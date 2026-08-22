@@ -103,6 +103,9 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
   </div></header>
 
   <div class="wrap">
+    <div class="sec"><h2>교재 · 과</h2><span class="note">고르면 아래 전체가 그 교재 기준으로 바뀝니다</span></div>
+    <div class="tabsw" id="btabs"></div>
+
     <div class="sec"><h2>한눈에 보기</h2><span class="note" id="upd"></span></div>
     <div class="tiles" id="tiles"></div>
 
@@ -129,7 +132,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const PARTNAMES={vocab:"어휘 선택",gram:"어법 선택",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",write:"영작"};
 const ORDER=["vocab","gram","fix","tf","order","insert","write"];
-let PIN=sessionStorage.getItem("naesinfit.pin")||"", ROWS=[], TAB="all";
+let PIN=sessionStorage.getItem("naesinfit.pin")||"", ALL=[], ROWS=[], TAB="all", BOOK="all";
 
 const pctClass=p=>p>=80?"p-hi":p>=60?"p-mid":"p-lo";
 const fmt=d=>{const x=new Date(d);const p=n=>String(n).padStart(2,"0");
@@ -139,7 +142,7 @@ async function load(){
   const r=await fetch("/api/results",{headers:{"x-pin":PIN}});
   if(r.status===401){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"비밀번호가 맞지 않습니다"); }
   if(!r.ok){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"불러오지 못했습니다"); }
-  const j=await r.json(); ROWS=j.rows||[];
+  const j=await r.json(); ALL=j.rows||[];
 }
 $("#pin-go").onclick=async()=>{
   PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
@@ -150,6 +153,13 @@ $("#pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pin-go").click()
 $("#reload").onclick=async()=>{ try{ await load(); render(); }catch(e){ alert(e.message); } };
 
 function render(){
+  const books=[...new Set(ALL.map(x=>x.book).filter(Boolean))].sort();
+  if(BOOK!=="all" && !books.includes(BOOK)) BOOK="all";
+  ROWS = BOOK==="all" ? ALL : ALL.filter(x=>x.book===BOOK);
+  $("#btabs").innerHTML = books.length>1
+    ? [["all","전체 교재"]].concat(books.map(b=>[b,b])).map(([k,n])=>
+        `<button data-book="${esc(k)}"${BOOK===k?' class="on"':""}>${esc(n)}</button>`).join("")
+    : (books[0]?`<div style="font-size:13.5px;color:var(--ink-3);font-weight:600">${esc(books[0])}</div>`:"");
   const R=ROWS;
   $("#bar-sub").textContent = R.length ? `${new Set(R.map(x=>x.student)).size}명 · 총 ${R.length}회 응시` : "아직 응시 기록이 없습니다";
   $("#upd").textContent = "갱신 "+fmt(Date.now());
@@ -216,10 +226,11 @@ function render(){
     : `<tr><td class="empty">2명 이상이 같은 문항을 풀면 집계됩니다</td></tr>`;
 
   /* 최근 응시 */
-  $("#recent").innerHTML=`<thead><tr><th>시각</th><th>이름</th><th>파트</th><th>범위</th><th>점수</th><th></th></tr></thead><tbody>`+
+  $("#recent").innerHTML=`<thead><tr><th>시각</th><th>이름</th><th>교재·과</th><th>파트</th><th>범위</th><th>점수</th><th></th></tr></thead><tbody>`+
     R.slice(0,60).map(r=>`<tr>
       <td style="color:var(--ink-3);font-size:13px">${fmt(r.created_at)}</td>
       <td style="font-weight:700">${esc(r.student)}</td>
+      <td style="color:var(--ink-3);font-size:13px">${esc(r.book||"")}</td>
       <td>${PARTNAMES[r.part]||esc(r.part)}</td>
       <td style="color:var(--ink-3)">${r.scope==="all"?"전체":esc(r.scope)}</td>
       <td><span class="pill ${pctClass(r.pct)}">${r.pct}%</span> <span class="num" style="color:var(--ink-3);font-size:12px">${r.correct}/${r.total}</span></td>
@@ -227,6 +238,7 @@ function render(){
 }
 
 document.addEventListener("click",e=>{
+  const bk=e.target.closest("[data-book]"); if(bk){ BOOK=bk.dataset.book; TAB="all"; render(); return; }
   const t=e.target.closest("[data-tab]"); if(t){ TAB=t.dataset.tab; render(); return; }
   const s=e.target.closest("[data-stu]"); if(s){ openStudent(s.dataset.stu); return; }
   const a=e.target.closest("[data-att]"); if(a){ openAttempt(+a.dataset.att); return; }
@@ -242,7 +254,7 @@ function openStudent(n){
   $("#dlg").showModal();
 }
 function openAttempt(id){
-  const r=ROWS.find(x=>x.id===id); if(!r) return;
+  const r=ALL.find(x=>x.id===id); if(!r) return;
   const wrong=[];
   (r.detail||[]).forEach(it=>(it.d||[]).forEach(x=>{ if(!x.ok) wrong.push({it,x}); }));
   $("#dlg-t").textContent=`${r.student} · ${PARTNAMES[r.part]||r.part} · ${r.pct}%`;
@@ -256,7 +268,7 @@ function openAttempt(id){
 }
 $("#csv").onclick=()=>{
   const head=["시각","이름","교재","파트","범위","정답","전체","정답률(%)","소요(초)"];
-  const rows=ROWS.map(r=>[fmt(r.created_at),r.student,r.book,PARTNAMES[r.part]||r.part,r.scope,r.correct,r.total,r.pct,r.secs]);
+  const rows=ALL.map(r=>[fmt(r.created_at),r.student,r.book,PARTNAMES[r.part]||r.part,r.scope,r.correct,r.total,r.pct,r.secs]);
   const csv="﻿"+[head,...rows].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
   const a=document.createElement("a"); a.href=url; a.download="리뷰테스트_결과.csv"; a.click(); URL.revokeObjectURL(url);

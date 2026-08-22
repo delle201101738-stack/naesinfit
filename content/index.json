@@ -1,0 +1,17 @@
+{
+ "books": [
+  {
+   "id": "e2-cj",
+   "subject": "영어 II",
+   "publisher": "천재(강상구)",
+   "units": [
+    {
+     "id": "e2-cj-01",
+     "no": "1과",
+     "title": "Constantly in Motion",
+     "file": "content/e2-cj-01.json"
+    }
+   ]
+  }
+ ]
+}
