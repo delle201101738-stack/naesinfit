@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>선생님 대시보드 · 내신핏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&family=Archivo:wght@500;600;700&display=swap">
+<style>
+:root{
+  --ground:#EEEFF5; --surface:#fff; --surface-2:#F7F7FB; --surface-3:#EFEFF6;
+  --line:#E4E4EF; --line-2:#D8D8E6;
+  --ink:#16151F; --ink-2:#55536A; --ink-3:#8A87A0;
+  --accent:#6B4EFF; --accent-soft:#EDE9FF; --on-accent:#fff;
+  --ok:#12A150; --ok-soft:#E4F5EA; --no:#E5484D; --no-soft:#FCEBEB; --warn:#E8890C; --warn-soft:#FDF1E0;
+  --shadow:0 1px 2px rgba(22,21,31,.05), 0 10px 26px -16px rgba(22,21,31,.30);
+  --grid:rgba(22,21,31,.07);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#0E0E17; --surface:#1A1A27; --surface-2:#21212F; --surface-3:#282838;
+  --line:#2C2C3D; --line-2:#3A3A4E; --ink:#F1F0F8; --ink-2:#A7A4BB; --ink-3:#7B7894;
+  --accent:#8E76FF; --accent-soft:#241F42; --on-accent:#12101F;
+  --ok:#3ECF7E; --ok-soft:#12301F; --no:#FF6B6F; --no-soft:#3A1B1E; --warn:#F2A93B; --warn-soft:#382712;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -18px rgba(0,0,0,.85); --grid:rgba(241,240,248,.09);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:'Gothic A1','Apple SD Gothic Neo',sans-serif;font-size:15px;line-height:1.55;word-break:keep-all}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:'Archivo',sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 64px}
+header.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
+.bar h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.bar .sub{font-size:12.5px;color:var(--ink-3)}
+.btn{padding:9px 15px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-2)}
+.btn:hover{background:var(--surface-3)}
+.btn.pri{background:var(--accent);color:var(--on-accent)}
+.card{background:var(--surface);border-radius:18px;box-shadow:var(--shadow)}
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:30px 0 12px}
+.sec h2{margin:0;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.sec .note{font-size:12.5px;color:var(--ink-3)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{padding:18px 16px;text-align:center}
+.tile b{display:block;font-family:'Archivo',sans-serif;font-size:29px;font-weight:700;letter-spacing:-.02em;line-height:1.05}
+.tile span{display:block;font-size:12px;color:var(--ink-3);font-weight:600;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11.5px;font-weight:700;color:var(--ink-3);letter-spacing:.03em;padding:12px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+.scroll{overflow-x:auto}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;font-family:'Archivo',sans-serif}
+.p-hi{background:var(--ok-soft);color:var(--ok)} .p-mid{background:var(--accent-soft);color:var(--accent)} .p-lo{background:var(--no-soft);color:var(--no)}
+.meter{display:grid;grid-template-columns:120px 1fr 52px;align-items:center;gap:12px;padding:8px 0}
+.meter .lb{font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.meter .tr{height:10px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.meter .tr>i{display:block;height:100%;border-radius:0 5px 5px 0;background:var(--accent)}
+.meter .vl{font-family:'Archivo',sans-serif;font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.meter .tr>i.lo{background:var(--no)} .meter .tr>i.hi{background:var(--ok)}
+.gate{max-width:400px;margin:14vh auto;padding:0 20px}
+.gate h2{margin:0 0 6px;font-size:23px;font-weight:800;letter-spacing:-.02em}
+.gate p{margin:0 0 22px;font-size:14px;color:var(--ink-2)}
+.gate input{width:100%;padding:15px 16px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--surface);font-size:16px;font-weight:600}
+.gate input:focus{border-color:var(--accent);outline:none}
+.gate button{width:100%;margin-top:12px;padding:15px;border-radius:14px;background:var(--accent);color:var(--on-accent);font-size:15.5px;font-weight:800}
+.err{color:var(--no);font-size:13px;font-weight:700;margin-top:10px;min-height:19px}
+.empty{text-align:center;padding:56px 24px;color:var(--ink-3)}
+dialog{border:0;border-radius:20px;padding:0;background:var(--surface);color:var(--ink);max-width:640px;width:calc(100% - 32px);box-shadow:0 30px 70px -30px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(10,10,20,.5)}
+.dl-h{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+.dl-b{padding:8px 20px 20px;max-height:65vh;overflow:auto}
+.wrongrow{padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.6}
+.wrongrow:last-child{border-bottom:0}
+.k{color:var(--ink-3);font-weight:700;margin-right:6px;font-size:12px}
+.bad{color:var(--no);font-weight:700;text-decoration:line-through}
+.good{color:var(--ok);font-weight:700}
+.tabsw{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabsw button{padding:9px 14px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-3)}
+.tabsw button.on{background:var(--accent);color:var(--on-accent)}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <h2>선생님 대시보드</h2>
+  <p>비밀번호를 입력하세요.</p>
+  <input id="pin" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button id="pin-go">들어가기</button>
+  <div class="err" id="pin-err"></div>
+</div>
+
+<div id="app" hidden>
+  <header class="bar"><div class="bar-in">
+    <div style="flex:1">
+      <h1>리뷰테스트 결과</h1>
+      <div class="sub" id="bar-sub">불러오는 중…</div>
+    </div>
+    <button class="btn" id="csv">CSV 내려받기</button>
+    <button class="btn pri" id="reload">새로고침</button>
+  </div></header>
+
+  <div class="wrap">
+    <div class="sec"><h2>한눈에 보기</h2><span class="note" id="upd"></span></div>
+    <div class="tiles" id="tiles"></div>
+
+    <div class="sec"><h2>학생별</h2><span class="note">이름을 누르면 응시 내역이 열려요</span></div>
+    <div class="card scroll"><table id="stu"></table></div>
+
+    <div class="sec"><h2>파트별 평균 정답률</h2><span class="note">낮은 파트가 보강 1순위</span></div>
+    <div class="card" style="padding:18px 20px" id="parts"></div>
+
+    <div class="sec"><h2>많이 틀린 문항</h2><span class="note">오답률 높은 순 · 2명 이상 푼 것만</span></div>
+    <div class="tabsw" id="ptabs"></div>
+    <div class="card scroll"><table id="items"></table></div>
+
+    <div class="sec"><h2>최근 응시</h2><span class="note">최근 60건</span></div>
+    <div class="card scroll"><table id="recent"></table></div>
+  </div>
+</div>
+
+<dialog id="dlg"><div class="dl-h"><b id="dlg-t">상세</b><button class="btn" onclick="document.getElementById('dlg').close()">닫기</button></div><div class="dl-b" id="dlg-b"></div></dialog>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const PARTNAMES={vocab:"어휘 선택",gram:"어법 선택",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",write:"영작"};
+const ORDER=["vocab","gram","fix","tf","order","insert","write"];
+let PIN=sessionStorage.getItem("naesinfit.pin")||"", ROWS=[], TAB="all";
+
+const pctClass=p=>p>=80?"p-hi":p>=60?"p-mid":"p-lo";
+const fmt=d=>{const x=new Date(d);const p=n=>String(n).padStart(2,"0");
+  return `${x.getFullYear()}.${p(x.getMonth()+1)}.${p(x.getDate())} ${p(x.getHours())}:${p(x.getMinutes())}`;};
+
+async function load(){
+  const r=await fetch("/api/results",{headers:{"x-pin":PIN}});
+  if(r.status===401){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"비밀번호가 맞지 않습니다"); }
+  if(!r.ok){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"불러오지 못했습니다"); }
+  const j=await r.json(); ROWS=j.rows||[];
+}
+$("#pin-go").onclick=async()=>{
+  PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
+  try{ await load(); sessionStorage.setItem("naesinfit.pin",PIN); $("#gate").hidden=true; $("#app").hidden=false; render(); }
+  catch(e){ $("#pin-err").textContent=e.message; }
+};
+$("#pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pin-go").click();});
+$("#reload").onclick=async()=>{ try{ await load(); render(); }catch(e){ alert(e.message); } };
+
+function render(){
+  const R=ROWS;
+  $("#bar-sub").textContent = R.length ? `${new Set(R.map(x=>x.student)).size}명 · 총 ${R.length}회 응시` : "아직 응시 기록이 없습니다";
+  $("#upd").textContent = "갱신 "+fmt(Date.now());
+  const today=new Date().toDateString();
+  const tot=R.reduce((s,x)=>s+x.total,0), cor=R.reduce((s,x)=>s+x.correct,0);
+  $("#tiles").innerHTML=[
+    ["응시 학생", new Set(R.map(x=>x.student)).size, ""],
+    ["총 응시", R.length, ""],
+    ["평균 정답률", tot?Math.round(cor/tot*100)+"%":"—", tot&&cor/tot>=.8?"var(--ok)":""],
+    ["오늘 응시", R.filter(x=>new Date(x.created_at).toDateString()===today).length, ""]
+  ].map(([l,v,c])=>`<div class="card tile"><b class="num"${c?` style="color:${c}"`:""}>${v}</b><span>${l}</span></div>`).join("");
+
+  if(!R.length){
+    $("#stu").innerHTML=`<tr><td class="empty">학생이 링크로 접속해 응시하면 여기에 쌓입니다</td></tr>`;
+    $("#parts").innerHTML=`<div class="empty">아직 데이터가 없습니다</div>`;
+    $("#items").innerHTML=""; $("#recent").innerHTML=""; $("#ptabs").innerHTML=""; return;
+  }
+
+  /* 학생별 */
+  const byS={};
+  R.forEach(r=>{ (byS[r.student]=byS[r.student]||[]).push(r); });
+  const studs=Object.entries(byS).map(([n,rs])=>{
+    const t=rs.reduce((s,x)=>s+x.total,0), c=rs.reduce((s,x)=>s+x.correct,0);
+    const parts=new Set(rs.map(x=>x.part));
+    return {n, cnt:rs.length, pct:Math.round(c/t*100), parts:parts.size,
+            last:rs.reduce((m,x)=>Math.max(m,+new Date(x.created_at)),0)};
+  }).sort((a,b)=>a.pct-b.pct);
+  $("#stu").innerHTML=`<thead><tr><th>이름</th><th>정답률</th><th>응시</th><th>진행 파트</th><th>마지막 응시</th></tr></thead><tbody>`+
+    studs.map(s=>`<tr><td><button style="font-weight:700;color:var(--accent)" data-stu="${esc(s.n)}">${esc(s.n)}</button></td>
+      <td><span class="pill ${pctClass(s.pct)}">${s.pct}%</span></td>
+      <td class="num">${s.cnt}회</td><td class="num">${s.parts} / 7</td>
+      <td style="color:var(--ink-3);font-size:13px">${fmt(s.last)}</td></tr>`).join("")+`</tbody>`;
+
+  /* 파트별 */
+  const byP={};
+  R.forEach(r=>{ const p=byP[r.part]=byP[r.part]||{t:0,c:0,n:0}; p.t+=r.total; p.c+=r.correct; p.n++; });
+  $("#parts").innerHTML=ORDER.map(p=>{
+    const v=byP[p]; const pct=v?Math.round(v.c/v.t*100):null;
+    return `<div class="meter"><span class="lb">${PARTNAMES[p]}</span>
+      <span class="tr"><i class="${pct==null?"":pct>=80?"hi":pct<60?"lo":""}" style="width:${pct||0}%"></i></span>
+      <span class="vl">${pct==null?"—":pct+"%"}</span></div>`;}).join("");
+
+  /* 문항별 오답률 */
+  const agg={};
+  R.forEach(r=>(r.detail||[]).forEach(it=>(it.d||[]).forEach(x=>{
+    const k=`${r.part}|${it.sec}|${it.no}|${x.l}`;
+    const a=agg[k]=agg[k]||{part:r.part,sec:it.sec,no:it.no,l:x.l,n:0,w:0,ex:null};
+    a.n++; if(!x.ok){ a.w++; if(!a.ex) a.ex={m:x.m,r:x.r}; }
+  })));
+  const list=Object.values(agg).filter(a=>a.n>=2&&a.w>0)
+    .filter(a=>TAB==="all"||a.part===TAB)
+    .map(a=>({...a,rate:Math.round(a.w/a.n*100)}))
+    .sort((a,b)=>b.rate-a.rate||b.n-a.n).slice(0,40);
+  $("#ptabs").innerHTML=[["all","전체"]].concat(ORDER.filter(p=>byP[p]).map(p=>[p,PARTNAMES[p]]))
+    .map(([k,n])=>`<button data-tab="${k}"${TAB===k?' class="on"':""}>${n}</button>`).join("");
+  $("#items").innerHTML = list.length
+    ? `<thead><tr><th>파트</th><th>위치</th><th>번호</th><th>오답률</th><th>틀린 답 예시</th><th>정답</th></tr></thead><tbody>`+
+      list.map(a=>`<tr><td>${PARTNAMES[a.part]}</td>
+        <td style="color:var(--ink-3)">${a.sec==="본문"?"본문":"Read Further"} ${a.no}</td>
+        <td class="num">${esc(a.l)}</td>
+        <td><span class="pill ${a.rate>=60?"p-lo":a.rate>=30?"p-mid":"p-hi"}">${a.rate}%</span>
+          <span style="color:var(--ink-3);font-size:12px" class="num"> ${a.w}/${a.n}</span></td>
+        <td class="bad">${esc(a.ex?.m||"")}</td><td class="good">${esc(a.ex?.r||"")}</td></tr>`).join("")+`</tbody>`
+    : `<tr><td class="empty">2명 이상이 같은 문항을 풀면 집계됩니다</td></tr>`;
+
+  /* 최근 응시 */
+  $("#recent").innerHTML=`<thead><tr><th>시각</th><th>이름</th><th>파트</th><th>범위</th><th>점수</th><th></th></tr></thead><tbody>`+
+    R.slice(0,60).map(r=>`<tr>
+      <td style="color:var(--ink-3);font-size:13px">${fmt(r.created_at)}</td>
+      <td style="font-weight:700">${esc(r.student)}</td>
+      <td>${PARTNAMES[r.part]||esc(r.part)}</td>
+      <td style="color:var(--ink-3)">${r.scope==="all"?"전체":esc(r.scope)}</td>
+      <td><span class="pill ${pctClass(r.pct)}">${r.pct}%</span> <span class="num" style="color:var(--ink-3);font-size:12px">${r.correct}/${r.total}</span></td>
+      <td><button class="btn" data-att="${r.id}">오답 보기</button></td></tr>`).join("")+`</tbody>`;
+}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-tab]"); if(t){ TAB=t.dataset.tab; render(); return; }
+  const s=e.target.closest("[data-stu]"); if(s){ openStudent(s.dataset.stu); return; }
+  const a=e.target.closest("[data-att]"); if(a){ openAttempt(+a.dataset.att); return; }
+});
+function openStudent(n){
+  const rs=ROWS.filter(r=>r.student===n);
+  $("#dlg-t").textContent=`${n} · ${rs.length}회 응시`;
+  $("#dlg-b").innerHTML=`<table><thead><tr><th>시각</th><th>파트</th><th>점수</th><th></th></tr></thead><tbody>`+
+    rs.map(r=>`<tr><td style="color:var(--ink-3);font-size:13px">${fmt(r.created_at)}</td>
+      <td>${PARTNAMES[r.part]||r.part}</td>
+      <td><span class="pill ${pctClass(r.pct)}">${r.pct}%</span> <span class="num" style="font-size:12px;color:var(--ink-3)">${r.correct}/${r.total}</span></td>
+      <td><button class="btn" data-att="${r.id}">오답</button></td></tr>`).join("")+`</tbody></table>`;
+  $("#dlg").showModal();
+}
+function openAttempt(id){
+  const r=ROWS.find(x=>x.id===id); if(!r) return;
+  const wrong=[];
+  (r.detail||[]).forEach(it=>(it.d||[]).forEach(x=>{ if(!x.ok) wrong.push({it,x}); }));
+  $("#dlg-t").textContent=`${r.student} · ${PARTNAMES[r.part]||r.part} · ${r.pct}%`;
+  $("#dlg-b").innerHTML = wrong.length
+    ? wrong.map(({it,x})=>`<div class="wrongrow">
+        <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${it.sec==="본문"?"본문":"Read Further"} ${it.no} · ${esc(x.l)}</div>
+        <span class="k">학생</span><span class="bad">${esc(x.m)}</span><br>
+        <span class="k">정답</span><span class="good">${esc(x.r)}</span></div>`).join("")
+    : `<div class="empty">틀린 문항이 없습니다 👏</div>`;
+  $("#dlg").showModal();
+}
+$("#csv").onclick=()=>{
+  const head=["시각","이름","교재","파트","범위","정답","전체","정답률(%)","소요(초)"];
+  const rows=ROWS.map(r=>[fmt(r.created_at),r.student,r.book,PARTNAMES[r.part]||r.part,r.scope,r.correct,r.total,r.pct,r.secs]);
+  const csv="﻿"+[head,...rows].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  const a=document.createElement("a"); a.href=url; a.download="리뷰테스트_결과.csv"; a.click(); URL.revokeObjectURL(url);
+};
+(async()=>{ if(PIN){ try{ await load(); $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){} } })();
+</script>
+</body>
+</html>

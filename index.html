@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6B4EFF">
+<title>영어II 1과 리뷰테스트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&family=Archivo:wght@500;600;700&display=swap">
+<style>
+/* ─────────── tokens ─────────── */
+:root{
+  --ground:#EEEFF5; --surface:#FFFFFF; --surface-2:#F7F7FB; --surface-3:#EFEFF6;
+  --line:#E4E4EF; --line-2:#D8D8E6;
+  --ink:#16151F; --ink-2:#55536A; --ink-3:#8A87A0;
+  --accent:#6B4EFF; --accent-2:#5A3EE8; --accent-soft:#EDE9FF; --on-accent:#FFFFFF;
+  --hero-a:#7B5BFF; --hero-b:#A56CFF;
+  --ok:#12A150; --ok-soft:#E4F5EA; --no:#E5484D; --no-soft:#FCEBEB;
+  --cat-1:#6B4EFF; --cat-1-s:#EDE9FF;
+  --cat-2:#E5484D; --cat-2-s:#FCEBEB;
+  --cat-3:#E8890C; --cat-3-s:#FDF1E0;
+  --cat-4:#12A177; --cat-4-s:#E2F5EF;
+  --gold:#D99A00;
+  --shadow:0 1px 2px rgba(22,21,31,.05), 0 10px 26px -16px rgba(22,21,31,.30);
+  --shadow-lift:0 2px 6px rgba(22,21,31,.07), 0 18px 40px -20px rgba(22,21,31,.38);
+  --r-card:20px; --r-sm:12px; --r-pill:999px;
+  --grid:rgba(22,21,31,.07);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E0E17; --surface:#1A1A27; --surface-2:#21212F; --surface-3:#282838;
+    --line:#2C2C3D; --line-2:#3A3A4E;
+    --ink:#F1F0F8; --ink-2:#A7A4BB; --ink-3:#7B7894;
+    --accent:#8E76FF; --accent-2:#A491FF; --accent-soft:#241F42; --on-accent:#12101F;
+    --hero-a:#5B3FD6; --hero-b:#8250E0;
+    --ok:#3ECF7E; --ok-soft:#12301F; --no:#FF6B6F; --no-soft:#3A1B1E;
+    --cat-1:#8E76FF; --cat-1-s:#241F42;
+    --cat-2:#FF6B6F; --cat-2-s:#3A1B1E;
+    --cat-3:#F2A93B; --cat-3-s:#382712;
+    --cat-4:#2ABF93; --cat-4-s:#0F3229;
+    --gold:#F0C34B;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -18px rgba(0,0,0,.85);
+    --shadow-lift:0 2px 8px rgba(0,0,0,.55), 0 22px 46px -22px rgba(0,0,0,.9);
+    --grid:rgba(241,240,248,.09);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E0E17; --surface:#1A1A27; --surface-2:#21212F; --surface-3:#282838;
+  --line:#2C2C3D; --line-2:#3A3A4E;
+  --ink:#F1F0F8; --ink-2:#A7A4BB; --ink-3:#7B7894;
+  --accent:#8E76FF; --accent-2:#A491FF; --accent-soft:#241F42; --on-accent:#12101F;
+  --hero-a:#5B3FD6; --hero-b:#8250E0;
+  --ok:#3ECF7E; --ok-soft:#12301F; --no:#FF6B6F; --no-soft:#3A1B1E;
+  --cat-1:#8E76FF; --cat-1-s:#241F42;
+  --cat-2:#FF6B6F; --cat-2-s:#3A1B1E;
+  --cat-3:#F2A93B; --cat-3-s:#382712;
+  --cat-4:#2ABF93; --cat-4-s:#0F3229;
+  --gold:#F0C34B;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -18px rgba(0,0,0,.85);
+  --shadow-lift:0 2px 8px rgba(0,0,0,.55), 0 22px 46px -22px rgba(0,0,0,.9);
+  --grid:rgba(241,240,248,.09);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:'Gothic A1','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  word-break:keep-all;
+}
+button{font:inherit; color:inherit; cursor:pointer; border:0; background:none}
+input{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+.num{font-family:'Archivo',system-ui,sans-serif; font-variant-numeric:tabular-nums}
+
+/* ─────────── shell ─────────── */
+.app{
+  max-width:430px; margin:0 auto; min-height:100dvh; background:var(--ground);
+  position:relative; padding-bottom:96px; overflow-x:hidden;
+}
+.screen{display:none; animation:fade .2s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important}}
+
+.pad{padding:0 18px}
+.stack{display:flex; flex-direction:column}
+.gap8{gap:8px} .gap10{gap:10px} .gap12{gap:12px} .gap14{gap:14px} .gap18{gap:18px} .gap24{gap:24px}
+
+/* top bar */
+.top{
+  position:sticky; top:0; z-index:30; display:grid; grid-template-columns:44px 1fr 44px;
+  align-items:center; height:56px; background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(14px); border-bottom:1px solid var(--line);
+}
+.top h1{margin:0; font-size:16.5px; font-weight:700; text-align:center; letter-spacing:-.01em}
+.icon-btn{display:grid; place-items:center; width:44px; height:44px; border-radius:12px}
+.icon-btn:hover{background:var(--surface-2)}
+.icon-btn svg{width:21px; height:21px; stroke:var(--ink); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+
+/* section label */
+.sec{display:flex; align-items:baseline; justify-content:space-between; margin:0 0 10px}
+.sec h2{margin:0; font-size:14px; font-weight:700; color:var(--ink-2); letter-spacing:.02em}
+.sec .more{font-size:12.5px; color:var(--ink-3); font-weight:500}
+
+/* cards */
+.card{background:var(--surface); border-radius:var(--r-card); box-shadow:var(--shadow)}
+.row{display:flex; align-items:center; gap:13px; width:100%; padding:15px 16px; text-align:left}
+
+/* ─────────── home hero ─────────── */
+.greet{display:flex; align-items:flex-start; justify-content:space-between; padding:14px 18px 12px}
+.greet .hi{font-size:13px; color:var(--ink-3); font-weight:500}
+.greet .nm{font-size:21px; font-weight:800; letter-spacing:-.02em; margin-top:1px}
+.theme-btn{width:42px; height:42px; border-radius:var(--r-pill); background:var(--surface); box-shadow:var(--shadow); display:grid; place-items:center}
+.theme-btn svg{width:19px; height:19px; stroke:var(--ink-2); fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
+
+.hero{
+  position:relative; overflow:hidden; border-radius:24px; padding:20px;
+  background:linear-gradient(135deg,var(--hero-a) 0%,var(--hero-b) 100%);
+  color:#fff; box-shadow:var(--shadow-lift);
+}
+.hero::after{content:""; position:absolute; right:-56px; top:-72px; width:190px; height:190px; border-radius:50%; background:rgba(255,255,255,.10)}
+.hero::before{content:""; position:absolute; right:-18px; bottom:-88px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,.07)}
+.hero-top{position:relative; z-index:1; display:flex; gap:14px; align-items:center}
+.ava{width:66px; height:66px; border-radius:50%; background:#FFE9C7; border:3px solid rgba(255,255,255,.85); display:grid; place-items:center; flex:none; overflow:hidden}
+.ava svg{width:100%; height:100%}
+.badges{display:flex; align-items:center; gap:7px; margin-bottom:3px}
+.lv{font-size:12.5px; font-weight:700; opacity:.95}
+.tier{font-size:11px; font-weight:700; padding:2.5px 9px; border-radius:var(--r-pill); background:rgba(255,255,255,.22); letter-spacing:.02em}
+.hero h3{margin:0; font-size:20px; font-weight:800; line-height:1.3; letter-spacing:-.02em; text-wrap:balance}
+.xp-row{position:relative; z-index:1; display:flex; justify-content:space-between; font-size:11.5px; font-weight:600; opacity:.92; margin:16px 0 6px}
+.bar{position:relative; z-index:1; height:7px; border-radius:var(--r-pill); background:rgba(255,255,255,.28); overflow:hidden}
+.bar > i{display:block; height:100%; border-radius:var(--r-pill); background:#fff; transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.bubble{
+  position:relative; z-index:1; margin-top:14px; padding:11px 14px; border-radius:14px;
+  background:rgba(255,255,255,.17); font-size:13px; font-weight:500; line-height:1.5;
+}
+.bubble::before{content:""; position:absolute; top:-5px; left:24px; width:11px; height:11px; background:rgba(255,255,255,.17); transform:rotate(45deg); border-radius:2px}
+
+/* missions */
+.mission{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line)}
+.mission:last-of-type{border-bottom:0}
+.tick{width:22px; height:22px; border-radius:50%; border:2px solid var(--line-2); flex:none; display:grid; place-items:center; transition:.2s}
+.tick svg{width:12px; height:12px; stroke:#fff; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; opacity:0}
+.mission.done .tick{background:var(--ok); border-color:var(--ok)}
+.mission.done .tick svg{opacity:1}
+.mission.done .m-t{color:var(--ink-3); text-decoration:line-through}
+.m-t{font-size:14.5px; font-weight:700; letter-spacing:-.01em}
+.m-s{font-size:12px; color:var(--ink-3); margin-top:1px}
+.xp-chip{font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:var(--r-pill); background:var(--accent-soft); color:var(--accent); flex:none}
+.bonus{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--surface-2); border-radius:0 0 var(--r-card) var(--r-card); font-size:12.5px; color:var(--ink-3); font-weight:600}
+
+/* category rail */
+.rail{display:flex; gap:12px; overflow-x:auto; padding:2px 18px 6px; scroll-snap-type:x mandatory; -ms-overflow-style:none; scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.cat{
+  flex:none; width:142px; height:126px; border-radius:20px; padding:15px; color:#fff;
+  display:flex; flex-direction:column; justify-content:space-between; scroll-snap-align:start;
+  box-shadow:var(--shadow); transition:transform .18s ease;
+}
+.cat:active{transform:scale(.97)}
+.cat .ci{width:34px; height:34px; border-radius:11px; background:rgba(255,255,255,.24); display:grid; place-items:center}
+.cat .ci svg{width:19px; height:19px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.cat b{display:block; font-size:16.5px; font-weight:800; letter-spacing:-.02em}
+.cat span{display:block; font-size:11.5px; opacity:.86; margin-top:2px; font-weight:500}
+
+/* resume card */
+.resume{display:flex; align-items:center; gap:13px; padding:15px 16px}
+.resume .ci{width:42px; height:42px; border-radius:13px; background:var(--accent-soft); display:grid; place-items:center; flex:none}
+.resume .ci svg{width:20px; height:20px; stroke:var(--accent); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+
+/* ─────────── range picker ─────────── */
+.crumb{padding:14px 18px 6px; font-size:12.5px; color:var(--ink-3); font-weight:600; letter-spacing:.02em}
+.grp-label{padding:12px 18px 6px; font-size:11.5px; color:var(--ink-3); font-weight:700; letter-spacing:.05em; text-transform:uppercase}
+.acc{background:var(--surface); border-radius:16px; box-shadow:var(--shadow); margin-bottom:10px; overflow:hidden}
+.acc-h{display:flex; align-items:center; gap:9px; width:100%; padding:16px; font-size:15.5px; font-weight:700; letter-spacing:-.01em}
+.acc-h .chev{margin-left:auto; width:18px; height:18px; stroke:var(--ink-3); fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s}
+.acc.open > .acc-h .chev{transform:rotate(180deg)}
+.count{min-width:21px; height:21px; padding:0 6px; border-radius:var(--r-pill); background:var(--accent); color:var(--on-accent); font-size:11.5px; font-weight:700; display:grid; place-items:center}
+.acc-b{display:none; border-top:1px solid var(--line)}
+.acc.open > .acc-b{display:block}
+.pub{border-bottom:1px solid var(--line)}
+.pub:last-child{border-bottom:0}
+.pub-h{display:flex; align-items:center; gap:9px; width:100%; padding:14px 16px 14px 22px; font-size:14.5px; font-weight:600}
+.pub-h .chev{margin-left:auto; width:16px; height:16px; stroke:var(--ink-3); fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s}
+.pub.open .pub-h .chev{transform:rotate(180deg)}
+.pub-b{display:none; padding:0 16px 10px 22px}
+.pub.open .pub-b{display:block}
+.unit{display:flex; align-items:center; gap:11px; width:100%; padding:11px 12px; border-radius:12px; font-size:14px; text-align:left}
+.unit:hover{background:var(--surface-2)}
+.unit.sel{background:var(--accent-soft)}
+.unit.sel .u-n{color:var(--accent); font-weight:700}
+.box{width:20px; height:20px; border-radius:6px; border:2px solid var(--line-2); flex:none; display:grid; place-items:center; transition:.15s}
+.box svg{width:11px; height:11px; stroke:var(--on-accent); stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; opacity:0}
+.unit.sel .box{background:var(--accent); border-color:var(--accent)}
+.unit.sel .box svg{opacity:1}
+.u-n{flex:1}
+.soon{font-size:10.5px; font-weight:700; color:var(--ink-3); background:var(--surface-3); padding:2.5px 8px; border-radius:var(--r-pill)}
+.unit:disabled{opacity:.55; cursor:not-allowed}
+.unit:disabled:hover{background:none}
+
+/* sticky CTA */
+.cta-wrap{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(430px,100%); z-index:60;
+  padding:12px 18px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top, var(--ground) 62%, transparent);
+}
+.cta{
+  width:100%; height:56px; border-radius:17px; font-size:16px; font-weight:800; letter-spacing:-.01em;
+  background:var(--accent); color:var(--on-accent); box-shadow:0 8px 22px -10px var(--accent); transition:.18s;
+}
+.cta:disabled{background:var(--surface); color:var(--ink-3); box-shadow:inset 0 0 0 1.5px var(--line); cursor:not-allowed}
+.cta:not(:disabled):active{transform:scale(.985)}
+.cta.ghost{background:var(--surface); color:var(--ink); box-shadow:var(--shadow)}
+
+/* ─────────── setup ─────────── */
+.range-chip{display:flex; flex-wrap:wrap; align-items:center; gap:7px; padding:17px 18px; font-size:15px; font-weight:700; letter-spacing:-.01em}
+.range-chip .dot{color:var(--ink-3); font-weight:400}
+.range-chip .u{color:var(--accent)}
+.edit-btn{
+  display:flex; align-items:center; justify-content:center; gap:7px; margin:12px auto 0; padding:13px 20px;
+  border-radius:15px; border:1.5px solid var(--accent); color:var(--accent); font-size:14.5px; font-weight:700; background:var(--surface);
+}
+.edit-btn svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.opt{display:flex; align-items:center; gap:13px; width:100%; padding:15px 16px; text-align:left; background:var(--surface); border-radius:18px; box-shadow:var(--shadow); transition:.15s}
+.opt.sel{box-shadow:0 0 0 2px var(--accent), var(--shadow)}
+.opt .ci{width:44px; height:44px; border-radius:13px; display:grid; place-items:center; flex:none}
+.opt .ci svg{width:22px; height:22px; stroke-width:1.9; fill:none; stroke-linecap:round; stroke-linejoin:round}
+.opt .t{font-size:15.5px; font-weight:700; letter-spacing:-.01em}
+.opt .s{font-size:12.5px; color:var(--ink-3); margin-top:1px}
+.radio{width:22px; height:22px; border-radius:50%; border:2px solid var(--line-2); flex:none; display:grid; place-items:center; transition:.15s}
+.radio i{width:10px; height:10px; border-radius:50%; background:var(--accent); transform:scale(0); transition:transform .18s cubic-bezier(.3,1.6,.5,1)}
+.opt.sel .radio{border-color:var(--accent)}
+.opt.sel .radio i{transform:scale(1)}
+.tag-prac{font-size:10.5px; font-weight:700; color:var(--accent); background:var(--accent-soft); padding:3px 9px; border-radius:var(--r-pill)}
+
+/* ─────────── quiz ─────────── */
+.q-top{position:sticky; top:0; z-index:30; background:var(--surface); border-bottom:1px solid var(--line)}
+.q-top-in{display:grid; grid-template-columns:44px 1fr auto; align-items:center; height:56px; padding-right:16px}
+.q-count{font-size:13.5px; font-weight:700; color:var(--ink-2)}
+.q-count b{color:var(--accent); font-size:16px}
+.q-timer{font-size:13px; font-weight:700; color:var(--ink-3); padding:5px 11px; border-radius:var(--r-pill); background:var(--surface-2)}
+.q-bar{height:4px; background:var(--surface-3)}
+.q-bar > i{display:block; height:100%; background:var(--accent); transition:width .35s cubic-bezier(.2,.8,.2,1)}
+
+.q-type{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); padding:4px 10px; border-radius:var(--r-pill)}
+.q-stem{font-size:16.5px; font-weight:700; line-height:1.6; letter-spacing:-.01em; margin:12px 0 0; text-wrap:pretty}
+.passage{
+  background:var(--surface); border-radius:16px; padding:16px; box-shadow:var(--shadow);
+  font-size:14.5px; line-height:1.95; letter-spacing:0;
+}
+.passage em{font-style:normal; text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:2px; font-weight:700}
+.passage .mk{font-weight:800; color:var(--accent)}
+.passage .blankbox{display:inline-block; min-width:76px; border-bottom:2px solid var(--accent); text-align:center; font-weight:700; color:var(--accent)}
+.choice{
+  display:flex; align-items:flex-start; gap:11px; width:100%; padding:14px 15px; text-align:left;
+  background:var(--surface); border-radius:15px; box-shadow:var(--shadow); font-size:14.5px; line-height:1.55; transition:.14s;
+}
+.choice .n{
+  width:24px; height:24px; border-radius:50%; border:1.5px solid var(--line-2); flex:none;
+  display:grid; place-items:center; font-size:12px; font-weight:700; color:var(--ink-3); margin-top:1px;
+  font-family:'Archivo',sans-serif;
+}
+.choice.sel{box-shadow:0 0 0 2px var(--accent), var(--shadow)}
+.choice.sel .n{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.choice:active{transform:scale(.99)}
+.answer-in{
+  width:100%; padding:15px 16px; border-radius:15px; border:1.5px solid var(--line-2);
+  background:var(--surface); font-size:15.5px; font-weight:600;
+}
+.answer-in:focus{border-color:var(--accent); outline:none}
+.hint{font-size:12.5px; color:var(--ink-3); margin-top:8px}
+
+/* ─────────── result ─────────── */
+.score-card{text-align:center; padding:26px 20px 22px}
+.ring{position:relative; width:132px; height:132px; margin:0 auto 14px}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute; inset:0; display:grid; place-items:center; align-content:center}
+.ring .val b{font-family:'Archivo',sans-serif; font-size:36px; font-weight:700; letter-spacing:-.02em; line-height:1}
+.ring .val span{font-size:12px; color:var(--ink-3); font-weight:600; margin-top:3px}
+.score-msg{font-size:18px; font-weight:800; letter-spacing:-.02em}
+.score-sub{font-size:13.5px; color:var(--ink-2); margin-top:4px}
+.gain{display:inline-flex; align-items:center; gap:6px; margin-top:14px; padding:8px 15px; border-radius:var(--r-pill); background:var(--accent-soft); color:var(--accent); font-size:14px; font-weight:800}
+.rv{border-bottom:1px solid var(--line)}
+.rv:last-child{border-bottom:0}
+.rv-h{display:flex; align-items:flex-start; gap:11px; width:100%; padding:14px 16px; text-align:left}
+.mark{width:24px; height:24px; border-radius:50%; flex:none; display:grid; place-items:center; margin-top:1px}
+.mark svg{width:13px; height:13px; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round}
+.mark.o{background:var(--ok-soft)} .mark.o svg{stroke:var(--ok)}
+.mark.x{background:var(--no-soft)} .mark.x svg{stroke:var(--no)}
+.rv-q{font-size:14px; font-weight:600; line-height:1.5}
+.rv-meta{font-size:12px; color:var(--ink-3); margin-top:3px}
+.rv-b{display:none; padding:0 16px 16px 51px}
+.rv.open .rv-b{display:block}
+.ans-line{font-size:13.5px; line-height:1.7}
+.ans-line .k{color:var(--ink-3); font-weight:600; margin-right:6px}
+.ans-line .good{color:var(--ok); font-weight:700}
+.ans-line .bad{color:var(--no); font-weight:700; text-decoration:line-through}
+.expl{margin-top:9px; padding:12px 13px; border-radius:12px; background:var(--surface-2); font-size:13px; line-height:1.7; color:var(--ink-2)}
+
+/* ─────────── record ─────────── */
+.tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.tile{background:var(--surface); border-radius:16px; box-shadow:var(--shadow); padding:15px 12px; text-align:center}
+.tile b{display:block; font-family:'Archivo',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.02em; line-height:1.1}
+.tile span{display:block; font-size:11.5px; color:var(--ink-3); font-weight:600; margin-top:5px}
+.chart-card{padding:16px}
+.chart-card h3{margin:0 0 2px; font-size:14.5px; font-weight:700; letter-spacing:-.01em}
+.chart-card p{margin:0 0 14px; font-size:12px; color:var(--ink-3)}
+.spark{width:100%; height:132px; display:block; overflow:visible}
+.tip{
+  position:absolute; z-index:5; pointer-events:none; padding:7px 10px; border-radius:10px;
+  background:var(--ink); color:var(--ground); font-size:11.5px; font-weight:600; white-space:nowrap;
+  box-shadow:var(--shadow-lift); transform:translate(-50%,-130%); opacity:0; transition:opacity .12s;
+}
+.meter{display:grid; grid-template-columns:70px 1fr 44px; align-items:center; gap:10px; padding:7px 0}
+.meter .lb{font-size:13px; font-weight:600; color:var(--ink-2)}
+.meter .tr{height:9px; border-radius:var(--r-pill); background:var(--surface-3); overflow:hidden}
+.meter .tr > i{display:block; height:100%; border-radius:0 4px 4px 0; background:var(--accent); transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.meter .vl{font-family:'Archivo',sans-serif; font-size:13px; font-weight:700; text-align:right; font-variant-numeric:tabular-nums}
+.hist{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); width:100%; text-align:left}
+.hist:last-child{border-bottom:0}
+.hist .sc{width:46px; height:46px; border-radius:14px; display:grid; place-items:center; flex:none; font-family:'Archivo',sans-serif; font-weight:700; font-size:16px}
+.empty{text-align:center; padding:56px 24px}
+.empty .em-ic{width:64px; height:64px; margin:0 auto 16px; border-radius:20px; background:var(--accent-soft); display:grid; place-items:center}
+.empty .em-ic svg{width:30px; height:30px; stroke:var(--accent); fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.empty h3{margin:0 0 6px; font-size:17px; font-weight:800; letter-spacing:-.02em}
+.empty p{margin:0 0 20px; font-size:13.5px; color:var(--ink-3)}
+.btn-sm{display:inline-block; padding:13px 26px; border-radius:15px; background:var(--accent); color:var(--on-accent); font-size:14.5px; font-weight:700}
+
+/* ─────────── my ─────────── */
+.prof{display:flex; align-items:center; gap:14px; padding:20px 18px}
+.prof .ava{width:62px; height:62px; border:3px solid var(--surface); box-shadow:var(--shadow)}
+.prof .nm{font-size:19px; font-weight:800; letter-spacing:-.02em}
+.prof .sub{font-size:12.5px; color:var(--ink-3); margin-top:2px}
+.set-row{display:flex; align-items:center; gap:12px; width:100%; padding:15px 16px; border-bottom:1px solid var(--line); text-align:left}
+.set-row:last-child{border-bottom:0}
+.set-row .ci{width:34px; height:34px; border-radius:11px; background:var(--surface-2); display:grid; place-items:center; flex:none}
+.set-row .ci svg{width:17px; height:17px; stroke:var(--ink-2); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.set-row .t{flex:1; font-size:14.5px; font-weight:600}
+.set-row .v{font-size:13px; color:var(--ink-3); font-weight:600}
+.sw{width:46px; height:27px; border-radius:var(--r-pill); background:var(--line-2); position:relative; flex:none; transition:.2s}
+.sw i{position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%; background:#fff; transition:.2s cubic-bezier(.3,1.4,.5,1); box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on{background:var(--accent)}
+.sw.on i{left:22px}
+
+/* ─────────── tab bar ─────────── */
+.tabs{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:min(430px,100%); z-index:50;
+  display:grid; grid-template-columns:repeat(4,1fr);
+  background:color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter:blur(16px);
+  border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom);
+}
+.tab{display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 0 10px; color:var(--ink-3)}
+.tab svg{width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
+.tab span{font-size:10.5px; font-weight:700; letter-spacing:.01em}
+.tab.on{color:var(--accent)}
+.tab.on svg{stroke-width:2.3}
+
+/* toast */
+.toast{
+  position:fixed; bottom:104px; left:50%; transform:translate(-50%,14px); z-index:80;
+  padding:12px 20px; border-radius:14px; background:var(--ink); color:var(--ground);
+  font-size:13.5px; font-weight:700; box-shadow:var(--shadow-lift); opacity:0; pointer-events:none; transition:.25s;
+}
+.toast.on{opacity:1; transform:translate(-50%,0)}
+
+.hidden{display:none !important}
+</style><style>
+/* ─── 리뷰테스트 전용 ─── */
+.part-card{display:flex; align-items:center; gap:13px; width:100%; padding:15px 16px; text-align:left; border-bottom:1px solid var(--line)}
+.part-card:last-child{border-bottom:0}
+.part-card .ci{width:42px; height:42px; border-radius:13px; display:grid; place-items:center; flex:none; font-family:'Archivo',sans-serif; font-weight:700; font-size:15px}
+.part-card .t{display:block; font-size:15.5px; font-weight:700; letter-spacing:-.01em}
+.part-card .s{display:block; font-size:12.5px; color:var(--ink-3); margin-top:2px}
+.part-card .go{width:18px; height:18px; stroke:var(--ink-3); fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; flex:none}
+.done-pill{font-size:11px; font-weight:700; padding:3px 9px; border-radius:var(--r-pill); background:var(--ok-soft); color:var(--ok); flex:none}
+
+.seg-btn{display:flex; gap:6px; margin:10px 0 0}
+.seg-btn button{flex:1; padding:11px 8px; border-radius:12px; background:var(--surface-2); font-size:13.5px; font-weight:700; color:var(--ink-3)}
+.seg-btn button.on{background:var(--accent); color:var(--on-accent)}
+
+/* 지문 + 인라인 선택 */
+.psg{background:var(--surface); border-radius:16px; padding:16px; box-shadow:var(--shadow); font-size:15px; line-height:2.35; letter-spacing:0}
+.pick{display:inline-flex; gap:3px; vertical-align:middle; margin:0 2px; padding:2px; background:var(--surface-2); border-radius:9px; border:1px solid var(--line)}
+.pick button{padding:3px 8px; border-radius:7px; font-size:13.5px; font-weight:600; line-height:1.35; color:var(--ink-2); white-space:nowrap}
+.pick button.on{background:var(--accent); color:var(--on-accent); font-weight:700}
+.pick.ok{border-color:var(--ok)} .pick.no{border-color:var(--no)}
+.pick button.ans{box-shadow:inset 0 0 0 2px var(--ok)}
+.bn{display:inline-block; min-width:15px; font-family:'Archivo',sans-serif; font-size:10.5px; font-weight:700; color:var(--accent); vertical-align:super}
+
+/* 어법 오류 수정 */
+.seg{display:inline; border-bottom:2px solid var(--line-2); cursor:pointer; padding-bottom:1px}
+.seg.mk{border-bottom-color:var(--no); background:var(--no-soft); border-radius:4px; padding:1px 2px}
+.seg-lab{font-family:'Archivo',sans-serif; font-size:11px; font-weight:700; color:var(--accent); margin-right:2px}
+.fixrow{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--line)}
+.fixrow:last-child{border-bottom:0}
+.fixrow .lb{width:20px; font-family:'Archivo',sans-serif; font-weight:700; color:var(--accent)}
+.fixrow input{flex:1; padding:9px 11px; border-radius:11px; border:1.5px solid var(--line-2); background:var(--surface-2); font-size:14px}
+.fixrow input:focus{border-color:var(--accent); outline:none; background:var(--surface)}
+
+/* TF */
+.tfrow{display:flex; align-items:flex-start; gap:10px; padding:12px 0; border-bottom:1px solid var(--line)}
+.tfrow:last-child{border-bottom:0}
+.tfrow .q{flex:1; font-size:14px; line-height:1.6}
+.tfbtns{display:flex; gap:5px; flex:none}
+.tfbtns button{width:38px; height:34px; border-radius:10px; background:var(--surface-2); font-family:'Archivo',sans-serif; font-weight:700; font-size:14px; color:var(--ink-3)}
+.tfbtns button.on{background:var(--accent); color:var(--on-accent)}
+.tfbtns button.good{background:var(--ok); color:#fff}
+.tfbtns button.bad{background:var(--no); color:#fff}
+
+/* 순서배열 */
+.ord{display:flex; align-items:flex-start; gap:11px; width:100%; text-align:left; padding:14px 15px; background:var(--surface); border-radius:15px; box-shadow:var(--shadow); font-size:14px; line-height:1.65; margin-bottom:10px}
+.ord .lb{width:26px; height:26px; border-radius:8px; background:var(--surface-2); display:grid; place-items:center; font-family:'Archivo',sans-serif; font-weight:700; font-size:12.5px; flex:none; color:var(--ink-3)}
+.ord.on{box-shadow:0 0 0 2px var(--accent), var(--shadow)}
+.ord.on .lb{background:var(--accent); color:var(--on-accent)}
+.ord .rank{font-family:'Archivo',sans-serif; font-weight:700; color:var(--accent); flex:none}
+
+/* 문장삽입 슬롯 */
+.slot{display:inline-grid; place-items:center; width:27px; height:27px; border-radius:50%; border:1.5px dashed var(--line-2); font-family:'Archivo',sans-serif; font-weight:700; font-size:12px; color:var(--ink-3); margin:0 3px; vertical-align:middle}
+.slot.on{background:var(--accent); border-style:solid; border-color:var(--accent); color:var(--on-accent)}
+.slot.ans{border-color:var(--ok); border-style:solid; color:var(--ok)}
+.given{background:var(--accent-soft); border-radius:14px; padding:14px 15px; font-size:14.5px; line-height:1.7; font-weight:600}
+
+/* 영작 */
+.ko{font-size:15.5px; font-weight:700; line-height:1.65; letter-spacing:-.01em}
+.wr-in{width:100%; min-height:96px; padding:14px 15px; border-radius:15px; border:1.5px solid var(--line-2); background:var(--surface); font-size:15px; line-height:1.6; resize:vertical}
+.wr-in:focus{border-color:var(--accent); outline:none}
+.selfmark{display:flex; gap:8px; margin-top:10px}
+.selfmark button{flex:1; padding:12px; border-radius:12px; font-size:14px; font-weight:700; background:var(--surface-2); color:var(--ink-2)}
+.selfmark button.o.on{background:var(--ok); color:#fff}
+.selfmark button.x.on{background:var(--no); color:#fff}
+.imp{display:inline-block; font-size:10.5px; font-weight:700; color:var(--no); background:var(--no-soft); padding:2px 8px; border-radius:var(--r-pill); margin-left:6px}
+.prog-track{height:6px; border-radius:var(--r-pill); background:var(--surface-3); overflow:hidden; margin-top:8px}
+.prog-track > i{display:block; height:100%; background:var(--accent)}
+</style>
+
+</head>
+<body>
+<div class="app" id="app">
+
+  <section class="screen on" id="s-home">
+    <div class="greet">
+      <div>
+        <div class="hi" id="home-hi">리뷰테스트 · [22개정] 천재(강상구)</div>
+        <div class="nm">영어 II · 1과</div>
+      </div>
+      <button class="theme-btn" id="theme-toggle" aria-label="화면 밝기 바꾸기"></button>
+    </div>
+
+    <div class="pad"><div class="hero">
+      <div class="hero-top">
+        <div class="ava" id="hero-ava"></div>
+        <div>
+          <div class="badges"><span class="lv" id="hero-lv">Lv.1</span><span class="tier" id="hero-tier">브론즈</span></div>
+          <h3>Constantly<br>in Motion</h3>
+        </div>
+      </div>
+      <div class="xp-row"><span class="num" id="hero-xp">0/354 문항</span><span class="num" id="hero-pct">0%</span></div>
+      <div class="bar"><i id="hero-bar" style="width:0%"></i></div>
+      <div class="bubble" id="hero-msg">파트를 하나 골라서 시작해 보자. 어휘 선택부터 순서대로 가는 걸 추천해 📘</div>
+    </div></div>
+
+    <div class="pad" style="margin-top:24px">
+      <div class="sec"><h2>파트 선택</h2><span class="more">7개 파트</span></div>
+      <div class="card" id="part-list"></div>
+    </div>
+
+    <div class="pad" style="margin-top:22px">
+      <div class="sec"><h2>본문</h2><span class="more">읽고 확인하기</span></div>
+      <div class="card" id="passage-list"></div>
+    </div>
+    <div style="height:20px"></div>
+  </section>
+
+
+  <section class="screen" id="s-login">
+    <div style="padding:56px 22px 0">
+      <div style="width:64px;height:64px;border-radius:20px;background:var(--accent-soft);display:grid;place-items:center;margin-bottom:20px">
+        <svg viewBox="0 0 24 24" style="width:30px;height:30px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5Z"/></svg>
+      </div>
+      <h2 style="margin:0;font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.3">영어 II · 1과<br>리뷰테스트</h2>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-2);line-height:1.65">이름을 입력하면 시작합니다.<br>결과는 선생님께 자동으로 전달돼요.</p>
+      <input class="answer-in" id="login-name" placeholder="이름 (예: 김지민)" maxlength="12" autocomplete="name"
+        style="margin-top:26px" enterkeyhint="go">
+      <p class="hint" id="login-hint">출석부에 적힌 이름 그대로 써 주세요.</p>
+    </div>
+    <div class="cta-wrap"><button class="cta" id="login-cta" disabled>이름을 입력해 주세요</button></div>
+  </section>
+
+  <section class="screen" id="s-setup">
+    <header class="top">
+      <button class="icon-btn" data-back="home" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <h1 id="setup-title">파트</h1><span></span>
+    </header>
+    <div class="pad" style="margin-top:18px" id="setup-body"></div>
+    <div style="height:110px"></div>
+    <div class="cta-wrap"><button class="cta" id="setup-cta">시작하기</button></div>
+  </section>
+
+  <section class="screen" id="s-quiz">
+    <div class="q-top">
+      <div class="q-top-in">
+        <button class="icon-btn" id="quiz-exit" aria-label="나가기"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <div class="q-count num"><b id="q-now">1</b> / <span id="q-total">9</span></div>
+        <div class="q-timer num" id="q-timer">00:00</div>
+      </div>
+      <div class="q-bar"><i id="q-bar" style="width:0%"></i></div>
+    </div>
+    <div class="pad" style="padding-top:18px" id="quiz-body"></div>
+    <div style="height:110px"></div>
+    <div class="cta-wrap"><button class="cta" id="quiz-cta">다음</button></div>
+  </section>
+
+  <section class="screen" id="s-result">
+    <header class="top">
+      <span></span><h1>채점 결과</h1>
+      <button class="icon-btn" data-back="home" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </header>
+    <div class="pad" style="margin-top:18px"><div class="card score-card" id="score-card"></div></div>
+    <div class="pad" style="margin-top:22px">
+      <div class="sec"><h2>문항별 결과</h2><span class="more">탭하면 펼쳐져요</span></div>
+      <div class="card" id="review-list"></div>
+    </div>
+    <div style="height:110px"></div>
+    <div class="cta-wrap"><button class="cta" id="result-cta">홈으로</button></div>
+  </section>
+
+  <section class="screen" id="s-read">
+    <header class="top">
+      <button class="icon-btn" data-back="home" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <h1 id="read-title">본문</h1>
+      <button class="icon-btn" id="read-ko" aria-label="해석 보기"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></button>
+    </header>
+    <div class="pad" style="margin-top:16px" id="read-body"></div>
+    <div style="height:30px"></div>
+  </section>
+
+  <section class="screen" id="s-record">
+    <header class="top"><span></span><h1>기록</h1><span></span></header>
+    <div id="record-body"></div>
+    <div style="height:24px"></div>
+  </section>
+
+  <section class="screen" id="s-my">
+    <header class="top"><span></span><h1>마이</h1><span></span></header>
+    <div class="pad" style="margin-top:14px">
+      <div class="card prof">
+        <div class="ava" id="my-ava"></div>
+        <div style="flex:1"><div class="nm" id="my-name">지민님</div><div class="sub" id="my-sub">Lv.1 · 브론즈</div></div>
+      </div>
+    </div>
+    <div class="pad" style="margin-top:16px"><div class="tiles" id="my-tiles"></div></div>
+    <div class="pad" style="margin-top:20px">
+      <div class="sec"><h2>설정</h2></div>
+      <div class="card" id="settings"></div>
+    </div>
+    <div class="pad" style="margin-top:16px">
+      <p style="font-size:11.5px;color:var(--ink-3);line-height:1.7;margin:0">
+        본 자료의 지문·문항 저작권은 원 저작권자에게 있습니다. 학원 내부 학습용 프로토타입이며, 기록은 이 브라우저에만 저장됩니다.
+      </p>
+    </div>
+    <div style="height:24px"></div>
+  </section>
+
+  <nav class="tabs" id="tabs"></nav>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+const C = {"vocab":[{"sec":"본문","no":"01","text":"We often see individuals who manage to «1» «2» impossible tasks. It almost appears as if they possessed the ability to «3» their own spirits. They could be innovators who achieve success after «4» trials and errors, athletes who push themselves «5» until they go beyond their limits, or activists who are «6» to take risks to «7» what they believe is right. They make us «8» \"What could be the driving force behind them? What makes their lives meaningful to them and even to us?\" Let us meet two «9» individuals and try to answer these questions.","blanks":[{"opt":["accomplish","accompany"],"ans":0},{"opt":["seemly","seemingly"],"ans":1},{"opt":["ignite","ignore"],"ans":0},{"opt":["countable","countless"],"ans":1},{"opt":["tirelessly","tiresomely"],"ans":0},{"opt":["willful","willing"],"ans":1},{"opt":["pursue","persuade"],"ans":0},{"opt":["wonder:","wander:"],"ans":0},{"opt":["prominent","permanent"],"ans":0}]},{"sec":"본문","no":"02","text":"«1» stay positive, and learn to do things your own way.\" Luca \"Lazylegz\" Patuelli has lived by this motto his whole life. Born in 1984 with a «2» disorder affecting the bones and joints of the body, he has «3» a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders. Despite the «4» challenges, Lazylegz learned at an early age about the power of adapting positively to any situation. Always «5» to stay active and join his friends in any activity, he managed to «6» in activities such as soccer, football, and baseball. He also «7» in learning how to rock climb and ski, and he found ways to join his high school swim and dive teams. As he explored the full range of physical activities, skateboarding developed into a «8» «9» for him.","blanks":[{"opt":["\"Adapt,","\"Adopt,"],"ans":0},{"opt":["rare","raw"],"ans":0},{"opt":["undergone","undertaken"],"ans":0},{"opt":["physical","psychological"],"ans":0},{"opt":["reluctant","eager"],"ans":1},{"opt":["participate","anticipate"],"ans":0},{"opt":["proceeded","succeeded"],"ans":1},{"opt":["particular","partial"],"ans":0},{"opt":["fashion","passion"],"ans":1}]},{"sec":"본문","no":"03","text":"In 1999, at the age of 15, Lazylegz was «1» to breakdancing. Immediately, he was «2» to the music, the culture, and most of all, the «3» movements. He slowly began creating a «4» style that made the most of his upper body strength. By using his crutches as «5» of his arms, Bboy Lazylegz was born! As a professional dancer, he «6» and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International. He created ILL-Abilities in 2007, an international Bboy crew «7» of some of the world's best dancers who are differently «8» \"We have a message, and that message is No excuses, no limits. We want to encourage people of all abilities, all ages, and all races to «9» their passion, whatever it is. Find a way to do it your «10» way, and that's what it is all about.\"","blanks":[{"opt":["induced","introduced"],"ans":1},{"opt":["attracted","attached"],"ans":0},{"opt":["challenging","challenged"],"ans":0},{"opt":["uniform","unique"],"ans":1},{"opt":["expansions","extensions"],"ans":1},{"opt":["competed","completed"],"ans":0},{"opt":["compared","composed"],"ans":1},{"opt":["abled.","enabled."],"ans":0},{"opt":["persuade","pursue"],"ans":1},{"opt":["own","owe"],"ans":0}]},{"sec":"본문","no":"04","text":"With dancing «1» part of his identity, Lazylegz wanted to see how far he could truly go. In 2009, he graduated from Montreal's Concordia University with a degree in business. Combining his passion for dance with his knowledge of «2» the masses, he has become a strong «3» for inclusion and integration, by bringing people of all abilities together through the power of dance. Just as his dancing reached a new «4» in «5» and his message drew international attention, Lazylegz was given the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics. The past few years have been exciting for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world continues to «6» others. As a loving husband and «7» father, he is «8» to helping his children grow up in a society where people of all abilities can come together and share their passions despite their differences.","blanks":[{"opt":["clearly","cleanly"],"ans":0},{"opt":["enraging","engaging"],"ans":1},{"opt":["advocate","adversary"],"ans":0},{"opt":["peek","peak"],"ans":1},{"opt":["maturity","majority"],"ans":0},{"opt":["inspire","conspire"],"ans":0},{"opt":["devoid","devoted"],"ans":1},{"opt":["committed","permitted"],"ans":0}]},{"sec":"본문","no":"05","text":"\"Where in the world would I rather be than on the front line of history?\" Born in Connecticut, United States, in 1973, Lynsey Addario developed an early «1» for photography. Her father gave her an old 35mm camera when she was about 12 years old. She started reading books on how to take photographs. Too shy to «2» people, she took pictures of flowers and the moon. Despite her love for taking pictures, she never learned photography «3» Her parents taught her to «4» diverse cultures and «5» about the world beyond her «6» surroundings. She studied international «7» and Italian at college. After «8» she moved to Argentina to study Spanish, and it was there that she started working as a news photographer.","blanks":[{"opt":["passion","fashion"],"ans":0},{"opt":["reproach","approach"],"ans":1},{"opt":["formally.","formerly."],"ans":0},{"opt":["depreciate","appreciate"],"ans":1},{"opt":["inquire","acquire"],"ans":0},{"opt":["intermediate","immediate"],"ans":1},{"opt":["relatives","relations"],"ans":1},{"opt":["graduation,","graduality,"],"ans":0}]},{"sec":"본문","no":"06","text":"Addario's career took a «1» turn when she went to Afghanistan in 2000. Her photographs captured the grief, «2» and courage of Afghan women. This body of work gained international «3» serving as a stepping stone for Addario's future achievements. Over the years, Addario's work has taken her to many regions «4» by war, including Iraq, Sudan, Libya, and Syria. She knows very well what could happen in the wars: she was captured twice and was even «5» with her life. Time and again, however, she has risked her life to capture images that speak volumes about the suffering of those caught in the «6» between nations. \"The idea of me going to a war zone was out of the question. Then came 9/11, and it was such a defining moment in history that I felt like I needed to cover it. From there I ended up covering the war in Iraq in 2003 because again, I felt like I needed to be there. Young soldiers of my generation were going in to fight, and I thought it was important to «7» the war. I'm lucky because I've «8» I'm now at the point in my life and my career where many of my friends are not. And so I think it's important to realize there is a reason I'm still here, and I have to keep «9» forward.\"","blanks":[{"opt":["significant","insignificant"],"ans":0},{"opt":["resilience,","resistance,"],"ans":0},{"opt":["recognition,","cognition,"],"ans":0},{"opt":["worn","torn"],"ans":1},{"opt":["threatened","treated"],"ans":0},{"opt":["conflicts","confirms"],"ans":0},{"opt":["department","document"],"ans":1},{"opt":["survived.","revived."],"ans":0},{"opt":["pulling","pushing"],"ans":1}]},{"sec":"본문","no":"07","text":"Lynsey Addario has been capturing images that have defined the face of international «1» and humanitarian «2» She has «3» herself to throwing light not only on «4» stories of individuals impacted by war, poverty, and social «5» but also on touching moments of «6» and hope. By capturing the «7» of humanity in its raw and «8» forms, Addario continues her journey as one of the most «9» and «10» voices in the field of news photography.","blanks":[{"opt":["conflicts","conflections"],"ans":0},{"opt":["critics.","crises."],"ans":1},{"opt":["dedicated","dictated"],"ans":0},{"opt":["unfold","untold"],"ans":1},{"opt":["injustice,","insensitivity,"],"ans":0},{"opt":["resistance","resilience"],"ans":1},{"opt":["essence","absence"],"ans":0},{"opt":["unfilled","unfiltered"],"ans":1},{"opt":["influential","indifferent"],"ans":0},{"opt":["respective","respected"],"ans":1}]},{"sec":"Read Further","no":"08","text":"I have found that nothing in life is of value «1» you take risks. Nothing. Now I'm sure in your «2» in school, in applying to college, in picking your major, in deciding what you want to do with life, people have told you to make sure you have something to \"fall back on.\" But I never understood that «3» having something to fall back on. If I'm going to fall, I don't want to fall back on anything. I want to fall forward. This is what I mean. Reggie Jackson «4» out 2,600 times in his career, the most in the history of baseball. But you don't hear about it. People remember the home runs. Fall forward. Thomas Edison «5» 1,000 failed experiments because the 1,001st was the light bulb. Fall forward. Every failed experiment is one step closer to success. You've got to take risks. I want to talk to you about why that's so important. You will fail at some «6» in your lives. You will lose. You will «7» yourselves. There is no doubt about it. I know that's probably not a «8» message for a graduation ceremony but I'm telling you. «9» it because it's inevitable.","blanks":[{"opt":["if","unless"],"ans":1},{"opt":["experiences","experiments"],"ans":0},{"opt":["concept,","conception,"],"ans":0},{"opt":["struck","stuck"],"ans":0},{"opt":["constructed","conducted"],"ans":1},{"opt":["period","point"],"ans":1},{"opt":["embarrass","embrace"],"ans":0},{"opt":["additional","traditional"],"ans":1},{"opt":["Embrace","Replace"],"ans":0}]},{"sec":"Read Further","no":"09","text":"In the acting business, you fail all the time. Early on in my «1» I auditioned for a part in a Broadway musical. A perfect role for me, I thought, «2» for the fact that I can't sing. So I'm in the wings. I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting «3» and smaller. I didn't get the job. But here's the thing. I didn't «4» I didn't fall back. I walked out of there to prepare for the next audition and the one after that. I continued to fail and fail, but it didn't «5» There is an old saying: if you hang around the barbershop long «6» sooner or later you're going to get a haircut. So you will catch a break, which is «7» what I did. Last year I did a play called Fences on Broadway. It was at the Court Theater. It was at the same theater that I failed that first audition 30 years «8» The point is every graduate here today has the training and the «9» to succeed. But do you have the «10» to fail?","blanks":[{"opt":["career,","carrier,"],"ans":0},{"opt":["accept","except"],"ans":1},{"opt":["shorter","smaller"],"ans":1},{"opt":["quit.","quiet."],"ans":0},{"opt":["matter.","mutter."],"ans":0},{"opt":["enough,","scarce,"],"ans":0},{"opt":["excitedly","exactly"],"ans":1},{"opt":["prior.","primary."],"ans":0},{"opt":["talent","task"],"ans":0},{"opt":["carriage","courage"],"ans":1}]}],"gram":[{"sec":"본문","no":"01","text":"We often see individuals who manage «1» «2» impossible tasks. It almost appears as if they «3» the ability to ignite their own spirits. They could be innovators who achieve success after countless trials and errors, athletes who push «4» «5» until they go beyond their limits, or activists who are willing to take risks to pursue «6» they believe «7» right. They make us «8» \"What could be the driving force behind them? What makes their lives «9» to them and even to us?\" Let us «10» two prominent individuals and try «11» these questions.","blanks":[{"opt":["to accomplish","accomplishing"],"ans":0},{"opt":["seemingly","seeming"],"ans":0},{"opt":["possess","possessed"],"ans":1},{"opt":["themselves","them"],"ans":0},{"opt":["tireless","tirelessly"],"ans":1},{"opt":["what","that"],"ans":0},{"opt":["are","is"],"ans":1},{"opt":["wonder:","wondered:"],"ans":0},{"opt":["meaningfully","meaningful"],"ans":1},{"opt":["meet","meeting"],"ans":0},{"opt":["answering","to answer"],"ans":1}]},{"sec":"본문","no":"02","text":"\"Adapt, stay «1» and learn «2» things your own way.\" Luca \"Lazylegz\" Patuelli «3» by this motto his whole life. «4» in 1984 with a rare disorder «5» the bones and joints of the body, he «6» a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders. «7» the physical challenges, Lazylegz learned at an early age about the power of adapting «8» to any situation. Always «9» «10» «11» and join his friends in any activity, he managed «12» in activities such as soccer, football, and baseball. He also succeeded in learning how to rock climb and ski, and he found ways to join his high school swim and dive teams. As he explored the full range of physical activities, skateboarding developed into a particular passion for him.","blanks":[{"opt":["positive,","positively,"],"ans":0},{"opt":["to do","doing"],"ans":0},{"opt":["lived","has lived"],"ans":1},{"opt":["Born","Bearing"],"ans":0},{"opt":["affected","affecting"],"ans":1},{"opt":["has undergone","underwent"],"ans":0},{"opt":["Although","Despite"],"ans":1},{"opt":["positively","positive"],"ans":0},{"opt":["eager","eagerly"],"ans":0},{"opt":["to stay","staying"],"ans":0},{"opt":["actively","active"],"ans":1},{"opt":["to participate","participating"],"ans":0}]},{"sec":"본문","no":"03","text":"In 1999, at the age of 15, Lazylegz was «1» to breakdancing. Immediately, he was «2» to the music, the culture, and most of all, the challenging movements. He slowly began creating a unique style that «3» the most of his upper body strength. By «4» his crutches as extensions of his arms, Bboy Lazylegz was born! As a professional dancer, he competed and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International. He created ILL-Abilities in 2007, an international Bboy crew «5» of some of the world's best dancers who «6» differently «7» \"We have a message, and that message is No excuses, no limits. We want to «8» people of all abilities, all ages, and all races «9» their passion, «10» it is. Find a way to do it your own way, and that's «11» it is all about.\"","blanks":[{"opt":["introduced","introducing"],"ans":0},{"opt":["attracting","attracted"],"ans":1},{"opt":["made","make"],"ans":0},{"opt":["used","using"],"ans":1},{"opt":["composed","composing"],"ans":0},{"opt":["is","are"],"ans":1},{"opt":["abled.","abling."],"ans":0},{"opt":["encourage","encouraging"],"ans":0},{"opt":["pursuing","to pursue"],"ans":1},{"opt":["whatever","what"],"ans":0},{"opt":["that","what"],"ans":1}]},{"sec":"본문","no":"04","text":"With dancing clearly part of his identity, Lazylegz wanted to see «1» far he could truly go. In 2009, he «2» from Montreal's Concordia University with a degree in business. «3» his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance. Just as his dancing reached a new peak in maturity and his message drew international attention, Lazylegz was «4» the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics. The past few years have been «5» for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world «6» to inspire others. As a loving husband and devoted father, he is committed to «7» his children grow up in a society «8» people of all abilities can come together and «9» their passions «10» their differences.","blanks":[{"opt":["how","what"],"ans":0},{"opt":["was graduated","graduated"],"ans":1},{"opt":["Combining","Combined"],"ans":0},{"opt":["given","giving"],"ans":0},{"opt":["excited","exciting"],"ans":1},{"opt":["continues","continue"],"ans":0},{"opt":["helping","help"],"ans":0},{"opt":["where","which"],"ans":0},{"opt":["share","sharing"],"ans":0},{"opt":["although","despite"],"ans":1}]},{"sec":"본문","no":"05","text":"\"Where in the world would I rather «1» than on the front line of history?\" «2» in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography. Her father gave her an old 35mm camera when she was about 12 years old. She started reading books on how «3» photographs. Too «4» «5» people, she took pictures of flowers and the moon. «6» her love for taking pictures, she never learned photography «7» Her parents taught her «8» diverse cultures and «9» about the world beyond her immediate surroundings. She studied international relations and Italian at college. After graduation, she moved to Argentina «10» Spanish, and it was there «11» she started working as a news photographer.","blanks":[{"opt":["being","be"],"ans":1},{"opt":["Born","Bearing"],"ans":0},{"opt":["to take","taking"],"ans":0},{"opt":["shyly","shy"],"ans":1},{"opt":["to approach","approaching"],"ans":0},{"opt":["Despite","Although"],"ans":0},{"opt":["formally.","formal."],"ans":0},{"opt":["to appreciate","appreciating"],"ans":0},{"opt":["inquired","inquire"],"ans":1},{"opt":["studying","to study"],"ans":1},{"opt":["that","which"],"ans":0}]},{"sec":"본문","no":"06","text":"Addario's career took a significant turn when she went to Afghanistan in 2000. Her photographs captured the grief, resilience, and courage of Afghan women. This body of work gained international recognition, «1» as a stepping stone for Addario's future achievements. Over the years, Addario's work has taken her to many regions «2» by war, «3» Iraq, Sudan, Libya, and Syria. She knows very well «4» could happen in the wars: she «5» twice and was even «6» with her life. Time and again, however, she has risked her life to capture images «7» speak volumes about the suffering of those «8» in the conflicts between nations. \"The idea of me «9» to a war zone was out of the question. Then came 9/11, and it was «10» a defining moment in history «11» I felt like I needed to cover it. From there I ended up «12» the war in Iraq in 2003 because again, I felt like I needed to be there. Young soldiers of my generation were going in to fight, and I thought it was important to document the war. I'm lucky because I've survived. I'm now at the point in my life and my career «13» many of my friends «14» not. And so I think it's important to realize there is a reason I'm still here, and I have to keep «15» forward.\"","blanks":[{"opt":["serving","served"],"ans":0},{"opt":["tearing","torn"],"ans":1},{"opt":["including","included"],"ans":0},{"opt":["what","that"],"ans":0},{"opt":["was captured","captured"],"ans":0},{"opt":["threatened","threatening"],"ans":0},{"opt":["that","what"],"ans":0},{"opt":["catching","caught"],"ans":1},{"opt":["going","go"],"ans":0},{"opt":["such","so"],"ans":0},{"opt":["which","that"],"ans":1},{"opt":["covering","to cover"],"ans":0},{"opt":["where","which"],"ans":0},{"opt":["are","do"],"ans":0},{"opt":["pushing","to push"],"ans":0}]},{"sec":"본문","no":"07","text":"Lynsey Addario has been «1» images that «2» defined the face of international conflicts and humanitarian crises. She has dedicated «3» to «4» light not only on «5» stories of individuals «6» by war, poverty, and social injustice, but also on «7» moments of resilience and hope. By capturing the essence of humanity in «8» raw and «9» forms, Addario continues her journey as one of the most influential and «10» «11» in the field of news photography.","blanks":[{"opt":["capturing","captured"],"ans":0},{"opt":["has","have"],"ans":1},{"opt":["herself","her"],"ans":0},{"opt":["throw","throwing"],"ans":1},{"opt":["untold","untelling"],"ans":0},{"opt":["impacting","impacted"],"ans":1},{"opt":["touching","touched"],"ans":0},{"opt":["their","its"],"ans":1},{"opt":["unfiltered","unfiltering"],"ans":0},{"opt":["respecting","respected"],"ans":1},{"opt":["voices","voice"],"ans":0}]},{"sec":"Read Further","no":"08","text":"I have found that nothing in life is of «1» unless you take risks. Nothing. Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding «2» you want to do with life, people have told you «3» sure you have something to \"fall back on.\" But I never understood that concept, «4» something to fall back on. If I'm going to fall, I don't want to fall back on anything. I want to fall forward. This is «5» I mean. Reggie Jackson struck out 2,600 times in his career, the most in the history of baseball. But you don't hear about it. People remember the home runs. Fall forward. Thomas Edison conducted 1,000 failed experiments «6» the 1,001st was the light bulb. Fall forward. Every failed experiment «7» one step closer to success. You've got to take risks. I want to talk to you about why «8» so important. You will fail at some point in your lives. You will lose. You will embarrass «9» There is no doubt about it. I know «10» probably not a traditional message for a graduation ceremony but I'm telling you. Embrace it because it's «11»","blanks":[{"opt":["value","valuable"],"ans":0},{"opt":["what","that"],"ans":0},{"opt":["to make","making"],"ans":0},{"opt":["having","have"],"ans":0},{"opt":["that","what"],"ans":1},{"opt":["because of","because"],"ans":1},{"opt":["is","are"],"ans":0},{"opt":["that's","is that"],"ans":0},{"opt":["yourselves.","you."],"ans":0},{"opt":["that's","what's"],"ans":0},{"opt":["inevitable.","inevitably."],"ans":0}]},{"sec":"Read Further","no":"09","text":"In the acting business, you fail all the time. Early on in my career, I auditioned for a part in a Broadway musical. A perfect role for me, I thought, except for the fact «1» I can't sing. So I'm in the wings. I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting smaller and smaller. I didn't get the job. But here's the thing. I didn't quit. I didn't fall back. I walked out of there «2» for the next audition and the one after that. I continued to fail and fail, but it didn't matter. There is an old saying: if you hang around the barbershop «3» sooner or later you're going to get a haircut. So you will catch a break, «4» is exactly «5» I did. Last year I did a play «6» Fences on Broadway. It was at the Court Theater. It was at the same theater «7» I failed that first audition 30 years prior. The point is every graduate here today «8» the training and the talent to succeed. But do you have the courage to fail?","blanks":[{"opt":["that","which"],"ans":0},{"opt":["to prepare","preparing"],"ans":0},{"opt":["long enough,","enough long,"],"ans":0},{"opt":["that","which"],"ans":1},{"opt":["what","that"],"ans":0},{"opt":["calling","called"],"ans":1},{"opt":["that","which"],"ans":0},{"opt":["have","has"],"ans":1}]}],"fix":[{"sec":"본문","no":"01","lead":"We often see","seg":[{"L":"A","t":"individuals who manage accomplishing seemingly impossible tasks. It almost appears","wrong":true,"from":"accomplishing","to":"to accomplish"},{"L":"B","t":"as if they possess the ability to ignite their own spirits. They could be","wrong":true,"from":"possess","to":"possessed"},{"L":"C","t":"innovators who achieves success after countless trials and errors,","wrong":true,"from":"achieves","to":"achieve"},{"L":"D","t":"athletes who push them tirelessly until they go beyond their limits, or activists who are willing to take risks to pursue","wrong":true,"from":"them","to":"themselves"},{"L":"E","t":"that they believe is right.","wrong":true,"from":"that","to":"what"},{"L":"F","t":"They make us wondered: \"What could be the driving force behind them?","wrong":true,"from":"wondered:","to":"wonder:"},{"L":"G","t":"What makes their lives meaningfully to them and even to us?\" Let us meet two prominent individuals and","wrong":true,"from":"meaningfully","to":"meaningful"},{"L":"H","t":"try answering these questions.","wrong":true,"from":"answering","to":"to answer"}]},{"sec":"본문","no":"02","lead":"","seg":[{"L":"A","t":"\"Adapt, stay positively, and","wrong":true,"from":"positively,","to":"positive,"},{"L":"B","t":"learn doing things your own way.\" Luca \"Lazylegz\" Patuelli","wrong":true,"from":"doing","to":"to do"},{"L":"C","t":"has lived by this motto his whole life. Born in 1984 with","wrong":false,"from":"","to":""},{"L":"D","t":"a rare disorder affected the bones and joints of the body,","wrong":true,"from":"affected","to":"affecting"},{"L":"E","t":"he underwent a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders.","wrong":true,"from":"underwent","to":"has undergone"},{"L":"F","t":"Although the physical challenges, Lazylegz learned at an early age about the power of","wrong":true,"from":"Although","to":"Despite"},{"L":"G","t":"adapting positive to any situation.","wrong":true,"from":"positive","to":"positively"},{"L":"H","t":"Always eagerly to stay active and join his friends in any activity, he managed to participate in activities such as soccer, football, and baseball. He also succeeded in learning","wrong":true,"from":"eagerly","to":"eager"},{"L":"I","t":"how to rock climb and ski, and he found ways to join his high school swim and dive teams. As he explored the full range of physical activities, skateboarding developed into a particular passion for him.","wrong":false,"from":"","to":""}]},{"sec":"본문","no":"03","lead":"In 1999, at the age of 15, Lazylegz","seg":[{"L":"A","t":"introduced to breakdancing. Immediately, he","wrong":true,"from":"introduced","to":"was introduced"},{"L":"B","t":"attracted to the music, the culture, and most of all, the challenging movements. He slowly began creating a unique style","wrong":true,"from":"attracted","to":"was attracted"},{"L":"C","t":"that made the most of his upper body strength. By using his crutches as extensions of his arms, Bboy Lazylegz was born! As a professional dancer, he competed and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International. He created ILL-Abilities in 2007, an international Bboy crew","wrong":false,"from":"","to":""},{"L":"D","t":"composing of some of the world's best dancers","wrong":true,"from":"composing","to":"composed"},{"L":"E","t":"who are differently abling. \"We have a message, and that message is No excuses, no limits. We want to encourage people of all abilities, all ages, and","wrong":true,"from":"abling.","to":"abled."},{"L":"F","t":"all races pursuing their passion,","wrong":true,"from":"pursuing","to":"to pursue"},{"L":"G","t":"what it is. Find a way to do it your own way, and","wrong":true,"from":"what","to":"whatever"},{"L":"H","t":"that's that it is all about.\"","wrong":true,"from":"that","to":"what"}]},{"sec":"본문","no":"04","lead":"With dancing clearly part of his identity, Lazylegz wanted to see","seg":[{"L":"A","t":"how could he truly go far.","wrong":true,"from":"could he truly go far.","to":"far he could truly go."},{"L":"B","t":"In 2009, he was graduated from Montreal's Concordia University with a degree in business.","wrong":true,"from":"was graduated","to":"graduated"},{"L":"C","t":"Combined his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance. Just as his dancing reached a new peak in maturity and his message drew international attention,","wrong":true,"from":"Combined","to":"Combining"},{"L":"D","t":"Lazylegz gave the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics.","wrong":true,"from":"gave","to":"was given"},{"L":"E","t":"The past few years have been excited for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world","wrong":true,"from":"excited","to":"exciting"},{"L":"F","t":"continue to inspire others. As a loving husband and devoted father,","wrong":true,"from":"continue","to":"continues"},{"L":"G","t":"he is committed to help his children grow up in a society","wrong":true,"from":"help","to":"helping"},{"L":"H","t":"which people of all abilities can come together and","wrong":true,"from":"which","to":"where"},{"L":"I","t":"to share their passions despite their differences.","wrong":true,"from":"to share","to":"share"}]},{"sec":"본문","no":"05","lead":"\"Where in the world","seg":[{"L":"A","t":"would I rather being than on the front line of history?\"","wrong":true,"from":"being","to":"be"},{"L":"B","t":"Born in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography. Her father gave her an old 35mm camera when she was about 12 years old. She started reading books on","wrong":false,"from":"","to":""},{"L":"C","t":"how taking photographs.","wrong":true,"from":"taking","to":"to take"},{"L":"D","t":"Too shy approaching people, she took pictures of flowers and the moon.","wrong":true,"from":"approaching","to":"to approach"},{"L":"E","t":"Although her love for taking pictures, she never learned photography formally. Her parents taught her","wrong":true,"from":"Although","to":"Despite"},{"L":"F","t":"appreciating diverse cultures and","wrong":true,"from":"appreciating","to":"to appreciate"},{"L":"G","t":"inquired about the world beyond her immediate surroundings. She studied international relations and Italian at college. After graduation, she moved to Argentina to study Spanish, and","wrong":true,"from":"inquired","to":"inquire"},{"L":"H","t":"it was there which she started working as a news photographer.","wrong":true,"from":"which","to":"that"}]},{"sec":"본문","no":"06","lead":"Addario's career took a significant turn","seg":[{"L":"A","t":"which she went to Afghanistan in 2000. Her photographs captured the grief, resilience, and courage of Afghan women. This body of work gained international recognition,","wrong":true,"from":"which","to":"when"},{"L":"B","t":"served as a stepping stone for Addario's future achievements. Over the years, Addario's work has taken her to","wrong":true,"from":"served","to":"serving"},{"L":"C","t":"many regions tearing by war, including Iraq, Sudan, Libya, and Syria.","wrong":true,"from":"tearing","to":"torn"},{"L":"D","t":"She knows very well that could happen in the wars:","wrong":true,"from":"that","to":"what"},{"L":"E","t":"she captured twice and","wrong":true,"from":"captured","to":"was captured"},{"L":"F","t":"was even threatening with her life. Time and again, however, she has risked her life","wrong":true,"from":"threatening","to":"threatened"},{"L":"G","t":"to capture images that speak volumes about the suffering of those","wrong":false,"from":"","to":""},{"L":"H","t":"catching in the conflicts between nations. \"The idea of me going to a war zone was out of the question. Then came 9/11, and","wrong":true,"from":"catching","to":"caught"},{"L":"I","t":"it was so a defining moment in history","wrong":true,"from":"so","to":"such"},{"L":"J","t":"when I felt like I needed to cover it.","wrong":true,"from":"when","to":"that"},{"L":"K","t":"From there I ended up to cover the war in Iraq in 2003 because again, I felt like I needed to be there. Young soldiers of my generation were going in to fight, and I thought it was important (L) documenting the war. I'm lucky because I've survived. I'm now at the point in my life and my career (M) where many of my friends do not. And so I think it's important to realize there is a reason I'm still here, and (N) I have to keep to push forward.\"","wrong":true,"from":"to cover","to":"covering"}]},{"sec":"본문","no":"07","lead":"","seg":[{"L":"A","t":"Lynsey Addario has been captured images that have defined the face of international conflicts and humanitarian crises.","wrong":true,"from":"captured","to":"capturing"},{"L":"B","t":"She has dedicated herself to throw light","wrong":true,"from":"throw","to":"throwing"},{"L":"C","t":"not only on untelling stories","wrong":true,"from":"untelling","to":"untold"},{"L":"D","t":"of individuals impacting by war, poverty, and social injustice, but also on","wrong":true,"from":"impacting","to":"impacted"},{"L":"E","t":"touched moments of resilience and hope. By capturing the essence of humanity","wrong":true,"from":"touched","to":"touching"},{"L":"F","t":"in its raw and unfiltering forms, Addario continues her journey as one of","wrong":true,"from":"unfiltering","to":"unfiltered"},{"L":"G","t":"the most influential and respecting voices in the field of news photography.","wrong":true,"from":"respecting","to":"respected"}]},{"sec":"Read Further","no":"08","lead":"I have found that","seg":[{"L":"A","t":"nothing in life is of valuable","wrong":true,"from":"valuable","to":"value"},{"L":"B","t":"unless you take risks. Nothing. Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding","wrong":false,"from":"","to":""},{"L":"C","t":"that you want to do with life,","wrong":true,"from":"that","to":"what"},{"L":"D","t":"people have told you making sure you have something to \"fall back on.\" But I never understood that concept,","wrong":true,"from":"making","to":"to make"},{"L":"E","t":"have something to fall back on. If I'm going to fall, I don't want to fall back on anything. I want to fall forward.","wrong":true,"from":"have","to":"having"},{"L":"F","t":"This is that I mean. Reggie Jackson struck out 2,600 times in his career, the most in the history of baseball. But you don't hear about it. People remember the home runs. Fall forward. Thomas Edison conducted 1,000 failed experiments because the 1,001st was the light bulb. Fall forward. Every failed experiment","wrong":true,"from":"that","to":"what"},{"L":"G","t":"are one step closer to success. You've got to take risks. I want to talk to you about","wrong":true,"from":"are","to":"is"},{"L":"H","t":"why is that so important. You will fail at some point in your lives. You will lose.","wrong":true,"from":"is that","to":"that's"},{"L":"I","t":"You will embarrass you. There is no doubt about it. I know","wrong":true,"from":"you.","to":"yourselves."},{"L":"J","t":"what's probably not a traditional message for a graduation ceremony but I'm telling you.","wrong":true,"from":"what's","to":"that's"},{"L":"K","t":"Embrace it because it's inevitably.","wrong":true,"from":"inevitably.","to":"inevitable."}]},{"sec":"Read Further","no":"09","lead":"In the acting business, you fail all the time. Early on in my career, I auditioned for a part in a Broadway musical. A perfect role for me, I thought, except for","seg":[{"L":"A","t":"the fact which I can't sing. So I'm in the wings. I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting smaller and smaller. I didn't get the job. But here's the thing. I didn't quit. I didn't fall back.","wrong":true,"from":"which","to":"that"},{"L":"B","t":"I walked out of there preparing for the next audition and the one after that. I continued to fail and fail, but it didn't matter. There is an old saying:","wrong":true,"from":"preparing","to":"to prepare"},{"L":"C","t":"if you hang around the barbershop enough long, sooner or later you're going to get a haircut. So you will catch a break,","wrong":true,"from":"enough long,","to":"long enough,"},{"L":"D","t":"that is exactly what I did.","wrong":true,"from":"that","to":"which"},{"L":"E","t":"Last year I did a play calling Fences on Broadway. It was at the Court Theater. It was","wrong":true,"from":"calling","to":"called"},{"L":"F","t":"at the same theater which I failed that first audition 30 years prior. The point is","wrong":true,"from":"which","to":"that"},{"L":"G","t":"every graduate here today have the training and the talent to succeed. But do you have the courage to fail?","wrong":true,"from":"have","to":"has"}]}],"tf":[{"sec":"본문","no":"01","passage":"We often see individuals who manage to accomplish seemingly impossible tasks. It almost appears as if they possessed the ability to ignite their own spirits. They could be innovators who achieve success after countless trials and errors, athletes who push themselves tirelessly until they go beyond their limits, or activists who are willing to take risks to pursue what they believe is right. They make us wonder: \"What could be the driving force behind them? What makes their lives meaningful to them and even to us?\" Let us meet two prominent individuals and try to answer these questions.","st":["People who achieve seemingly impossible tasks are described as having the ability to inspire their own spirits.","Innovators are defined as individuals who achieve success immediately without any failures.","The athletes mentioned in the text stop pushing themselves once they reach their physical limits.","Activists are characterized by their willingness to accept risks for the sake of their beliefs."],"ans":["T","F","F","T"]},{"sec":"본문","no":"02","passage":"\"Adapt, stay positive, and learn to do things your own way.\" Luca \"Lazylegz\" Patuelli has lived by this motto his whole life. Born in 1984 with a rare disorder affecting the bones and joints of the body, he has undergone a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders. Despite the physical challenges, Lazylegz learned at an early age about the power of adapting positively to any situation. Always eager to stay active and join his friends in any activity, he managed to participate in activities such as soccer, football, and baseball. He also succeeded in learning how to rock climb and ski, and he found ways to join his high school swim and dive teams. As he explored the full range of physical activities, skateboarding developed into a particular passion for him.","st":["Luca Patuelli has undergone a total of 16 surgeries since he was seven months old.","Luca’s physical challenges prevented him from participating in any sports with his friends.","Luca learned how to rock climb and ski, and he found ways to join high school swim and dive teams.","Luca's motto suggests that people should follow traditional ways rather than their own way.","Skateboarding became a particular passion for Luca as he explored various physical activities. T F TF 40"],"ans":["T","F","T","F","T"]},{"sec":"본문","no":"03","passage":"In 1999, at the age of 15, Lazylegz was introduced to breakdancing. Immediately, he was attracted to the music, the culture, and most of all, the challenging movements. He slowly began creating a unique style that made the most of his upper body strength. By using his crutches as extensions of his arms, Bboy Lazylegz was born! As a professional dancer, he competed and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International. He created ILL-Abilities in 2007, an international Bboy crew composed of some of the world's best dancers who are differently abled. \"We have a message, and that message is No excuses, no limits. We want to encourage people of all abilities, all ages, and all races to pursue their passion, whatever it is. Find a way to do it your own way, and that's what it is all about.\"","st":["Lazylegz started breakdancing when he was 15 years old in 1999.","Lazylegz developed a dancing style that primarily focused on his lower body strength.","He used crutches as extensions of his arms to create his unique breakdancing moves.","ILL-Abilities is a dance crew consisting only of dancers without any physical disabilities.","Lazylegz has participated in various international dance events as a professional dancer.","The message of the crew ILL-Abilities is to find excuses for why things cannot be done. T F TF 41"],"ans":["T","F","T","F","T","F"]},{"sec":"본문","no":"04","passage":"With dancing clearly part of his identity, Lazylegz wanted to see how far he could truly go. In 2009, he graduated from Montreal's Concordia University with a degree in business. Combining his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance. Just as his dancing reached a new peak in maturity and his message drew international attention, Lazylegz was given the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics. The past few years have been exciting for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world continues to inspire others. As a loving husband and devoted father, he is committed to helping his children grow up in a society where people of all abilities can come together and share their passions despite their differences.","st":["Lazylegz obtained a degree in dance from Concordia University in 2009.","Lazylegz uses dance as a tool to promote inclusion and integration among people of all abilities.","Lazylegz performed as a headliner at the opening ceremony of the Vancouver 2010 Winter Paralympics.","Lazylegz's message of adaptation gained international attention before his dance reached its peak maturity.","Lazylegz is committed to creating a society where people's differences do not prevent them from sharing their passions.","Lazylegz's primary goal is to prove that he is the most talented dancer in the world. T F TF 42"],"ans":["F","T","T","F","T","F"]},{"sec":"본문","no":"05","passage":"\"Where in the world would I rather be than on the front line of history?\" Born in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography. Her father gave her an old 35mm camera when she was about 12 years old. She started reading books on how to take photographs. Too shy to approach people, she took pictures of flowers and the moon. Despite her love for taking pictures, she never learned photography formally. Her parents taught her to appreciate diverse cultures and inquire about the world beyond her immediate surroundings. She studied international relations and Italian at college. After graduation, she moved to Argentina to study Spanish, and it was there that she started working as a news photographer.","st":["Lynsey Addario received formal training in photography during her childhood.","Addario initially focused on photographing nature because she was too shy to approach people.","Her parents encouraged her to value various cultures and explore the world beyond her surroundings.","In college, she chose to major in photography and international relations.","She began her professional career as a news photographer while staying in Argentina.","Her father gave her a 35mm camera as a gift when she was around 12 years old.","She moved to Argentina immediately before graduating from college to study Spanish. T F TF 43"],"ans":["F","T","T","F","T","T","F"]},{"sec":"본문","no":"06","passage":"Addario's career took a significant turn when she went to Afghanistan in 2000. Her photographs captured the grief, resilience, and courage of Afghan women. This body of work gained international recognition, serving as a stepping stone for Addario's future achievements. Over the years, Addario's work has taken her to many regions torn by war, including Iraq, Sudan, Libya, and Syria. She knows very well what could happen in the wars: she was captured twice and was even threatened with her life. Time and again, however, she has risked her life to capture images that speak volumes about the suffering of those caught in the conflicts between nations. \"The idea of me going to a war zone was out of the question. Then came 9/11, and it was such a defining moment in history that I felt like I needed to cover it. From there I ended up covering the war in Iraq in 2003 because again, I felt like I needed to be there. Young soldiers of my generation were going in to fight, and I thought it was important to document the war. I'm lucky because I've survived. I'm now at the point in my life and my career where many of my friends are not. And so I think it's important to realize there is a reason I'm still here, and I have to keep pushing forward.\"","st":["Addario's career underwent a major change when she visited Afghanistan in 2000.","Addario's photographs of Afghan women received little attention and failed to gain international recognition.","Addario has faced life-threatening situations, including being captured twice during her work.","From the start of her career, Addario always believed that going to war zones was a necessary part of her job.","The events of 9/11 served as a defining moment that motivated Addario to cover historical conflicts.","Addario feels a responsibility to continue her work because she survived while many of her friends did not. T F TF 44"],"ans":["T","F","T","F","T","T"]},{"sec":"본문","no":"07","passage":"Lynsey Addario has been capturing images that have defined the face of international conflicts and humanitarian crises. She has dedicated herself to throwing light not only on untold stories of individuals impacted by war, poverty, and social injustice, but also on touching moments of resilience and hope. By capturing the essence of humanity in its raw and unfiltered forms, Addario continues her journey as one of the most influential and respected voices in the field of news photography.","st":["Lynsey Addario has focused her career on documenting international conflicts and humanitarian crises.","Addario's work is limited to showing the devastating impact of war and social injustice on people.","She is widely considered one of the most respected and influential photographers in the field of news photography.","Addario often captures stories that have already been widely covered by other media outlets.","Her photography style involves capturing the essence of humanity in raw and unfiltered forms. T F TF 45"],"ans":["T","F","T","F","T"]},{"sec":"Read Further","no":"08","passage":"I have found that nothing in life is of value unless you take risks. Nothing. Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding what you want to do with life, people have told you to make sure you have something to \"fall back on.\" But I never understood that concept, having something to fall back on. If I'm going to fall, I don't want to fall back on anything. I want to fall forward. This is what I mean. Reggie Jackson struck out 2,600 times in his career, the most in the history of baseball. But you don't hear about it. People remember the home runs. Fall forward. Thomas Edison conducted 1,000 failed experiments because the 1,001st was the light bulb. Fall forward. Every failed experiment is one step closer to success. You've got to take risks. I want to talk to you about why that's so important. You will fail at some point in your lives. You will lose. You will embarrass yourselves. There is no doubt about it. I know that's probably not a traditional message for a graduation ceremony but I'm telling you. Embrace it because it's inevitable.","st":["The speaker believes that taking risks is a necessary condition for finding value in life.","The speaker advises graduates to always have a backup plan to fall back on when they fail.","Reggie Jackson is primarily remembered by people for setting the record for the most strikeouts in baseball history.","Thomas Edison succeeded in inventing the light bulb on his 1,001st experiment after 1,000 failures.","The speaker suggests that failure is an inevitable part of life that should be accepted. T F TF 46"],"ans":["T","F","F","T","T"]},{"sec":"Read Further","no":"09","passage":"In the acting business, you fail all the time. Early on in my career, I auditioned for a part in a Broadway musical. A perfect role for me, I thought, except for the fact that I can't sing. So I'm in the wings. I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting smaller and smaller. I didn't get the job. But here's the thing. I didn't quit. I didn't fall back. I walked out of there to prepare for the next audition and the one after that. I continued to fail and fail, but it didn't matter. There is an old saying: if you hang around the barbershop long enough, sooner or later you're going to get a haircut. So you will catch a break, which is exactly what I did. Last year I did a play called Fences on Broadway. It was at the Court Theater. It was at the same theater that I failed that first audition 30 years prior. The point is every graduate here today has the training and the talent to succeed. But do you have the courage to fail?","st":["The speaker initially thought the role in the Broadway musical was perfect for him, despite his inability to sing.","Listening to the person auditioning before him made the speaker feel more confident about his own performance.","After failing the audition, the speaker decided to quit the acting business and look for a new career.","The speaker eventually performed at the same theater where he had failed an audition 30 years earlier.","The proverb about the barbershop suggests that persistence will eventually lead to an opportunity.","The speaker believes that having talent and training is the only requirement for graduates to succeed. T F TF 47"],"ans":["T","F","F","T","T","F"]}],"order":[{"sec":"본문","no":"01","lead":"We often see individuals who manage to accomplish seemingly impossible tasks.","A":"They make us wonder: \"What could be the driving force behind them? What makes their lives meaningful to them and even to us?\" Let us meet two prominent individuals and try to answer these questions.","B":"It almost appears as if they possessed the ability to ignite their own spirits.","C":"They could be innovators who achieve success after countless trials and errors, athletes who push themselves tirelessly until they go beyond their limits, or activists who are willing to take risks to pursue what they believe is right.","ans":["B","C","A"]},{"sec":"본문","no":"02","lead":"\"Adapt, stay positive, and learn to do things your own way.\"","A":"Despite the physical challenges, Lazylegz learned at an early age about the power of adapting positively to any situation. Always eager to stay active and join his friends in any activity, he managed to participate in activities such as soccer, football, and baseball.","B":"He also succeeded in learning how to rock climb and ski, and he found ways to join his high school swim and dive teams. As he explored the full range of physical activities, skateboarding developed into a particular passion for him.","C":"Luca \"Lazylegz\" Patuelli has lived by this motto his whole life. Born in 1984 with a rare disorder affecting the bones and joints of the body, he has undergone a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders.","ans":["C","A","B"]},{"sec":"본문","no":"03","lead":"In 1999, at the age of 15, Lazylegz was introduced to breakdancing.","A":"As a professional dancer, he competed and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International. He created ILL-Abilities in 2007, an international Bboy crew composed of some of the world's best dancers who are differently abled.","B":"Immediately, he was attracted to the music, the culture, and most of all, the challenging movements. He slowly began creating a unique style that made the most of his upper body strength. By using his crutches as extensions of his arms, Bboy Lazylegz was born!","C":"\"We have a message, and that message is No excuses, no limits. We want to encourage people of all abilities, all ages, and all races to pursue their passion, whatever it is. Find a way to do it your own way, and that's what it is all about.\"","ans":["B","A","C"]},{"sec":"본문","no":"04","lead":"With dancing clearly part of his identity, Lazylegz wanted to see how far he could truly go.","A":"The past few years have been exciting for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world continues to inspire others. As a loving husband and devoted father, he is committed to helping his children grow up in a society where people of all abilities can come together and share their passions despite their differences.","B":"Just as his dancing reached a new peak in maturity and his message drew international attention, Lazylegz was given the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics.","C":"In 2009, he graduated from Montreal's Concordia University with a degree in business. Combining his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance.","ans":["C","B","A"]},{"sec":"본문","no":"05","lead":"\"Where in the world would I rather be than on the front line of history?\"","A":"Her parents taught her to appreciate diverse cultures and inquire about the world beyond her immediate surroundings. She studied international relations and Italian at college. After graduation, she moved to Argentina to study Spanish, and it was there that she started working as a news photographer.","B":"Born in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography. Her father gave her an old 35mm camera when she was about 12 years old. She started reading books on how to take photographs.","C":"Too shy to approach people, she took pictures of flowers and the moon. Despite her love for taking pictures, she never learned photography formally.","ans":["B","C","A"]},{"sec":"본문","no":"06","lead":"Addario's career took a significant turn when she went to Afghanistan in 2000.","A":"Time and again, however, she has risked her life to capture images that speak volumes about the suffering of those caught in the conflicts between nations. \"The idea of me going to a war zone was out of the question. Then came 9/11, and it was such a defining moment in history that I felt like I needed to cover it. From there I ended up covering the war in Iraq in 2003 because again, I felt like I needed to be there.","B":"Young soldiers of my generation were going in to fight, and I thought it was important to document the war. I'm lucky because I've survived. I'm now at the point in my life and my career where many of my friends are not. And so I think it's important to realize there is a reason I'm still here, and I have to keep pushing forward.\"","C":"Her photographs captured the grief, resilience, and courage of Afghan women. This body of work gained international recognition, serving as a stepping stone for Addario's future achievements. Over the years, Addario's work has taken her to many regions torn by war, including Iraq, Sudan, Libya, and Syria. She knows very well what could happen in the wars: she was captured twice and was even threatened with her life.","ans":["C","A","B"]},{"sec":"Read Further","no":"07","lead":"I have found that nothing in life is of value unless you take risks.","A":"Reggie Jackson struck out 2,600 times in his career, the most in the history of baseball. But you don't hear about it. People remember the home runs. Fall forward. Thomas Edison conducted 1,000 failed experiments because the 1,001st was the light bulb. Fall forward. Every failed experiment is one step closer to success.","B":"Nothing. Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding what you want to do with life, people have told you to make sure you have something to \"fall back on.\" But I never understood that concept, having something to fall back on. If I'm going to fall, I don't want to fall back on anything. I want to fall forward. This is what I mean.","C":"You've got to take risks. I want to talk to you about why that's so important. You will fail at some point in your lives. You will lose. You will embarrass yourselves. There is no doubt about it. I know that's probably not a traditional message for a graduation ceremony but I'm telling you. Embrace it because it's inevitable.","ans":["B","A","C"]},{"sec":"Read Further","no":"08","lead":"In the acting business, you fail all the time.","A":"I didn't quit. I didn't fall back. I walked out of there to prepare for the next audition and the one after that. I continued to fail and fail, but it didn't matter. There is an old saying: if you hang around the barbershop long enough, sooner or later you're going to get a haircut. So you will catch a break, which is exactly what I did.","B":"Last year I did a play called Fences on Broadway. It was at the Court Theater. It was at the same theater that I failed that first audition 30 years prior. The point is every graduate here today has the training and the talent to succeed. But do you have the courage to fail?","C":"Early on in my career, I auditioned for a part in a Broadway musical. A perfect role for me, I thought, except for the fact that I can't sing. So I'm in the wings. I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting smaller and smaller. I didn't get the job. But here's the thing.","ans":["C","A","B"]}],"insert":[{"sec":"본문","no":"01","given":"They make us wonder: \"What could be the driving force behind them? What makes their lives meaningful to them and even to us?\"","chunks":["We often see individuals who manage to accomplish seemingly impossible tasks.","It almost appears as if they possessed the ability to ignite their own spirits.","They could be innovators who achieve success after countless trials and errors, athletes who push themselves tirelessly until they go beyond their limits, or activists who are willing to take risks to pursue what they believe is right.","Let us meet two prominent individuals and try to answer these questions."],"slots":4,"ans":3},{"sec":"본문","no":"02","given":"Despite the physical challenges, Lazylegz learned at an early age about the power of adapting positively to any situation.","chunks":["\"Adapt, stay positive, and learn to do things your own way.\" Luca \"Lazylegz\" Patuelli has lived by this motto his whole life.","Born in 1984 with a rare disorder affecting the bones and joints of the body, he has undergone a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders.","Always eager to stay active and join his friends in any activity, he managed to participate in activities such as soccer, football, and baseball.","He also succeeded in learning how to rock climb and ski, and he found ways to join his high school swim and dive teams.","As he explored the full range of physical activities, skateboarding developed into a particular passion for him."],"slots":5,"ans":2},{"sec":"본문","no":"03","given":"By using his crutches as extensions of his arms, Bboy Lazylegz was born!","chunks":["In 1999, at the age of 15, Lazylegz was introduced to breakdancing. Immediately, he was attracted to the music, the culture, and most of all, the challenging movements.","He slowly began creating a unique style that made the most of his upper body strength.","As a professional dancer, he competed and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International.","He created ILL-Abilities in 2007, an international Bboy crew composed of some of the world's best dancers who are differently abled.","\"We have a message, and that message is No excuses, no limits.","We want to encourage people of all abilities, all ages, and all races to pursue their passion, whatever it is. Find a way to do it your own way, and that's what it is all about.\""],"slots":5,"ans":2},{"sec":"본문","no":"04","given":"Just as his dancing reached a new peak in maturity and his message drew international attention, Lazylegz was given the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics.","chunks":["With dancing clearly part of his identity, Lazylegz wanted to see how far he could truly go.","In 2009, he graduated from Montreal's Concordia University with a degree in business.","Combining his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance.","The past few years have been exciting for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world continues to inspire others.","As a loving husband and devoted father, he is committed to helping his children grow up in a society where people of all abilities can come together and share their passions despite their differences."],"slots":5,"ans":3},{"sec":"본문","no":"05","given":"Despite her love for taking pictures, she never learned photography formally.","chunks":["\"Where in the world would I rather be than on the front line of history?\" Born in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography. Her father gave her an old 35mm camera when she was about 12 years old.","She started reading books on how to take photographs.","Too shy to approach people, she took pictures of flowers and the moon.","Her parents taught her to appreciate diverse cultures and inquire about the world beyond her immediate surroundings.","She studied international relations and Italian at college.","After graduation, she moved to Argentina to study Spanish, and it was there that she started working as a news photographer."],"slots":5,"ans":3},{"sec":"본문","no":"06","given":"Time and again, however, she has risked her life to capture images that speak volumes about the suffering of those caught in the conflicts between nations.","chunks":["Addario's career took a significant turn when she went to Afghanistan in 2000. Her photographs captured the grief, resilience, and courage of Afghan women. This body of work gained international recognition, serving as a stepping stone for Addario's future achievements.","Over the years, Addario's work has taken her to many regions torn by war, including Iraq, Sudan, Libya, and Syria.","She knows very well what could happen in the wars: she was captured twice and was even threatened with her life.","\"The idea of me going to a war zone was out of the question.","Then came 9/11, and it was such a defining moment in history that I felt like I needed to cover it.","From there I ended up covering the war in Iraq in 2003 because again, I felt like I needed to be there. Young soldiers of my generation were going in to fight, and I thought it was important to document the war. I'm lucky because I've survived. I'm now at the point in my life and my career where many of my friends are not. And so I think it's important to realize there is a reason I'm still here, and I have to keep pushing forward.\""],"slots":5,"ans":3},{"sec":"본문","no":"07","given":"She has dedicated herself to throwing light not only on untold stories of individuals impacted by war, poverty, and social injustice, but also on touching moments of resilience and hope.","chunks":["Lynsey Addario has been capturing images that have defined the face of international conflicts and humanitarian crises.","By capturing the essence of humanity in its raw and unfiltered forms, Addario continues her journey as one of the most influential and respected voices in the field of news photography.",""],"slots":2,"ans":1},{"sec":"Read Further","no":"08","given":"But I never understood that concept, having something to fall back on.","chunks":["I have found that nothing in life is of value unless you take risks.","Nothing.","Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding what you want to do with life, people have told you to make sure you have something to \"fall back on.\"","If I'm going to fall, I don't want to fall back on anything.","I want to fall forward.","This is what I mean. Reggie Jackson struck out 2,600 times in his career, the most in the history of baseball. But you don't hear about it. People remember the home runs. Fall forward. Thomas Edison conducted 1,000 failed experiments because the 1,001st was the light bulb. Fall forward. Every failed experiment is one step closer to success. You've got to take risks. I want to talk to you about why that's so important. You will fail at some point in your lives. You will lose. You will embarrass yourselves. There is no doubt about it. I know that's probably not a traditional message for a graduation ceremony but I'm telling you. Embrace it because it's inevitable."],"slots":5,"ans":3},{"sec":"Read Further","no":"09","given":"It was at the same theater that I failed that first audition 30 years prior.","chunks":["In the acting business, you fail all the time. Early on in my career, I auditioned for a part in a Broadway musical. A perfect role for me, I thought, except for the fact that I can't sing. So I'm in the wings. I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting smaller and smaller. I didn't get the job. But here's the thing. I didn't quit. I didn't fall back. I walked out of there to prepare for the next audition and the one after that. I continued to fail and fail, but it didn't matter. There is an old saying: if you hang around the barbershop long enough, sooner or later you're going to get a haircut.","So you will catch a break, which is exactly what I did.","Last year I did a play called Fences on Broadway.","It was at the Court Theater.","The point is every graduate here today has the training and the talent to succeed.","But do you have the courage to fail?"],"slots":5,"ans":1}],"write":[{"sec":"본문","no":"06","ko":"\"적응하고, 긍정적으로 생각하며, 자신만의 방식으로 해내는 법을 배워라.\"","en":"\"Adapt, stay positive, and learn to do things your own way.\""},{"sec":"본문","no":"08","ko":"1984년, 몸의 뼈와 관절에 영향을 미치는 희귀 장애를 갖고 태어나, 그는 생후 7개월부터 다리, 엉덩이, 등, 어깨를 지탱하기 위한 수술을 총 16회 받아 왔다.","en":"Born in 1984 with a rare disorder affecting the bones and joints of the body, he has undergone a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders."},{"sec":"본문","no":"18","ko":"그는 2007년 ILL-Abilities라는, 장애를 가진 세계 최고의 춤꾼들로 구성된 국제적 비보이 팀을 만들었다.","en":"He created ILL-Abilities in 2007, an international Bboy crew composed of some of the world's best dancers who are differently abled."},{"sec":"본문","no":"20","ko":"우리는 장애인과 비장애인, 모든 연령, 모든 인종의 사람들이 어떤 것이든 자신의 열정을 추구하도록 격려하고 싶어요.","en":"We want to encourage people of all abilities, all ages, and all races to pursue their passion, whatever it is."},{"sec":"본문","no":"21","ko":"자신만의 방식으로 그걸 할 방법을 찾아야 하고, 그것이 가장 중요해요.\"","en":"Find a way to do it your own way, and that's what it is all about.\""},{"sec":"본문","no":"24","ko":"춤에 대한 열정과 대중의 관심을 끄는 지식을 결합하여, 그는 춤의 힘으로 장애인을 포함한 모든 사람들을 한데 모음으로써 포용과 통합의 강력한 대변인이 되었다.","en":"Combining his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance."},{"sec":"본문","no":"27","ko":"사랑하는 남편이자 헌신적인 아버지로서, 그는 자녀들이 장애인과 비장애인이 서로 다름에도 불구하고 함께 모여 열정을 나눌 수 있 는 사회에서 성장하도록 전념하고 있다.","en":"As a loving husband and devoted father, he is committed to helping his children grow up in a society where people of all abilities can come together and share their passions despite their differences."},{"sec":"본문","no":"29","ko":"1973년 미국 코네티컷주에서 태어난 Lynsey Addario는 일찍이 사진에 대한 열정을 키웠다.","en":"Born in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography."},{"sec":"본문","no":"32","ko":"너무 수줍어서 사람들에게 다가가지 못했기 때문에, 그녀는 꽃과 달의 사진을 찍었다.","en":"Too shy to approach people, she took pictures of flowers and the moon."},{"sec":"본문","no":"36","ko":"졸업 후, 스페인어를 공부하러 아르헨티나로 갔는데, 바로 그곳에서 보도 사진 기자로 일하기 시작했다.","en":"After graduation, she moved to Argentina to study Spanish, and it was there that she started working as a news photographer."},{"sec":"본문","no":"39","ko":"이러한 일련의 작업이 국제적으로 인정받게 되고, Addario의 향후 성과를 향한 디딤돌 역할을 했다.","en":"This body of work gained international recognition, serving as a stepping stone for Addario's future achievements."},{"sec":"본문","no":"42","ko":"하지만 몇 번이고, 그녀는 국가 간의 분쟁에 휘말린 이들의 고통을 알리는 장면을 포착하기 위해 자신의 목숨을 걸었다.","en":"Time and again, however, she has risked her life to capture images that speak volumes about the suffering of those caught in the conflicts between nations."},{"sec":"본문","no":"44","ko":"그런데 9.11테러가 왔고, 이건 내가 취재해야 할 것만 같은 생각이 들었던 결정적인 역사적 순간이었어요.","en":"Then came 9/11, and it was such a defining moment in history that I felt like I needed to cover it."},{"sec":"본문","no":"49","ko":"그래서 내가 아직 여기에 있는 이유가 있다는 걸 잘 아는 게 중요하다고 생각하고, 계속 앞으로 나아가야 해요.\"","en":"And so I think it's important to realize there is a reason I'm still here, and I have to keep pushing forward.\""},{"sec":"본문","no":"51","ko":"그녀는 전쟁, 빈곤, 사회적 불평등의 영향을 받은 개인들의 알려지지 않은 이야기뿐만 아니라, 회복력과 희망의 감동적인 순간들을 부각하는 데에도 자신의 삶을 바쳐 왔다.","en":"She has dedicated herself to throwing light not only on untold stories of individuals impacted by war, poverty, and social injustice, but also on touching moments of resilience and hope."},{"sec":"Read Further","no":"01","ko":"저는 위험을 감수하지 않는다면 인생에서 아무것도 가치 있지 않다는 것을 깨달았습니다.","en":"I have found that nothing in life is of value unless you take risks."},{"sec":"Read Further","no":"03","ko":"여러분이 학교를 다니고, 대학에 지원하고, 전공을 선택하고, 인생에서 하고 싶은 일을 결정할 때, 사람들은 여러분들에게 '뒤를 받 쳐 줄' 무언가를 반드시 가지라고 말했을 겁니다.","en":"Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding what you want to do with life, people have told you to make sure you have something to \"fall back on.\""},{"sec":"Read Further","no":"11","ko":"앞으로 넘어지세요.","en":"Fall forward."},{"sec":"Read Further","no":"14","ko":"모든 실패한 실험은 성공을 향한 한 보의 진전입니다.","en":"Every failed experiment is one step closer to success."},{"sec":"Read Further","no":"15","ko":"여러분은 위험을 감수해야 합니다.","en":"You've got to take risks."},{"sec":"Read Further","no":"22","ko":"이 사실은 피할 수 없으니 받아들이세요.","en":"Embrace it because it's inevitable."},{"sec":"Read Further","no":"29","ko":"하지만 중요한 게 있어요.","en":"But here's the thing."},{"sec":"Read Further","no":"33","ko":"계속해서 실패하고 또 실패했지만 그건 중요하지 않았어요.","en":"I continued to fail and fail, but it didn't matter."},{"sec":"Read Further","no":"34","ko":"옛말에 '이발소에서 오래 기다리면, 머지않아 머리를 자를 차례가 올 것이다.'라고 합니다.","en":"There is an old saying: if you hang around the barbershop long enough, sooner or later you're going to get a haircut."},{"sec":"Read Further","no":"35","ko":"여러분은 기회를 잡을 것입니다. 제가 딱 그랬던 것처럼요.","en":"So you will catch a break, which is exactly what I did."},{"sec":"Read Further","no":"38","ko":"30년 전 첫 오디션에서 떨어졌던 바로 그 극장이었죠.","en":"It was at the same theater that I failed that first audition 30 years prior."},{"sec":"Read Further","no":"40","ko":"하지만 여러분들은 실패할 용기가 있나요?","en":"But do you have the courage to fail? 226"}],"read":[{"sec":"본문","no":"01","ko":"우리는 겉보기에 불가능해 보이는 일을 성취해 내는 사람들을 종종 보게 된다.","en":"We often see individuals who manage to accomplish seemingly impossible tasks.","imp":false},{"sec":"본문","no":"02","ko":"이들은 흡사 자기 영혼에 불을 붙이는 능력을 지닌 것만 같다.","en":"It almost appears as if they possessed the ability to ignite their own spirits.","imp":false},{"sec":"본문","no":"03","ko":"그들은 수없이 많은 시행착오 끝에 성공을 거두는 혁신가일 수도 있고, 자신의 한계를 넘어설 때까지 쉬지 않고 자신을 밀어붙이는 운동선수일 수도 있으며, 기꺼이 위험을 감수해 가면서 옳다고 믿는 것을 추구하는 활동가일 수도 있다.","en":"They could be innovators who achieve success after countless trials and errors, athletes who push themselves tirelessly until they go beyond their limits, or activists who are willing to take risks to pursue what they believe is right.","imp":false},{"sec":"본문","no":"04","ko":"이들을 보고 우리는 질문하게 된다. \"이 사람들 뒤에 있는 원동력은 과연 무엇일까? 어떻게 이들의 삶이 이들에게는 물론 우리에게 까지 의미를 갖게 되는 걸까?\"","en":"They make us wonder: \"What could be the driving force behind them? What makes their lives meaningful to them and even to us?\"","imp":false},{"sec":"본문","no":"05","ko":"두 명의 유명한 사람들을 만나 이 질문들에 답해 보자.","en":"Let us meet two prominent individuals and try to answer these questions.","imp":false},{"sec":"본문","no":"06","ko":"\"적응하고, 긍정적으로 생각하며, 자신만의 방식으로 해내는 법을 배워라.\"","en":"\"Adapt, stay positive, and learn to do things your own way.\"","imp":true},{"sec":"본문","no":"07","ko":"Luca \"Lazylegz\" Patuelli는 이 좌우명에 따라 평생을 살아왔다.","en":"Luca \"Lazylegz\" Patuelli has lived by this motto his whole life.","imp":false},{"sec":"본문","no":"08","ko":"1984년, 몸의 뼈와 관절에 영향을 미치는 희귀 장애를 갖고 태어나, 그는 생후 7개월부터 다리, 엉덩이, 등, 어깨를 지탱하기 위한 수술을 총 16회 받아 왔다.","en":"Born in 1984 with a rare disorder affecting the bones and joints of the body, he has undergone a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders.","imp":true},{"sec":"본문","no":"09","ko":"신체적 어려움에도 불구하고, Lazylegz는 어린 나이에 어떤 상황에도 긍정적으로 적응하는 것의 힘에 대해 배웠다.","en":"Despite the physical challenges, Lazylegz learned at an early age about the power of adapting positively to any situation.","imp":false},{"sec":"본문","no":"10","ko":"늘 활동적이고 어떤 활동이든 친구들과 함께하려는 열정으로, 그는 축구, 미식축구, 야구와 같은 활동에 참여할 수 있었다.","en":"Always eager to stay active and join his friends in any activity, he managed to participate in activities such as soccer, football, and baseball.","imp":false},{"sec":"본문","no":"11","ko":"그는 또한 암벽 등반을 하는 법과 스키 타는 법을 배우는 데 성공했고, 고등학교 수영과 다이빙 팀에 들어갈 방법을 찾아냈다.","en":"He also succeeded in learning how to rock climb and ski, and he found ways to join his high school swim and dive teams.","imp":false},{"sec":"본문","no":"12","ko":"그가 폭넓은 범위의 신체 활동을 탐험하면서 스케이트보딩에 특별한 열정을 가지게 되었다.","en":"As he explored the full range of physical activities, skateboarding developed into a particular passion for him.","imp":false},{"sec":"본문","no":"13","ko":"1999년, 15세의 나이로, Lazylegz는 브레이크 댄스에 입문했다.","en":"In 1999, at the age of 15, Lazylegz was introduced to breakdancing.","imp":false},{"sec":"본문","no":"14","ko":"곧바로, 그는 음악, 문화, 그리고 무엇보다, 도전적인 동작에 매료되었다.","en":"Immediately, he was attracted to the music, the culture, and most of all, the challenging movements. 224","imp":false},{"sec":"본문","no":"15","ko":"그는 서서히 자신의 상체 근력을 최대로 활용한 독특한 스타일을 창안하기 시작했다.","en":"He slowly began creating a unique style that made the most of his upper body strength.","imp":false},{"sec":"본문","no":"16","ko":"목발을 팔의 연장선으로 활용함으로써, 비보이 Lazylegz가 탄생했다!","en":"By using his crutches as extensions of his arms, Bboy Lazylegz was born!","imp":false},{"sec":"본문","no":"17","ko":"전문 춤꾼으로서 그는 Breakin' Convention, World of Dance, 그리고 Hip Hop International과 같은 다채로운 국제 춤 경연에 서 경쟁하고 공연을 했다. . (SV-31233) 86","en":"As a professional dancer, he competed and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International.","imp":false},{"sec":"본문","no":"18","ko":"그는 2007년 ILL-Abilities라는, 장애를 가진 세계 최고의 춤꾼들로 구성된 국제적 비보이 팀을 만들었다.","en":"He created ILL-Abilities in 2007, an international Bboy crew composed of some of the world's best dancers who are differently abled.","imp":true},{"sec":"본문","no":"19","ko":"\"우리가 전하고 싶은 말이 있는데, '변명도 하지 말고, 한계도 두지 말라'는 거예요.","en":"\"We have a message, and that message is No excuses, no limits.","imp":false},{"sec":"본문","no":"20","ko":"우리는 장애인과 비장애인, 모든 연령, 모든 인종의 사람들이 어떤 것이든 자신의 열정을 추구하도록 격려하고 싶어요.","en":"We want to encourage people of all abilities, all ages, and all races to pursue their passion, whatever it is.","imp":true},{"sec":"본문","no":"21","ko":"자신만의 방식으로 그걸 할 방법을 찾아야 하고, 그것이 가장 중요해요.\"","en":"Find a way to do it your own way, and that's what it is all about.\"","imp":true},{"sec":"본문","no":"22","ko":"춤을 자기 정체성의 뚜렷한 한 부분으로 삼아, Lazylegz는 자신이 진정 얼마나 멀리 갈 수 있는지 보고 싶었다.","en":"With dancing clearly part of his identity, Lazylegz wanted to see how far he could truly go.","imp":false},{"sec":"본문","no":"23","ko":"2009년, 그는 몬트리올의 콩코디아 대학에서 경영학 학위를 받고 졸업했다.","en":"In 2009, he graduated from Montreal's Concordia University with a degree in business.","imp":false},{"sec":"본문","no":"24","ko":"춤에 대한 열정과 대중의 관심을 끄는 지식을 결합하여, 그는 춤의 힘으로 장애인을 포함한 모든 사람들을 한데 모음으로써 포용과 통합의 강력한 대변인이 되었다.","en":"Combining his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance.","imp":true},{"sec":"본문","no":"25","ko":"자신의 춤이 성숙함의 새로운 정점에 오르고 자신이 전하는 말이 세계의 이목을 끌자마자, Lazylegz에게 2010년 밴쿠버 동계 장 애인 올림픽 개막식에서 주 공연자로 무대에 서는 영예가 주어졌다.","en":"Just as his dancing reached a new peak in maturity and his message drew international attention, Lazylegz was given the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics.","imp":false},{"sec":"본문","no":"26","ko":"지난 몇 년은 Luca \"Lazylegz\" Patuelli에게 흥미진진한 시간이었고, 적응의 힘을 세상과 함께 나누려는 그의 꿈은 계속해서 다른 사람들에게 영감을 주고 있다.","en":"The past few years have been exciting for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world continues to inspire others.","imp":false},{"sec":"본문","no":"27","ko":"사랑하는 남편이자 헌신적인 아버지로서, 그는 자녀들이 장애인과 비장애인이 서로 다름에도 불구하고 함께 모여 열정을 나눌 수 있 는 사회에서 성장하도록 전념하고 있다.","en":"As a loving husband and devoted father, he is committed to helping his children grow up in a society where people of all abilities can come together and share their passions despite their differences.","imp":true},{"sec":"본문","no":"28","ko":"\"역사의 최전선에 서는 것보다 내가 있을 만한 곳이 세상 어디 있겠는가?\"","en":"\"Where in the world would I rather be than on the front line of history?\"","imp":false},{"sec":"본문","no":"29","ko":"1973년 미국 코네티컷주에서 태어난 Lynsey Addario는 일찍이 사진에 대한 열정을 키웠다.","en":"Born in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography.","imp":true},{"sec":"본문","no":"30","ko":"12살쯤 되었을 때 그녀의 아버지는 그녀에게 오래된 35 mm 카메라를 선물했다.","en":"Her father gave her an old 35mm camera when she was about 12 years old.","imp":false},{"sec":"본문","no":"31","ko":"그녀는 사진을 찍는 법에 관한 책을 읽기 시작했다.","en":"She started reading books on how to take photographs.","imp":false},{"sec":"본문","no":"32","ko":"너무 수줍어서 사람들에게 다가가지 못했기 때문에, 그녀는 꽃과 달의 사진을 찍었다.","en":"Too shy to approach people, she took pictures of flowers and the moon.","imp":true},{"sec":"본문","no":"33","ko":"사진 찍는 것을 사랑했지만, 정식으로 사진술을 배운 적은 없었다.","en":"Despite her love for taking pictures, she never learned photography formally. 118 및 재판매할 수 없습니다. (SV-31233) 정답 및 해설","imp":false},{"sec":"본문","no":"34","ko":"그녀의 부모는 그녀가 다양한 문화의 가치를 인정하고 가까이에 있는 환경 너머의 세계에 관해 알아보도록 가르쳤다.","en":"Her parents taught her to appreciate diverse cultures and inquire about the world beyond her immediate surroundings.","imp":false},{"sec":"본문","no":"35","ko":"그녀는 대학에서 국제 관계와 이탈리아어를 공부했다.","en":"She studied international relations and Italian at college.","imp":false},{"sec":"본문","no":"36","ko":"졸업 후, 스페인어를 공부하러 아르헨티나로 갔는데, 바로 그곳에서 보도 사진 기자로 일하기 시작했다.","en":"After graduation, she moved to Argentina to study Spanish, and it was there that she started working as a news photographer.","imp":true},{"sec":"본문","no":"37","ko":"2000년에 아프가니스탄으로 가면서 Addario의 경력은 중요한 전환점을 맞이했다.","en":"Addario's career took a significant turn when she went to Afghanistan in 2000.","imp":false},{"sec":"본문","no":"38","ko":"그녀의 사진은 아프가니스탄 여성들의 큰 슬픔, 회복력, 그리고 용기를 포착했다.","en":"Her photographs captured the grief, resilience, and courage of Afghan women.","imp":false},{"sec":"본문","no":"39","ko":"이러한 일련의 작업이 국제적으로 인정받게 되고, Addario의 향후 성과를 향한 디딤돌 역할을 했다.","en":"This body of work gained international recognition, serving as a stepping stone for Addario's future achievements.","imp":true},{"sec":"본문","no":"40","ko":"수년간, Addario는 직업상 이라크, 수단, 리비아, 시리아와 같이 전쟁으로 상처 입은 지역을 다녔다.","en":"Over the years, Addario's work has taken her to many regions torn by war, including Iraq, Sudan, Libya, and Syria.","imp":false},{"sec":"본문","no":"41","ko":"그녀는 전쟁에서 무슨 일이 일어날 수 있는지 아주 잘 알고 있다. 두 차례 포로로 잡힌 적이 있었고 심지어 목숨을 위협받기도 했다.","en":"She knows very well what could happen in the wars: she was captured twice and was even threatened with her life.","imp":false},{"sec":"본문","no":"42","ko":"하지만 몇 번이고, 그녀는 국가 간의 분쟁에 휘말린 이들의 고통을 알리는 장면을 포착하기 위해 자신의 목숨을 걸었다.","en":"Time and again, however, she has risked her life to capture images that speak volumes about the suffering of those caught in the conflicts between nations.","imp":true},{"sec":"본문","no":"43","ko":"\"내가 전쟁 지역에 간다는 건 생각할 수도 없는 일이었어요.","en":"\"The idea of me going to a war zone was out of the question.","imp":false},{"sec":"본문","no":"44","ko":"그런데 9.11테러가 왔고, 이건 내가 취재해야 할 것만 같은 생각이 들었던 결정적인 역사적 순간이었어요.","en":"Then came 9/11, and it was such a defining moment in history that I felt like I needed to cover it.","imp":true},{"sec":"본문","no":"45","ko":"거기서부터 2003년 이라크전을 취재하게 됐고, 이때도 마찬가지로 내가 거기에 있어야 할 것 같은 느낌 때문이었어요.","en":"From there I ended up covering the war in Iraq in 2003 because again, I felt like I needed to be there.","imp":false},{"sec":"본문","no":"46","ko":"나와 같은 세대의 젊은 군인들이 싸우러 가고 있었기 때문에, 그 전쟁을 기록하는 게 중요하다고 생각했어요.","en":"Young soldiers of my generation were going in to fight, and I thought it was important to document the war.","imp":false},{"sec":"본문","no":"47","ko":"나는 살아남았으니 운이 좋은 거죠.","en":"I'm lucky because I've survived.","imp":false},{"sec":"본문","no":"48","ko":"나는 지금 내 인생과 경력에서, 내 친구들 중 많은 사람들이 아직 도달하지 못한 지점에 와 있어요.","en":"I'm now at the point in my life and my career where many of my friends are not.","imp":false},{"sec":"본문","no":"49","ko":"그래서 내가 아직 여기에 있는 이유가 있다는 걸 잘 아는 게 중요하다고 생각하고, 계속 앞으로 나아가야 해요.\"","en":"And so I think it's important to realize there is a reason I'm still here, and I have to keep pushing forward.\"","imp":true},{"sec":"본문","no":"50","ko":"Lynsey Addario는 국제 분쟁과 인도적 위기의 면면을 명확히 보여 주는 모습들을 포착해 왔다.","en":"Lynsey Addario has been capturing images that have defined the face of international conflicts and humanitarian crises.","imp":false},{"sec":"본문","no":"51","ko":"그녀는 전쟁, 빈곤, 사회적 불평등의 영향을 받은 개인들의 알려지지 않은 이야기뿐만 아니라, 회복력과 희망의 감동적인 순간들을 부각하는 데에도 자신의 삶을 바쳐 왔다.","en":"She has dedicated herself to throwing light not only on untold stories of individuals impacted by war, poverty, and social injustice, but also on touching moments of resilience and hope.","imp":true},{"sec":"본문","no":"52","ko":"인간성의 본질을 날것의 여과되지 않은 모습으로 잡아냄으로써, Addario는 보도 사진의 영역에서 가장 영향력 있고 존경받는 목소 리 중 하나로서 여정을 이어가고 있다.","en":"By capturing the essence of humanity in its raw and unfiltered forms, Addario continues her journey as one of the most influential and respected voices in the field of news photography.","imp":false},{"sec":"Read Further","no":"01","ko":"저는 위험을 감수하지 않는다면 인생에서 아무것도 가치 있지 않다는 것을 깨달았습니다.","en":"I have found that nothing in life is of value unless you take risks.","imp":true},{"sec":"Read Further","no":"02","ko":"아무것도요.","en":"Nothing. 225","imp":false},{"sec":"Read Further","no":"03","ko":"여러분이 학교를 다니고, 대학에 지원하고, 전공을 선택하고, 인생에서 하고 싶은 일을 결정할 때, 사람들은 여러분들에게 '뒤를 받 쳐 줄' 무언가를 반드시 가지라고 말했을 겁니다.","en":"Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding what you want to do with life, people have told you to make sure you have something to \"fall back on.\"","imp":true},{"sec":"Read Further","no":"04","ko":"하지만 저는 뒤를 받쳐줄 수 있는 무언가를 가진다는 개념을 이해할 수 없었습니다.","en":"But I never understood that concept, having something to fall back on.","imp":false},{"sec":"Read Further","no":"05","ko":"만약 제가 넘어진다면, 전 제 뒤를 받쳐주는 것 위로 넘어지고 싶지 않아요.","en":"If I'm going to fall, I don't want to fall back on anything.","imp":false},{"sec":"Read Further","no":"06","ko":"저는 앞으로 넘어지고 싶어요.","en":"I want to fall forward.","imp":false},{"sec":"Read Further","no":"07","ko":"제 말은 이것입니다.","en":"This is what I mean.","imp":false},{"sec":"Read Further","no":"08","ko":"Reggie Jackson은 선수 생활 동안 야구 역사상 가장 많은 2,600번의 삼진을 당했습니다.","en":"Reggie Jackson struck out 2,600 times in his career, the most in the history of baseball.","imp":false},{"sec":"Read Further","no":"09","ko":"하지만 여러분은 그런 얘기를 듣지 않습니다.","en":"But you don't hear about it.","imp":false},{"sec":"Read Further","no":"10","ko":"사람들은 홈런을 기억합니다.","en":"People remember the home runs.","imp":false},{"sec":"Read Further","no":"11","ko":"앞으로 넘어지세요.","en":"Fall forward.","imp":true},{"sec":"Read Further","no":"12","ko":"Thomas Edison은 1,000번의 실패한 실험을 했는데, 왜냐하면 1,001번째 실험이 바로 전구였기 때문입니다.","en":"Thomas Edison conducted 1,000 failed experiments because the 1,001st was the light bulb.","imp":false},{"sec":"Read Further","no":"13","ko":"앞으로 넘어지세요.","en":"Fall forward.","imp":false},{"sec":"Read Further","no":"14","ko":"모든 실패한 실험은 성공을 향한 한 보의 진전입니다.","en":"Every failed experiment is one step closer to success.","imp":true},{"sec":"Read Further","no":"15","ko":"여러분은 위험을 감수해야 합니다.","en":"You've got to take risks.","imp":true},{"sec":"Read Further","no":"16","ko":"그게 왜 중요한지 말씀드리고 싶습니다.","en":"I want to talk to you about why that's so important.","imp":false},{"sec":"Read Further","no":"17","ko":"여러분은 인생의 어느 지점에서는 실패할 것입니다.","en":"You will fail at some point in your lives.","imp":false},{"sec":"Read Further","no":"18","ko":"당신은 지게 될 겁니다.","en":"You will lose.","imp":false},{"sec":"Read Further","no":"19","ko":"여러분은 스스로를 부끄럽게 할 것입니다.","en":"You will embarrass yourselves.","imp":false},{"sec":"Read Further","no":"20","ko":"의심의 여지가 없습니다.","en":"There is no doubt about it.","imp":false},{"sec":"Read Further","no":"21","ko":"이 말이 졸업 연설을 위한 전통적인 메시지는 아닐 수 있다는 것을 알지만 여러분에게 말씀드립니다.","en":"I know that's probably not a traditional message for a graduation ceremony but I'm telling you.","imp":false},{"sec":"Read Further","no":"22","ko":"이 사실은 피할 수 없으니 받아들이세요.","en":"Embrace it because it's inevitable.","imp":true},{"sec":"Read Further","no":"23","ko":"연기 업계에서는, 항상 실패를 경험하죠.","en":"In the acting business, you fail all the time.","imp":false},{"sec":"Read Further","no":"24","ko":"제 연기 생활 초반에 브로드웨이 뮤지컬 오디션을 봤어요.","en":"Early on in my career, I auditioned for a part in a Broadway musical.","imp":false},{"sec":"Read Further","no":"25","ko":"제게 딱 맞는 역할이라고 생각했습니다. 제가 노래를 못한다는 사실만 빼면요.","en":"A perfect role for me, I thought, except for the fact that I can't sing.","imp":false},{"sec":"Read Further","no":"26","ko":"무대 옆에 서 있었습니다.","en":"So I'm in the wings.","imp":false},{"sec":"Read Further","no":"27","ko":"제가 무대에 나가려 하는데 제 앞에 있는 남자가, Pavarotti처럼 노래를 부르고 있고, 저는 점점 더 작아지는 거예요.","en":"I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting smaller and smaller.","imp":false},{"sec":"Read Further","no":"28","ko":"전 그 배역을 얻지 못했어요.","en":"I didn't get the job.","imp":false},{"sec":"Read Further","no":"29","ko":"하지만 중요한 게 있어요.","en":"But here's the thing.","imp":true},{"sec":"Read Further","no":"30","ko":"전 그만두지 않았어요.","en":"I didn't quit.","imp":false},{"sec":"Read Further","no":"31","ko":"전 뒤로 물러서지 않았어요.","en":"I didn't fall back.","imp":false},{"sec":"Read Further","no":"32","ko":"저는 다음 오디션과 그다음 오디션을 준비하기 위해 그곳을 걸어 나왔어요.","en":"I walked out of there to prepare for the next audition and the one after that. 119 및 재판매할 수 없습니다. (SV-31233) 정답 및 해설","imp":false},{"sec":"Read Further","no":"33","ko":"계속해서 실패하고 또 실패했지만 그건 중요하지 않았어요.","en":"I continued to fail and fail, but it didn't matter.","imp":true},{"sec":"Read Further","no":"34","ko":"옛말에 '이발소에서 오래 기다리면, 머지않아 머리를 자를 차례가 올 것이다.'라고 합니다.","en":"There is an old saying: if you hang around the barbershop long enough, sooner or later you're going to get a haircut.","imp":true},{"sec":"Read Further","no":"35","ko":"여러분은 기회를 잡을 것입니다. 제가 딱 그랬던 것처럼요.","en":"So you will catch a break, which is exactly what I did.","imp":true},{"sec":"Read Further","no":"36","ko":"작년에 저는 브로드웨이에서 'Fences'라는 연극을 했습니다.","en":"Last year I did a play called Fences on Broadway.","imp":false},{"sec":"Read Further","no":"37","ko":"코트 극장에서 공연했습니다.","en":"It was at the Court Theater.","imp":false},{"sec":"Read Further","no":"38","ko":"30년 전 첫 오디션에서 떨어졌던 바로 그 극장이었죠.","en":"It was at the same theater that I failed that first audition 30 years prior.","imp":true},{"sec":"Read Further","no":"39","ko":"요점은 오늘 여기 모인 모든 졸업생은 성공할 만한 훈련이 되어 있고 재능을 갖추었습니다.","en":"The point is every graduate here today has the training and the talent to succeed.","imp":false},{"sec":"Read Further","no":"40","ko":"하지만 여러분들은 실패할 용기가 있나요?","en":"But do you have the courage to fail? 226","imp":true}],"para":[{"sec":"본문","no":"01","en":"We often see individuals who manage to accomplish seemingly impossible tasks. It almost appears as if they possessed the ability to ignite their own spirits. They could be innovators who achieve success after countless trials and errors, athletes who push themselves tirelessly until they go beyond their limits, or activists who are willing to take risks to pursue what they believe is right. They make us wonder: \"What could be the driving force behind them? What makes their lives meaningful to them and even to us?\" Let us meet two prominent individuals and try to answer these questions."},{"sec":"본문","no":"02","en":"\"Adapt, stay positive, and learn to do things your own way.\" Luca \"Lazylegz\" Patuelli has lived by this motto his whole life. Born in 1984 with a rare disorder affecting the bones and joints of the body, he has undergone a total of 16 surgeries since he was 7 months old, to support his legs, hips, back, and shoulders. Despite the physical challenges, Lazylegz learned at an early age about the power of adapting positively to any situation. Always eager to stay active and join his friends in any activity, he managed to participate in activities such as soccer, football, and baseball. He also succeeded in learning how to rock climb and ski, and he found ways to join his high school swim and dive teams. As he explored the full range of physical activities, skateboarding developed into a particular passion for him."},{"sec":"본문","no":"03","en":"In 1999, at the age of 15, Lazylegz was introduced to breakdancing. Immediately, he was attracted to the music, the culture, and most of all, the challenging movements. He slowly began creating a unique style that made the most of his upper body strength. By using his crutches as extensions of his arms, Bboy Lazylegz was born! As a professional dancer, he competed and performed in a wide variety of international dance events such as Breakin' Convention, World of Dance, and Hip Hop International. He created ILL-Abilities in 2007, an international Bboy crew composed of some of the world's best dancers who are differently abled. \"We have a message, and that message is No excuses, no limits. We want to encourage people of all abilities, all ages, and all races to pursue their passion, whatever it is. Find a way to do it your own way, and that's what it is all about.\""},{"sec":"본문","no":"04","en":"With dancing clearly part of his identity, Lazylegz wanted to see how far he could truly go. In 2009, he graduated from Montreal's Concordia University with a degree in business. Combining his passion for dance with his knowledge of engaging the masses, he has become a strong advocate for inclusion and integration, by bringing people of all abilities together through the power of dance. Just as his dancing reached a new peak in maturity and his message drew international attention, Lazylegz was given the honor of headlining the opening ceremony of the Vancouver 2010 Winter Paralympics. The past few years have been exciting for Luca \"Lazylegz\" Patuelli, and his dream of sharing the power of adaptation with the world continues to inspire others. As a loving husband and devoted father, he is committed to helping his children grow up in a society where people of all abilities can come together and share their passions despite their differences."},{"sec":"본문","no":"05","en":"\"Where in the world would I rather be than on the front line of history?\" Born in Connecticut, United States, in 1973, Lynsey Addario developed an early passion for photography. Her father gave her an old 35mm camera when she was about 12 years old. She started reading books on how to take photographs. Too shy to approach people, she took pictures of flowers and the moon. Despite her love for taking pictures, she never learned photography formally. Her parents taught her to appreciate diverse cultures and inquire about the world beyond her immediate surroundings. She studied international relations and Italian at college. After graduation, she moved to Argentina to study Spanish, and it was there that she started working as a news photographer."},{"sec":"본문","no":"06","en":"Addario's career took a significant turn when she went to Afghanistan in 2000. Her photographs captured the grief, resilience, and courage of Afghan women. This body of work gained international recognition, serving as a stepping stone for Addario's future achievements. Over the years, Addario's work has taken her to many regions torn by war, including Iraq, Sudan, Libya, and Syria. She knows very well what could happen in the wars: she was captured twice and was even threatened with her life. Time and again, however, she has risked her life to capture images that speak volumes about the suffering of those caught in the conflicts between nations. \"The idea of me going to a war zone was out of the question. Then came 9/11, and it was such a defining moment in history that I felt like I needed to cover it. From there I ended up covering the war in Iraq in 2003 because again, I felt like I needed to be there. Young soldiers of my generation were going in to fight, and I thought it was important to document the war. I'm lucky because I've survived. I'm now at the point in my life and my career where many of my friends are not. And so I think it's important to realize there is a reason I'm still here, and I have to keep pushing forward.\""},{"sec":"본문","no":"07","en":"Lynsey Addario has been capturing images that have defined the face of international conflicts and humanitarian crises. She has dedicated herself to throwing light not only on untold stories of individuals impacted by war, poverty, and social injustice, but also on touching moments of resilience and hope. By capturing the essence of humanity in its raw and unfiltered forms, Addario continues her journey as one of the most influential and respected voices in the field of news photography."},{"sec":"Read Further","no":"08","en":"I have found that nothing in life is of value unless you take risks. Nothing. Now I'm sure in your experiences in school, in applying to college, in picking your major, in deciding what you want to do with life, people have told you to make sure you have something to \"fall back on.\" But I never understood that concept, having something to fall back on. If I'm going to fall, I don't want to fall back on anything. I want to fall forward. This is what I mean. Reggie Jackson struck out 2,600 times in his career, the most in the history of baseball. But you don't hear about it. People remember the home runs. Fall forward. Thomas Edison conducted 1,000 failed experiments because the 1,001st was the light bulb. Fall forward. Every failed experiment is one step closer to success. You've got to take risks. I want to talk to you about why that's so important. You will fail at some point in your lives. You will lose. You will embarrass yourselves. There is no doubt about it. I know that's probably not a traditional message for a graduation ceremony but I'm telling you. Embrace it because it's inevitable."},{"sec":"Read Further","no":"09","en":"In the acting business, you fail all the time. Early on in my career, I auditioned for a part in a Broadway musical. A perfect role for me, I thought, except for the fact that I can't sing. So I'm in the wings. I'm about to go on stage but the guy in front of me, he's singing like Pavarotti, and I'm just getting smaller and smaller. I didn't get the job. But here's the thing. I didn't quit. I didn't fall back. I walked out of there to prepare for the next audition and the one after that. I continued to fail and fail, but it didn't matter. There is an old saying: if you hang around the barbershop long enough, sooner or later you're going to get a haircut. So you will catch a break, which is exactly what I did. Last year I did a play called Fences on Broadway. It was at the Court Theater. It was at the same theater that I failed that first audition 30 years prior. The point is every graduate here today has the training and the talent to succeed. But do you have the courage to fail?"}]};
+
+const PARTS=[
+ {id:"vocab", n:"어휘 선택",     s:"박스에서 문맥상 적절한 것 고르기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"단락"},
+ {id:"gram",  n:"어법 선택",     s:"박스에서 어법상 적절한 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"단락"},
+ {id:"fix",   n:"어법 오류 수정", s:"밑줄 중 어색한 곳 찾아 고치기",   c:"var(--cat-2)", b:"var(--cat-2-s)", k:"단락"},
+ {id:"tf",    n:"내용일치 TF",   s:"일치하면 T, 아니면 F",           c:"var(--cat-4)", b:"var(--cat-4-s)", k:"단락"},
+ {id:"order", n:"순서 배열",     s:"이어질 글의 순서 정하기",         c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"insert",n:"문장 삽입",     s:"주어진 문장이 들어갈 위치 찾기",   c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문항"},
+ {id:"write", n:"영작",         s:"중요 표시 문장만 영작하기",        c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"}
+];
+const P = Object.fromEntries(PARTS.map(p=>[p.id,p]));
+
+/* 파트별 배점(=채점 포인트) */
+function pts(part, it){
+  if(part==="vocab"||part==="gram") return it.blanks.length;
+  if(part==="fix") return it.seg.length;
+  if(part==="tf") return it.st.length;
+  return 1;
+}
+function itemsOf(part, scope){
+  let a=C[part]||[];
+  if(scope==="본문") a=a.filter(x=>x.sec==="본문");
+  if(scope==="RF")  a=a.filter(x=>x.sec!=="본문");
+  return a;
+}
+const TOTAL = PARTS.reduce((s,p)=>s+itemsOf(p.id,"all").reduce((t,i)=>t+pts(p.id,i),0),0);
+
+/* ───── 아이콘 ───── */
+const I={
+ chev:'<path d="m9 6 6 6-6 6"/>', home:'<path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 21v-7h6v7"/>',
+ book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5Z"/>',
+ chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>',
+ check:'<path d="m4 12 5 5L20 6"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>',
+ moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
+ sun:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>', note:'<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+ redo:'<path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/>'
+};
+const svg=(n,cls)=>`<svg viewBox="0 0 24 24"${cls?` class="${cls}"`:""}>${I[n]}</svg>`;
+const AVATAR=`<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#FFE2B8"/><path d="M32 12c-11 0-17 7-17 16v4h34v-4c0-9-6-16-17-16Z" fill="#6B4A2F"/><circle cx="32" cy="36" r="15" fill="#FFD9A8"/><path d="M23 33h7M34 33h7" stroke="#3A2A1C" stroke-width="2.6" stroke-linecap="round"/><circle cx="26.5" cy="37.5" r="2.1" fill="#2B1D12"/><circle cx="37.5" cy="37.5" r="2.1" fill="#2B1D12"/><path d="M28 45c2.4 1.8 5.6 1.8 8 0" stroke="#2B1D12" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>`;
+
+/* ───── 상태 ───── */
+const KEY="naesinfit.review.v1";
+const DEF={name:"", exp:0, theme:"", attempts:[], best:{}};
+let S=(()=>{try{const r=JSON.parse(localStorage.getItem(KEY));return Object.assign({},DEF,r||{});}catch(e){return Object.assign({},DEF);}})();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+const lv=()=>Math.floor(S.exp/100)+1;
+const tier=()=>lv()>=7?"플래티넘":lv()>=5?"골드":lv()>=3?"실버":"브론즈";
+
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+let tT; const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("on"),1900);};
+function go(id){
+  $$(".screen").forEach(s=>s.classList.remove("on"));
+  $("#s-"+id).classList.add("on"); window.scrollTo(0,0);
+  const map={home:0,read:1,record:2,my:3};
+  $("#tabs").classList.toggle("hidden",["setup","quiz","result","login"].includes(id));
+  $$(".tab").forEach((t,i)=>t.classList.toggle("on",map[id]===i));
+}
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const norm=s=>String(s||"").toLowerCase().replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
+  .replace(/[^a-z0-9' ]/g," ").replace(/\s+/g," ").trim();
+
+/* ───── 테마 ───── */
+function applyTheme(){
+  if(S.theme) document.documentElement.setAttribute("data-theme",S.theme);
+  else document.documentElement.removeAttribute("data-theme");
+  const dark=S.theme==="dark"||(!S.theme&&matchMedia("(prefers-color-scheme: dark)").matches);
+  $("#theme-toggle").innerHTML=svg(dark?"sun":"moon");
+}
+$("#theme-toggle").onclick=()=>{
+  const dark=S.theme==="dark"||(!S.theme&&matchMedia("(prefers-color-scheme: dark)").matches);
+  S.theme=dark?"light":"dark"; save(); applyTheme(); renderMy();
+};
+$("#tabs").innerHTML=[["home","홈"],["book","본문"],["chart","기록"],["user","마이"]]
+  .map(([ic,nm],i)=>`<button class="tab${i?"":" on"}" data-go="${["home","read","record","my"][i]}">${svg(ic)}<span>${nm}</span></button>`).join("");
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]");
+  if(g){const d=g.dataset.go; ({home:renderHome,read:renderRead,record:renderRecord,my:renderMy})[d](); go(d); return;}
+  const b=e.target.closest("[data-back]"); if(b){renderHome(); go(b.dataset.back);}
+});
+
+/* ───── 홈 ───── */
+function doneCount(){
+  return PARTS.reduce((s,p)=>s+(S.best[p.id]?.done||0),0);
+}
+function renderHome(){
+  const q=qGet?qGet().length:0;
+  $("#home-hi").innerHTML = (S.name?`${esc(S.name)}님 · `:"")+"[22개정] 천재(강상구)"+(q?` · <span style="color:var(--cat-3);font-weight:700">미전송 ${q}건</span>`:"");
+  $("#hero-ava").innerHTML=AVATAR; $("#my-ava").innerHTML=AVATAR;
+  $("#hero-lv").textContent="Lv."+lv(); $("#hero-tier").textContent=tier();
+  const d=doneCount(), pct=Math.round(d/TOTAL*100);
+  $("#hero-xp").textContent=`${d}/${TOTAL} 채점`; $("#hero-pct").textContent=pct+"%";
+  $("#hero-bar").style.width=pct+"%";
+  const left=PARTS.filter(p=>!S.best[p.id]);
+  $("#hero-msg").textContent = d===0 ? "파트를 하나 골라서 시작해 보자. 어휘 선택부터 순서대로 가는 걸 추천해 📘"
+    : left.length ? `${left[0].n} 아직 안 봤네. 이것까지 끝내면 1과는 정리 완료야 💪`
+    : `7개 파트 다 봤어! 이제 틀린 것만 다시 돌리면 돼 🔥`;
+
+  $("#part-list").innerHTML=PARTS.map(p=>{
+    const all=itemsOf(p.id,"all"), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
+    const b=S.best[p.id];
+    return `<button class="part-card" data-part="${p.id}">
+      <span class="ci" style="background:${p.b};color:${p.c}">${all.length}</span>
+      <span style="flex:1"><span class="t">${p.n}</span><span class="s">${p.s} · <span class="num">${tp}개 채점</span></span></span>
+      ${b?`<span class="done-pill num">${b.pct}%</span>`:""}
+      ${svg("chev","go")}
+    </button>`;}).join("");
+
+  $("#passage-list").innerHTML=C.para.map((x,i)=>`
+    <button class="part-card" data-read="${i}">
+      <span class="ci" style="background:var(--surface-2);color:var(--ink-3)">${x.no}</span>
+      <span style="flex:1"><span class="t">${x.sec==="본문"?"본문":"Read Further"} ${x.no}</span>
+      <span class="s">${esc(x.en.slice(0,42))}…</span></span>${svg("chev","go")}
+    </button>`).join("");
+}
+
+/* ───── 파트 설정 ───── */
+let sel={part:null, scope:"all"};
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-part]"); if(!t) return;
+  sel.part=t.dataset.part; sel.scope="all"; renderSetup(); go("setup");
+});
+function scopeCounts(part){
+  const f=s=>{const a=itemsOf(part,s); return {n:a.length, p:a.reduce((x,i)=>x+pts(part,i),0)};};
+  return {all:f("all"), 본문:f("본문"), RF:f("RF")};
+}
+function renderSetup(){
+  const p=P[sel.part], sc=scopeCounts(sel.part);
+  $("#setup-title").textContent=p.n;
+  const b=S.best[sel.part];
+  $("#setup-body").innerHTML=`
+    <div class="card" style="padding:18px 16px">
+      <div style="display:flex;align-items:center;gap:13px">
+        <span class="ci" style="width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:${p.b};color:${p.c};font-family:Archivo;font-weight:700">${sc.all.n}</span>
+        <div><div class="t" style="font-size:17px;font-weight:800;letter-spacing:-.02em">${p.n}</div>
+        <div class="s" style="font-size:13px;color:var(--ink-3);margin-top:2px">${p.s}</div></div>
+      </div>
+      ${b?`<div class="prog-track"><i style="width:${b.pct}%"></i></div>
+      <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px;color:var(--ink-3)">
+        <span>최고 기록</span><span class="num" style="font-weight:700;color:var(--accent)">${b.pct}% (${b.done}/${b.total})</span></div>`:""}
+    </div>
+
+    <div class="sec" style="margin:24px 0 10px"><h2>범위</h2></div>
+    <div class="seg-btn" id="scope-btn">
+      <button data-sc="all" class="${sel.scope==="all"?"on":""}">전체 <span class="num">${sc.all.n}</span></button>
+      <button data-sc="본문" class="${sel.scope==="본문"?"on":""}">본문 <span class="num">${sc.본문.n}</span></button>
+      <button data-sc="RF" class="${sel.scope==="RF"?"on":""}">Read Further <span class="num">${sc.RF.n}</span></button>
+    </div>
+
+    <div class="sec" style="margin:24px 0 10px"><h2>안내</h2></div>
+    <div class="card" style="padding:15px 16px;font-size:13.5px;line-height:1.75;color:var(--ink-2)">${HOWTO[sel.part]}</div>`;
+  const n=scopeCounts(sel.part)[sel.scope];
+  $("#setup-cta").textContent=`${n.n}${p.k} · ${n.p}개 채점 시작`;
+  $("#setup-cta").disabled=n.n===0;
+}
+const HOWTO={
+ vocab:"지문 속 <b>초록 상자</b>에서 문맥상 알맞은 낱말을 하나씩 고릅니다. 한 단락이 한 문항이고, 빈칸 하나하나가 따로 채점돼요.",
+ gram:"지문 속 상자에서 <b>어법상</b> 알맞은 형태를 고릅니다. 해석이 아니라 문법으로 판단하세요.",
+ fix:"밑줄 친 (A)~(K) 중 <b>어법상 어색한 것</b>을 모두 눌러 표시하고, 아래 칸에 바르게 고쳐 씁니다. 표시와 고친 말이 모두 맞아야 정답입니다.",
+ tf:"지문을 읽고 각 문장이 내용과 <b>일치하면 T</b>, 일치하지 않으면 <b>F</b>를 누릅니다.",
+ order:"주어진 글 다음에 이어질 순서대로 (A)(B)(C)를 <b>순서대로 탭</b>하세요. 다시 누르면 취소됩니다.",
+ insert:"주어진 문장이 들어가기에 가장 적절한 <b>번호 자리</b>를 누릅니다.",
+ write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
+};
+$("#setup-body").addEventListener("click",e=>{
+  const b=e.target.closest("[data-sc]"); if(!b) return;
+  sel.scope=b.dataset.sc; renderSetup();
+});
+$("#setup-cta").onclick=()=>startQuiz();
+
+/* ───── 응시 ───── */
+let Q=null;
+function startQuiz(){
+  const items=itemsOf(sel.part, sel.scope);
+  if(!items.length){toast("문항이 없어요"); return;}
+  Q={part:sel.part, items, i:0, ans:items.map(()=>blankAns(sel.part,items[0])), t0:Date.now()};
+  Q.ans=items.map(it=>blankAns(sel.part,it));
+  $("#q-total").textContent=items.length;
+  clearInterval(Q.timer); Q.timer=setInterval(tick,1000); tick();
+  renderQ(); go("quiz");
+}
+function blankAns(part,it){
+  if(part==="vocab"||part==="gram") return it.blanks.map(()=>null);
+  if(part==="fix") return it.seg.map(()=>({mk:false,txt:""}));
+  if(part==="tf") return it.st.map(()=>null);
+  if(part==="order") return [];
+  if(part==="insert") return null;
+  return "";
+}
+function tick(){ if(!Q)return; const s=Math.floor((Date.now()-Q.t0)/1000);
+  $("#q-timer").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+$("#quiz-exit").onclick=()=>{ if(confirm("그만둘까요? 지금까지 푼 답은 저장되지 않아요.")){clearInterval(Q.timer);Q=null;renderHome();go("home");} };
+
+function renderQ(){
+  const it=Q.items[Q.i], part=Q.part, a=Q.ans[Q.i];
+  $("#q-now").textContent=Q.i+1;
+  $("#q-bar").style.width=((Q.i+1)/Q.items.length*100)+"%";
+  const tag=`<span class="q-type">${P[part].n} · ${it.sec==="본문"?"본문":"Read Further"} ${it.no}</span>`;
+  let body="";
+  if(part==="vocab"||part==="gram"){
+    body=`${tag}<p class="q-stem">박스에서 알맞은 것을 고르세요.</p>
+      <div class="psg" style="margin-top:14px">${pickHTML(it,a)}</div>`;
+  } else if(part==="fix"){
+    body=`${tag}<p class="q-stem">밑줄 친 부분 중 어법상 <b>어색한 것</b>을 모두 고르고 바르게 고치세요.</p>
+      <div class="psg" style="margin-top:14px;line-height:2.1">${esc(it.lead)} ${it.seg.map((s,i)=>
+        `<span class="seg${a[i].mk?" mk":""}" data-seg="${i}"><span class="seg-lab">(${s.L})</span> ${esc(s.t)}</span>`).join(" ")}</div>
+      <div class="card" style="margin-top:14px;padding:6px 16px" id="fixlist">${fixRows(it,a)}</div>`;
+  } else if(part==="tf"){
+    body=`${tag}<p class="q-stem">지문과 일치하면 T, 아니면 F</p>
+      <div class="psg" style="margin-top:14px;line-height:1.95">${esc(it.passage)}</div>
+      <div class="card" style="margin-top:14px;padding:4px 16px">${it.st.map((s,i)=>
+        `<div class="tfrow"><span class="q">(${i+1}) ${esc(s)}</span>
+        <span class="tfbtns" data-tf="${i}"><button data-v="T" class="${a[i]==="T"?"on":""}">T</button><button data-v="F" class="${a[i]==="F"?"on":""}">F</button></span></div>`).join("")}</div>`;
+  } else if(part==="order"){
+    body=`${tag}<p class="q-stem">이어질 순서대로 눌러 주세요.</p>
+      <div class="given" style="margin-top:14px">${esc(it.lead)}</div>
+      <div style="margin-top:14px">${["A","B","C"].map(L=>{
+        const r=a.indexOf(L);
+        return `<button class="ord${r>=0?" on":""}" data-ord="${L}">
+          <span class="lb">${L}</span><span style="flex:1">${esc(it[L])}</span>
+          ${r>=0?`<span class="rank num">${r+1}</span>`:""}</button>`;}).join("")}</div>`;
+  } else if(part==="insert"){
+    let html="";
+    for(let k=0;k<it.chunks.length;k++){
+      html+=esc(it.chunks[k])+" ";
+      if(k<it.slots) html+=`<button class="slot${a===k+1?" on":""}" data-slot="${k+1}">${k+1}</button> `;
+    }
+    body=`${tag}<p class="q-stem">주어진 문장이 들어갈 곳은?</p>
+      <div class="given" style="margin-top:14px">${esc(it.given)}</div>
+      <div class="psg" style="margin-top:14px;line-height:2.2">${html}</div>`;
+  } else {
+    body=`${tag}<p class="ko" style="margin-top:12px">${esc(it.ko)}<span class="imp">★중요</span></p>
+      <textarea class="wr-in" id="wr" placeholder="영어로 쓰세요" spellcheck="false">${esc(a)}</textarea>
+      <p class="hint">대소문자·문장부호는 채점에 영향을 주지 않아요.</p>`;
+  }
+  $("#quiz-body").innerHTML=body;
+  if(part==="write"){ const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
+  syncCta();
+}
+function pickHTML(it,a){
+  let h=esc(it.text);
+  it.blanks.forEach((b,i)=>{
+    h=h.replace("«"+(i+1)+"»",
+      `<span class="bn">${i+1}</span><span class="pick" data-b="${i}">`+
+      b.opt.map((o,j)=>`<button data-o="${j}"${a[i]===j?' class="on"':""}>${esc(o)}</button>`).join("")+`</span>`);
+  });
+  return h;
+}
+function fixRows(it,a){
+  const rows=it.seg.map((s,i)=>a[i].mk?
+    `<div class="fixrow"><span class="lb">${s.L}</span><input data-fix="${i}" value="${esc(a[i].txt)}" placeholder="바르게 고쳐 쓰기" autocomplete="off" spellcheck="false"></div>`:"").join("");
+  return rows||`<div style="padding:12px 0;font-size:13px;color:var(--ink-3)">어색한 부분을 눌러 표시하세요</div>`;
+}
+function syncCta(){
+  const b=$("#quiz-cta"), last=Q.i===Q.items.length-1;
+  b.disabled=false;
+  b.textContent=last?"제출하고 채점하기":"다음";
+}
+$("#quiz-body").addEventListener("click",e=>{
+  const it=Q.items[Q.i], a=Q.ans[Q.i];
+  const pk=e.target.closest(".pick>button");
+  if(pk){ a[+pk.parentNode.dataset.b]=+pk.dataset.o;
+    Array.from(pk.parentNode.children).forEach(x=>x.classList.toggle("on",x===pk)); return; }
+  const sg=e.target.closest("[data-seg]");
+  if(sg){ const i=+sg.dataset.seg; a[i].mk=!a[i].mk;
+    sg.classList.toggle("mk",a[i].mk); $("#fixlist").innerHTML=fixRows(it,a); return; }
+  const tf=e.target.closest("[data-tf]>button");
+  if(tf){ a[+tf.parentNode.dataset.tf]=tf.dataset.v;
+    Array.from(tf.parentNode.children).forEach(x=>x.classList.toggle("on",x===tf)); return; }
+  const od=e.target.closest("[data-ord]");
+  if(od){ const L=od.dataset.ord, k=a.indexOf(L);
+    if(k>=0) a.splice(k,1); else if(a.length<3) a.push(L);
+    renderQ(); return; }
+  const sl=e.target.closest("[data-slot]");
+  if(sl){ Q.ans[Q.i]=+sl.dataset.slot;
+    document.querySelectorAll("[data-slot]").forEach(x=>x.classList.toggle("on",x===sl)); return; }
+});
+$("#quiz-body").addEventListener("input",e=>{
+  const fx=e.target.closest("[data-fix]");
+  if(fx) Q.ans[Q.i][+fx.dataset.fix].txt=fx.value;
+});
+$("#quiz-cta").onclick=()=>{
+  if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); }
+  else finish();
+};
+
+/* ───── 채점 ───── */
+function grade(part,it,a){
+  const d=[];
+  if(part==="vocab"||part==="gram"){
+    it.blanks.forEach((b,i)=>d.push({ok:a[i]===b.ans, label:`${i+1}`,
+      mine:a[i]==null?"무응답":b.opt[a[i]], right:b.opt[b.ans]}));
+  } else if(part==="fix"){
+    it.seg.forEach((s,i)=>{
+      const m=a[i];
+      let ok = s.wrong ? (m.mk && norm(m.txt)===norm(s.to)) : !m.mk;
+      d.push({ok, label:s.L, mine: m.mk?(m.txt||"(고침 없음)"):"맞다고 표시",
+        right: s.wrong?`${s.from} → ${s.to}`:"어법상 맞음"});
+    });
+  } else if(part==="tf"){
+    it.st.forEach((s,i)=>d.push({ok:a[i]===it.ans[i], label:`${i+1}`,
+      mine:a[i]||"무응답", right:it.ans[i], q:s}));
+  } else if(part==="order"){
+    d.push({ok:a.join("")===it.ans.join(""), label:"순서",
+      mine:a.length?a.join(" - "):"무응답", right:it.ans.join(" - ")});
+  } else if(part==="insert"){
+    d.push({ok:a===it.ans, label:"위치", mine:a?`${a}번`:"무응답", right:`${it.ans}번`});
+  } else {
+    d.push({ok:norm(a)===norm(it.en), label:"영작", mine:a||"무응답", right:it.en});
+  }
+  return d;
+}
+function finish(){
+  clearInterval(Q.timer);
+  const part=Q.part;
+  Q.detail=Q.items.map((it,i)=>grade(part,it,Q.ans[i]));
+  showResult();
+}
+function tally(){
+  let t=0,c=0;
+  Q.detail.forEach(ds=>ds.forEach(x=>{t++; if(x.ok)c++;}));
+  return {t,c,pct:Math.round(c/t*100)};
+}
+function showResult(){
+  const part=Q.part, {t,c,pct}=tally();
+  const secs=Math.floor((Date.now()-Q.t0)/1000);
+  const r=58, cc=2*Math.PI*r;
+  const col=pct>=80?"var(--ok)":pct>=60?"var(--accent)":"var(--no)";
+  $("#score-card").innerHTML=`
+    <div class="ring"><svg width="132" height="132" viewBox="0 0 132 132">
+      <circle cx="66" cy="66" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="10"/>
+      <circle cx="66" cy="66" r="${r}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round"
+        stroke-dasharray="${cc}" stroke-dashoffset="${cc*(1-pct/100)}" style="transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)"/>
+    </svg><div class="val"><b>${pct}<span style="font-size:18px">%</span></b><span>정답률</span></div></div>
+    <div class="score-msg">${pct===100?"완벽해요! 이 파트는 끝":pct>=80?"잘했어요. 오답만 다시 보면 돼요":pct>=60?"절반은 넘겼어요":"지금 틀린 게 시험엔 안 나오게 하죠"}</div>
+    <div class="score-sub num">${P[part].n} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
+    <div class="gain">⚡ +${10+c*2} XP</div>
+    <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`;
+
+  $("#review-list").innerHTML=Q.items.map((it,i)=>{
+    const ds=Q.detail[i], ok=ds.filter(x=>x.ok).length;
+    const allok=ok===ds.length;
+    return `<div class="rv${allok?"":" open"}" data-rv>
+      <button class="rv-h">
+        <span class="mark ${allok?"o":"x"}">${svg(allok?"check":"x")}</span>
+        <span style="flex:1"><span class="rv-q">${i+1}. ${it.sec==="본문"?"본문":"Read Further"} ${it.no}</span>
+        <span class="rv-meta num">${ok} / ${ds.length} 정답</span></span></span>
+      </button>
+      <div class="rv-b">${ds.map((x,j)=>x.ok?"":`
+        <div class="ans-line" style="padding:7px 0;border-bottom:1px solid var(--line)">
+          <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:2px">${x.label}${x.q?" · "+esc(x.q.slice(0,54))+"…":""}</div>
+          <span class="k">내 답</span><span class="bad">${esc(x.mine)}</span><br>
+          <span class="k">정답</span><span class="good">${esc(x.right)}</span>
+          ${part==="write"?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
+        </div>`).join("")||`<div class="expl">전부 맞았어요 👏</div>`}</div></div>`;
+  }).join("");
+
+  // 기록 저장
+  const rec={d:new Date().toISOString().slice(0,10), part, partName:P[part].n,
+             scope:sel.scope, total:t, correct:c, pct, secs};
+  S.attempts.push(rec); S.exp+=10+c*2;
+  const b=S.best[part];
+  if(sel.scope==="all" && (!b || c>b.done)) S.best[part]={done:c,total:t,pct};
+  save();
+  go("result");
+
+  if(!Q.sent){
+    Q.sent=true;
+    submitResult({
+      student:S.name, book:"영어II 천재(강상구) 1과",
+      part, partName:P[part].n, scope:sel.scope,
+      total:t, correct:c, pct, secs,
+      detail:Q.items.map((it,i)=>({no:it.no, sec:it.sec,
+        d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})}))
+    });
+  }
+}
+$("#review-list").addEventListener("click",e=>{
+  const sf=e.target.closest("[data-self]");
+  if(sf){ const [i,j]=sf.dataset.self.split(".").map(Number);
+    Q.detail[i][j].ok=true; S.exp+=2;
+    const {t,c,pct}=tally();
+    const b=S.best[Q.part]; if(sel.scope==="all"&&(!b||c>b.done)) S.best[Q.part]={done:c,total:t,pct};
+    S.attempts[S.attempts.length-1].correct=c; S.attempts[S.attempts.length-1].pct=pct;
+    save(); Q.sent=false; showResult(); toast("정답 처리했어요 · 선생님께 다시 전송돼요"); return; }
+  const r=e.target.closest("[data-rv]"); if(r) r.classList.toggle("open");
+});
+$("#result-cta").onclick=()=>{renderHome();go("home");};
+
+/* ───── 본문 읽기 ───── */
+let readKo=true;
+function renderRead(idx){
+  $("#read-title").textContent="본문 · 영어 II 1과";
+  const rows=C.read.map(x=>`
+    <div style="padding:13px 0;border-bottom:1px solid var(--line)">
+      <div style="font-size:15px;line-height:1.75">${esc(x.en)}${x.imp?'<span class="imp">★중요</span>':""}</div>
+      ${readKo?`<div class="ko-line" style="font-size:13.5px;color:var(--ink-3);line-height:1.7;margin-top:5px">${esc(x.ko)}</div>`:""}
+    </div>`).join("");
+  $("#read-body").innerHTML=`<div class="card" style="padding:4px 16px">${rows}</div>`;
+}
+$("#read-ko").onclick=()=>{readKo=!readKo; renderRead(); toast(readKo?"해석 켬":"해석 끔");};
+document.addEventListener("click",e=>{
+  const r=e.target.closest("[data-read]"); if(!r) return;
+  renderRead(); go("read");
+});
+
+/* ───── 기록 ───── */
+function renderRecord(){
+  const A=S.attempts;
+  if(!A.length){ $("#record-body").innerHTML=`<div class="empty">
+    <div class="em-ic">${svg("chart")}</div><h3>아직 기록이 없어요</h3>
+    <p>파트를 하나 풀면 기록이 쌓여요</p><button class="btn-sm" data-go="home">파트 보러 가기</button></div>`; return; }
+  const tot=A.reduce((s,x)=>s+x.total,0), cor=A.reduce((s,x)=>s+x.correct,0);
+  const recent=A.slice(-10);
+  $("#record-body").innerHTML=`
+    <div class="pad" style="margin-top:14px"><div class="tiles">
+      <div class="tile"><b class="num">${A.length}</b><span>응시 횟수</span></div>
+      <div class="tile"><b class="num" style="color:${cor/tot>=.8?"var(--ok)":"var(--ink)"}">${Math.round(cor/tot*100)}%</b><span>전체 정답률</span></div>
+      <div class="tile"><b class="num">${doneCount()}</b><span>맞힌 채점</span></div>
+    </div></div>
+    <div class="pad" style="margin-top:16px"><div class="card chart-card" style="position:relative">
+      <h3>정답률 추이</h3><p>최근 ${recent.length}회 · 점을 누르면 상세가 보여요</p>
+      <div id="spark-wrap" style="position:relative">${spark(recent)}</div></div></div>
+    <div class="pad" style="margin-top:16px"><div class="card chart-card">
+      <h3>파트별 최고 기록</h3><p>낮은 파트부터 다시 돌리면 빨라요</p>
+      ${PARTS.map(p=>{const b=S.best[p.id];
+        return `<div class="meter"><span class="lb">${p.n}</span>
+        <span class="tr"><i style="width:${b?b.pct:0}%"></i></span>
+        <span class="vl">${b?b.pct+"%":"—"}</span></div>`;}).join("")}</div></div>
+    <div class="pad" style="margin-top:16px"><div class="sec"><h2>응시 기록</h2></div>
+      <div class="card">${A.slice().reverse().map(a=>`
+        <div class="hist">
+          <span class="sc num" style="background:${a.pct>=80?"var(--ok-soft)":a.pct>=60?"var(--accent-soft)":"var(--no-soft)"};color:${a.pct>=80?"var(--ok)":a.pct>=60?"var(--accent)":"var(--no)"}">${a.pct}</span>
+          <span style="flex:1"><span class="m-t" style="display:block">${a.partName}</span>
+          <span class="m-s">${a.scope==="all"?"전체":a.scope} · ${a.correct}/${a.total}</span></span>
+          <span class="m-s num">${a.d.slice(5)}</span></div>`).join("")}</div></div>`;
+  bindSpark(recent);
+}
+function spark(A){
+  const W=360,H=132,PL=6,PR=6,PT=14,PB=22, iw=W-PL-PR, ih=H-PT-PB;
+  const x=i=>A.length===1?PL+iw/2:PL+i*(iw/(A.length-1)), y=v=>PT+ih-(v/100)*ih;
+  const pts=A.map((a,i)=>[x(i),y(a.pct)]);
+  const line=pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+  const area=`${line} L ${pts[pts.length-1][0].toFixed(1)} ${PT+ih} L ${pts[0][0].toFixed(1)} ${PT+ih} Z`;
+  const grid=[0,50,100].map(v=>`<line x1="${PL}" x2="${W-PR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/>
+    <text x="${PL}" y="${y(v)-5}" font-size="9" fill="var(--ink-3)" font-family="Archivo">${v}</text>`).join("");
+  const last=pts[pts.length-1];
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" id="spark">
+    <defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    ${grid}<path d="${area}" fill="url(#fg)"/>
+    <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    ${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${i===pts.length-1?5:3.5}" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`).join("")}
+    ${pts.map((p,i)=>`<rect x="${p[0]-16}" y="0" width="32" height="${H}" fill="transparent" data-pt="${i}"/>`).join("")}
+    <text x="${last[0]}" y="${Math.max(last[1]-11,10)}" font-size="11" font-weight="700" fill="var(--accent)" text-anchor="middle" font-family="Archivo">${A[A.length-1].pct}%</text>
+  </svg><div class="tip" id="spark-tip"></div>`;
+}
+function bindSpark(A){
+  const s=$("#spark"), tip=$("#spark-tip"), wrap=$("#spark-wrap"); if(!s) return;
+  s.addEventListener("pointermove",e=>{
+    const t=e.target.closest("[data-pt]"); if(!t){tip.style.opacity=0;return;}
+    const a=A[+t.dataset.pt], r=wrap.getBoundingClientRect();
+    tip.style.left=(e.clientX-r.left)+"px"; tip.style.top=(e.clientY-r.top)+"px";
+    tip.innerHTML=`${a.d.slice(5)} · ${a.partName} · <b>${a.pct}%</b>`; tip.style.opacity=1;
+  });
+  s.addEventListener("pointerleave",()=>tip.style.opacity=0);
+}
+
+/* ───── 마이 ───── */
+function renderMy(){
+  $("#my-name").textContent=(S.name||"이름 미설정")+(S.name?"님":"");
+  $("#my-sub").textContent=`Lv.${lv()} · ${tier()}`;
+  const tot=S.attempts.reduce((s,x)=>s+x.total,0), cor=S.attempts.reduce((s,x)=>s+x.correct,0);
+  $("#my-tiles").innerHTML=`
+    <div class="tile"><b class="num">${S.exp}</b><span>총 EXP</span></div>
+    <div class="tile"><b class="num">${tot}</b><span>푼 채점</span></div>
+    <div class="tile"><b class="num">${tot?Math.round(cor/tot*100):0}%</b><span>정답률</span></div>`;
+  const dark=S.theme==="dark"||(!S.theme&&matchMedia("(prefers-color-scheme: dark)").matches);
+  $("#settings").innerHTML=`
+    <button class="set-row" id="set-name"><span class="ci">${svg("user")}</span><span class="t">이름 바꾸기</span><span class="v">${S.name}</span></button>
+    <div class="set-row"><span class="ci">${svg(dark?"sun":"moon")}</span><span class="t">다크 모드</span><span class="sw${dark?" on":""}" id="sw-theme"><i></i></span></div>
+    <button class="set-row" id="set-reset"><span class="ci">${svg("trash")}</span><span class="t" style="color:var(--no)">기록 초기화</span></button>`;
+  $("#sw-theme").onclick=()=>{S.theme=dark?"light":"dark";save();applyTheme();renderMy();};
+  $("#set-name").onclick=()=>{const n=prompt("이름",S.name); if(n&&n.trim()){S.name=n.trim().slice(0,12);save();renderMy();renderHome();}};
+  $("#set-reset").onclick=()=>{if(confirm("모든 기록을 지울까요?")){localStorage.removeItem(KEY);S=Object.assign({},DEF);save();applyTheme();renderHome();renderMy();go("home");toast("초기화했어요");}};
+}
+
+/* ───── 이름 입력 ───── */
+const nameIn=$("#login-name"), nameCta=$("#login-cta");
+nameIn.addEventListener("input",()=>{
+  const v=nameIn.value.trim();
+  nameCta.disabled=v.length<2;
+  nameCta.textContent=v.length<2?"이름을 입력해 주세요":`${v}(으)로 시작하기`;
+});
+nameIn.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!nameCta.disabled) nameCta.click(); });
+nameCta.onclick=()=>{
+  S.name=nameIn.value.trim().slice(0,12); save();
+  renderHome(); renderMy(); go("home"); flushQueue();
+};
+
+/* ───── 결과 전송 ───── */
+const QKEY="naesinfit.queue.v1";
+const qGet=()=>{try{return JSON.parse(localStorage.getItem(QKEY))||[]}catch(e){return []}};
+const qSet=a=>{try{localStorage.setItem(QKEY,JSON.stringify(a.slice(-40)))}catch(e){}};
+async function send(payload){
+  const r=await fetch("/api/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  if(!r.ok){ let m="전송 실패"; try{m=(await r.json()).error||m}catch(e){} throw new Error(m); }
+  return r.json();
+}
+async function submitResult(payload){
+  setSendState("sending");
+  try{ await send(payload); setSendState("sent"); }
+  catch(e){ const q=qGet(); q.push(payload); qSet(q); setSendState("queued", e.message); }
+}
+async function flushQueue(){
+  let q=qGet(); if(!q.length) return;
+  const left=[];
+  for(const p of q){ try{ await send(p); }catch(e){ left.push(p); } }
+  qSet(left);
+  if(q.length&&!left.length) toast(`밀린 결과 ${q.length}건을 전송했어요`);
+  renderHome();
+}
+function setSendState(st,msg){
+  const el=$("#send-state"); if(!el) return;
+  if(st==="sending") el.innerHTML=`<span style="color:var(--ink-3)">결과 전송 중…</span>`;
+  else if(st==="sent") el.innerHTML=`<span style="color:var(--ok);font-weight:700">✓ 선생님께 전송 완료</span>`;
+  else el.innerHTML=`<span style="color:var(--warn,#E8890C);font-weight:700">보관함에 저장됨 · 인터넷 연결되면 자동 전송</span>
+      <button id="retry-send" style="margin-left:8px;font-size:12px;font-weight:700;color:var(--accent);text-decoration:underline">지금 다시 시도</button>`;
+  const rb=$("#retry-send"); if(rb) rb.onclick=()=>{ flushQueue().then(()=>setSendState("sent")); };
+}
+window.addEventListener("online", flushQueue);
+
+applyTheme(); renderHome(); renderMy();
+if(!S.name){ go("login"); setTimeout(()=>nameIn.focus(),300); } else { flushQueue(); }
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{applyTheme();renderMy();});
+</script>
+</body>
+</html>
