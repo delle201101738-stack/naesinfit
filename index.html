@@ -462,6 +462,11 @@ input{font:inherit; color:inherit}
     </div></div>
 
     <div class="pad" style="margin-top:24px">
+      <div class="sec"><h2>시험 범위</h2><span class="more">모든 파트에 적용돼요</span></div>
+      <div class="card" style="padding:14px 16px" id="scope-card"></div>
+    </div>
+
+    <div class="pad" style="margin-top:22px">
       <div class="sec"><h2>파트 선택</h2><span class="more">7개 파트</span></div>
       <div class="card" id="part-list"></div>
     </div>
@@ -594,7 +599,8 @@ function itemsOf(part, scope){
   if(scope==="RF")  a=a.filter(x=>x.sec!=="본문");
   return a;
 }
-const TOTAL = PARTS.reduce((s,p)=>s+itemsOf(p.id,"all").reduce((t,i)=>t+pts(p.id,i),0),0);
+const totalPts = sc => PARTS.reduce((s,p)=>s+itemsOf(p.id,sc).reduce((t,i)=>t+pts(p.id,i),0),0);
+const SCOPES={all:{label:"본문 + Read Further",short:"전체"},"본문":{label:"본문만",short:"본문만"}};
 
 /* ───── 아이콘 ───── */
 const I={
@@ -612,7 +618,8 @@ const AVATAR=`<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#FFE
 
 /* ───── 상태 ───── */
 const KEY="naesinfit.review.v1";
-const DEF={name:"", exp:0, theme:"", attempts:[], best:{}};
+const DEF={name:"", exp:0, theme:"", attempts:[], best:{}, scope:"all"};
+let LOCKED=null;  // 선생님이 범위를 고정한 경우
 let S=(()=>{try{const r=JSON.parse(localStorage.getItem(KEY));return Object.assign({},DEF,r||{});}catch(e){return Object.assign({},DEF);}})();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
 const lv=()=>Math.floor(S.exp/100)+1;
@@ -659,16 +666,29 @@ function renderHome(){
   $("#home-hi").innerHTML = (S.name?`${esc(S.name)}님 · `:"")+"[22개정] 천재(강상구)"+(q?` · <span style="color:var(--cat-3);font-weight:700">미전송 ${q}건</span>`:"");
   $("#hero-ava").innerHTML=AVATAR; $("#my-ava").innerHTML=AVATAR;
   $("#hero-lv").textContent="Lv."+lv(); $("#hero-tier").textContent=tier();
-  const d=doneCount(), pct=Math.round(d/TOTAL*100);
-  $("#hero-xp").textContent=`${d}/${TOTAL} 채점`; $("#hero-pct").textContent=pct+"%";
+  const TP=totalPts(S.scope);
+  const d=Math.min(doneCount(),TP), pct=TP?Math.round(d/TP*100):0;
+  $("#hero-xp").textContent=`${d}/${TP} 채점`; $("#hero-pct").textContent=pct+"%";
   $("#hero-bar").style.width=pct+"%";
   const left=PARTS.filter(p=>!S.best[p.id]);
   $("#hero-msg").textContent = d===0 ? "파트를 하나 골라서 시작해 보자. 어휘 선택부터 순서대로 가는 걸 추천해 📘"
     : left.length ? `${left[0].n} 아직 안 봤네. 이것까지 끝내면 1과는 정리 완료야 💪`
     : `7개 파트 다 봤어! 이제 틀린 것만 다시 돌리면 돼 🔥`;
 
+  $("#scope-card").innerHTML = LOCKED
+    ? `<div style="display:flex;align-items:center;gap:10px">
+         <span style="font-size:20px">🔒</span>
+         <div><div style="font-size:15px;font-weight:700;letter-spacing:-.01em">${SCOPES[LOCKED].label}</div>
+         <div style="font-size:12.5px;color:var(--ink-3);margin-top:2px">선생님이 정한 범위예요 · <span class="num">${totalPts(LOCKED)}개 채점</span></div></div>
+       </div>`
+    : `<div class="seg-btn" id="scope-global">
+         ${Object.entries(SCOPES).map(([k,v])=>`<button data-gs="${k}"${S.scope===k?' class="on"':""}>${v.label}</button>`).join("")}
+       </div>
+       <p style="margin:10px 0 0;font-size:12.5px;color:var(--ink-3);line-height:1.6">
+         학교 시험범위에 Read Further가 없으면 <b>본문만</b>을 고르세요 · 지금 범위 <span class="num" style="font-weight:700;color:var(--accent)">${totalPts(S.scope)}개 채점</span></p>`;
+
   $("#part-list").innerHTML=PARTS.map(p=>{
-    const all=itemsOf(p.id,"all"), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
+    const all=itemsOf(p.id,S.scope), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
     const b=S.best[p.id];
     return `<button class="part-card" data-part="${p.id}">
       <span class="ci" style="background:${p.b};color:${p.c}">${all.length}</span>
@@ -677,7 +697,7 @@ function renderHome(){
       ${svg("chev","go")}
     </button>`;}).join("");
 
-  $("#passage-list").innerHTML=C.para.map((x,i)=>`
+  $("#passage-list").innerHTML=C.para.filter(x=>curScope()==="all"||x.sec==="본문").map((x,i)=>`
     <button class="part-card" data-read="${i}">
       <span class="ci" style="background:var(--surface-2);color:var(--ink-3)">${x.no}</span>
       <span style="flex:1"><span class="t">${x.sec==="본문"?"본문":"Read Further"} ${x.no}</span>
@@ -687,9 +707,13 @@ function renderHome(){
 
 /* ───── 파트 설정 ───── */
 let sel={part:null, scope:"all"};
+const curScope = () => LOCKED || S.scope;
 document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-gs]");
+  if(g){ if(LOCKED) return; S.scope=g.dataset.gs; save(); renderHome();
+         toast(`시험 범위: ${SCOPES[S.scope].label}`); return; }
   const t=e.target.closest("[data-part]"); if(!t) return;
-  sel.part=t.dataset.part; sel.scope="all"; renderSetup(); go("setup");
+  sel.part=t.dataset.part; sel.scope=curScope(); renderSetup(); go("setup");
 });
 function scopeCounts(part){
   const f=s=>{const a=itemsOf(part,s); return {n:a.length, p:a.reduce((x,i)=>x+pts(part,i),0)};};
@@ -711,12 +735,17 @@ function renderSetup(){
         <span>최고 기록</span><span class="num" style="font-weight:700;color:var(--accent)">${b.pct}% (${b.done}/${b.total})</span></div>`:""}
     </div>
 
-    <div class="sec" style="margin:24px 0 10px"><h2>범위</h2></div>
-    <div class="seg-btn" id="scope-btn">
-      <button data-sc="all" class="${sel.scope==="all"?"on":""}">전체 <span class="num">${sc.all.n}</span></button>
-      <button data-sc="본문" class="${sel.scope==="본문"?"on":""}">본문 <span class="num">${sc.본문.n}</span></button>
-      <button data-sc="RF" class="${sel.scope==="RF"?"on":""}">Read Further <span class="num">${sc.RF.n}</span></button>
-    </div>
+    <div class="sec" style="margin:24px 0 10px"><h2>시험 범위</h2>
+      <span class="note" style="font-size:12.5px;color:var(--ink-3)">${LOCKED?"선생님이 고정":"모든 파트 공통"}</span></div>
+    ${LOCKED
+      ? `<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:10px">
+           <span style="font-size:18px">🔒</span>
+           <span style="font-size:14.5px;font-weight:700">${SCOPES[LOCKED].label}</span>
+           <span class="num" style="margin-left:auto;font-size:13px;color:var(--ink-3)">${sc[LOCKED].n}문항</span></div>`
+      : `<div class="seg-btn" id="scope-btn">
+           <button data-sc="본문" class="${sel.scope==="본문"?"on":""}">본문만 <span class="num">${sc.본문.n}</span></button>
+           <button data-sc="all" class="${sel.scope==="all"?"on":""}">본문 + Read Further <span class="num">${sc.all.n}</span></button>
+         </div>`}
 
     <div class="sec" style="margin:24px 0 10px"><h2>안내</h2></div>
     <div class="card" style="padding:15px 16px;font-size:13.5px;line-height:1.75;color:var(--ink-2)">${HOWTO[sel.part]}</div>`;
@@ -734,8 +763,8 @@ const HOWTO={
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
 };
 $("#setup-body").addEventListener("click",e=>{
-  const b=e.target.closest("[data-sc]"); if(!b) return;
-  sel.scope=b.dataset.sc; renderSetup();
+  const b=e.target.closest("[data-sc]"); if(!b||LOCKED) return;
+  sel.scope=b.dataset.sc; S.scope=sel.scope; save(); renderSetup();
 });
 $("#setup-cta").onclick=()=>startQuiz();
 
@@ -928,10 +957,10 @@ function showResult(){
 
   // 기록 저장
   const rec={d:new Date().toISOString().slice(0,10), part, partName:P[part].n,
-             scope:sel.scope, total:t, correct:c, pct, secs};
+             scope:SCOPES[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs};
   S.attempts.push(rec); S.exp+=10+c*2;
   const b=S.best[part];
-  if(sel.scope==="all" && (!b || c>b.done)) S.best[part]={done:c,total:t,pct};
+  if(!b || pct>b.pct) S.best[part]={done:c,total:t,pct,scope:SCOPES[sel.scope]?.short||sel.scope};
   save();
   go("result");
 
@@ -939,7 +968,7 @@ function showResult(){
     Q.sent=true;
     submitResult({
       student:S.name, book:"영어II 천재(강상구) 1과",
-      part, partName:P[part].n, scope:sel.scope,
+      part, partName:P[part].n, scope:SCOPES[sel.scope]?.short||sel.scope,
       total:t, correct:c, pct, secs,
       detail:Q.items.map((it,i)=>({no:it.no, sec:it.sec,
         d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})}))
@@ -951,7 +980,7 @@ $("#review-list").addEventListener("click",e=>{
   if(sf){ const [i,j]=sf.dataset.self.split(".").map(Number);
     Q.detail[i][j].ok=true; S.exp+=2;
     const {t,c,pct}=tally();
-    const b=S.best[Q.part]; if(sel.scope==="all"&&(!b||c>b.done)) S.best[Q.part]={done:c,total:t,pct};
+    const b=S.best[Q.part]; if(!b||pct>b.pct) S.best[Q.part]={done:c,total:t,pct,scope:SCOPES[sel.scope]?.short||sel.scope};
     S.attempts[S.attempts.length-1].correct=c; S.attempts[S.attempts.length-1].pct=pct;
     save(); Q.sent=false; showResult(); toast("정답 처리했어요 · 선생님께 다시 전송돼요"); return; }
   const r=e.target.closest("[data-rv]"); if(r) r.classList.toggle("open");
@@ -962,7 +991,7 @@ $("#result-cta").onclick=()=>{renderHome();go("home");};
 let readKo=true;
 function renderRead(idx){
   $("#read-title").textContent="본문 · 영어 II 1과";
-  const rows=C.read.map(x=>`
+  const rows=C.read.filter(x=>curScope()==="all"||x.sec==="본문").map(x=>`
     <div style="padding:13px 0;border-bottom:1px solid var(--line)">
       <div style="font-size:15px;line-height:1.75">${esc(x.en)}${x.imp?'<span class="imp">★중요</span>':""}</div>
       ${readKo?`<div class="ko-line" style="font-size:13.5px;color:var(--ink-3);line-height:1.7;margin-top:5px">${esc(x.ko)}</div>`:""}
@@ -1100,6 +1129,14 @@ function setSendState(st,msg){
   const rb=$("#retry-send"); if(rb) rb.onclick=()=>{ flushQueue().then(()=>setSendState("sent")); };
 }
 window.addEventListener("online", flushQueue);
+
+(async()=>{
+  try{
+    const r=await fetch("/api/config",{cache:"no-store"});
+    if(r.ok){ const j=await r.json();
+      if(j.fixedScope && SCOPES[j.fixedScope]){ LOCKED=j.fixedScope; S.scope=LOCKED; save(); renderHome(); } }
+  }catch(e){}
+})();
 
 applyTheme(); renderHome(); renderMy();
 if(!S.name){ go("login"); setTimeout(()=>nameIn.focus(),300); } else { flushQueue(); }
