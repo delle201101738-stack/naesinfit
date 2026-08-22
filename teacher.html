@@ -35,7 +35,7 @@ header.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--s
 .bar-in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
 .bar h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
 .bar .sub{font-size:12.5px;color:var(--ink-3)}
-.btn{padding:9px 15px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-2)}
+.btn{display:inline-block;padding:9px 15px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-2);text-decoration:none}
 .btn:hover{background:var(--surface-3)}
 .btn.pri{background:var(--accent);color:var(--on-accent)}
 .card{background:var(--surface);border-radius:18px;box-shadow:var(--shadow)}
@@ -98,6 +98,7 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
       <h1>hazel_studylog</h1>
       <div class="sub" id="bar-sub">불러오는 중…</div>
     </div>
+    <a class="btn" href="report" target="_blank" rel="noopener">리포트 만들기</a>
     <button class="btn" id="csv">CSV 내려받기</button>
     <button class="btn pri" id="reload">새로고침</button>
   </div></header>
@@ -199,6 +200,7 @@ function render(){
           <button style="font-weight:700;color:var(--accent)" data-stu="${esc(x.n)}">${esc(x.n)}</button>
           <span style="font-size:12.5px;color:var(--ink-3)">${x.parts.slice(0,3).map(esc).join(" · ")}${x.parts.length>3?` 외 ${x.parts.length-3}`:""}</span>
           <span class="num" style="margin-left:auto;font-size:12.5px;color:var(--ink-3)">${x.cnt}회</span>
+          <a class="btn" style="padding:5px 11px;font-size:11.5px" href="report?student=${encodeURIComponent(x.n)}" target="_blank" rel="noopener">리포트</a>
         </div>`).join("")}
       </div>`;
   }
@@ -225,11 +227,12 @@ function render(){
     return {n, cnt:rs.length, pct:Math.round(c/t*100), parts:parts.size,
             last:rs.reduce((m,x)=>Math.max(m,+new Date(x.created_at)),0)};
   }).sort((a,b)=>a.pct-b.pct);
-  $("#stu").innerHTML=`<thead><tr><th>이름</th><th>정답률</th><th>응시</th><th>진행 파트</th><th>마지막 응시</th></tr></thead><tbody>`+
+  $("#stu").innerHTML=`<thead><tr><th>이름</th><th>정답률</th><th>응시</th><th>진행 파트</th><th>마지막 응시</th><th></th></tr></thead><tbody>`+
     studs.map(s=>`<tr><td><button style="font-weight:700;color:var(--accent)" data-stu="${esc(s.n)}">${esc(s.n)}</button></td>
       <td><span class="pill ${pctClass(s.pct)}">${s.pct}%</span></td>
       <td class="num">${s.cnt}회</td><td class="num">${s.parts} / 7</td>
-      <td style="color:var(--ink-3);font-size:13px">${fmt(s.last)}</td></tr>`).join("")+`</tbody>`;
+      <td style="color:var(--ink-3);font-size:13px">${fmt(s.last)}</td>
+      <td><a class="btn" href="report?student=${encodeURIComponent(s.n)}" target="_blank" rel="noopener">리포트</a></td></tr>`).join("")+`</tbody>`;
 
   /* 파트별 */
   const byP={};
