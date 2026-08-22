@@ -1,7 +1,7 @@
 {
  "books": [
   {
-   "id": "e2-cj",
+   "id": "e2-cj-kss",
    "subject": "영어 II",
    "publisher": "천재(강상구)",
    "units": [
@@ -10,6 +10,19 @@
      "no": "1과",
      "title": "Constantly in Motion",
      "file": "content/e2-cj-01.json"
+    }
+   ]
+  },
+  {
+   "id": "e2-cj-jsk",
+   "subject": "영어 II",
+   "publisher": "천재(조수경)",
+   "units": [
+    {
+     "id": "e2-cj3-03",
+     "no": "3과",
+     "title": "Seeds",
+     "file": "content/e2-cj3-03.json"
     }
    ]
   }
