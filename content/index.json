@@ -25,6 +25,19 @@
      "file": "content/e2-cj3-03.json"
     }
    ]
+  },
+  {
+   "id": "gw-ybm",
+   "subject": "영어 독해와 작문",
+   "publisher": "YBM(김성곤)",
+   "units": [
+    {
+     "id": "gw-ybm-05",
+     "no": "5과",
+     "title": "Future Technologies",
+     "file": "content/gw-ybm-05.json"
+    }
+   ]
   }
  ]
 }
