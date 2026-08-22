@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { TEACHER_PIN } from "./_config.js";
 
 const URL_ =
   process.env.DATABASE_URL ||
@@ -46,7 +47,8 @@ export function readBody(req) {
 }
 
 export function checkPin(req) {
-  const pin = process.env.TEACHER_PIN;
+  // Vercel 환경변수가 있으면 그것을, 없으면 api/_config.js 의 값을 씁니다.
+  const pin = process.env.TEACHER_PIN || TEACHER_PIN;
   if (!pin) return { ok: false, why: "NO_PIN" };
   const got = req.headers["x-pin"] || new URL(req.url, "http://x").searchParams.get("pin");
   return got === pin ? { ok: true } : { ok: false, why: "BAD_PIN" };
