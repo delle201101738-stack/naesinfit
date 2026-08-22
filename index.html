@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#6B4EFF">
-<title>영어II 1과 리뷰테스트</title>
+<title>hazel_studylog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&family=Archivo:wght@500;600;700&display=swap">
@@ -367,7 +367,7 @@ input{font:inherit; color:inherit}
 
 .hidden{display:none !important}
 </style><style>
-/* ─── 리뷰테스트 전용 ─── */
+/* ─── 학습 화면 전용 ─── */
 .part-card{display:flex; align-items:center; gap:13px; width:100%; padding:15px 16px; text-align:left; border-bottom:1px solid var(--line)}
 .part-card:last-child{border-bottom:0}
 .part-card .ci{width:42px; height:42px; border-radius:13px; display:grid; place-items:center; flex:none; font-family:'Archivo',sans-serif; font-weight:700; font-size:15px}
@@ -442,7 +442,7 @@ input{font:inherit; color:inherit}
   <section class="screen on" id="s-home">
     <div class="greet">
       <div>
-        <div class="hi" id="home-hi">리뷰테스트</div>
+        <div class="hi" id="home-hi">hazel_studylog</div>
         <button class="nm" id="home-book" style="display:flex;align-items:center;gap:6px;padding:0;text-align:left">
           <span id="home-book-t">교재</span>
           <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--ink-3);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="m6 9 6 6 6-6"/></svg>
@@ -487,8 +487,8 @@ input{font:inherit; color:inherit}
       <div style="width:64px;height:64px;border-radius:20px;background:var(--accent-soft);display:grid;place-items:center;margin-bottom:20px">
         <svg viewBox="0 0 24 24" style="width:30px;height:30px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5Z"/></svg>
       </div>
-      <h2 style="margin:0;font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.3">영어 II · 1과<br>리뷰테스트</h2>
-      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-2);line-height:1.65">이름을 입력하면 시작합니다.<br>결과는 선생님께 자동으로 전달돼요.</p>
+      <h2 style="margin:0;font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.25">hazel_studylog</h2>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-2);line-height:1.65">영어 내신 학습 기록<br>이름을 입력하면 시작합니다. 결과는 선생님께 자동으로 전달돼요.</p>
       <input class="answer-in" id="login-name" placeholder="이름 (예: 김지민)" maxlength="12" autocomplete="name"
         style="margin-top:26px" enterkeyhint="go">
       <p class="hint" id="login-hint">출석부에 적힌 이름 그대로 써 주세요.</p>
@@ -555,6 +555,18 @@ input{font:inherit; color:inherit}
 
   <section class="screen" id="s-record">
     <header class="top"><span></span><h1>기록</h1><span></span></header>
+    <div class="prof" style="padding:16px 18px 10px">
+      <div class="ava" id="rec-ava" style="width:48px;height:48px;border:3px solid var(--surface)"></div>
+      <div style="flex:1">
+        <div class="nm" id="rec-name" style="font-size:17px">기록</div>
+        <div class="sub" id="rec-sub">나의 성장을 확인해요</div>
+      </div>
+      <div style="text-align:right;margin-right:10px">
+        <div style="font-size:11.5px;font-weight:700;color:var(--gold)" id="rec-tier">브론즈</div>
+        <div class="num" style="font-size:16px;font-weight:700" id="rec-lv">Lv.1</div>
+      </div>
+      <button class="btn-sm" id="rec-reload" style="padding:8px 12px;font-size:12.5px;background:var(--surface-2);color:var(--ink-2)">새로고침</button>
+    </div>
     <div id="record-body"></div>
     <div style="height:24px"></div>
   </section>
@@ -574,7 +586,7 @@ input{font:inherit; color:inherit}
     </div>
     <div class="pad" style="margin-top:16px">
       <p style="font-size:11.5px;color:var(--ink-3);line-height:1.7;margin:0">
-        본 자료의 지문·문항 저작권은 원 저작권자에게 있습니다. 학원 내부 학습용 프로토타입이며, 기록은 이 브라우저에만 저장됩니다.
+        hazel_studylog · 본 자료의 지문·문항 저작권은 원 저작권자에게 있습니다. 학원 내부 학습용이며, 진행 기록은 이 브라우저에도 저장됩니다.
       </p>
     </div>
     <div style="height:24px"></div>
@@ -683,7 +695,7 @@ function doneCount(){
 }
 function renderHome(){
   const q=qGet?qGet().length:0;
-  $("#home-hi").innerHTML = (S.name?`${esc(S.name)}님`:"리뷰테스트")+(q?` · <span style="color:var(--cat-3);font-weight:700">미전송 ${q}건</span>`:"");
+  $("#home-hi").innerHTML = (S.name?`${esc(S.name)}님`:"hazel_studylog")+(q?` · <span style="color:var(--cat-3);font-weight:700">미전송 ${q}건</span>`:"");
   $("#home-book-t").textContent = UNIT ? `${UNIT.book.subject} · ${UNIT.no}` : "교재 선택";
   $("#hero-ava").innerHTML=AVATAR; $("#my-ava").innerHTML=AVATAR;
   $("#hero-lv").textContent="Lv."+lv(); $("#hero-tier").textContent=tier();
@@ -993,7 +1005,7 @@ function showResult(){
       student:S.name, book:unitLabel(), unitId:UNIT?UNIT.id:"",
       part, partName:labelOf(part), scope:SCOPES()[sel.scope]?.short||sel.scope,
       total:t, correct:c, pct, secs,
-      detail:Q.items.map((it,i)=>({no:it.no, sec:it.sec,
+      detail:Q.items.map((it,i)=>({no:it.no, sec:(it.sec==="본문"?secLab("본문"):secLab("RF")),
         d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})}))
     });
   }
@@ -1027,38 +1039,139 @@ document.addEventListener("click",e=>{
   renderRead(); go("read");
 });
 
-/* ───── 기록 ───── */
-function renderRecord(){
-  const A=S.attempts;
-  if(!A.length){ $("#record-body").innerHTML=`<div class="empty">
-    <div class="em-ic">${svg("chart")}</div><h3>아직 기록이 없어요</h3>
-    <p>파트를 하나 풀면 기록이 쌓여요</p><button class="btn-sm" data-go="home">파트 보러 가기</button></div>`; return; }
-  const tot=A.reduce((s,x)=>s+x.total,0), cor=A.reduce((s,x)=>s+x.correct,0);
-  const recent=A.slice(-10);
+/* ───── 기록 (서버에서 이름으로 조회) ───── */
+let MINE=null, MINEAT=0;
+async function loadMine(force){
+  if(!S.name) return null;
+  if(MINE && !force && Date.now()-MINEAT<20000) return MINE;
+  try{
+    const r=await fetch(`api/mine?student=${encodeURIComponent(S.name)}`,{cache:"no-store"});
+    if(!r.ok) throw 0;
+    const j=await r.json();
+    MINE=(j.rows||[]).map(x=>({id:x.id, book:x.book||"", part:x.part, name:x.part_name||(P[x.part]?P[x.part].n:x.part),
+      scope:x.scope, total:x.total, correct:x.correct, pct:x.pct, secs:x.secs, at:x.created_at}));
+    MINEAT=Date.now(); return MINE;
+  }catch(e){ return null; }
+}
+const localRows = () => S.attempts.map(x=>({id:null, book:x.unit||"", part:x.part, name:x.partName,
+  scope:x.scope, total:x.total, correct:x.correct, pct:x.pct, secs:x.secs, at:x.d}));
+const dayKey = v => { const d=new Date(v); return isNaN(d)?String(v).slice(0,10)
+  : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const todayKey = () => dayKey(new Date());
+const fmtDay = v => dayKey(v).slice(5).replace("-",".");
+
+$("#rec-reload").onclick=()=>{ MINE=null; toast("불러오는 중…"); renderRecord(); };
+
+async function renderRecord(){
+  $("#rec-ava").innerHTML=AVATAR;
+  $("#rec-name").textContent = S.name ? `${S.name}님의 기록` : "기록";
+  $("#rec-tier").textContent=tier(); $("#rec-lv").textContent="Lv."+lv();
+  $("#record-body").innerHTML=`<div class="empty"><p>불러오는 중…</p></div>`;
+
+  const server=await loadMine();
+  const R=((server && server.length) ? server : localRows()).slice().sort((a,b)=>new Date(b.at)-new Date(a.at));
+  $("#rec-sub").textContent = server===null ? "연결 안 됨 · 이 기기 기록만" : "이름으로 저장된 전체 기록";
+
+  if(!R.length){
+    $("#record-body").innerHTML=`<div class="empty">
+      <div class="em-ic">${svg("chart")}</div><h3>아직 기록이 없어요</h3>
+      <p>${S.name?esc(S.name)+"님 이름으로 저장된 기록이 없습니다":"이름을 먼저 입력해 주세요"}</p>
+      <button class="btn-sm" data-go="home">파트 보러 가기</button></div>`;
+    return;
+  }
+  const tk=todayKey();
+  const today=R.filter(x=>dayKey(x.at)===tk);
+  const sum=a=>({n:a.length, t:a.reduce((s,x)=>s+x.total,0), c:a.reduce((s,x)=>s+x.correct,0)});
+  const T=sum(today), A=sum(R);
+  const pctOf=o=>o.t?Math.round(o.c/o.t*100):0;
+  const recent=R.slice(0,10).reverse().map(x=>({pct:x.pct,d:dayKey(x.at),partName:x.name}));
+
+  const byName={}; R.forEach(x=>{ const o=byName[x.name]=byName[x.name]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct; });
+  const byBook={}; R.forEach(x=>{ const k=x.book||"기타"; const o=byBook[k]=byBook[k]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct; });
+  const days=[...new Set(R.map(x=>dayKey(x.at)))].length;
+
   $("#record-body").innerHTML=`
-    <div class="pad" style="margin-top:14px"><div class="tiles">
-      <div class="tile"><b class="num">${A.length}</b><span>응시 횟수</span></div>
-      <div class="tile"><b class="num" style="color:${cor/tot>=.8?"var(--ok)":"var(--ink)"}">${Math.round(cor/tot*100)}%</b><span>전체 정답률</span></div>
-      <div class="tile"><b class="num">${doneCount()}</b><span>맞힌 채점</span></div>
-    </div></div>
+    <div class="pad">
+      <div class="card" style="padding:16px;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff">
+        <div style="font-size:12.5px;font-weight:700;opacity:.9">오늘</div>
+        ${T.n ? `<div style="display:flex;align-items:flex-end;gap:10px;margin-top:6px">
+            <div class="num" style="font-size:34px;font-weight:800;line-height:1">${pctOf(T)}<span style="font-size:17px">%</span></div>
+            <div class="num" style="font-size:13px;opacity:.92;padding-bottom:5px">${T.n}회 · ${T.c}/${T.t} 채점</div></div>
+          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+            ${today.slice(0,4).map(x=>`<span style="font-size:11.5px;font-weight:700;background:rgba(255,255,255,.2);padding:4px 9px;border-radius:999px">${esc(x.name)} ${x.pct}%</span>`).join("")}
+            ${today.length>4?`<span style="font-size:11.5px;opacity:.85;padding:4px">외 ${today.length-4}회</span>`:""}
+          </div>`
+        : `<div style="font-size:15px;font-weight:700;margin-top:6px">아직 오늘 푼 게 없어요</div>
+           <div style="font-size:12.5px;opacity:.9;margin-top:3px">한 파트만 풀어도 기록에 남아요</div>`}
+      </div>
+    </div>
+
+    <div class="pad" style="margin-top:16px">
+      <div class="sec"><h2>누적</h2><span class="more num">${days}일 학습</span></div>
+      <div class="tiles">
+        <div class="tile"><b class="num">${A.n}</b><span>총 응시</span></div>
+        <div class="tile"><b class="num" style="color:${pctOf(A)>=80?"var(--ok)":"var(--ink)"}">${pctOf(A)}%</b><span>평균 정답률</span></div>
+        <div class="tile"><b class="num">${A.c}</b><span>맞힌 채점</span></div>
+      </div>
+    </div>
+
     <div class="pad" style="margin-top:16px"><div class="card chart-card" style="position:relative">
       <h3>정답률 추이</h3><p>최근 ${recent.length}회 · 점을 누르면 상세가 보여요</p>
       <div id="spark-wrap" style="position:relative">${spark(recent)}</div></div></div>
+
     <div class="pad" style="margin-top:16px"><div class="card chart-card">
-      <h3>파트별 최고 기록</h3><p>낮은 파트부터 다시 돌리면 빨라요</p>
-      ${livePARTS().map(p=>{const b=bestOf()[p.id];
-        return `<div class="meter"><span class="lb">${labelOf(p.id)}</span>
-        <span class="tr"><i style="width:${b?b.pct:0}%"></i></span>
-        <span class="vl">${b?b.pct+"%":"—"}</span></div>`;}).join("")}</div></div>
-    <div class="pad" style="margin-top:16px"><div class="sec"><h2>응시 기록</h2></div>
-      <div class="card">${A.slice().reverse().map(a=>`
-        <div class="hist">
+      <h3>파트별 정답률</h3><p>낮은 파트부터 다시 돌리면 빨라요</p>
+      ${Object.entries(byName).sort((a,b)=>(a[1].c/a[1].t)-(b[1].c/b[1].t)).map(([k,v])=>{
+        const p2=Math.round(v.c/v.t*100);
+        return `<div class="meter"><span class="lb">${esc(k)}</span>
+          <span class="tr"><i class="${p2>=80?"hi":p2<60?"lo":""}" style="width:${p2}%"></i></span>
+          <span class="vl">${p2}%</span></div>`;}).join("")}
+    </div></div>
+
+    ${Object.keys(byBook).length>1?`<div class="pad" style="margin-top:16px"><div class="card chart-card">
+      <h3>교재별 정답률</h3><p>어느 교재가 약한지 보여요</p>
+      ${Object.entries(byBook).map(([k,v])=>{const p2=Math.round(v.c/v.t*100);
+        return `<div class="meter"><span class="lb" style="font-size:11.5px">${esc(k)}</span>
+          <span class="tr"><i class="${p2>=80?"hi":p2<60?"lo":""}" style="width:${p2}%"></i></span>
+          <span class="vl">${p2}%</span></div>`;}).join("")}
+    </div></div>`:""}
+
+    <div class="pad" style="margin-top:16px">
+      <div class="sec"><h2>응시 기록</h2><span class="more num">${R.length}회</span></div>
+      <div class="card">${R.slice(0,60).map(a=>`
+        <button class="hist"${a.id?` data-att="${a.id}"`:""}>
           <span class="sc num" style="background:${a.pct>=80?"var(--ok-soft)":a.pct>=60?"var(--accent-soft)":"var(--no-soft)"};color:${a.pct>=80?"var(--ok)":a.pct>=60?"var(--accent)":"var(--no)"}">${a.pct}</span>
-          <span style="flex:1"><span class="m-t" style="display:block">${a.partName}</span>
-          <span class="m-s">${a.scope==="all"?"전체":a.scope} · ${a.correct}/${a.total}</span></span>
-          <span class="m-s num">${a.d.slice(5)}</span></div>`).join("")}</div></div>`;
+          <span style="flex:1"><span class="m-t" style="display:block">${esc(a.name)}</span>
+          <span class="m-s">${esc(a.book||"")} · ${a.correct}/${a.total}</span></span>
+          <span class="m-s num">${fmtDay(a.at)}</span></button>`).join("")}</div>
+    </div>`;
   bindSpark(recent);
 }
+
+$("#record-body").addEventListener("click", async e=>{
+  const b=e.target.closest("[data-att]"); if(!b) return;
+  toast("오답 불러오는 중…");
+  try{
+    const r=await fetch(`api/mine?student=${encodeURIComponent(S.name)}&id=${b.dataset.att}`,{cache:"no-store"});
+    const j=await r.json(); const row=j.row;
+    if(!row) return toast("기록을 찾지 못했어요");
+    const wrong=[];
+    (row.detail||[]).forEach(it=>(it.d||[]).forEach(x=>{ if(!x.ok) wrong.push({it,x}); }));
+    $("#review-list").innerHTML = wrong.length
+      ? wrong.map(({it,x})=>`<div class="rv open"><div class="rv-b" style="padding:12px 16px">
+          <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${it.sec==="본문"?secLab("본문"):secLab("RF")} ${it.no} · ${esc(x.l)}</div>
+          <div class="ans-line"><span class="k">내 답</span><span class="bad">${esc(x.m)}</span></div>
+          <div class="ans-line"><span class="k">정답</span><span class="good">${esc(x.r)}</span></div></div></div>`).join("")
+      : `<div class="empty" style="padding:40px 20px"><h3>틀린 문항이 없어요 👏</h3></div>`;
+    $("#score-card").innerHTML=`<div style="padding:18px 16px;text-align:center">
+      <div class="score-msg">${esc(row.part_name)} · ${row.pct}%</div>
+      <div class="score-sub num">${esc(row.book||"")} · ${row.correct}/${row.total} · ${fmtDay(row.created_at)}</div></div>`;
+    const cta=$("#result-cta"); cta.textContent="기록으로 돌아가기";
+    cta.onclick=()=>{ cta.textContent="홈으로"; cta.onclick=()=>{renderHome();go("home");}; renderRecord(); go("record"); };
+    go("result");
+  }catch(err){ toast("불러오지 못했어요"); }
+});
+
 function spark(A){
   const W=360,H=132,PL=6,PR=6,PT=14,PB=22, iw=W-PL-PR, ih=H-PT-PB;
   const x=i=>A.length===1?PL+iw/2:PL+i*(iw/(A.length-1)), y=v=>PT+ih-(v/100)*ih;

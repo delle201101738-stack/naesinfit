@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>선생님 대시보드 · 내신핏</title>
+<title>hazel_studylog · 선생님</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&family=Archivo:wght@500;600;700&display=swap">
@@ -85,8 +85,8 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 <body>
 
 <div id="gate" class="gate">
-  <h2>선생님 대시보드</h2>
-  <p>비밀번호를 입력하세요.</p>
+  <h2>hazel_studylog</h2>
+  <p>선생님 대시보드 · 비밀번호를 입력하세요.</p>
   <input id="pin" type="password" placeholder="비밀번호" autocomplete="current-password">
   <button id="pin-go">들어가기</button>
   <div class="err" id="pin-err"></div>
@@ -95,7 +95,7 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 <div id="app" hidden>
   <header class="bar"><div class="bar-in">
     <div style="flex:1">
-      <h1>리뷰테스트 결과</h1>
+      <h1>hazel_studylog</h1>
       <div class="sub" id="bar-sub">불러오는 중…</div>
     </div>
     <button class="btn" id="csv">CSV 내려받기</button>
@@ -106,7 +106,10 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
     <div class="sec"><h2>교재 · 과</h2><span class="note">고르면 아래 전체가 그 교재 기준으로 바뀝니다</span></div>
     <div class="tabsw" id="btabs"></div>
 
-    <div class="sec"><h2>한눈에 보기</h2><span class="note" id="upd"></span></div>
+    <div class="sec"><h2>오늘</h2><span class="note" id="today-date"></span></div>
+    <div class="card" id="today-card" style="padding:18px 20px"></div>
+
+    <div class="sec"><h2>누적</h2><span class="note" id="upd"></span></div>
     <div class="tiles" id="tiles"></div>
 
     <div class="sec"><h2>학생별</h2><span class="note">이름을 누르면 응시 내역이 열려요</span></div>
@@ -163,13 +166,48 @@ function render(){
   const R=ROWS;
   $("#bar-sub").textContent = R.length ? `${new Set(R.map(x=>x.student)).size}명 · 총 ${R.length}회 응시` : "아직 응시 기록이 없습니다";
   $("#upd").textContent = "갱신 "+fmt(Date.now());
+  const dkey=v=>{const d=new Date(v);const p=n=>String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+  const tk=dkey(new Date());
+  const todayRows=R.filter(x=>dkey(x.created_at)===tk);
   const today=new Date().toDateString();
+
+  /* ── 오늘 ── */
+  $("#today-date").textContent=tk.replace(/-/g,".");
+  if(!todayRows.length){
+    $("#today-card").innerHTML=`<div style="color:var(--ink-3);font-size:14px">오늘 응시한 학생이 아직 없습니다.</div>`;
+  } else {
+    const tS=new Set(todayRows.map(x=>x.student));
+    const tt=todayRows.reduce((s,x)=>s+x.total,0), tc=todayRows.reduce((s,x)=>s+x.correct,0);
+    const perS={};
+    todayRows.forEach(x=>{const o=perS[x.student]=perS[x.student]||{t:0,c:0,n:0,parts:[]};
+      o.t+=x.total;o.c+=x.correct;o.n++;o.parts.push(PARTNAMES[x.part]||x.part);});
+    const list=Object.entries(perS).map(([n,o])=>({n,pct:Math.round(o.c/o.t*100),cnt:o.n,parts:o.parts}))
+      .sort((a,b)=>a.pct-b.pct);
+    $("#today-card").innerHTML=`
+      <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:baseline">
+        <div><b class="num" style="font-size:30px;font-weight:700">${tS.size}</b>
+          <span style="font-size:12.5px;color:var(--ink-3);margin-left:5px">명 응시</span></div>
+        <div><b class="num" style="font-size:30px;font-weight:700">${todayRows.length}</b>
+          <span style="font-size:12.5px;color:var(--ink-3);margin-left:5px">회</span></div>
+        <div><b class="num" style="font-size:30px;font-weight:700;color:${tc/tt>=.8?"var(--ok)":tc/tt<.6?"var(--no)":"var(--accent)"}">${Math.round(tc/tt*100)}%</b>
+          <span style="font-size:12.5px;color:var(--ink-3);margin-left:5px">정답률 · ${tc}/${tt}</span></div>
+      </div>
+      <div style="margin-top:16px;display:grid;gap:8px">
+        ${list.map(x=>`<div style="display:flex;align-items:center;gap:10px">
+          <span class="pill ${pctClass(x.pct)}" style="min-width:46px;text-align:center">${x.pct}%</span>
+          <button style="font-weight:700;color:var(--accent)" data-stu="${esc(x.n)}">${esc(x.n)}</button>
+          <span style="font-size:12.5px;color:var(--ink-3)">${x.parts.slice(0,3).map(esc).join(" · ")}${x.parts.length>3?` 외 ${x.parts.length-3}`:""}</span>
+          <span class="num" style="margin-left:auto;font-size:12.5px;color:var(--ink-3)">${x.cnt}회</span>
+        </div>`).join("")}
+      </div>`;
+  }
   const tot=R.reduce((s,x)=>s+x.total,0), cor=R.reduce((s,x)=>s+x.correct,0);
   $("#tiles").innerHTML=[
     ["응시 학생", new Set(R.map(x=>x.student)).size, ""],
     ["총 응시", R.length, ""],
     ["평균 정답률", tot?Math.round(cor/tot*100)+"%":"—", tot&&cor/tot>=.8?"var(--ok)":""],
-    ["오늘 응시", R.filter(x=>new Date(x.created_at).toDateString()===today).length, ""]
+    ["학습한 날", new Set(R.map(x=>dkey(x.created_at))).size, ""]
   ].map(([l,v,c])=>`<div class="card tile"><b class="num"${c?` style="color:${c}"`:""}>${v}</b><span>${l}</span></div>`).join("");
 
   if(!R.length){
@@ -218,7 +256,7 @@ function render(){
   $("#items").innerHTML = list.length
     ? `<thead><tr><th>파트</th><th>위치</th><th>번호</th><th>오답률</th><th>틀린 답 예시</th><th>정답</th></tr></thead><tbody>`+
       list.map(a=>`<tr><td>${PARTNAMES[a.part]}</td>
-        <td style="color:var(--ink-3)">${a.sec==="본문"?"본문":"Read Further"} ${a.no}</td>
+        <td style="color:var(--ink-3)">${esc(a.sec||"")} ${a.no}</td>
         <td class="num">${esc(a.l)}</td>
         <td><span class="pill ${a.rate>=60?"p-lo":a.rate>=30?"p-mid":"p-hi"}">${a.rate}%</span>
           <span style="color:var(--ink-3);font-size:12px" class="num"> ${a.w}/${a.n}</span></td>
@@ -260,7 +298,7 @@ function openAttempt(id){
   $("#dlg-t").textContent=`${r.student} · ${PARTNAMES[r.part]||r.part} · ${r.pct}%`;
   $("#dlg-b").innerHTML = wrong.length
     ? wrong.map(({it,x})=>`<div class="wrongrow">
-        <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${it.sec==="본문"?"본문":"Read Further"} ${it.no} · ${esc(x.l)}</div>
+        <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${esc(it.sec||"")} ${it.no} · ${esc(x.l)}</div>
         <span class="k">학생</span><span class="bad">${esc(x.m)}</span><br>
         <span class="k">정답</span><span class="good">${esc(x.r)}</span></div>`).join("")
     : `<div class="empty">틀린 문항이 없습니다 👏</div>`;
@@ -271,7 +309,7 @@ $("#csv").onclick=()=>{
   const rows=ALL.map(r=>[fmt(r.created_at),r.student,r.book,PARTNAMES[r.part]||r.part,r.scope,r.correct,r.total,r.pct,r.secs]);
   const csv="﻿"+[head,...rows].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  const a=document.createElement("a"); a.href=url; a.download="리뷰테스트_결과.csv"; a.click(); URL.revokeObjectURL(url);
+  const a=document.createElement("a"); a.href=url; a.download="hazel_studylog_결과.csv"; a.click(); URL.revokeObjectURL(url);
 };
 (async()=>{ if(PIN){ try{ await load(); $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){} } })();
 </script>
