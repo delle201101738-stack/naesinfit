@@ -616,7 +616,9 @@ function itemsOf(part, scope){
   return a;
 }
 const totalPts = sc => PARTS.reduce((s,p)=>s+itemsOf(p.id,sc).reduce((t,i)=>t+pts(p.id,i),0),0);
-const SCOPES={all:{label:"본문 + Read Further",short:"전체"},"본문":{label:"본문만",short:"본문만"}};
+const secLab = k => (C&&C.secLabels&&C.secLabels[k]) || (k==="본문"?"본문":"Read Further");
+const SCOPES = () => ({all:{label:`${secLab("본문")} + ${secLab("RF")}`, short:"전체"},
+                       "본문":{label:`${secLab("본문")}만`, short:secLab("본문")}});
 
 /* ───── 아이콘 ───── */
 const I={
@@ -697,14 +699,14 @@ function renderHome(){
   $("#scope-card").innerHTML = LOCKED
     ? `<div style="display:flex;align-items:center;gap:10px">
          <span style="font-size:20px">🔒</span>
-         <div><div style="font-size:15px;font-weight:700;letter-spacing:-.01em">${SCOPES[LOCKED].label}</div>
+         <div><div style="font-size:15px;font-weight:700;letter-spacing:-.01em">${SCOPES()[LOCKED].label}</div>
          <div style="font-size:12.5px;color:var(--ink-3);margin-top:2px">선생님이 정한 범위예요 · <span class="num">${totalPts(LOCKED)}개 채점</span></div></div>
        </div>`
     : `<div class="seg-btn" id="scope-global">
-         ${Object.entries(SCOPES).map(([k,v])=>`<button data-gs="${k}"${S.scope===k?' class="on"':""}>${v.label}</button>`).join("")}
+         ${Object.entries(SCOPES()).map(([k,v])=>`<button data-gs="${k}"${S.scope===k?' class="on"':""}>${v.label}</button>`).join("")}
        </div>
        <p style="margin:10px 0 0;font-size:12.5px;color:var(--ink-3);line-height:1.6">
-         학교 시험범위에 Read Further가 없으면 <b>본문만</b>을 고르세요 · 지금 범위 <span class="num" style="font-weight:700;color:var(--accent)">${totalPts(S.scope)}개 채점</span></p>`;
+         학교 시험범위에 ${secLab("RF")}가 없으면 <b>${secLab("본문")}만</b>을 고르세요 · 지금 범위 <span class="num" style="font-weight:700;color:var(--accent)">${totalPts(S.scope)}개 채점</span></p>`;
 
   $("#part-list").innerHTML=livePARTS().map(p=>{
     const all=itemsOf(p.id,S.scope), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
@@ -719,7 +721,7 @@ function renderHome(){
   $("#passage-list").innerHTML=C.para.filter(x=>curScope()==="all"||x.sec==="본문").map((x,i)=>`
     <button class="part-card" data-read="${i}">
       <span class="ci" style="background:var(--surface-2);color:var(--ink-3)">${x.no}</span>
-      <span style="flex:1"><span class="t">${x.sec==="본문"?"본문":"Read Further"} ${x.no}</span>
+      <span style="flex:1"><span class="t">${x.sec==="본문"?secLab("본문"):secLab("RF")} ${x.no}</span>
       <span class="s">${esc(x.en.slice(0,42))}…</span></span>${svg("chev","go")}
     </button>`).join("");
 }
@@ -730,7 +732,7 @@ const curScope = () => LOCKED || S.scope;
 document.addEventListener("click",e=>{
   const g=e.target.closest("[data-gs]");
   if(g){ if(LOCKED) return; S.scope=g.dataset.gs; save(); renderHome();
-         toast(`시험 범위: ${SCOPES[S.scope].label}`); return; }
+         toast(`시험 범위: ${SCOPES()[S.scope].label}`); return; }
   const t=e.target.closest("[data-part]"); if(!t) return;
   sel.part=t.dataset.part; sel.scope=curScope(); renderSetup(); go("setup");
 });
@@ -759,11 +761,11 @@ function renderSetup(){
     ${LOCKED
       ? `<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:10px">
            <span style="font-size:18px">🔒</span>
-           <span style="font-size:14.5px;font-weight:700">${SCOPES[LOCKED].label}</span>
+           <span style="font-size:14.5px;font-weight:700">${SCOPES()[LOCKED].label}</span>
            <span class="num" style="margin-left:auto;font-size:13px;color:var(--ink-3)">${sc[LOCKED].n}문항</span></div>`
       : `<div class="seg-btn" id="scope-btn">
-           <button data-sc="본문" class="${sel.scope==="본문"?"on":""}">본문만 <span class="num">${sc.본문.n}</span></button>
-           <button data-sc="all" class="${sel.scope==="all"?"on":""}">본문 + Read Further <span class="num">${sc.all.n}</span></button>
+           <button data-sc="본문" class="${sel.scope==="본문"?"on":""}">${SCOPES()["본문"].label} <span class="num">${sc.본문.n}</span></button>
+           <button data-sc="all" class="${sel.scope==="all"?"on":""}">${SCOPES().all.label} <span class="num">${sc.all.n}</span></button>
          </div>`}
 
     <div class="sec" style="margin:24px 0 10px"><h2>안내</h2></div>
@@ -815,7 +817,7 @@ function renderQ(){
   const it=Q.items[Q.i], part=Q.part, a=Q.ans[Q.i];
   $("#q-now").textContent=Q.i+1;
   $("#q-bar").style.width=((Q.i+1)/Q.items.length*100)+"%";
-  const tag=`<span class="q-type">${labelOf(part)} · ${it.sec==="본문"?"본문":"Read Further"} ${it.no}</span>`;
+  const tag=`<span class="q-type">${labelOf(part)} · ${it.sec==="본문"?secLab("본문"):secLab("RF")} ${it.no}</span>`;
   let body="";
   if(part==="vocab"||part==="gram"){
     body=`${tag}<p class="q-stem">박스에서 알맞은 것을 고르세요.</p>
@@ -964,7 +966,7 @@ function showResult(){
     return `<div class="rv${allok?"":" open"}" data-rv>
       <button class="rv-h">
         <span class="mark ${allok?"o":"x"}">${svg(allok?"check":"x")}</span>
-        <span style="flex:1"><span class="rv-q">${i+1}. ${it.sec==="본문"?"본문":"Read Further"} ${it.no}</span>
+        <span style="flex:1"><span class="rv-q">${i+1}. ${it.sec==="본문"?secLab("본문"):secLab("RF")} ${it.no}</span>
         <span class="rv-meta num">${ok} / ${ds.length} 정답</span></span></span>
       </button>
       <div class="rv-b">${ds.map((x,j)=>x.ok?"":`
@@ -978,10 +980,10 @@ function showResult(){
 
   // 기록 저장
   const rec={d:new Date().toISOString().slice(0,10), unit:unitLabel(), part, partName:labelOf(part),
-             scope:SCOPES[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs};
+             scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs};
   S.attempts.push(rec); S.exp+=10+c*2;
   const b=S.best[part];
-  if(!b || pct>b.pct) bestOf()[part]={done:c,total:t,pct,scope:SCOPES[sel.scope]?.short||sel.scope};
+  if(!b || pct>b.pct) bestOf()[part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
   save();
   go("result");
 
@@ -989,7 +991,7 @@ function showResult(){
     Q.sent=true;
     submitResult({
       student:S.name, book:unitLabel(), unitId:UNIT?UNIT.id:"",
-      part, partName:labelOf(part), scope:SCOPES[sel.scope]?.short||sel.scope,
+      part, partName:labelOf(part), scope:SCOPES()[sel.scope]?.short||sel.scope,
       total:t, correct:c, pct, secs,
       detail:Q.items.map((it,i)=>({no:it.no, sec:it.sec,
         d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})}))
@@ -1001,7 +1003,7 @@ $("#review-list").addEventListener("click",e=>{
   if(sf){ const [i,j]=sf.dataset.self.split(".").map(Number);
     Q.detail[i][j].ok=true; S.exp+=2;
     const {t,c,pct}=tally();
-    const b=bestOf()[Q.part]; if(!b||pct>b.pct) bestOf()[Q.part]={done:c,total:t,pct,scope:SCOPES[sel.scope]?.short||sel.scope};
+    const b=bestOf()[Q.part]; if(!b||pct>b.pct) bestOf()[Q.part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
     S.attempts[S.attempts.length-1].correct=c; S.attempts[S.attempts.length-1].pct=pct;
     save(); Q.sent=false; showResult(); toast("정답 처리했어요 · 선생님께 다시 전송돼요"); return; }
   const r=e.target.closest("[data-rv]"); if(r) r.classList.toggle("open");
@@ -1207,7 +1209,7 @@ applyTheme();
 (async function boot(){
   try{
     const r=await fetch("api/config",{cache:"no-store"});
-    if(r.ok){ const j=await r.json(); if(j.fixedScope&&SCOPES[j.fixedScope]){ LOCKED=j.fixedScope; S.scope=LOCKED; save(); } }
+    if(r.ok){ const j=await r.json(); if(j.fixedScope&&SCOPES()[j.fixedScope]){ LOCKED=j.fixedScope; S.scope=LOCKED; save(); } }
   }catch(e){}
 
   try{ await loadManifest(); }
