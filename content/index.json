@@ -9,7 +9,18 @@
      "id": "e2-cj-01",
      "no": "1과",
      "title": "Constantly in Motion",
-     "file": "content/e2-cj-01.json"
+     "file": "content/e2-cj-01.json",
+     "pts": {
+      "vocab": 82,
+      "gram": 100,
+      "fix": 78,
+      "tf": 50,
+      "order": 8,
+      "insert": 9,
+      "write": 27
+     },
+     "total": 354,
+     "labels": {}
     }
    ]
   },
@@ -22,7 +33,18 @@
      "id": "e2-cj3-03",
      "no": "3과",
      "title": "Seeds",
-     "file": "content/e2-cj3-03.json"
+     "file": "content/e2-cj3-03.json",
+     "pts": {
+      "vocab": 60,
+      "gram": 63,
+      "fix": 57,
+      "tf": 39,
+      "order": 7,
+      "insert": 6,
+      "write": 21
+     },
+     "total": 253,
+     "labels": {}
     }
    ]
   },
@@ -35,7 +57,21 @@
      "id": "gwybm05",
      "no": "5과",
      "title": "Future Technologies",
-     "file": "content/gwybm05.json"
+     "file": "content/gwybm05.json",
+     "pts": {
+      "word": 71,
+      "fix": 81,
+      "tf": 46,
+      "order": 13,
+      "insert": 20,
+      "write": 22
+     },
+     "total": 253,
+     "labels": {
+      "word": "단어 밑줄",
+      "fix": "어법 밑줄",
+      "write": "영작(서술형)"
+     }
     }
    ]
   }
