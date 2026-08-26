@@ -140,8 +140,8 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const PARTNAMES={vocab:"어휘 선택",gram:"어법 선택",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",write:"영작"};
-const ORDER=["vocab","gram","fix","tf","order","insert","write"];
+const PARTNAMES={vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작"};
+const ORDER=["vocab","gram","word","fix","tf","order","insert","arrange","write"];
 let PIN=sessionStorage.getItem("naesinfit.pin")||"", ALL=[], ROWS=[], TAB="all", BOOK="all";
 
 const pctClass=p=>p>=90?"p-hi":p>=75?"p-mid":"p-lo";
