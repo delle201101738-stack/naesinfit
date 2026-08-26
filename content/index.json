@@ -58,7 +58,7 @@
       "tf": 25,
       "order": 5,
       "insert": 5,
-      "write": 24
+      "arrange": 24
      },
      "total": 206,
      "labels": {}
@@ -83,7 +83,7 @@
       "tf": 50,
       "order": 11,
       "insert": 11,
-      "write": 35
+      "arrange": 35
      },
      "total": 349,
      "labels": {}
@@ -108,7 +108,7 @@
       "tf": 51,
       "order": 9,
       "insert": 9,
-      "write": 30
+      "arrange": 30
      },
      "total": 335,
      "labels": {}
@@ -121,10 +121,10 @@
    "publisher": "천재(강상구)",
    "units": [
     {
-     "id": "e2-cj-01",
+     "id": "e2cjk01",
      "no": "1과",
      "title": "Constantly in Motion",
-     "file": "content/e2-cj-01.json",
+     "file": "content/e2cjk01.json",
      "pts": {
       "vocab": 82,
       "gram": 100,
@@ -132,7 +132,7 @@
       "tf": 50,
       "order": 8,
       "insert": 9,
-      "write": 27
+      "arrange": 27
      },
      "total": 357,
      "labels": {}
@@ -157,16 +157,16 @@
       "tf": 39,
       "order": 7,
       "insert": 7,
-      "write": 20
+      "arrange": 20
      },
      "total": 305,
      "labels": {}
     },
     {
-     "id": "e2-cj3-03",
+     "id": "e2cjs03",
      "no": "3과",
      "title": "Seeds",
-     "file": "content/e2-cj3-03.json",
+     "file": "content/e2cjs03.json",
      "pts": {
       "vocab": 60,
       "gram": 63,
@@ -174,7 +174,7 @@
       "tf": 39,
       "order": 7,
       "insert": 6,
-      "write": 21
+      "arrange": 21
      },
      "total": 253,
      "labels": {}
@@ -191,7 +191,7 @@
       "tf": 30,
       "order": 5,
       "insert": 5,
-      "write": 21
+      "arrange": 21
      },
      "total": 204,
      "labels": {}
@@ -215,7 +215,7 @@
       "tf": 46,
       "order": 13,
       "insert": 20,
-      "write": 22
+      "arrange": 22
      },
      "total": 253,
      "labels": {
