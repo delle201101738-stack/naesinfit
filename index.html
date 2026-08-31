@@ -407,6 +407,11 @@ input{font:inherit; color:inherit}
 .tok.used{opacity:.28; pointer-events:none}
 .bld .tok{background:var(--accent); color:var(--on-accent); border-color:var(--accent); box-shadow:none; font-weight:700}
 .bld .tok .ix{font-family:'Archivo',sans-serif; font-size:10px; opacity:.7; margin-right:5px}
+.car{display:inline-block; width:14px; align-self:stretch; min-height:34px; padding:0 6px;
+  background-clip:content-box; background:var(--line-2); opacity:.45; border-radius:2px; flex:none}
+.car.on{background:var(--accent); opacity:1; animation:blink 1.1s steps(1,end) infinite}
+@keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.15}}
+.bld-tip{font-size:12px; color:var(--ink-3); margin-top:8px; line-height:1.6}
 .seg{display:inline; border-bottom:2px solid var(--line-2); cursor:pointer; padding-bottom:1px}
 .seg.mk{border-bottom-color:var(--no); background:var(--no-soft); border-radius:4px; padding:1px 2px}
 .seg-lab{font-family:'Archivo',sans-serif; font-size:11px; font-weight:700; color:var(--accent); margin-right:2px}
@@ -755,16 +760,58 @@ const bestOf = () => (S.best[UNIT?UNIT.id:"_"] ||= {});
 const wrongOf = () => ((S.wrong ||= {})[UNIT?UNIT.id:"_"] ||= {});
 const wkey = it => `${it.sec}|${it.no}`;
 function markWrong(part, it, bad){
-  const w=wrongOf(), arr=(w[part] ||= []), k=wkey(it), i=arr.indexOf(k);
-  if(bad){ if(i<0) arr.push(k); } else if(i>=0) arr.splice(i,1);
-  if(!arr.length) delete w[part];
+  const w=wrongOf(), m=(w[part] ||= {}), k=wkey(it);
+  if(bad && bad.length) m[k]=bad.slice(); else delete m[k];
+  if(!Object.keys(m).length) delete w[part];
+}
+/* 틀린 채점 포인트만 남긴 축소 문항 만들기 */
+function subVG(it, keep){
+  let text=it.text, nb=[], map={}, n=0;
+  it.blanks.forEach((b,i)=>{ if(keep.indexOf(i)>=0){ n++; map[i]=n; nb.push(b); } });
+  it.blanks.forEach((b,i)=>{
+    text = text.replace("«"+(i+1)+"»",
+      keep.indexOf(i)>=0 ? "\u0001"+map[i]+"\u0002" : b.opt[b.ans]);
+  });
+  text = text.replace(/\u0001(\d+)\u0002/g, "«$1»");
+  return Object.assign({}, it, {text, blanks:nb, _map:keep.slice()});
+}
+function subSeg(it, keep){
+  let lead=it.lead||"", seg=[];
+  it.seg.forEach((s,i)=>{
+    if(keep.indexOf(i)>=0){ seg.push(Object.assign({}, s)); return; }
+    const fixed = s.wrong ? (s.from && s.t.indexOf(s.from)>=0 ? s.t.replace(s.from, s.to) : s.to) : s.t;
+    const add = (fixed + (s.after ? " "+s.after : "")).trim();
+    if(seg.length) seg[seg.length-1].after = ((seg[seg.length-1].after||"") + " " + add).trim();
+    else lead = (lead + " " + add).trim();
+  });
+  return Object.assign({}, it, {lead, seg, _map:keep.slice()});
+}
+function subTF(it, keep){
+  return Object.assign({}, it, {st:keep.map(i=>it.st[i]), ans:keep.map(i=>it.ans[i]), _map:keep.slice()});
+}
+function subset(part, it, keep){
+  if(!keep || !keep.length) return it;
+  if(part==="vocab"||part==="gram") return subVG(it,keep);
+  if(part==="fix"||part==="word")   return subSeg(it,keep);
+  if(part==="tf")                   return subTF(it,keep);
+  return Object.assign({}, it, {_map:keep.slice()});
 }
 function wrongItems(part){
-  const ks=wrongOf()[part]||[], all=(C&&C[part])||[];
-  return ks.map(k=>all.find(x=>wkey(x)===k)).filter(Boolean)
-           .filter(it=>curScope()!=="본문" || it.sec==="본문");
+  const m=wrongOf()[part]||{}, all=(C&&C[part])||[], out=[];
+  Object.keys(m).forEach(k=>{
+    const it=all.find(x=>wkey(x)===k); if(!it) return;
+    if(curScope()==="본문" && it.sec!=="본문") return;
+    const keep=(m[k]||[]).filter(i=>i>=0 && i<subLen(part,it));
+    if(!keep.length) return;
+    out.push(subset(part, it, keep));
+  });
+  return out;
 }
-const wrongCount = part => wrongItems(part).length;
+const subLen = (part,it) =>
+  (part==="vocab"||part==="gram") ? it.blanks.length :
+  (part==="fix"||part==="word")   ? it.seg.length :
+  (part==="tf")                   ? it.st.length : 1;
+const wrongCount = part => wrongItems(part).reduce((s,it)=>s+pts(part,it),0);
 const wrongTotal = () => livePARTS().reduce((s,p)=>s+wrongCount(p.id),0);
 function doneCount(){
   const b=bestOf();
@@ -820,7 +867,7 @@ function renderHome(){
     <div class="sec"><h2>오답노트</h2><span class="more">틀린 것만 모았어요</span></div>
     <button class="card part-card" data-go="wrong" style="width:100%">
       <span class="ci" style="background:var(--no-soft);color:var(--no)">${wt}</span>
-      <span style="flex:1"><span class="t">틀린 문항 다시 풀기</span>
+      <span style="flex:1"><span class="t">틀린 문제만 다시 풀기</span>
       <span class="s">${livePARTS().filter(p=>wrongCount(p.id)).map(p=>labelOf(p.id)).join(" · ")}</span></span>
       ${svg("chev","go")}
     </button>` : (tried ? `
@@ -917,6 +964,7 @@ function startQuiz(opts){
   Q={review:!!opts.review, part: opts.review ? (opts.part||"review") : sel.part,
      items, pl:list.map(x=>x.part), i:0, t0:Date.now()};
   Q.ans=list.map(x=>blankAns(x.part,x.it));
+  Q.cur=list.map(()=>0);
   $("#q-total").textContent=items.length;
   clearInterval(Q.timer); Q.timer=setInterval(tick,1000); tick();
   renderQ(); go("quiz");
@@ -963,13 +1011,18 @@ function renderQ(){
           <span class="lb">${L}</span><span style="flex:1">${esc(it[L])}</span>
           ${r>=0?`<span class="rank num">${r+1}</span>`:""}</button>`;}).join("")}</div>`;
   } else if(part==="arrange"){
+    if(Q.cur[Q.i]==null || Q.cur[Q.i]>a.length) Q.cur[Q.i]=a.length;
+    const cur=Q.cur[Q.i];
     body=`${tag}<p class="q-stem">토막을 눌러 순서대로 배열하세요.</p>
       <p class="ko" style="margin-top:12px;font-size:15px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>
       <div class="bld${a.length?" on":""}" id="bld" style="margin-top:14px">${
-        a.length ? a.map((t,r)=>`<button class="tok" data-un="${r}"><span class="ix">${r+1}</span>${esc(it.tok[t])}</button>`).join("")
-                 : `<span class="ph">아래에서 토막을 눌러 담으세요 · 담은 것을 다시 누르면 빠져요</span>`}</div>
+        a.length
+          ? a.map((t,r)=>`<i class="car${cur===r?" on":""}" data-car="${r}"></i><button class="tok" data-un="${r}"><span class="ix">${r+1}</span>${esc(it.tok[t])}</button>`).join("")
+            + `<i class="car${cur===a.length?" on":""}" data-car="${a.length}"></i>`
+          : `<span class="ph">아래에서 토막을 눌러 담으세요</span>`}</div>
+      <p class="bld-tip">담은 토막을 누르면 <b>그 자리에서 빠지고</b> 커서가 거기 남습니다 · 사이 빈틈을 누르면 <b>끼워 넣을 위치</b>를 옮길 수 있어요${a.length?` · <button id="bld-clear" style="color:var(--accent);font-weight:700">전체 지우기</button>`:""}</p>
       <div class="pool">${it.tok.map((t,j)=>`<button class="tok${a.includes(j)?" used":""}" data-tk="${j}">${esc(t)}</button>`).join("")}</div>
-      <p class="hint" style="margin-top:14px">${a.length}/${it.tok.length} 담음</p>`;
+      <p class="hint" style="margin-top:14px">${a.length}/${it.tok.length} 담음${a.length<it.tok.length?` · ${cur===a.length?"맨 뒤":(cur+1)+"번째 자리"}에 들어갑니다`:""}</p>`;
   } else if(part==="insert"){
     let html="";
     for(let k=0;k<it.chunks.length;k++){
@@ -1023,10 +1076,16 @@ $("#quiz-body").addEventListener("click",e=>{
     const N=["A","B","C","D","E"].filter(x=>it[x]).length;
     if(k>=0) a.splice(k,1); else if(a.length<N) a.push(L);
     renderQ(); return; }
+  if(e.target.closest("#bld-clear")){ a.length=0; Q.cur[Q.i]=0; renderQ(); return; }
+  const car=e.target.closest("[data-car]");
+  if(car){ Q.cur[Q.i]=+car.dataset.car; renderQ(); return; }
   const tk=e.target.closest("[data-tk]");
-  if(tk){ const j=+tk.dataset.tk; if(!a.includes(j)) a.push(j); renderQ(); return; }
+  if(tk){ const j=+tk.dataset.tk;
+    if(!a.includes(j)){ let c=Q.cur[Q.i]; if(c==null||c>a.length) c=a.length;
+      a.splice(c,0,j); Q.cur[Q.i]=c+1; }
+    renderQ(); return; }
   const un=e.target.closest("[data-un]");
-  if(un){ a.splice(+un.dataset.un,1); renderQ(); return; }
+  if(un){ const r=+un.dataset.un; a.splice(r,1); Q.cur[Q.i]=r; renderQ(); return; }
   const sl=e.target.closest("[data-slot]");
   if(sl){ Q.ans[Q.i]=+sl.dataset.slot;
     document.querySelectorAll("[data-slot]").forEach(x=>x.classList.toggle("on",x===sl)); return; }
@@ -1073,7 +1132,11 @@ function grade(part,it,a){
 function finish(){
   clearInterval(Q.timer);
   Q.detail=Q.items.map((it,i)=>grade(Q.pl[i],it,Q.ans[i]));
-  Q.items.forEach((it,i)=>markWrong(Q.pl[i], it, Q.detail[i].some(x=>!x.ok)));
+  Q.items.forEach((it,i)=>{
+    const mp=it._map, bad=[];
+    Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
+    markWrong(Q.pl[i], it, bad);
+  });
   save();
   showResult();
 }
@@ -1146,7 +1209,9 @@ $("#review-list").addEventListener("click",e=>{
   const sf=e.target.closest("[data-self]");
   if(sf){ const [i,j]=sf.dataset.self.split(".").map(Number);
     Q.detail[i][j].ok=true; S.exp+=2;
-    markWrong(Q.pl[i], Q.items[i], Q.detail[i].some(x=>!x.ok));
+    (function(){ const mp=Q.items[i]._map, bad=[];
+      Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
+      markWrong(Q.pl[i], Q.items[i], bad); })();
     const {t,c,pct}=tally();
     if(!Q.review){
       const b=bestOf()[Q.part]; if(!b||pct>b.pct) bestOf()[Q.part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
@@ -1167,8 +1232,8 @@ function renderWrong(){
     <div class="card" style="padding:18px 16px">
       <div style="display:flex;align-items:center;gap:13px">
         <span class="ci" style="width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--no-soft);color:var(--no);font-family:Archivo;font-weight:800;font-size:18px">${tot}</span>
-        <div><div style="font-size:17px;font-weight:800;letter-spacing:-.02em">틀린 문항 ${tot}개</div>
-        <div style="font-size:13px;color:var(--ink-3);margin-top:2px">맞히면 목록에서 자동으로 빠져요</div></div>
+        <div><div style="font-size:17px;font-weight:800;letter-spacing:-.02em">틀린 문제 ${tot}개</div>
+        <div style="font-size:13px;color:var(--ink-3);margin-top:2px">틀린 자리만 콕 집어서 나와요 · 맞히면 목록에서 빠집니다</div></div>
       </div>
     </div>
     <div class="sec" style="margin:24px 0 10px"><h2>파트별</h2><span class="more">눌러서 그 파트만 풀기</span></div>
@@ -1176,7 +1241,7 @@ function renderWrong(){
       ${rows.map(({p,n})=>`<button class="wrow" data-wp="${p.id}">
         <span class="ci" style="background:${p.b};color:${p.c}">${n}</span>
         <span style="flex:1;min-width:0"><span class="t" style="display:block;font-size:15px;font-weight:700">${labelOf(p.id)}</span>
-        <span class="s" style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">틀린 문항 ${n}개</span></span>
+        <span class="s" style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">틀린 문제 ${n}개</span></span>
         <span style="flex:none;display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--accent)">
           <svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round">${I.redo}</svg>
           다시 풀기</span>
@@ -1185,10 +1250,10 @@ function renderWrong(){
     <div class="card" style="margin-top:16px;padding:15px 16px;font-size:13px;line-height:1.75;color:var(--ink-2)">
       오답노트는 <b>연습용</b>이라 선생님께 전송되지 않아요. 정식 기록은 파트를 처음부터 다시 풀 때 남습니다.</div>`
     : `<div class="empty" style="padding:60px 20px;text-align:center">
-         <h3 style="margin:0;font-size:18px;font-weight:800">틀린 문항이 없어요 👏</h3>
+         <h3 style="margin:0;font-size:18px;font-weight:800">틀린 문제가 없어요 👏</h3>
          <p style="margin:8px 0 0;font-size:14px;color:var(--ink-3);line-height:1.7">파트를 풀다가 틀리면 여기에 자동으로 쌓입니다.</p></div>`;
   $("#wrong-cta").hidden = !tot;
-  $("#wrong-cta").textContent = `틀린 문항 ${tot}개 전부 다시 풀기`;
+  $("#wrong-cta").textContent = `틀린 문제 ${tot}개 전부 다시 풀기`;
 }
 $("#wrong-cta").onclick=()=>startQuiz({review:true});
 $("#wrong-body").addEventListener("click",e=>{
@@ -1418,12 +1483,9 @@ const UKEY="naesinfit.unit";
       if(S.wrong[o] && !S.wrong[n]) S.wrong[n] = S.wrong[o];
       delete S.best[o]; delete S.wrong[o];
     }
-    for(const u in S.wrong){                    // 번호 없이 저장된 옛 키 제거
+    for(const u in S.wrong){          // 옛 형식(문항 단위 배열) 폐기 → 포인트 단위로 재수집
       const m=S.wrong[u]||{};
-      for(const pt in m){
-        m[pt]=(m[pt]||[]).filter(k=>typeof k==="string" && !/\|$/.test(k));
-        if(!m[pt].length) delete m[pt];
-      }
+      for(const pt in m) if(Array.isArray(m[pt])) delete m[pt];
       if(!Object.keys(m).length) delete S.wrong[u];
     }
     for(const u in S.best){ const b=S.best[u]; if(b && b.write) delete b.write; }
