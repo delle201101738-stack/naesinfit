@@ -407,11 +407,16 @@ input{font:inherit; color:inherit}
 .tok.used{opacity:.28; pointer-events:none}
 .bld .tok{background:var(--accent); color:var(--on-accent); border-color:var(--accent); box-shadow:none; font-weight:700}
 .bld .tok .ix{font-family:'Archivo',sans-serif; font-size:10px; opacity:.7; margin-right:5px}
-.car{display:inline-block; width:14px; align-self:stretch; min-height:34px; padding:0 6px;
-  background-clip:content-box; background:var(--line-2); opacity:.45; border-radius:2px; flex:none}
-.car.on{background:var(--accent); opacity:1; animation:blink 1.1s steps(1,end) infinite}
+.car{position:relative; box-sizing:border-box; width:16px; align-self:stretch; min-height:34px; flex:none; background:none}
+.car::before{content:""; position:absolute; left:7px; top:4px; bottom:4px; width:2px; border-radius:2px;
+  background:var(--line-2); opacity:.4}
+.car.on::before{background:var(--accent); opacity:1; width:3px; left:6px; animation:blink 1.1s steps(1,end) infinite}
 @keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.15}}
 .bld-tip{font-size:12px; color:var(--ink-3); margin-top:8px; line-height:1.6}
+.bld .tok{touch-action:none; user-select:none; -webkit-user-select:none; transition:transform .12s, box-shadow .12s}
+.bld .tok.drag{transform:scale(1.08); box-shadow:0 8px 22px rgba(0,0,0,.3); opacity:.95; position:relative; z-index:5}
+.bld.dragging{cursor:grabbing}
+.bld.dragging .car{pointer-events:none; opacity:.25}
 .seg{display:inline; border-bottom:2px solid var(--line-2); cursor:pointer; padding-bottom:1px}
 .seg.mk{border-bottom-color:var(--no); background:var(--no-soft); border-radius:4px; padding:1px 2px}
 .seg-lab{font-family:'Archivo',sans-serif; font-size:11px; font-weight:700; color:var(--accent); margin-right:2px}
@@ -1017,10 +1022,10 @@ function renderQ(){
       <p class="ko" style="margin-top:12px;font-size:15px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>
       <div class="bld${a.length?" on":""}" id="bld" style="margin-top:14px">${
         a.length
-          ? a.map((t,r)=>`<i class="car${cur===r?" on":""}" data-car="${r}"></i><button class="tok" data-un="${r}"><span class="ix">${r+1}</span>${esc(it.tok[t])}</button>`).join("")
+          ? a.map((t,r)=>`<i class="car${cur===r?" on":""}" data-car="${r}"></i><button class="tok" data-un="${r}" data-ti="${t}"><span class="ix">${r+1}</span>${esc(it.tok[t])}</button>`).join("")
             + `<i class="car${cur===a.length?" on":""}" data-car="${a.length}"></i>`
           : `<span class="ph">아래에서 토막을 눌러 담으세요</span>`}</div>
-      <p class="bld-tip">담은 토막을 누르면 <b>그 자리에서 빠지고</b> 커서가 거기 남습니다 · 사이 빈틈을 누르면 <b>끼워 넣을 위치</b>를 옮길 수 있어요${a.length?` · <button id="bld-clear" style="color:var(--accent);font-weight:700">전체 지우기</button>`:""}</p>
+      <p class="bld-tip">토막을 <b>끌어서 자리를 바꿀 수</b> 있어요 · 짧게 누르면 <b>빠집니다</b> · 사이 빈틈을 누르면 끼워 넣을 위치가 그리로 옮겨가요${a.length?` · <button id="bld-clear" style="color:var(--accent);font-weight:700">전체 지우기</button>`:""}</p>
       <div class="pool">${it.tok.map((t,j)=>`<button class="tok${a.includes(j)?" used":""}" data-tk="${j}">${esc(t)}</button>`).join("")}</div>
       <p class="hint" style="margin-top:14px">${a.length}/${it.tok.length} 담음${a.length<it.tok.length?` · ${cur===a.length?"맨 뒤":(cur+1)+"번째 자리"}에 들어갑니다`:""}</p>`;
   } else if(part==="insert"){
@@ -1039,8 +1044,53 @@ function renderQ(){
   }
   $("#quiz-body").innerHTML=body;
   if(part==="write"){ const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
+  if(part==="arrange" && DRAG) wireDrag();
   syncCta();
 }
+/* ───── 단어배열: 끌어서 자리 바꾸기 ───── */
+const DRAG = typeof window!=="undefined" && !!window.PointerEvent;
+function wireDrag(){
+  const bld=$("#bld"); if(!bld) return;
+  let el=null, sx=0, sy=0, moved=false, pid=null;
+  const stop=()=>{ el=null; moved=false; bld.classList.remove("dragging"); };
+  bld.addEventListener("pointerdown", e=>{
+    const t=e.target.closest("[data-un]"); if(!t) return;
+    if(e.pointerType==="mouse" && e.button!==0) return;
+    el=t; sx=e.clientX; sy=e.clientY; moved=false; pid=e.pointerId;
+    try{ bld.setPointerCapture(pid); }catch(_){}
+  });
+  bld.addEventListener("pointermove", e=>{
+    if(!el) return;
+    if(!moved){
+      if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy) < 9) return;
+      moved=true; el.classList.add("drag"); bld.classList.add("dragging");
+    }
+    e.preventDefault();
+    const over=document.elementFromPoint(e.clientX, e.clientY);
+    const tgt=over && over.closest ? over.closest("[data-un]") : null;
+    if(tgt && tgt!==el && tgt.parentNode===bld){
+      const r=tgt.getBoundingClientRect();
+      const after = e.clientY > r.bottom || (e.clientY >= r.top && e.clientX > r.left + r.width/2);
+      bld.insertBefore(el, after ? tgt.nextSibling : tgt);
+    }
+  });
+  const end=()=>{
+    if(!el) return;
+    try{ bld.releasePointerCapture(pid); }catch(_){}
+    const cell=el, wasMoved=moved; stop(); cell.classList.remove("drag");
+    const a=Q.ans[Q.i];
+    if(wasMoved){
+      const order=Array.from(bld.querySelectorAll("[data-un]")).map(x=>+x.dataset.ti);
+      a.length=0; order.forEach(v=>a.push(v)); Q.cur[Q.i]=a.length;
+    }else{
+      const r=+cell.dataset.un; a.splice(r,1); Q.cur[Q.i]=r;
+    }
+    renderQ();
+  };
+  bld.addEventListener("pointerup", end);
+  bld.addEventListener("pointercancel", end);
+}
+
 function pickHTML(it,a){
   let h=esc(it.text);
   it.blanks.forEach((b,i)=>{
@@ -1085,7 +1135,8 @@ $("#quiz-body").addEventListener("click",e=>{
       a.splice(c,0,j); Q.cur[Q.i]=c+1; }
     renderQ(); return; }
   const un=e.target.closest("[data-un]");
-  if(un){ const r=+un.dataset.un; a.splice(r,1); Q.cur[Q.i]=r; renderQ(); return; }
+  if(un && !DRAG){ const r=+un.dataset.un; a.splice(r,1); Q.cur[Q.i]=r; renderQ(); return; }
+  if(un) return;
   const sl=e.target.closest("[data-slot]");
   if(sl){ Q.ans[Q.i]=+sl.dataset.slot;
     document.querySelectorAll("[data-slot]").forEach(x=>x.classList.toggle("on",x===sl)); return; }
