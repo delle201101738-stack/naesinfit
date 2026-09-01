@@ -413,6 +413,19 @@ input{font:inherit; color:inherit}
 .car.on::before{background:var(--accent); opacity:1; width:3px; left:6px; animation:blink 1.1s steps(1,end) infinite}
 @keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.15}}
 .bld-tip{font-size:12px; color:var(--ink-3); margin-top:8px; line-height:1.6}
+.hintbox{margin-top:16px; padding:12px 13px 13px; border-radius:14px; background:var(--accent-soft);
+  border:1px solid var(--line)}
+.hintbox .hh{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.hintbox .hh b{font-size:12.5px; color:var(--ink-2); letter-spacing:.2px}
+.hintbox .hh .lv{font-size:11.5px; color:var(--ink-3); font-weight:600}
+.hlvl{display:flex; gap:5px}
+.hlvl button{padding:6px 10px; border-radius:9px; font-size:11.5px; font-weight:700;
+  background:var(--surface); color:var(--ink-3); border:1px solid var(--line)}
+.hlvl button.on{background:var(--accent); color:var(--on-accent); border-color:var(--accent)}
+.hchips{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+.hchip{padding:5px 9px; border-radius:8px; background:var(--surface); border:1px solid var(--line);
+  font-size:12.5px; font-weight:600; color:var(--ink-2); line-height:1.2}
+.hnone{margin-top:9px; font-size:12px; color:var(--ink-3)}
 .bld .tok{touch-action:none; user-select:none; -webkit-user-select:none; transition:transform .12s, box-shadow .12s}
 .bld .tok.drag{transform:scale(1.08); box-shadow:0 8px 22px rgba(0,0,0,.3); opacity:.95; position:relative; z-index:5}
 .bld.dragging{cursor:grabbing}
@@ -715,7 +728,7 @@ const AVATAR=`<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#FFE
 
 /* ───── 상태 ───── */
 const KEY="naesinfit.review.v1";
-const DEF={name:"", exp:0, theme:"", attempts:[], best:{}, wrong:{}, scope:"all", grade:"", subject:"", arrMode:"tok"};
+const DEF={name:"", exp:0, theme:"", attempts:[], best:{}, wrong:{}, scope:"all", grade:"", subject:"", arrMode:"tok", arrHint:1};
 let LOCKED=null;  // 선생님이 범위를 고정한 경우
 let S=(()=>{try{const r=JSON.parse(localStorage.getItem(KEY));return Object.assign({},DEF,r||{});}catch(e){return Object.assign({},DEF);}})();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
@@ -957,7 +970,7 @@ const HOWTO={
  tf:"지문을 읽고 각 문장이 내용과 <b>일치하면 T</b>, 일치하지 않으면 <b>F</b>를 누릅니다.",
  order:"주어진 글 다음에 이어질 순서대로 (A)(B)(C)를 <b>순서대로 탭</b>하세요. 다시 누르면 취소됩니다.",
  insert:"주어진 문장이 들어가기에 가장 적절한 <b>번호 자리</b>를 누릅니다.",
- arrange:"<b>토막 배열</b>은 흩어진 토막을 끌어서 순서대로 맞춥니다. <b>직접 타이핑</b>은 우리말만 보고 영어로 씁니다 — 관사(a·the)와 사소한 철자 실수는 봐주고, 문장마다 100점 만점으로 채점해 "+ARR_PASS+"점 이상이면 정답입니다. 위 <b>푸는 방식</b>에서 언제든 바꿀 수 있어요.",
+ arrange:"<b>토막 배열</b>은 흩어진 토막을 끌어서 순서대로 맞춥니다. <b>직접 타이핑</b>은 우리말만 보고 영어로 씁니다 — 관사(a·the)와 사소한 철자 실수는 봐주고, 문장마다 100점 만점으로 채점해 "+ARR_PASS+"점 이상이면 정답입니다. 타이핑에는 <b>힌트</b>가 붙어요 — 기본은 <b>핵심 단어</b>만 섞어서 보여주고, 문제 화면에서 <b>전체 토막</b>이나 <b>없음</b>으로 바꿀 수 있습니다. 위 <b>푸는 방식</b>은 언제든 바꿀 수 있어요.",
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
 };
 $("#setup-body").addEventListener("click",e=>{
@@ -1035,7 +1048,8 @@ function renderQ(){
     body=`${tag}<p class="q-stem">우리말을 보고 영어로 쓰세요.</p>
       <p class="ko" style="margin-top:12px;font-size:15px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>
       <textarea class="wr-in" id="wr" placeholder="영어로 쓰세요" spellcheck="false" autocapitalize="off">${esc(a)}</textarea>
-      <p class="hint">관사(a·the)와 사소한 철자 실수는 봐줍니다 · <b>${ARR_PASS}점 이상이면 정답</b></p>`;
+      <p class="hint">관사(a·the)와 사소한 철자 실수는 봐줍니다 · <b>${ARR_PASS}점 이상이면 정답</b></p>
+      ${hintBox(it)}`;
   } else if(part==="arrange"){
     if(Q.cur[Q.i]==null || Q.cur[Q.i]>a.length) Q.cur[Q.i]=a.length;
     const cur=Q.cur[Q.i];
@@ -1068,6 +1082,33 @@ function renderQ(){
     const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
   if(part==="arrange" && S.arrMode!=="type" && DRAG) wireDrag();
   syncCta();
+}
+/* ───── 타이핑 힌트 (핵심 단어 / 전체 토막) ───── */
+const STOP=new Set(("a an the and or but so if of to in on at by for from with as that which who whom whose this that these those "+
+"it its they them their there here he she him her his we us our you your i my me one ones "+
+"is are was were be been being am do does did done have has had having will would shall should can could may might must "+
+"not no nor than then when while because although though into over under about after before during up out off down again "+
+"very much such own same too also just only even more most other another each every both any some all what how why where").split(" "));
+function bare(t){ return String(t||"").toLowerCase().replace(/[^a-z0-9'-]/g,""); }
+function keyToks(tok){
+  const idx=tok.map((t,i)=>i).filter(i=>{ const w=bare(tok[i]); return w.length>=4 && !STOP.has(w); });
+  if(idx.length>=3) return idx;
+  return tok.map((t,i)=>i).filter(i=>{ const w=bare(tok[i]); return w.length>=3 && !STOP.has(w); });
+}
+function hintBox(it){
+  const lv=+S.arrHint||0, kt=keyToks(it.tok);
+  const show = lv===2 ? it.tok.slice() : lv===1 ? kt.map(i=>it.tok[i]) : [];
+  return `<div class="hintbox">
+    <div class="hh"><b>힌트</b>
+      <span class="hlvl">
+        <button data-ah="0" class="${lv===0?"on":""}">없음</button>
+        <button data-ah="1" class="${lv===1?"on":""}">핵심 단어</button>
+        <button data-ah="2" class="${lv===2?"on":""}">전체 토막</button>
+      </span></div>
+    ${lv? `<div class="hchips">${show.map(t=>`<span class="hchip">${esc(t)}</span>`).join("")}</div>
+           <p class="hnone">순서는 섞여 있어요${lv===1?` · 들어갈 말 ${it.tok.length}개 중 ${show.length}개`:` · 모두 ${show.length}개`}</p>`
+        : `<p class="hnone">힌트 없이 풉니다 · 필요하면 위에서 켜세요</p>`}
+  </div>`;
 }
 /* ───── 영작 채점 (부분점수 · 관대하게) ───── */
 const ARTS=new Set(["a","an","the"]);
@@ -1177,6 +1218,11 @@ function syncCta(){
 }
 $("#quiz-body").addEventListener("click",e=>{
   const it=Q.items[Q.i], a=Q.ans[Q.i];
+  const ah=e.target.closest("[data-ah]");
+  if(ah){ S.arrHint=+ah.dataset.ah; save();
+    const box=e.target.closest(".hintbox");
+    if(box) box.outerHTML=hintBox(it);
+    return; }
   const pk=e.target.closest(".pick>button");
   if(pk){ a[+pk.parentNode.dataset.b]=+pk.dataset.o;
     Array.from(pk.parentNode.children).forEach(x=>x.classList.toggle("on",x===pk)); return; }
@@ -1601,7 +1647,7 @@ const UKEY="naesinfit.unit";
 (function migrate(){
   try{
     const REN={"e2-cj-01":"e2cjk01","e2-cj3-03":"e2cjs03"};
-    S.best ||= {}; S.wrong ||= {};
+    S.best ||= {}; S.wrong ||= {}; if(S.arrHint==null) S.arrHint=1;
     for(const o in REN){ const n=REN[o];
       if(S.best[o]  && !S.best[n])  S.best[n]  = S.best[o];
       if(S.wrong[o] && !S.wrong[n]) S.wrong[n] = S.wrong[o];
