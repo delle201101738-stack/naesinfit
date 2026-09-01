@@ -709,7 +709,9 @@ function itemsOf(part, scope){
 }
 const totalPts = sc => PARTS.reduce((s,p)=>s+itemsOf(p.id,sc).reduce((t,i)=>t+pts(p.id,i),0),0);
 const secLab = k => (C&&C.secLabels&&C.secLabels[k]) || (k==="본문"?"본문":"Read Further");
-const SCOPES = () => ({all:{label:`${secLab("본문")} + ${secLab("RF")}`, short:"전체"},
+const rfSecs = () => { const st=new Set(); if(C) for(const k in C){ const v=C[k]; if(Array.isArray(v)) v.forEach(x=>{ if(x&&x.sec&&x.sec!=="본문") st.add(x.sec); }); } return st.size?[...st]:["RF"]; };
+const rfLabel = () => rfSecs().map(secLab).join(" + ");
+const SCOPES = () => ({all:{label:`${secLab("본문")} + ${rfLabel()}`, short:"전체"},
                        "본문":{label:`${secLab("본문")}만`, short:secLab("본문")}});
 
 /* ───── 아이콘 ───── */
@@ -867,7 +869,7 @@ function renderHome(){
          ${Object.entries(SCOPES()).map(([k,v])=>`<button data-gs="${k}"${S.scope===k?' class="on"':""}>${v.label}</button>`).join("")}
        </div>
        <p style="margin:10px 0 0;font-size:12.5px;color:var(--ink-3);line-height:1.6">
-         학교 시험범위에 ${secLab("RF")}가 없으면 <b>${secLab("본문")}만</b>을 고르세요 · 지금 범위 <span class="num" style="font-weight:700;color:var(--accent)">${totalPts(S.scope)}개 채점</span></p>`;
+         학교 시험범위에 ${rfLabel()}가 없으면 <b>${secLab("본문")}만</b>을 고르세요 · 지금 범위 <span class="num" style="font-weight:700;color:var(--accent)">${totalPts(S.scope)}개 채점</span></p>`;
 
   $("#part-list").innerHTML=livePARTS().map(p=>{
     const all=itemsOf(p.id,S.scope), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
@@ -897,7 +899,7 @@ function renderHome(){
   $("#passage-list").innerHTML=C.para.filter(x=>curScope()==="all"||x.sec==="본문").map((x,i)=>`
     <button class="part-card" data-read="${i}">
       <span class="ci" style="background:var(--surface-2);color:var(--ink-3)">${x.no}</span>
-      <span style="flex:1"><span class="t">${x.sec==="본문"?secLab("본문"):secLab("RF")} ${x.no}</span>
+      <span style="flex:1"><span class="t">${secLab(x.sec)} ${x.no}</span>
       <span class="s">${esc(x.en.slice(0,42))}…</span></span>${svg("chev","go")}
     </button>`).join("");
 }
@@ -1020,7 +1022,7 @@ function renderQ(){
   const it=Q.items[Q.i], part=Q.pl[Q.i], a=Q.ans[Q.i];
   $("#q-now").textContent=Q.i+1;
   $("#q-bar").style.width=((Q.i+1)/Q.items.length*100)+"%";
-  const tag=`<span class="q-type">${labelOf(part)} · ${it.sec==="본문"?secLab("본문"):secLab("RF")} ${it.no}</span>`;
+  const tag=`<span class="q-type">${labelOf(part)} · ${secLab(it.sec)} ${it.no}</span>`;
   let body="";
   if(part==="vocab"||part==="gram"){
     body=`${tag}<p class="q-stem">박스에서 알맞은 것을 고르세요.</p>
@@ -1338,7 +1340,7 @@ function showResult(){
     return `<div class="rv${allok?"":" open"}" data-rv>
       <button class="rv-h">
         <span class="mark ${allok?"o":"x"}">${svg(allok?"check":"x")}</span>
-        <span style="flex:1"><span class="rv-q">${i+1}. ${it.sec==="본문"?secLab("본문"):secLab("RF")} ${it.no}</span>
+        <span style="flex:1"><span class="rv-q">${i+1}. ${secLab(it.sec)} ${it.no}</span>
         <span class="rv-meta num">${ok} / ${ds.length} 정답</span></span></span>
       </button>
       <div class="rv-b">${ds.map((x,j)=>x.ok?"":`
@@ -1370,7 +1372,7 @@ function showResult(){
       student:S.name, book:unitLabel(), unitId:UNIT?UNIT.id:"",
       part, partName:labelOf(part), scope:SCOPES()[sel.scope]?.short||sel.scope,
       total:t, correct:c, pct, secs,
-      detail:Q.items.map((it,i)=>({no:it.no, sec:(it.sec==="본문"?secLab("본문"):secLab("RF")),
+      detail:Q.items.map((it,i)=>({no:it.no, sec:(secLab(it.sec)),
         d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})}))
     });
   }
@@ -1575,7 +1577,7 @@ $("#record-body").addEventListener("click", async e=>{
     (row.detail||[]).forEach(it=>(it.d||[]).forEach(x=>{ if(!x.ok) wrong.push({it,x}); }));
     $("#review-list").innerHTML = wrong.length
       ? wrong.map(({it,x})=>`<div class="rv open"><div class="rv-b" style="padding:12px 16px">
-          <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${it.sec==="본문"?secLab("본문"):secLab("RF")} ${it.no} · ${esc(x.l)}</div>
+          <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${secLab(it.sec)} ${it.no} · ${esc(x.l)}</div>
           <div class="ans-line"><span class="k">내 답</span><span class="bad">${esc(x.m)}</span></div>
           <div class="ans-line"><span class="k">정답</span><span class="good">${esc(x.r)}</span></div></div></div>`).join("")
       : `<div class="empty" style="padding:40px 20px"><h3>틀린 문항이 없어요 👏</h3></div>`;
