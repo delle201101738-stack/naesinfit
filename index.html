@@ -715,11 +715,12 @@ const AVATAR=`<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#FFE
 
 /* ───── 상태 ───── */
 const KEY="naesinfit.review.v1";
-const DEF={name:"", exp:0, theme:"", attempts:[], best:{}, wrong:{}, scope:"all", grade:"", subject:""};
+const DEF={name:"", exp:0, theme:"", attempts:[], best:{}, wrong:{}, scope:"all", grade:"", subject:"", arrMode:"tok"};
 let LOCKED=null;  // 선생님이 범위를 고정한 경우
 let S=(()=>{try{const r=JSON.parse(localStorage.getItem(KEY));return Object.assign({},DEF,r||{});}catch(e){return Object.assign({},DEF);}})();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
 const VD_PASS=90, VD_PART=75;
+const ARR_PASS=85;   // 영작(타이핑) 통과 점수
 const VERDICT = pct => pct>=VD_PASS ? {k:"pass", n:"통과",        e:"✓"}
                      : pct>=VD_PART ? {k:"part", n:"부분 재시험", e:"◐"}
                                     : {k:"full", n:"전체 재시험", e:"↻"};
@@ -930,6 +931,18 @@ function renderSetup(){
            <button data-sc="all" class="${sel.scope==="all"?"on":""}">${SCOPES().all.label} <span class="num">${sc.all.n}</span></button>
          </div>`}
 
+    ${sel.part==="arrange" ? `
+    <div class="sec" style="margin:24px 0 10px"><h2>푸는 방식</h2>
+      <span class="note" style="font-size:12.5px;color:var(--ink-3)">언제든 바꿀 수 있어요</span></div>
+    <div class="seg-btn" id="arr-mode">
+      <button data-am="tok"${S.arrMode!=="type"?' class="on"':""}>토막 배열</button>
+      <button data-am="type"${S.arrMode==="type"?' class="on"':""}>직접 타이핑</button>
+    </div>
+    <p style="margin:9px 2px 0;font-size:12.5px;color:var(--ink-3);line-height:1.6">
+      ${S.arrMode==="type"
+        ? `우리말만 보고 직접 씁니다 · 관사(a·the)와 사소한 철자 실수는 봐주고 <b>${ARR_PASS}점 이상이면 정답</b>`
+        : "흩어진 토막을 끌어서 순서대로 맞춥니다 · 순서가 정확히 맞아야 정답"}</p>` : ""}
+
     <div class="sec" style="margin:24px 0 10px"><h2>안내</h2></div>
     <div class="card" style="padding:15px 16px;font-size:13.5px;line-height:1.75;color:var(--ink-2)">${HOWTO[sel.part]}</div>`;
   const n=scopeCounts(sel.part)[sel.scope];
@@ -944,10 +957,13 @@ const HOWTO={
  tf:"지문을 읽고 각 문장이 내용과 <b>일치하면 T</b>, 일치하지 않으면 <b>F</b>를 누릅니다.",
  order:"주어진 글 다음에 이어질 순서대로 (A)(B)(C)를 <b>순서대로 탭</b>하세요. 다시 누르면 취소됩니다.",
  insert:"주어진 문장이 들어가기에 가장 적절한 <b>번호 자리</b>를 누릅니다.",
- arrange:"흩어진 <b>토막</b>을 문장 순서대로 눌러 담습니다. 잘못 담았으면 위쪽에서 그 토막을 다시 눌러 빼세요. 대소문자·문장부호는 느슨하게 채점합니다.",
+ arrange:"<b>토막 배열</b>은 흩어진 토막을 끌어서 순서대로 맞춥니다. <b>직접 타이핑</b>은 우리말만 보고 영어로 씁니다 — 관사(a·the)와 사소한 철자 실수는 봐주고, 문장마다 100점 만점으로 채점해 "+ARR_PASS+"점 이상이면 정답입니다. 위 <b>푸는 방식</b>에서 언제든 바꿀 수 있어요.",
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
 };
 $("#setup-body").addEventListener("click",e=>{
+  const am=e.target.closest("[data-am]");
+  if(am){ S.arrMode=am.dataset.am; save(); renderSetup();
+          toast(S.arrMode==="type"?"직접 타이핑으로 풉니다":"토막 배열로 풉니다"); return; }
   const b=e.target.closest("[data-sc]"); if(!b||LOCKED) return;
   sel.scope=b.dataset.sc; S.scope=sel.scope; save(); renderSetup();
 });
@@ -979,7 +995,7 @@ function blankAns(part,it){
   if(part==="fix"||part==="word") return it.seg.map(()=>({mk:false,txt:""}));
   if(part==="tf") return it.st.map(()=>null);
   if(part==="order") return [];
-  if(part==="arrange") return [];
+  if(part==="arrange") return S.arrMode==="type" ? "" : [];
   if(part==="insert") return null;
   return "";
 }
@@ -1015,6 +1031,11 @@ function renderQ(){
         return `<button class="ord${r>=0?" on":""}" data-ord="${L}">
           <span class="lb">${L}</span><span style="flex:1">${esc(it[L])}</span>
           ${r>=0?`<span class="rank num">${r+1}</span>`:""}</button>`;}).join("")}</div>`;
+  } else if(part==="arrange" && S.arrMode==="type"){
+    body=`${tag}<p class="q-stem">우리말을 보고 영어로 쓰세요.</p>
+      <p class="ko" style="margin-top:12px;font-size:15px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>
+      <textarea class="wr-in" id="wr" placeholder="영어로 쓰세요" spellcheck="false" autocapitalize="off">${esc(a)}</textarea>
+      <p class="hint">관사(a·the)와 사소한 철자 실수는 봐줍니다 · <b>${ARR_PASS}점 이상이면 정답</b></p>`;
   } else if(part==="arrange"){
     if(Q.cur[Q.i]==null || Q.cur[Q.i]>a.length) Q.cur[Q.i]=a.length;
     const cur=Q.cur[Q.i];
@@ -1043,10 +1064,54 @@ function renderQ(){
       <p class="hint">대소문자·문장부호는 채점에 영향을 주지 않아요.</p>`;
   }
   $("#quiz-body").innerHTML=body;
-  if(part==="write"){ const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
-  if(part==="arrange" && DRAG) wireDrag();
+  if(part==="write" || (part==="arrange" && S.arrMode==="type")){
+    const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
+  if(part==="arrange" && S.arrMode!=="type" && DRAG) wireDrag();
   syncCta();
 }
+/* ───── 영작 채점 (부분점수 · 관대하게) ───── */
+const ARTS=new Set(["a","an","the"]);
+function wtok(s){
+  return String(s||"").toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"')
+    .replace(/[^a-z0-9' ]/g," ").split(/\s+/).filter(w=>w && !ARTS.has(w));
+}
+function lev(a,b){
+  if(a===b) return 0;
+  const m=a.length, n=b.length; if(!m||!n) return m||n;
+  let prev=[], cur=[];
+  for(let j=0;j<=n;j++) prev[j]=j;
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++)
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a.charAt(i-1)===b.charAt(j-1)?0:1));
+    const t=prev; prev=cur; cur=t;
+  }
+  return prev[n];
+}
+function wEq(x,y){
+  if(x===y) return true;
+  const L=Math.max(x.length,y.length);
+  if(L<=3) return false;                    // 짧은 낱말은 정확히
+  return lev(x,y) <= (L>=8 ? 2 : 1);        // 철자 1~2자 실수는 인정
+}
+function scoreText(mine, ans){
+  const A=wtok(ans), B=wtok(mine);
+  if(!A.length) return {score:0, miss:[], extra:0};
+  const m=A.length, n=B.length;
+  const dp=[]; for(let i=0;i<=m;i++){ dp.push(new Array(n+1).fill(0)); }
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = wEq(A[i-1],B[j-1]) ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
+  const L=dp[m][n];
+  const score=Math.round(100*L/Math.max(m,n));
+  const hit=new Array(m).fill(false);
+  let i=m, j=n;
+  while(i>0 && j>0){
+    if(wEq(A[i-1],B[j-1]) && dp[i][j]===dp[i-1][j-1]+1){ hit[i-1]=true; i--; j--; }
+    else if(dp[i-1][j] >= dp[i][j-1]) i--; else j--;
+  }
+  return {score, miss:A.filter((w,k)=>!hit[k]), extra:Math.max(0,n-L)};
+}
+
 /* ───── 단어배열: 끌어서 자리 바꾸기 ───── */
 const DRAG = typeof window!=="undefined" && !!window.PointerEvent;
 function wireDrag(){
@@ -1170,9 +1235,15 @@ function grade(part,it,a){
     d.push({ok:a.join("")===it.ans.join(""), label:"순서",
       mine:a.length?a.join(" - "):"무응답", right:it.ans.join(" - ")});
   } else if(part==="arrange"){
-    const mine=(Array.isArray(a)?a:[]).map(i=>it.tok[i]).join(" ");
-    d.push({ok:!!a.length && norm(mine)===norm(it.en), label:"배열",
-      mine:mine||"무응답", right:it.en});
+    if(S.arrMode==="type"){
+      const mine=String(a||"").trim(), r=scoreText(mine, it.en);
+      d.push({ok:r.score>=ARR_PASS, label:"타이핑", mine:mine||"무응답", right:it.en,
+              sc:r.score, miss:r.miss.slice(0,10)});
+    }else{
+      const mine=(Array.isArray(a)?a:[]).map(i=>it.tok[i]).join(" ");
+      d.push({ok:!!(a&&a.length) && norm(mine)===norm(it.en), label:"배열",
+              mine:mine||"무응답", right:it.en});
+    }
   } else if(part==="insert"){
     d.push({ok:a===it.ans, label:"위치", mine:a?`${a}번`:"무응답", right:`${it.ans}번`});
   } else {
@@ -1227,9 +1298,11 @@ function showResult(){
       <div class="rv-b">${ds.map((x,j)=>x.ok?"":`
         <div class="ans-line" style="padding:7px 0;border-bottom:1px solid var(--line)">
           <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:2px">${x.label}${x.q?" · "+esc(x.q.slice(0,54))+"…":""}</div>
+          ${x.sc!=null?`<div style="margin-bottom:6px"><span class="vd ${x.sc>=ARR_PASS?"pass":x.sc>=60?"part":"full"}">${x.sc}점 / ${ARR_PASS}점 통과</span>${
+            x.miss&&x.miss.length?`<span style="font-size:12px;color:var(--ink-3);margin-left:8px">빠진 말: ${esc(x.miss.join(", "))}</span>`:""}</div>`:""}
           <span class="k">내 답</span><span class="bad">${esc(x.mine)}</span><br>
           <span class="k">정답</span><span class="good">${esc(x.right)}</span>
-          ${Q.pl[i]==="write"?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
+          ${(Q.pl[i]==="write"||(Q.pl[i]==="arrange"&&S.arrMode==="type"))?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
         </div>`).join("")||`<div class="expl">전부 맞았어요 👏</div>`}</div></div>`;
   }).join("");
 
