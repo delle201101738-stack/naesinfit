@@ -187,6 +187,23 @@
      },
      "total": 357,
      "labels": {}
+    },
+    {
+     "id": "e2cjk02",
+     "no": "2과",
+     "title": "The Power of Nudges",
+     "file": "content/e2cjk02.json",
+     "pts": {
+      "vocab": 81,
+      "gram": 110,
+      "fix": 76,
+      "tf": 50,
+      "order": 9,
+      "insert": 9,
+      "arrange": 22
+     },
+     "total": 357,
+     "labels": {}
     }
    ],
    "grade": "고2"
