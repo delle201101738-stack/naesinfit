@@ -426,6 +426,15 @@ input{font:inherit; color:inherit}
 .hchip{padding:5px 9px; border-radius:8px; background:var(--surface); border:1px solid var(--line);
   font-size:12.5px; font-weight:600; color:var(--ink-2); line-height:1.2}
 .hnone{margin-top:9px; font-size:12px; color:var(--ink-3)}
+.czrow{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line)}
+.czrow:last-child{border-bottom:none}
+.czb{display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px;
+  border-radius:7px; background:var(--accent-soft); color:var(--accent); font-weight:800; font-size:12px; padding:0 4px}
+.czh{flex:1; font-size:13.5px; color:var(--ink-2); line-height:1.5}
+.cz-in{width:132px; flex:none; padding:9px 11px; border-radius:10px; border:1.5px solid var(--line-2);
+  background:var(--surface); color:var(--ink); font-size:14px; font-family:inherit}
+.cz-in:focus{border-color:var(--accent); outline:none}
+.hchip.bold{font-weight:800; border-bottom:2.5px solid var(--ink); background:var(--accent-soft)}
 .bld .tok{touch-action:none; user-select:none; -webkit-user-select:none; transition:transform .12s, box-shadow .12s}
 .bld .tok.drag{transform:scale(1.08); box-shadow:0 8px 22px rgba(0,0,0,.3); opacity:.95; position:relative; z-index:5}
 .bld.dragging{cursor:grabbing}
@@ -680,14 +689,18 @@ let C = null;   // 교재 내용은 content/ 폴더에서 불러옵니다
 let BOOKS = null, UNIT = null;
 
 const PARTS=[
+ {id:"twrite",n:"주제문 영작",   s:"주제 문장을 배열·어형 변형해 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"},
+ {id:"cloze", n:"빈칸 추론",     s:"뜻·첫 글자 힌트로 빈칸 채우기",    c:"var(--cat-3)", b:"var(--cat-3-s)", k:"지문"},
  {id:"vocab", n:"어휘 선택",     s:"박스에서 문맥상 적절한 것 고르기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"단락"},
  {id:"gram",  n:"어법 선택",     s:"박스에서 어법상 적절한 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"단락"},
  {id:"word",  n:"단어 밑줄",     s:"밑줄 친 단어 중 어색한 것 고치기", c:"var(--cat-4)", b:"var(--cat-4-s)", k:"문항"},
  {id:"fix",   n:"어법 오류 수정", s:"밑줄 중 어색한 곳 찾아 고치기",   c:"var(--cat-2)", b:"var(--cat-2-s)", k:"단락"},
  {id:"tf",    n:"내용일치 TF",   s:"일치하면 T, 아니면 F",           c:"var(--cat-4)", b:"var(--cat-4-s)", k:"단락"},
+ {id:"choice",n:"독해",         s:"요약·추론·함축 5지선다",          c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"order", n:"순서 배열",     s:"이어질 글의 순서 정하기",         c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"insert",n:"문장 삽입",     s:"주어진 문장이 들어갈 위치 찾기",   c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문항"},
  {id:"arrange",n:"단어배열",      s:"흩어진 토막을 순서대로 배열하기",  c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"},
+ {id:"mwrite",n:"중요 문장 영작", s:"핵심 문장을 배열·어형 변형해 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"},
  {id:"write", n:"영작",         s:"중요 표시 문장만 영작하기",        c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"}
 ];
 const P = Object.fromEntries(PARTS.map(p=>[p.id,p]));
@@ -696,13 +709,18 @@ const livePARTS = () => PARTS.filter(p=>(C&&C[p.id]||[]).length);
 
 /* 파트별 배점(=채점 포인트) */
 function pts(part, it){
-  if(part==="vocab"||part==="gram") return it.blanks.length;
+  if(part==="vocab"||part==="gram"||part==="cloze") return it.blanks.length;
   if(part==="fix"||part==="word") return it.seg.length;
   if(part==="tf") return it.st.length;
   return 1;
 }
+const hasScopes = () => { if(!C) return false;
+  let bm=false, other=false;
+  for(const k in C){ const v=C[k]; if(Array.isArray(v)) v.forEach(x=>{ if(x&&x.sec){ if(x.sec==="본문") bm=true; else other=true; } }); }
+  return bm && other; };
 function itemsOf(part, scope){
   let a=C[part]||[];
+  if(!hasScopes()) scope="all";
   if(scope==="본문") a=a.filter(x=>x.sec==="본문");
   if(scope==="RF")  a=a.filter(x=>x.sec!=="본문");
   return a;
@@ -808,13 +826,24 @@ function subSeg(it, keep){
   return Object.assign({}, it, {lead, seg, _map:keep.slice()});
 }
 function subTF(it, keep){
-  return Object.assign({}, it, {st:keep.map(i=>it.st[i]), ans:keep.map(i=>it.ans[i]), _map:keep.slice()});
+  return Object.assign({}, it, {st:keep.map(i=>it.st[i]), ans:keep.map(i=>it.ans[i]),
+    fx: it.fx?keep.map(i=>it.fx[i]):undefined, _map:keep.slice()});
+}
+function subCloze(it, keep){
+  let text=it.text, nb=[], map={}, n=0;
+  it.blanks.forEach((b,i)=>{ if(keep.indexOf(i)>=0){ n++; map[i]=n; nb.push(b); } });
+  it.blanks.forEach((b,i)=>{
+    text = text.replace("«"+(i+1)+"»", keep.indexOf(i)>=0 ? "\u0001"+map[i]+"\u0002" : b.ans);
+  });
+  text = text.replace(/\u0001(\d+)\u0002/g, "«$1»");
+  return Object.assign({}, it, {text, blanks:nb, _map:keep.slice()});
 }
 function subset(part, it, keep){
   if(!keep || !keep.length) return it;
   if(part==="vocab"||part==="gram") return subVG(it,keep);
   if(part==="fix"||part==="word")   return subSeg(it,keep);
   if(part==="tf")                   return subTF(it,keep);
+  if(part==="cloze")                return subCloze(it,keep);
   return Object.assign({}, it, {_map:keep.slice()});
 }
 function wrongItems(part){
@@ -829,7 +858,7 @@ function wrongItems(part){
   return out;
 }
 const subLen = (part,it) =>
-  (part==="vocab"||part==="gram") ? it.blanks.length :
+  (part==="vocab"||part==="gram"||part==="cloze") ? it.blanks.length :
   (part==="fix"||part==="word")   ? it.seg.length :
   (part==="tf")                   ? it.st.length : 1;
 const wrongCount = part => wrongItems(part).reduce((s,it)=>s+pts(part,it),0);
@@ -859,7 +888,12 @@ function renderHome(){
     : left.length ? `${left[0].n} 아직 안 봤네. 이것까지 끝내면 ${UNIT?UNIT.no:"이 과"}는 정리 완료야 💪`
     : `${livePARTS().length}개 파트 다 봤어! 이제 틀린 것만 다시 돌리면 돼 🔥`;
 
-  $("#scope-card").innerHTML = LOCKED
+  $("#scope-card").innerHTML = !hasScopes()
+    ? `<div style="display:flex;align-items:center;gap:10px">
+         <div><div style="font-size:15px;font-weight:700;letter-spacing:-.01em">전 범위 응시</div>
+         <div style="font-size:12.5px;color:var(--ink-3);margin-top:2px">이 시험지는 범위가 하나예요 · <span class="num">${totalPts("all")}개 채점</span></div></div>
+       </div>`
+    : LOCKED
     ? `<div style="display:flex;align-items:center;gap:10px">
          <span style="font-size:20px">🔒</span>
          <div><div style="font-size:15px;font-weight:700;letter-spacing:-.01em">${SCOPES()[LOCKED].label}</div>
@@ -896,7 +930,7 @@ function renderHome(){
     <div class="card" style="padding:16px;font-size:13.5px;color:var(--ink-3);line-height:1.7">
       지금은 틀린 문항이 없어요 👏 새로 풀다가 틀리면 여기에 자동으로 쌓입니다.</div>` : "");
 
-  $("#passage-list").innerHTML=C.para.filter(x=>curScope()==="all"||x.sec==="본문").map((x,i)=>`
+  $("#passage-list").innerHTML=(C.para||[]).filter(x=>curScope()==="all"||x.sec==="본문").map((x,i)=>`
     <button class="part-card" data-read="${i}">
       <span class="ci" style="background:var(--surface-2);color:var(--ink-3)">${x.no}</span>
       <span style="flex:1"><span class="t">${secLab(x.sec)} ${x.no}</span>
@@ -906,7 +940,7 @@ function renderHome(){
 
 /* ───── 파트 설정 ───── */
 let sel={part:null, scope:"all"};
-const curScope = () => LOCKED || S.scope;
+const curScope = () => !hasScopes() ? "all" : (LOCKED || S.scope);
 document.addEventListener("click",e=>{
   const g=e.target.closest("[data-gs]");
   if(g){ if(LOCKED) return; S.scope=g.dataset.gs; save(); renderHome();
@@ -934,9 +968,9 @@ function renderSetup(){
         <span>최고 기록 ${vdPill(b.pct)}</span><span class="num" style="font-weight:700;color:var(--accent)">${b.pct}% (${b.done}/${b.total})</span></div>`:""}
     </div>
 
-    <div class="sec" style="margin:24px 0 10px"><h2>시험 범위</h2>
-      <span class="note" style="font-size:12.5px;color:var(--ink-3)">${LOCKED?"선생님이 고정":"모든 파트 공통"}</span></div>
-    ${LOCKED
+    ${!hasScopes()?"":`<div class="sec" style="margin:24px 0 10px"><h2>시험 범위</h2>
+      <span class="note" style="font-size:12.5px;color:var(--ink-3)">${LOCKED?"선생님이 고정":"모든 파트 공통"}</span></div>`}
+    ${!hasScopes() ? "" : LOCKED
       ? `<div class="card" style="padding:14px 16px;display:flex;align-items:center;gap:10px">
            <span style="font-size:18px">🔒</span>
            <span style="font-size:14.5px;font-weight:700">${SCOPES()[LOCKED].label}</span>
@@ -973,6 +1007,10 @@ const HOWTO={
  order:"주어진 글 다음에 이어질 순서대로 (A)(B)(C)를 <b>순서대로 탭</b>하세요. 다시 누르면 취소됩니다.",
  insert:"주어진 문장이 들어가기에 가장 적절한 <b>번호 자리</b>를 누릅니다.",
  arrange:"<b>토막 배열</b>은 흩어진 토막을 끌어서 순서대로 맞춥니다. <b>직접 타이핑</b>은 우리말만 보고 영어로 씁니다 — 관사(a·the)와 사소한 철자 실수는 봐주고, 문장마다 100점 만점으로 채점해 "+ARR_PASS+"점 이상이면 정답입니다. 타이핑에는 <b>힌트</b>가 붙어요 — 기본은 <b>핵심 단어</b>만 섞어서 보여주고, 문제 화면에서 <b>전체 토막</b>이나 <b>없음</b>으로 바꿀 수 있습니다. 위 <b>푸는 방식</b>은 언제든 바꿀 수 있어요.",
+ twrite:"각 지문의 <b>주제문</b>을 새로 표현한 문장입니다. 흩어진 단어를 배열하고 <b>굵게 표시된 동사는 어형(시제·태·수일치·분사)을 바꿔</b> 완성하세요. "+ARR_PASS+"점 이상이고 어형 변형까지 맞아야 정답이며, 관사·사소한 철자는 봐줍니다.",
+ cloze:"원문 지문의 빈칸에 들어갈 단어를 <b>한국어 뜻과 첫 글자·글자 수 힌트</b>를 보고 직접 씁니다. 철자가 정확해야 정답입니다.",
+ choice:"지문을 바탕으로 한 <b>요약문 추론 · 추론 불가 · 함축 의미</b> 5지선다입니다. 정답 번호 하나를 고르세요.",
+ mwrite:"원문 참조 없이, 각 지문의 <b>중요 문장</b>을 단어 배열 + <b>어형 변형</b>으로 완성합니다. 어법 포인트가 힌트로 붙어 있어요. "+ARR_PASS+"점 이상 + 어형 변형이 맞아야 정답.",
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
 };
 $("#setup-body").addEventListener("click",e=>{
@@ -1012,6 +1050,8 @@ function blankAns(part,it){
   if(part==="order") return [];
   if(part==="arrange") return S.arrMode==="type" ? "" : [];
   if(part==="insert") return null;
+  if(part==="cloze") return it.blanks.map(()=>"");
+  if(part==="choice") return null;
   return "";
 }
 function tick(){ if(!Q)return; const s=Math.floor((Date.now()-Q.t0)/1000);
@@ -1041,7 +1081,7 @@ function renderQ(){
   } else if(part==="order"){
     body=`${tag}<p class="q-stem">이어질 순서대로 눌러 주세요.</p>
       <div class="given" style="margin-top:14px">${esc(it.lead)}</div>
-      <div style="margin-top:14px">${["A","B","C","D","E"].filter(L=>it[L]).map(L=>{
+      <div style="margin-top:14px">${["A","B","C","D","E","F","G"].filter(L=>it[L]).map(L=>{
         const r=a.indexOf(L);
         return `<button class="ord${r>=0?" on":""}" data-ord="${L}">
           <span class="lb">${L}</span><span style="flex:1">${esc(it[L])}</span>
@@ -1074,13 +1114,41 @@ function renderQ(){
     body=`${tag}<p class="q-stem">주어진 문장이 들어갈 곳은?</p>
       <div class="given" style="margin-top:14px">${esc(it.given)}</div>
       <div class="psg" style="margin-top:14px;line-height:2.2">${html}</div>`;
+  } else if(part==="cloze"){
+    const czText=esc(it.text).replace(/«(\d+)»/g,'<span class="czb num">$1</span>');
+    body=`${tag}<p class="q-stem">한국어 뜻과 힌트(첫 글자·글자 수)를 참고해 빈칸에 들어갈 단어를 쓰세요.</p>
+      ${it.src?`<p class="hint" style="margin-top:6px">${esc(it.src)}</p>`:""}
+      <div class="psg" style="margin-top:12px;line-height:1.95">${czText}</div>
+      <div class="card" style="margin-top:14px;padding:12px 16px">${it.blanks.map((b,i)=>`
+        <div class="czrow"><span class="czb num">${i+1}</span>
+          <span class="czh">「${esc(b.ko)}」 <b>${esc(b.h)}</b>${"_".repeat(Math.min(10,Math.max(3,b.n-1)))} <span class="num">(${b.n}글자)</span></span>
+          <input class="cz-in" data-cz="${i}" value="${esc(a[i]||"")}" placeholder="영어 단어" spellcheck="false" autocapitalize="off" autocomplete="off"></div>`).join("")}</div>`;
+  } else if(part==="choice"){
+    let bh="";
+    if(it.body){
+      let t2=esc(it.body);
+      if(it.ul){ const u=esc(it.ul); if(t2.indexOf(u)>=0) t2=t2.replace(u, `<u>${u}</u>`); }
+      bh=`<div class="psg" style="margin-top:12px;line-height:1.95">${t2}</div>`;
+    }
+    body=`${tag}<p class="q-stem">${esc(it.stem)}</p>${bh}
+      <div style="margin-top:14px">${it.opt.map((o,i)=>`
+        <button class="ord${a===i?" on":""}" data-ch="${i}"><span class="lb num">${i+1}</span><span style="flex:1;text-align:left">${esc(o)}</span></button>`).join("")}</div>`;
+  } else if(part==="twrite"||part==="mwrite"){
+    const bolds=(it.sv||[]).map(w=>w.toLowerCase());
+    const isB=t=>{ const ws=t.toLowerCase().replace(/[^a-z' ]/g," ").split(/\s+/); return bolds.some(b=>ws.includes(b)); };
+    body=`${tag}<p class="q-stem">단어를 배열하고 <b>굵은 동사는 어형(시제·태·수일치·분사)을 바꿔</b> 한국어 해석에 맞는 문장을 완성하세요.</p>
+      ${it.theme?`<p class="hint" style="margin-top:8px">● 주제: ${esc(it.theme)}</p>`:""}
+      <p class="ko" style="margin-top:12px;font-size:15px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>
+      <div class="hchips" style="margin-top:12px">${it.tok.map(t=>`<span class="hchip${isB(t)?" bold":""}">${esc(t)}</span>`).join("")}</div>
+      <textarea class="wr-in" id="wr" placeholder="완성 문장을 쓰세요" spellcheck="false" autocapitalize="off">${esc(a)}</textarea>
+      <p class="hint">${ARR_PASS}점 이상 + <b>어형 변형이 정확</b>해야 정답${it.point?` · <b>어법 포인트</b>: ${esc(it.point)}`:""}</p>`;
   } else {
     body=`${tag}<p class="ko" style="margin-top:12px">${esc(it.ko)}<span class="imp">★중요</span></p>
       <textarea class="wr-in" id="wr" placeholder="영어로 쓰세요" spellcheck="false">${esc(a)}</textarea>
       <p class="hint">대소문자·문장부호는 채점에 영향을 주지 않아요.</p>`;
   }
   $("#quiz-body").innerHTML=body;
-  if(part==="write" || (part==="arrange" && S.arrMode==="type")){
+  if(part==="write" || part==="twrite" || part==="mwrite" || (part==="arrange" && S.arrMode==="type")){
     const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
   if(part==="arrange" && S.arrMode!=="type" && DRAG) wireDrag();
   syncCta();
@@ -1112,6 +1180,11 @@ function hintBox(it){
         : `<p class="hnone">힌트 없이 풉니다 · 필요하면 위에서 켜세요</p>`}
   </div>`;
 }
+/* ───── 모의고사 채점 헬퍼 ───── */
+const czEq=(a,b)=>String(a||"").toLowerCase().replace(/[^a-z0-9'\-]/g,"")===String(b||"").toLowerCase().replace(/[^a-z0-9'\-]/g,"");
+function nrmW(s){ return String(s||"").toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/[^a-z0-9' ]/g," ").replace(/\s+/g," ").trim(); }
+function strictMiss(mine, strict){ const m=" "+nrmW(mine)+" ";
+  return (strict||[]).filter(f=>{ const t=nrmW(f); return t && m.indexOf(" "+t+" ")<0; }); }
 /* ───── 영작 채점 (부분점수 · 관대하게) ───── */
 const ARTS=new Set(["a","an","the"]);
 function wtok(s){
@@ -1234,9 +1307,12 @@ $("#quiz-body").addEventListener("click",e=>{
   const tf=e.target.closest("[data-tf]>button");
   if(tf){ a[+tf.parentNode.dataset.tf]=tf.dataset.v;
     Array.from(tf.parentNode.children).forEach(x=>x.classList.toggle("on",x===tf)); return; }
+  const chb=e.target.closest("[data-ch]");
+  if(chb){ Q.ans[Q.i]=+chb.dataset.ch;
+    document.querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===chb)); return; }
   const od=e.target.closest("[data-ord]");
   if(od){ const L=od.dataset.ord, k=a.indexOf(L);
-    const N=["A","B","C","D","E"].filter(x=>it[x]).length;
+    const N=["A","B","C","D","E","F","G"].filter(x=>it[x]).length;
     if(k>=0) a.splice(k,1); else if(a.length<N) a.push(L);
     renderQ(); return; }
   if(e.target.closest("#bld-clear")){ a.length=0; Q.cur[Q.i]=0; renderQ(); return; }
@@ -1257,6 +1333,8 @@ $("#quiz-body").addEventListener("click",e=>{
 $("#quiz-body").addEventListener("input",e=>{
   const fx=e.target.closest("[data-fix]");
   if(fx) Q.ans[Q.i][+fx.dataset.fix].txt=fx.value;
+  const cz=e.target.closest("[data-cz]");
+  if(cz){ Q.ans[Q.i][+cz.dataset.cz]=cz.value; syncCta(); }
 });
 $("#quiz-cta").onclick=()=>{
   if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); }
@@ -1278,7 +1356,7 @@ function grade(part,it,a){
     });
   } else if(part==="tf"){
     it.st.forEach((s,i)=>d.push({ok:a[i]===it.ans[i], label:`${i+1}`,
-      mine:a[i]||"무응답", right:it.ans[i], q:s}));
+      mine:a[i]||"무응답", right:it.ans[i]+(it.fx&&it.fx[i]?` · 고치기: ${it.fx[i]}`:""), q:s}));
   } else if(part==="order"){
     d.push({ok:a.join("")===it.ans.join(""), label:"순서",
       mine:a.length?a.join(" - "):"무응답", right:it.ans.join(" - ")});
@@ -1294,6 +1372,20 @@ function grade(part,it,a){
     }
   } else if(part==="insert"){
     d.push({ok:a===it.ans, label:"위치", mine:a?`${a}번`:"무응답", right:`${it.ans}번`});
+  } else if(part==="cloze"){
+    it.blanks.forEach((b,i)=>{
+      const mine=String(a[i]||"").trim();
+      const ok=czEq(mine,b.ans) || (b.alt||[]).some(x=>czEq(mine,x));
+      d.push({ok, label:`${i+1}`, mine:mine||"무응답",
+              right:b.ans+((b.alt&&b.alt.length)?` (허용: ${b.alt.join(", ")})`:"")});
+    });
+  } else if(part==="choice"){
+    d.push({ok:a===it.ans, label:"선택", mine:a==null?"무응답":`${a+1}번`,
+            right:`${it.ans+1}번 — ${it.opt[it.ans]}`});
+  } else if(part==="twrite"||part==="mwrite"){
+    const mine=String(a||"").trim(), r=scoreText(mine, it.en), sm=strictMiss(mine, it.strict);
+    d.push({ok:r.score>=ARR_PASS && !sm.length, label:"영작", mine:mine||"무응답", right:it.en,
+            sc:r.score, miss:r.miss.slice(0,10), smiss:sm});
   } else {
     d.push({ok:norm(a)===norm(it.en), label:"영작", mine:a||"무응답", right:it.en});
   }
@@ -1347,10 +1439,11 @@ function showResult(){
         <div class="ans-line" style="padding:7px 0;border-bottom:1px solid var(--line)">
           <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:2px">${x.label}${x.q?" · "+esc(x.q.slice(0,54))+"…":""}</div>
           ${x.sc!=null?`<div style="margin-bottom:6px"><span class="vd ${x.sc>=ARR_PASS?"pass":x.sc>=60?"part":"full"}">${x.sc}점 / ${ARR_PASS}점 통과</span>${
-            x.miss&&x.miss.length?`<span style="font-size:12px;color:var(--ink-3);margin-left:8px">빠진 말: ${esc(x.miss.join(", "))}</span>`:""}</div>`:""}
+            x.miss&&x.miss.length?`<span style="font-size:12px;color:var(--ink-3);margin-left:8px">빠진 말: ${esc(x.miss.join(", "))}</span>`:""}${
+            x.smiss&&x.smiss.length?`<span style="font-size:12px;color:var(--no);font-weight:700;margin-left:8px">어형 틀림·누락: ${esc(x.smiss.join(", "))}</span>`:""}</div>`:""}
           <span class="k">내 답</span><span class="bad">${esc(x.mine)}</span><br>
           <span class="k">정답</span><span class="good">${esc(x.right)}</span>
-          ${(Q.pl[i]==="write"||(Q.pl[i]==="arrange"&&S.arrMode==="type"))?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
+          ${(Q.pl[i]==="write"||Q.pl[i]==="twrite"||Q.pl[i]==="mwrite"||(Q.pl[i]==="arrange"&&S.arrMode==="type"))?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
         </div>`).join("")||`<div class="expl">전부 맞았어요 👏</div>`}</div></div>`;
   }).join("");
 
@@ -1681,7 +1774,7 @@ const unitLabel = () => UNIT ? `${UNIT.book.subject} · ${UNIT.book.publisher} �
 const gradeOfBook = b => b.grade || "고2";
 const allGrades = () => [...new Set((BOOKS||[]).map(gradeOfBook))]
   .sort((a,b)=>(parseInt(a.replace(/\D/g,""))||9)-(parseInt(b.replace(/\D/g,""))||9));
-const SUBJ_ORDER={"고1":["공통영어1","공통영어2"],"고2":["영어 I","영어 II"]};
+const SUBJ_ORDER={"고1":["공통영어1","공통영어2"],"고2":["영어 I","영어 II","모의고사"]};
 const subjOf = b => b.subject||"";
 const subjectsOf = g => {
   const have=[...new Set((BOOKS||[]).filter(b=>gradeOfBook(b)===g).map(subjOf))];

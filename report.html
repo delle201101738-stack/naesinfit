@@ -188,9 +188,9 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const n0=v=>Math.round(v);
-const PARTORDER=["vocab","gram","word","fix","tf","order","insert","arrange","write"];
+const PARTORDER=["twrite","cloze","vocab","gram","word","fix","tf","choice","order","insert","arrange","mwrite","write"];
 const PARTBASE={vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",fix:"어법 오류 수정",
-  tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작"};
+  tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작",twrite:"주제문 영작",cloze:"빈칸 추론",choice:"독해",mwrite:"중요 문장 영작"};
 
 /* ── 등급 (절대평가) ── */
 const GRADES=[[95,"A+"],[90,"A"],[85,"A-"],[80,"B+"],[75,"B"],[70,"B-"],[65,"C+"],[60,"C"],[55,"C-"],[50,"D"]];
