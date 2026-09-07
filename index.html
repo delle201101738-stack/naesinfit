@@ -1125,10 +1125,13 @@ function renderQ(){
           <input class="cz-in" data-cz="${i}" value="${esc(a[i]||"")}" placeholder="영어 단어" spellcheck="false" autocapitalize="off" autocomplete="off"></div>`).join("")}</div>`;
   } else if(part==="choice"){
     let bh="";
+    if(it.psg) bh+=`<div class="psg" style="margin-top:12px;line-height:1.95">${esc(it.psg)}</div>`;
     if(it.body){
       let t2=esc(it.body);
       if(it.ul){ const u=esc(it.ul); if(t2.indexOf(u)>=0) t2=t2.replace(u, `<u>${u}</u>`); }
-      bh=`<div class="psg" style="margin-top:12px;line-height:1.95">${t2}</div>`;
+      bh+=it.psg
+        ? `<div class="given" style="margin-top:12px;line-height:1.9">${t2}</div>`
+        : `<div class="psg" style="margin-top:12px;line-height:1.95">${t2}</div>`;
     }
     body=`${tag}<p class="q-stem">${esc(it.stem)}</p>${bh}
       <div style="margin-top:14px">${it.opt.map((o,i)=>`
