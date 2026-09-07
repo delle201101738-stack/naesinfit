@@ -140,7 +140,7 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const PARTNAMES={vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작",twrite:"주제문 영작",cloze:"빈칸 추론",choice:"독해",mwrite:"중요 문장 영작"};
+const PARTNAMES={vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작",twrite:"주제문 영작",cloze:"빈칸 추론",choice:"독해",mwrite:"중요 문장 영작",review:"오답노트(전체)"};
 const ORDER=["twrite","cloze","vocab","gram","word","fix","tf","choice","order","insert","arrange","mwrite","write"];
 let PIN=sessionStorage.getItem("naesinfit.pin")||"", ALL=[], ROWS=[], TAB="all", BOOK="all";
 
@@ -336,15 +336,23 @@ function openStudent(n){
 }
 function openAttempt(id){
   const r=ALL.find(x=>x.id===id); if(!r) return;
-  const wrong=[];
-  (r.detail||[]).forEach(it=>(it.d||[]).forEach(x=>{ if(!x.ok) wrong.push({it,x}); }));
+  const wrong=[]; const notes=[];
+  (r.detail||[]).forEach(it=>{
+    (it.d||[]).forEach(x=>{ if(!x.ok) wrong.push({it,x}); });
+    if(it.why||it.voc) notes.push(it);
+  });
   $("#dlg-t").textContent=`${r.student} · ${PARTNAMES[r.part]||r.part} · ${r.pct}%`;
-  $("#dlg-b").innerHTML = wrong.length
+  $("#dlg-b").innerHTML = (wrong.length
     ? wrong.map(({it,x})=>`<div class="wrongrow">
         <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${esc(it.sec||"")} ${it.no} · ${esc(x.l)}</div>
         <span class="k">학생</span><span class="bad">${esc(x.m)}</span><br>
         <span class="k">정답</span><span class="good">${esc(x.r)}</span></div>`).join("")
-    : `<div class="empty">틀린 문항이 없습니다 👏</div>`;
+    : `<div class="empty">틀린 문항이 없습니다 👏</div>`)
+    + (notes.length ? `<div style="margin-top:14px;font-weight:800;font-size:13px">✍️ 학생 오답 정리</div>`
+      + notes.map(it=>`<div class="wrongrow">
+        <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${esc(it.sec||"")} ${it.no}</div>
+        ${it.why?`<span class="k">틀린 이유</span>${esc(it.why)}<br>`:""}
+        ${it.voc?`<span class="k">몰랐던 단어</span>${esc(it.voc)}`:""}</div>`).join("") : "");
   $("#dlg").showModal();
 }
 $("#csv").onclick=()=>{

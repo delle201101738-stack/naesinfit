@@ -435,6 +435,8 @@ input{font:inherit; color:inherit}
   background:var(--surface); color:var(--ink); font-size:14px; font-family:inherit}
 .cz-in:focus{border-color:var(--accent); outline:none}
 .hchip.bold{font-weight:800; border-bottom:2.5px solid var(--ink); background:var(--accent-soft)}
+.note-in{min-height:56px; margin-top:6px; font-size:14px}
+.cta:disabled{opacity:.45}
 .pool .tok.vb{font-weight:800; border-bottom:2.5px solid var(--ink)}
 .bld .tok.vb{font-weight:800}
 .bld .tok{touch-action:none; user-select:none; -webkit-user-select:none; transition:transform .12s, box-shadow .12s}
@@ -1075,6 +1077,7 @@ function startQuiz(opts){
   Q.ans=list.map(x=>blankAns(x.part,x.it));
   Q.cur=list.map(()=>0);
   Q.bd=list.map(()=>[]); Q.af={};
+  Q.notes=list.map(()=>({why:"",voc:""}));
   $("#q-total").textContent=items.length;
   clearInterval(Q.timer); Q.timer=setInterval(tick,1000); tick();
   renderQ(); go("quiz");
@@ -1197,6 +1200,16 @@ function renderQ(){
     body=`${tag}<p class="ko" style="margin-top:12px">${esc(it.ko)}<span class="imp">★중요</span></p>
       <textarea class="wr-in" id="wr" placeholder="영어로 쓰세요" spellcheck="false">${esc(a)}</textarea>
       <p class="hint">대소문자·문장부호는 채점에 영향을 주지 않아요.</p>`;
+  }
+  if(Q.review){
+    const n=(Q.notes&&Q.notes[Q.i])||{why:"",voc:""};
+    body+=`<div class="card" style="margin-top:18px;padding:14px 16px">
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:4px">✍️ 오답 정리 <span style="font-weight:600;color:var(--ink-3);font-size:12px">둘 중 하나는 꼭 써야 다음으로 넘어가요</span></div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--ink-2);margin-top:8px">1. 나만의 틀린 이유 정리</div>
+      <textarea class="wr-in note-in" id="note-why" placeholder="왜 틀렸는지 내 말로 정리해 보세요">${esc(n.why)}</textarea>
+      <div style="font-size:12.5px;font-weight:700;color:var(--ink-2);margin-top:10px">2. 몰랐던 단어 쓰기</div>
+      <textarea class="wr-in note-in" id="note-voc" placeholder="몰랐던 단어와 뜻 (예: yield 양보하다)">${esc(n.voc)}</textarea>
+    </div>`;
   }
   $("#quiz-body").innerHTML=body;
   if(part==="write" || part==="twrite" || part==="mwrite" || (part==="arrange" && S.arrMode==="type")){
@@ -1348,6 +1361,13 @@ function fixRows(it,a){
 }
 function syncCta(){
   const b=$("#quiz-cta"), last=Q.i===Q.items.length-1;
+  if(Q.review){
+    const n=(Q.notes&&Q.notes[Q.i])||{};
+    const ok=String(n.why||"").trim()||String(n.voc||"").trim();
+    b.disabled=!ok;
+    b.textContent = ok ? (last?"제출하고 채점하기":"다음") : "틀린 이유나 몰랐던 단어를 적어 주세요";
+    return;
+  }
   b.disabled=false;
   b.textContent=last?"제출하고 채점하기":"다음";
 }
@@ -1395,6 +1415,11 @@ $("#quiz-body").addEventListener("input",e=>{
   if(fx) Q.ans[Q.i][+fx.dataset.fix].txt=fx.value;
   const cz=e.target.closest("[data-cz]");
   if(cz){ Q.ans[Q.i][+cz.dataset.cz]=cz.value; syncCta(); }
+  if(e.target.id==="note-why"||e.target.id==="note-voc"){
+    const n=(Q.notes ||= [])[Q.i] ||= {why:"",voc:""};
+    if(e.target.id==="note-why") n.why=e.target.value; else n.voc=e.target.value;
+    syncCta();
+  }
 });
 $("#quiz-cta").onclick=()=>{
   if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); }
@@ -1519,14 +1544,20 @@ function showResult(){
   $("#result-retry").hidden = !wrongTotal();
   go("result");
 
-  if(!Q.review && !Q.sent){
+  if(!Q.sent){
     Q.sent=true;
     submitResult({
       student:S.name, book:unitLabel(), unitId:UNIT?UNIT.id:"",
-      part, partName:labelOf(part), scope:SCOPES()[sel.scope]?.short||sel.scope,
+      part, partName:Q.review?("오답노트 · "+(part!=="review"&&P[part]?labelOf(part):"전체")):labelOf(part),
+      scope:Q.review?"재시험":(SCOPES()[sel.scope]?.short||sel.scope),
       total:t, correct:c, pct, secs,
-      detail:Q.items.map((it,i)=>({no:it.no, sec:(secLab(it.sec)),
-        d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})}))
+      detail:Q.items.map((it,i)=>{
+        const row={no:it.no, sec:(secLab(it.sec)),
+          d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})};
+        const n=Q.notes&&Q.notes[i];
+        if(n && (n.why.trim()||n.voc.trim())){ row.why=n.why.trim().slice(0,300); row.voc=n.voc.trim().slice(0,300); }
+        return row;
+      })
     });
   }
 }
