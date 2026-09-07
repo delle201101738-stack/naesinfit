@@ -237,7 +237,7 @@ input{font:inherit; color:inherit}
 
 /* ─────────── quiz ─────────── */
 .q-top{position:sticky; top:0; z-index:30; background:var(--surface); border-bottom:1px solid var(--line)}
-.q-top-in{display:grid; grid-template-columns:44px 1fr auto; align-items:center; height:56px; padding-right:16px}
+.q-top-in{display:grid; grid-template-columns:44px 44px 1fr auto; align-items:center; height:56px; padding-right:16px}
 .q-count{font-size:13.5px; font-weight:700; color:var(--ink-2)}
 .q-count b{color:var(--accent); font-size:16px}
 .q-timer{font-size:13px; font-weight:700; color:var(--ink-3); padding:5px 11px; border-radius:var(--r-pill); background:var(--surface-2)}
@@ -435,6 +435,8 @@ input{font:inherit; color:inherit}
   background:var(--surface); color:var(--ink); font-size:14px; font-family:inherit}
 .cz-in:focus{border-color:var(--accent); outline:none}
 .hchip.bold{font-weight:800; border-bottom:2.5px solid var(--ink); background:var(--accent-soft)}
+.pool .tok.vb{font-weight:800; border-bottom:2.5px solid var(--ink)}
+.bld .tok.vb{font-weight:800}
 .bld .tok{touch-action:none; user-select:none; -webkit-user-select:none; transition:transform .12s, box-shadow .12s}
 .bld .tok.drag{transform:scale(1.08); box-shadow:0 8px 22px rgba(0,0,0,.3); opacity:.95; position:relative; z-index:5}
 .bld.dragging{cursor:grabbing}
@@ -593,6 +595,7 @@ input{font:inherit; color:inherit}
   <section class="screen" id="s-quiz">
     <div class="q-top">
       <div class="q-top-in">
+        <button class="icon-btn" id="quiz-prev" aria-label="이전 문항"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
         <button class="icon-btn" id="quiz-exit" aria-label="나가기"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         <div class="q-count num"><b id="q-now">1</b> / <span id="q-total">9</span></div>
         <div class="q-timer num" id="q-timer">00:00</div>
@@ -642,7 +645,7 @@ input{font:inherit; color:inherit}
   </section>
 
   <section class="screen" id="s-record">
-    <header class="top"><span></span><h1>기록</h1><span></span></header>
+    <header class="top"><button class="icon-btn" data-back="home" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h1>기록</h1><span></span></header>
     <div class="prof" style="padding:16px 18px 10px">
       <div class="ava" id="rec-ava" style="width:48px;height:48px;border:3px solid var(--surface)"></div>
       <div style="flex:1">
@@ -660,7 +663,7 @@ input{font:inherit; color:inherit}
   </section>
 
   <section class="screen" id="s-my">
-    <header class="top"><span></span><h1>마이</h1><span></span></header>
+    <header class="top"><button class="icon-btn" data-back="home" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button><h1>마이</h1><span></span></header>
     <div class="pad" style="margin-top:14px">
       <div class="card prof">
         <div class="ava" id="my-ava"></div>
@@ -804,6 +807,31 @@ function markWrong(part, it, bad){
   if(!Object.keys(m).length) delete w[part];
 }
 /* 틀린 채점 포인트만 남긴 축소 문항 만들기 */
+function sentSplit(t){
+  const out=[]; let cur="";
+  for(let i=0;i<t.length;i++){
+    cur+=t[i];
+    if(".!?".indexOf(t[i])>=0){
+      while(i+1<t.length && '\u201d"\u2019\u0027)'.indexOf(t[i+1])>=0){ cur+=t[++i]; }
+      const nx=t.slice(i+1).match(/^\s+(.)/);
+      if(nx && /[A-Z\u00ab"\u201c\u2018(\u2776-\u277f0-9]/.test(nx[1])){ out.push(cur); cur=""; while(i+1<t.length&&t[i+1]===" ") i++; }
+    }
+  }
+  if(cur.trim()) out.push(cur.trim());
+  return out;
+}
+function keepSents(text){          // «n» 이 든 문장만 남기고 사이는 ⋯ 표시
+  const ss=sentSplit(text);
+  if(ss.length<2) return text;
+  const kept=[]; let prev=-2;
+  ss.forEach((x,i)=>{
+    if(x.indexOf("\u00ab")>=0){
+      if(kept.length && i>prev+1) kept.push("\u22ef");
+      kept.push(x.trim()); prev=i;
+    }
+  });
+  return kept.length ? kept.join("  ") : text;
+}
 function subVG(it, keep){
   let text=it.text, nb=[], map={}, n=0;
   it.blanks.forEach((b,i)=>{ if(keep.indexOf(i)>=0){ n++; map[i]=n; nb.push(b); } });
@@ -812,7 +840,7 @@ function subVG(it, keep){
       keep.indexOf(i)>=0 ? "\u0001"+map[i]+"\u0002" : b.opt[b.ans]);
   });
   text = text.replace(/\u0001(\d+)\u0002/g, "«$1»");
-  return Object.assign({}, it, {text, blanks:nb, _map:keep.slice()});
+  return Object.assign({}, it, {text:keepSents(text), blanks:nb, _map:keep.slice()});
 }
 function subSeg(it, keep){
   let lead=it.lead||"", seg=[];
@@ -822,6 +850,13 @@ function subSeg(it, keep){
     const add = (fixed + (s.after ? " "+s.after : "")).trim();
     if(seg.length) seg[seg.length-1].after = ((seg[seg.length-1].after||"") + " " + add).trim();
     else lead = (lead + " " + add).trim();
+  });
+  if(lead){ const ls=sentSplit(lead); if(ls.length>1) lead="\u22ef "+ls[ls.length-1]; }
+  seg.forEach((sg,i)=>{
+    if(!sg.after) return;
+    const as=sentSplit(sg.after);
+    if(i===seg.length-1){ if(as.length>1) sg.after=as[0]+" \u22ef"; }
+    else if(as.length>2){ sg.after=as[0]+" \u22ef "+as[as.length-1]; }
   });
   return Object.assign({}, it, {lead, seg, _map:keep.slice()});
 }
@@ -836,7 +871,7 @@ function subCloze(it, keep){
     text = text.replace("«"+(i+1)+"»", keep.indexOf(i)>=0 ? "\u0001"+map[i]+"\u0002" : b.ans);
   });
   text = text.replace(/\u0001(\d+)\u0002/g, "«$1»");
-  return Object.assign({}, it, {text, blanks:nb, _map:keep.slice()});
+  return Object.assign({}, it, {text:keepSents(text), blanks:nb, _map:keep.slice()});
 }
 function subset(part, it, keep){
   if(!keep || !keep.length) return it;
@@ -1039,6 +1074,7 @@ function startQuiz(opts){
      items, pl:list.map(x=>x.part), i:0, t0:Date.now()};
   Q.ans=list.map(x=>blankAns(x.part,x.it));
   Q.cur=list.map(()=>0);
+  Q.bd=list.map(()=>[]); Q.af={};
   $("#q-total").textContent=items.length;
   clearInterval(Q.timer); Q.timer=setInterval(tick,1000); tick();
   renderQ(); go("quiz");
@@ -1056,11 +1092,13 @@ function blankAns(part,it){
 }
 function tick(){ if(!Q)return; const s=Math.floor((Date.now()-Q.t0)/1000);
   $("#q-timer").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+$("#quiz-prev").onclick=()=>{ if(Q && Q.i>0){ Q.i--; renderQ(); window.scrollTo(0,0); } };
 $("#quiz-exit").onclick=()=>{ if(confirm("그만둘까요? 지금까지 푼 답은 저장되지 않아요.")){clearInterval(Q.timer);Q=null;renderHome();go("home");} };
 
 function renderQ(){
   const it=Q.items[Q.i], part=Q.pl[Q.i], a=Q.ans[Q.i];
   $("#q-now").textContent=Q.i+1;
+  const pv=$("#quiz-prev"); pv.style.opacity=Q.i?"1":".25"; pv.style.pointerEvents=Q.i?"auto":"none";
   $("#q-bar").style.width=((Q.i+1)/Q.items.length*100)+"%";
   const tag=`<span class="q-type">${labelOf(part)} · ${secLab(it.sec)} ${it.no}</span>`;
   let body="";
@@ -1139,12 +1177,22 @@ function renderQ(){
   } else if(part==="twrite"||part==="mwrite"){
     const bolds=(it.sv||[]).map(w=>w.toLowerCase());
     const isB=t=>{ const ws=t.toLowerCase().replace(/[^a-z' ]/g," ").split(/\s+/); return bolds.some(b=>ws.includes(b)); };
-    body=`${tag}<p class="q-stem">단어를 배열하고 <b>굵은 동사는 어형(시제·태·수일치·분사)을 바꿔</b> 한국어 해석에 맞는 문장을 완성하세요.</p>
+    const bd=(Q.bd&&Q.bd[Q.i])||[];
+    if(Q.cur[Q.i]==null || Q.cur[Q.i]>bd.length) Q.cur[Q.i]=bd.length;
+    const cur=Q.cur[Q.i];
+    const edited = String(a||"").trim() && String(a) !== ((Q.af&&Q.af[Q.i])||"");
+    body=`${tag}<p class="q-stem">토막을 배열하고 <b>굵은 동사는 어형(시제·태·수일치·분사)을 바꿔</b> 한국어 해석에 맞는 문장을 완성하세요.</p>
       ${it.theme?`<p class="hint" style="margin-top:8px">● 주제: ${esc(it.theme)}</p>`:""}
       <p class="ko" style="margin-top:12px;font-size:15px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>
-      <div class="hchips" style="margin-top:12px">${it.tok.map(t=>`<span class="hchip${isB(t)?" bold":""}">${esc(t)}</span>`).join("")}</div>
-      <textarea class="wr-in" id="wr" placeholder="완성 문장을 쓰세요" spellcheck="false" autocapitalize="off">${esc(a)}</textarea>
-      <p class="hint">${ARR_PASS}점 이상 + <b>어형 변형이 정확</b>해야 정답${it.point?` · <b>어법 포인트</b>: ${esc(it.point)}`:""}</p>`;
+      <div class="bld${bd.length?" on":""}" id="bld" style="margin-top:14px">${
+        bd.length
+          ? bd.map((t,r)=>`<i class="car${cur===r?" on":""}" data-car="${r}"></i><button class="tok" data-un="${r}" data-ti="${t}"><span class="ix">${r+1}</span>${esc(it.tok[t])}</button>`).join("")
+            + `<i class="car${cur===bd.length?" on":""}" data-car="${bd.length}"></i>`
+          : `<span class="ph">아래에서 토막을 눌러 담으세요 — 배열하면 입력칸에 자동으로 채워져요</span>`}</div>
+      <p class="bld-tip">토막을 <b>끌어서 자리를 바꿀 수</b> 있어요 · 짧게 누르면 <b>빠집니다</b>${bd.length?` · <button id="bld-clear" style="color:var(--accent);font-weight:700">전체 지우기</button>`:""}</p>
+      <div class="pool">${it.tok.map((t,j)=>`<button class="tok${bd.includes(j)?" used":""}${isB(t)?" vb":""}" data-tk="${j}">${esc(t)}</button>`).join("")}</div>
+      <textarea class="wr-in" id="wr" placeholder="완성 문장 (배열하면 자동으로 채워져요)" spellcheck="false" autocapitalize="off">${esc(a)}</textarea>
+      <p class="hint">${edited?`입력칸을 직접 고친 상태라 배열을 바꿔도 입력칸은 그대로 둡니다 · `:""}${ARR_PASS}점 이상 + <b>어형 변형이 정확</b>해야 정답${it.point?` · <b>어법 포인트</b>: ${esc(it.point)}`:""}</p>`;
   } else {
     body=`${tag}<p class="ko" style="margin-top:12px">${esc(it.ko)}<span class="imp">★중요</span></p>
       <textarea class="wr-in" id="wr" placeholder="영어로 쓰세요" spellcheck="false">${esc(a)}</textarea>
@@ -1153,7 +1201,7 @@ function renderQ(){
   $("#quiz-body").innerHTML=body;
   if(part==="write" || part==="twrite" || part==="mwrite" || (part==="arrange" && S.arrMode==="type")){
     const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
-  if(part==="arrange" && S.arrMode!=="type" && DRAG) wireDrag();
+  if((part==="arrange" && S.arrMode!=="type") || part==="twrite" || part==="mwrite"){ if(DRAG) wireDrag(); }
   syncCta();
 }
 /* ───── 타이핑 힌트 (핵심 단어 / 전체 토막) ───── */
@@ -1233,6 +1281,15 @@ function scoreText(mine, ans){
 
 /* ───── 단어배열: 끌어서 자리 바꾸기 ───── */
 const DRAG = typeof window!=="undefined" && !!window.PointerEvent;
+const bldArr = () => (Q.pl[Q.i]==="arrange") ? Q.ans[Q.i] : (Q.bd[Q.i] ||= []);
+function mwSync(){
+  if(!(Q.pl[Q.i]==="twrite"||Q.pl[Q.i]==="mwrite")) return;
+  const bd=(Q.bd&&Q.bd[Q.i])||[], it=Q.items[Q.i];
+  const join=bd.map(i=>it.tok[i]).join(" ");
+  const prev=(Q.af&&Q.af[Q.i])||"", cur=String(Q.ans[Q.i]||"");
+  if(!cur.trim() || cur===prev) Q.ans[Q.i]=join;
+  (Q.af ||= {})[Q.i]=join;
+}
 function wireDrag(){
   const bld=$("#bld"); if(!bld) return;
   let el=null, sx=0, sy=0, moved=false, pid=null;
@@ -1262,14 +1319,14 @@ function wireDrag(){
     if(!el) return;
     try{ bld.releasePointerCapture(pid); }catch(_){}
     const cell=el, wasMoved=moved; stop(); cell.classList.remove("drag");
-    const a=Q.ans[Q.i];
+    const a=bldArr();
     if(wasMoved){
       const order=Array.from(bld.querySelectorAll("[data-un]")).map(x=>+x.dataset.ti);
       a.length=0; order.forEach(v=>a.push(v)); Q.cur[Q.i]=a.length;
     }else{
       const r=+cell.dataset.un; a.splice(r,1); Q.cur[Q.i]=r;
     }
-    renderQ();
+    mwSync(); renderQ();
   };
   bld.addEventListener("pointerup", end);
   bld.addEventListener("pointercancel", end);
@@ -1318,16 +1375,16 @@ $("#quiz-body").addEventListener("click",e=>{
     const N=["A","B","C","D","E","F","G"].filter(x=>it[x]).length;
     if(k>=0) a.splice(k,1); else if(a.length<N) a.push(L);
     renderQ(); return; }
-  if(e.target.closest("#bld-clear")){ a.length=0; Q.cur[Q.i]=0; renderQ(); return; }
+  if(e.target.closest("#bld-clear")){ const ba=bldArr(); ba.length=0; Q.cur[Q.i]=0; mwSync(); renderQ(); return; }
   const car=e.target.closest("[data-car]");
   if(car){ Q.cur[Q.i]=+car.dataset.car; renderQ(); return; }
   const tk=e.target.closest("[data-tk]");
-  if(tk){ const j=+tk.dataset.tk;
-    if(!a.includes(j)){ let c=Q.cur[Q.i]; if(c==null||c>a.length) c=a.length;
-      a.splice(c,0,j); Q.cur[Q.i]=c+1; }
-    renderQ(); return; }
+  if(tk){ const j=+tk.dataset.tk, ba=bldArr();
+    if(!ba.includes(j)){ let c=Q.cur[Q.i]; if(c==null||c>ba.length) c=ba.length;
+      ba.splice(c,0,j); Q.cur[Q.i]=c+1; }
+    mwSync(); renderQ(); return; }
   const un=e.target.closest("[data-un]");
-  if(un && !DRAG){ const r=+un.dataset.un; a.splice(r,1); Q.cur[Q.i]=r; renderQ(); return; }
+  if(un && !DRAG){ const r=+un.dataset.un, ba=bldArr(); ba.splice(r,1); Q.cur[Q.i]=r; mwSync(); renderQ(); return; }
   if(un) return;
   const sl=e.target.closest("[data-slot]");
   if(sl){ Q.ans[Q.i]=+sl.dataset.slot;
