@@ -1269,7 +1269,7 @@ function renderQ(){
       <textarea class="wr-in" id="wr" placeholder="영어로 쓰세요" spellcheck="false">${esc(a)}</textarea>
       <p class="hint">대소문자·문장부호는 채점에 영향을 주지 않아요.</p>`;
   }
-  if(Q.review){
+  if(Q.review && !WORD_PARTS.has(part)){ // 단어 TEST는 오답 정리 칸 없음
     const n=(Q.notes&&Q.notes[Q.i])||{why:"",voc:""};
     body+=`<div class="card" style="margin-top:18px;padding:14px 16px">
       <div style="font-size:13.5px;font-weight:800;margin-bottom:4px">✍️ 오답 정리 <span style="font-weight:600;color:var(--ink-3);font-size:12px">둘 중 하나는 꼭 써야 다음으로 넘어가요</span></div>
@@ -1480,9 +1480,10 @@ function fixRows(it,a){
     `<div class="fixrow"><span class="lb">${s.L}</span><input data-fix="${i}" value="${esc(a[i].txt)}" placeholder="바르게 고쳐 쓰기" autocomplete="off" spellcheck="false"></div>`:"").join("");
   return rows||`<div style="padding:12px 0;font-size:13px;color:var(--ink-3)">어색한 부분을 눌러 표시하세요</div>`;
 }
+const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef"]);
 function syncCta(){
   const b=$("#quiz-cta"), last=Q.i===Q.items.length-1;
-  if(Q.review){
+  if(Q.review && !WORD_PARTS.has(Q.pl[Q.i])){
     const n=(Q.notes&&Q.notes[Q.i])||{};
     const ok=String(n.why||"").trim()||String(n.voc||"").trim();
     b.disabled=!ok;
