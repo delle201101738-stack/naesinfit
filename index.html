@@ -446,6 +446,34 @@ input{font:inherit; color:inherit}
 .seg{display:inline; border-bottom:2px solid var(--line-2); cursor:pointer; padding-bottom:1px}
 .seg.mk{border-bottom-color:var(--no); background:var(--no-soft); border-radius:4px; padding:1px 2px}
 .seg-lab{font-family:'Archivo',sans-serif; font-size:11px; font-weight:700; color:var(--accent); margin-right:2px}
+/* 통변형: 밑줄 하나씩 O/X */
+.sk-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; font-size:13px; color:var(--ink-3)}
+.sk-head b{color:var(--ink); font-size:15px}
+.sk-dots{display:flex; flex-wrap:wrap; gap:5px; margin-top:10px}
+.sk-dot{min-width:32px; height:28px; padding:0 6px; border-radius:8px; font-family:'Archivo',sans-serif; font-size:11.5px; font-weight:700; background:var(--surface-2); color:var(--ink-3)}
+.sk-dot.o{background:var(--ok-soft); color:var(--ok)}
+.sk-dot.x{background:var(--no-soft); color:var(--no)}
+.sk-dot.cur{outline:2px solid var(--accent); outline-offset:1px; color:var(--ink)}
+.sk-ctx{margin-top:12px; font-size:16px; line-height:2.1}
+.sk-ctx .sk-u{border-bottom:3px solid var(--accent); background:var(--accent-soft); border-radius:4px; padding:1px 3px; font-weight:700}
+.sk-ctx .sk-u.x{border-bottom-color:var(--no); background:var(--no-soft)}
+.sk-ctx .sk-o{border-bottom:1.5px dashed var(--line-2); color:var(--ink-2)}
+.sk-ctx .seg-lab{font-size:11.5px}
+.sk-ox{display:flex; gap:10px; margin-top:14px}
+.sk-ox button{flex:1; padding:15px 8px; border-radius:14px; font-size:16px; font-weight:800; background:var(--surface-2); color:var(--ink-2)}
+.sk-ox button.o.on{background:var(--ok); color:#fff}
+.sk-ox button.x.on{background:var(--no); color:#fff}
+.sk-fix{margin-top:10px}
+.sk-fix input{width:100%; box-sizing:border-box; padding:13px 14px; border-radius:12px; border:1.5px solid var(--no); background:var(--surface); font-size:15px}
+.sk-fix input:focus{outline:none; border-color:var(--accent)}
+.sk-nav{display:flex; justify-content:space-between; gap:10px; margin-top:12px}
+.sk-nav button{padding:10px 14px; border-radius:11px; background:var(--surface-2); font-size:13px; font-weight:700; color:var(--ink-2)}
+.sk-nav button:disabled{opacity:.3}
+.sk-all{margin-top:16px}
+.sk-all summary{cursor:pointer; font-size:13px; font-weight:700; color:var(--ink-3); padding:6px 0}
+.sk-all .psg{font-size:14px; line-height:2.05}
+.sk-all .seg.o{border-bottom-color:var(--ok)}
+.sk-all .seg.cur{background:var(--accent-soft); border-radius:4px}
 .fixrow{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--line)}
 .fixrow:last-child{border-bottom:0}
 .fixrow .lb{width:20px; font-family:'Archivo',sans-serif; font-weight:700; color:var(--accent)}
@@ -1147,10 +1175,8 @@ function renderQ(){
     body=`${tag}<p class="q-stem">박스에서 알맞은 것을 고르세요.</p>
       <div class="psg" style="margin-top:14px">${pickHTML(it,a)}</div>`;
   } else if(isSegP(part)){
-    body=`${tag}<p class="q-stem">${stemOf((part==="word"||part==="word2")?'밑줄 친 단어 중 <b>문맥상 어색한 것</b>을 모두 고르고 바르게 고치세요.':'밑줄 친 부분 중 어법상 <b>어색한 것</b>을 모두 고르고 바르게 고치세요.')}</p>${it.title?`<p class="hint" style="margin-top:6px">${esc(it.title)}</p>`:""}
-      <div class="psg" style="margin-top:14px;line-height:2.1">${esc(it.lead)} ${it.seg.map((s,i)=>
-        `<span class="seg${a[i].mk?" mk":""}" data-seg="${i}"><span class="seg-lab">(${s.L})</span> ${esc(s.t)}</span>${s.after?(/^[.,;:!?)”"’']/.test(s.after)?"":" ")+esc(s.after):""}`).join(" ")}</div>
-      <div class="card" style="margin-top:14px;padding:6px 16px" id="fixlist">${fixRows(it,a)}</div>`;
+    body=`${tag}<p class="q-stem">${stemOf((part==="word"||part==="word2")?'밑줄 친 단어가 <b>문맥상 맞으면 O</b>, 어색하면 <b>X</b>를 누르고 바르게 고치세요.':'밑줄 친 부분이 <b>어법상 맞으면 O</b>, 어색하면 <b>X</b>를 누르고 바르게 고치세요.')}</p>${it.title?`<p class="hint" style="margin-top:6px">${esc(it.title)}</p>`:""}
+      <div id="skbox">${skHTML(it,a)}</div>`;
   } else if(part==="tf"){
     body=`${tag}<p class="q-stem">지문과 일치하면 T, 아니면 F</p>
       <div class="psg" style="margin-top:14px;line-height:1.95">${esc(it.passage)}</div>
@@ -1516,6 +1542,57 @@ function pickHTML(it,a){
   });
   return h;
 }
+/* ───── 통변형: 밑줄 하나씩 보여 주고 O/X → 고치기 ───── */
+const skCur=()=>{ Q.sk ||= {}; return Q.sk[Q.i] ||= 0; };
+function skPieces(it){ // [{t, seg:i}] 원래 지문 순서
+  const P=[]; if(it.lead) P.push({t:it.lead});
+  it.seg.forEach((s,i)=>{ P.push({t:s.t, seg:i}); if(s.after) P.push({t:s.after, glue:/^[.,;:!?)”"’']/.test(s.after)}); });
+  return P;
+}
+const SK_END=/[.!?]["”’)]?(?=\s|$)/g;
+function skContext(it,k){ // 현재 밑줄이 든 문장 (앞이 너무 짧으면 앞 문장까지)
+  const P=skPieces(it); let pos=0, out=[];
+  P.forEach(p=>{ const sep = out.length && !p.glue ? " " : ""; out.push({...p, a:pos+sep.length, sep}); pos+=sep.length+p.t.length; });
+  const full=out.map(p=>p.sep+p.t).join("");
+  const cur=out.find(p=>p.seg===k);
+  const ends=[]; let m; SK_END.lastIndex=0; while((m=SK_END.exec(full))) ends.push(m.index+m[0].length);
+  let from=0; const before=ends.filter(e=>e<=cur.a);
+  if(before.length){ from=before[before.length-1]; if(cur.a-from<25 && before.length>1) from=before[before.length-2]; }
+  let to=full.length; const after=ends.filter(e=>e>cur.a+cur.t.length);
+  if(after.length){ to=after[0]; if(to-(cur.a+cur.t.length)<12 && after.length>1) to=after[1]; }
+  return {out, from, to};
+}
+function skHTML(it,a){
+  const k=Math.min(skCur(), it.seg.length-1), s=it.seg[k], m=a[k];
+  const {out,from,to}=skContext(it,k);
+  let ctx=(from>0?"⋯ ":"");
+  out.forEach(p=>{ const a0=p.a, a1=p.a+p.t.length; if(a1<=from || a0>=to) return;
+    let txt=p.t; if(a0<from) txt=txt.slice(from-a0); if(a1>to) txt=txt.slice(0,to-a0);
+    const sp = (a0>from && p.sep) ? " " : "";
+    if(p.seg===k) ctx+=sp+`<span class="sk-u${m.done&&m.mk?" x":""}"><span class="seg-lab">(${esc(s.L)})</span> ${esc(txt)}</span>`;
+    else if(p.seg!=null) ctx+=sp+`<span class="sk-o">${esc(txt)}</span>`;
+    else ctx+=sp+esc(txt.replace(/^\s+/,""));
+  });
+  if(to<out.reduce((n,p)=>Math.max(n,p.a+p.t.length),0)) ctx+=" ⋯";
+  const left=a.filter(x=>!x.done).length;
+  return `<div class="sk-head"><span>밑줄 <b>${k+1}</b> / ${it.seg.length}</span><span>${left?`남은 밑줄 ${left}개`:"모두 골랐어요"}</span></div>
+    <div class="sk-dots">${it.seg.map((x,i)=>`<button class="sk-dot${a[i].done?(a[i].mk?" x":" o"):""}${i===k?" cur":""}" data-skgo="${i}">${esc(x.L)}</button>`).join("")}</div>
+    <div class="psg sk-ctx">${ctx}</div>
+    <div class="sk-ox"><button class="o${m.done&&!m.mk?" on":""}" data-skox="o">O 맞음</button><button class="x${m.done&&m.mk?" on":""}" data-skox="x">X 틀림 · 고치기</button></div>
+    ${m.mk?`<div class="sk-fix"><input id="skfix" data-fix="${k}" value="${esc(m.txt)}" placeholder="(${esc(s.L)}) 바르게 고쳐 쓰기 — 고친 단어만 써도, 문장째 써도 돼요" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next"></div>`:""}
+    <div class="sk-nav"><button data-skgo="${k-1}"${k?"":" disabled"}>← 이전 밑줄</button><button data-skgo="${k+1}"${k<it.seg.length-1?"":" disabled"}>다음 밑줄 →</button></div>
+    <details class="sk-all"><summary>지문 전체 보기</summary><div class="psg">${esc(it.lead||"")} ${it.seg.map((x,i)=>
+      `<span class="seg${a[i].done?(a[i].mk?" mk":" o"):""}${i===k?" cur":""}" data-skgo="${i}"><span class="seg-lab">(${esc(x.L)})</span> ${esc(x.t)}</span>${x.after?(/^[.,;:!?)”"’']/.test(x.after)?"":" ")+esc(x.after):""}`).join(" ")}</div></details>`;
+}
+function skRender(focusFix){
+  const it=Q.items[Q.i], a=Q.ans[Q.i], open=document.querySelector(".sk-all")?.open;
+  $("#skbox").innerHTML=skHTML(it,a);
+  if(open) document.querySelector(".sk-all").open=true;
+  if(focusFix){ const f=$("#skfix"); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
+  syncCta();
+}
+function skGo(k){ const it=Q.items[Q.i]; if(k<0||k>=it.seg.length) return; Q.sk[Q.i]=k; skRender(false);
+  const box=$("#skbox"); if(box && box.getBoundingClientRect().top<0) box.scrollIntoView({block:"start"}); }
 function fixRows(it,a){
   const rows=it.seg.map((s,i)=>a[i].mk?
     `<div class="fixrow"><span class="lb">${s.L}</span><input data-fix="${i}" value="${esc(a[i].txt)}" placeholder="바르게 고쳐 쓰기 (문장째 써도 돼요)" autocomplete="off" spellcheck="false"></div>`:"").join("");
@@ -1524,6 +1601,7 @@ function fixRows(it,a){
 const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef"]);
 function syncCta(){
   const b=$("#quiz-cta"), last=Q.i===Q.items.length-1;
+  if(isSegP(Q.pl[Q.i]) && skCur()<Q.items[Q.i].seg.length-1){ b.disabled=false; b.textContent="다음 밑줄"; return; }
   if(Q.review && !WORD_PARTS.has(Q.pl[Q.i])){
     const n=(Q.notes&&Q.notes[Q.i])||{};
     const ok=String(n.why||"").trim()||String(n.voc||"").trim();
@@ -1532,7 +1610,8 @@ function syncCta(){
     return;
   }
   b.disabled=false;
-  b.textContent=last?"제출하고 채점하기":"다음";
+  if(isSegP(Q.pl[Q.i]) && skCur()<Q.items[Q.i].seg.length-1){ b.textContent="다음 밑줄"; return; }
+  b.textContent=last?"제출하고 채점하기":(isSegP(Q.pl[Q.i])&&isSegP(Q.pl[Q.i+1])?"다음 문단":"다음");
 }
 $("#quiz-body").addEventListener("click",e=>{
   const it=Q.items[Q.i], a=Q.ans[Q.i];
@@ -1544,9 +1623,14 @@ $("#quiz-body").addEventListener("click",e=>{
   const pk=e.target.closest(".pick>button");
   if(pk){ a[+pk.parentNode.dataset.b]=+pk.dataset.o;
     Array.from(pk.parentNode.children).forEach(x=>x.classList.toggle("on",x===pk)); return; }
-  const sg=e.target.closest("[data-seg]");
-  if(sg){ const i=+sg.dataset.seg; a[i].mk=!a[i].mk;
-    sg.classList.toggle("mk",a[i].mk); $("#fixlist").innerHTML=fixRows(it,a); return; }
+  const skg=e.target.closest("[data-skgo]");
+  if(skg){ e.preventDefault(); skGo(+skg.dataset.skgo); return; }
+  const sko=e.target.closest("[data-skox]");
+  if(sko){ const k=skCur(), m=a[k];
+    if(sko.dataset.skox==="o"){ m.mk=false; m.done=true;
+      if(k<it.seg.length-1) skGo(k+1); else skRender(false); }
+    else { m.mk=true; m.done=true; skRender(true); }
+    return; }
   const tf=e.target.closest("[data-tf]>button");
   if(tf){ a[+tf.parentNode.dataset.tf]=tf.dataset.v;
     Array.from(tf.parentNode.children).forEach(x=>x.classList.toggle("on",x===tf)); return; }
@@ -1573,6 +1657,11 @@ $("#quiz-body").addEventListener("click",e=>{
   if(sl){ Q.ans[Q.i]=+sl.dataset.slot;
     document.querySelectorAll("[data-slot]").forEach(x=>x.classList.toggle("on",x===sl)); return; }
 });
+$("#quiz-body").addEventListener("keydown",e=>{
+  if(e.key!=="Enter" || e.target.id!=="skfix" || e.isComposing) return;
+  e.preventDefault(); const it=Q.items[Q.i], k=skCur();
+  if(k<it.seg.length-1) skGo(k+1); else $("#quiz-cta").focus();
+});
 $("#quiz-body").addEventListener("input",e=>{
   const fx=e.target.closest("[data-fix]");
   if(fx) Q.ans[Q.i][+fx.dataset.fix].txt=fx.value;
@@ -1593,6 +1682,7 @@ $("#quiz-body").addEventListener("input",e=>{
   }
 });
 $("#quiz-cta").onclick=()=>{
+  if(isSegP(Q.pl[Q.i])){ const k=skCur(); if(k<Q.items[Q.i].seg.length-1){ skGo(k+1); return; } }
   if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); }
   else finish();
 };
