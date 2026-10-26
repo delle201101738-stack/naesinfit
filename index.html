@@ -699,6 +699,7 @@ const PARTS=[
  {id:"vocab", n:"어휘 선택",     s:"박스에서 문맥상 적절한 것 고르기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"단락"},
  {id:"gram",  n:"어법 선택",     s:"박스에서 어법상 적절한 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"단락"},
  {id:"word",  n:"단어 밑줄",     s:"밑줄 친 단어 중 어색한 것 고치기", c:"var(--cat-4)", b:"var(--cat-4-s)", k:"문항"},
+ {id:"word2", n:"통변형 ②",  s:"밑줄마다 O·X, X는 고쳐 쓰기", c:"var(--cat-4)", b:"var(--cat-4-s)", k:"문항"},
  {id:"fix",   n:"어법 오류 수정", s:"밑줄 중 어색한 곳 찾아 고치기",   c:"var(--cat-2)", b:"var(--cat-2-s)", k:"단락"},
  {id:"tf",    n:"내용일치 TF",   s:"일치하면 T, 아니면 F",           c:"var(--cat-4)", b:"var(--cat-4-s)", k:"단락"},
  {id:"choice",n:"독해",         s:"요약·추론·함축 5지선다",          c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
@@ -724,7 +725,7 @@ const itemTag = it => it.tag || `${secLab(it.sec)} ${it.no}`;
 /* 파트별 배점(=채점 포인트) */
 function pts(part, it){
   if(part==="vocab"||part==="gram"||part==="cloze") return it.blanks.length;
-  if(part==="fix"||part==="word") return it.seg.length;
+  if(isSegP(part)) return it.seg.length;
   if(part==="tf") return it.st.length;
   if(part==="wmean"||part==="wsyn"||part==="wsynw") return it.rows.length;
   if(part==="wdef") return 2;
@@ -787,6 +788,7 @@ function go(id){
   $$(".tab").forEach((t,i)=>t.classList.toggle("on",map[id]===i));
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const isSegP=p=>p==="fix"||p==="word"||p==="word2";
 const norm=s=>String(s||"").toLowerCase().replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
   .replace(/[^a-z0-9' ]/g," ").replace(/\s+/g," ").trim();
 
@@ -889,7 +891,7 @@ function subCloze(it, keep){
 function subset(part, it, keep){
   if(!keep || !keep.length) return it;
   if(part==="vocab"||part==="gram") return subVG(it,keep);
-  if(part==="fix"||part==="word")   return subSeg(it,keep);
+  if(isSegP(part))   return subSeg(it,keep);
   if(part==="tf")                   return subTF(it,keep);
   if(part==="cloze")                return subCloze(it,keep);
   if(part==="wmean"||part==="wsyn"||part==="wsynw") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
@@ -909,7 +911,7 @@ function wrongItems(part){
 }
 const subLen = (part,it) =>
   (part==="vocab"||part==="gram"||part==="cloze") ? it.blanks.length :
-  (part==="fix"||part==="word")   ? it.seg.length :
+  (isSegP(part))   ? it.seg.length :
   (part==="tf")                   ? it.st.length :
   (part==="wmean"||part==="wsyn"||part==="wsynw") ? it.rows.length :
   (part==="wdef")                 ? 2 : 1;
@@ -1115,7 +1117,7 @@ function startQuiz(opts){
 }
 function blankAns(part,it){
   if(part==="vocab"||part==="gram") return it.blanks.map(()=>null);
-  if(part==="fix"||part==="word") return it.seg.map(()=>({mk:false,txt:""}));
+  if(isSegP(part)) return it.seg.map(()=>({mk:false,txt:""}));
   if(part==="tf") return it.st.map(()=>null);
   if(part==="order") return [];
   if(part==="arrange") return S.arrMode==="type" ? "" : [];
@@ -1144,8 +1146,8 @@ function renderQ(){
   if(part==="vocab"||part==="gram"){
     body=`${tag}<p class="q-stem">박스에서 알맞은 것을 고르세요.</p>
       <div class="psg" style="margin-top:14px">${pickHTML(it,a)}</div>`;
-  } else if(part==="fix"||part==="word"){
-    body=`${tag}<p class="q-stem">${stemOf(part==="word"?'밑줄 친 단어 중 <b>문맥상 어색한 것</b>을 모두 고르고 바르게 고치세요.':'밑줄 친 부분 중 어법상 <b>어색한 것</b>을 모두 고르고 바르게 고치세요.')}</p>${it.title?`<p class="hint" style="margin-top:6px">${esc(it.title)}</p>`:""}
+  } else if(isSegP(part)){
+    body=`${tag}<p class="q-stem">${stemOf((part==="word"||part==="word2")?'밑줄 친 단어 중 <b>문맥상 어색한 것</b>을 모두 고르고 바르게 고치세요.':'밑줄 친 부분 중 어법상 <b>어색한 것</b>을 모두 고르고 바르게 고치세요.')}</p>${it.title?`<p class="hint" style="margin-top:6px">${esc(it.title)}</p>`:""}
       <div class="psg" style="margin-top:14px;line-height:2.1">${esc(it.lead)} ${it.seg.map((s,i)=>
         `<span class="seg${a[i].mk?" mk":""}" data-seg="${i}"><span class="seg-lab">(${s.L})</span> ${esc(s.t)}</span>${s.after?(/^[.,;:!?)”"’']/.test(s.after)?"":" ")+esc(s.after):""}`).join(" ")}</div>
       <div class="card" style="margin-top:14px;padding:6px 16px" id="fixlist">${fixRows(it,a)}</div>`;
@@ -1516,7 +1518,7 @@ function pickHTML(it,a){
 }
 function fixRows(it,a){
   const rows=it.seg.map((s,i)=>a[i].mk?
-    `<div class="fixrow"><span class="lb">${s.L}</span><input data-fix="${i}" value="${esc(a[i].txt)}" placeholder="바르게 고쳐 쓰기" autocomplete="off" spellcheck="false"></div>`:"").join("");
+    `<div class="fixrow"><span class="lb">${s.L}</span><input data-fix="${i}" value="${esc(a[i].txt)}" placeholder="바르게 고쳐 쓰기 (문장째 써도 돼요)" autocomplete="off" spellcheck="false"></div>`:"").join("");
   return rows||`<div style="padding:12px 0;font-size:13px;color:var(--ink-3)">어색한 부분을 눌러 표시하세요</div>`;
 }
 const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef"]);
@@ -1596,15 +1598,34 @@ $("#quiz-cta").onclick=()=>{
 };
 
 /* ───── 채점 ───── */
+/* 고치기 채점: 정답(to·acc)과 똑같거나, 정답 표현을 포함한 문장을 쓰고 틀린 형태(from+앞뒤 단어)가 남아 있지 않으면 정답 */
+function segOk(s,txt,before){
+  const A=[s.to].concat(s.acc||[]).filter(x=>x!=null&&String(x).trim()!=="");
+  const n=norm(txt); if(!n) return false;
+  if(A.some(x=>n===norm(x))) return true;
+  if(!s.from || String(s.t||"").indexOf(s.from)<0) return false;
+  const P=" "+n+" ", inP=k=>!!k && P.indexOf(" "+k+" ")>=0;
+  if(!A.some(x=>inP(norm(x)))) return false;
+  const tw=norm(s.t).split(" "), fw=norm(s.from).split(" ").filter(Boolean);
+  if(!fw.length) return false;
+  let i=-1;
+  for(let j=0;j+fw.length<=tw.length;j++){ if(fw.every((w,k)=>tw[j+k]===w)){ i=j; break; } }
+  if(i<0) return false;
+  const prev=tw[i-1]||norm(before||"").split(" ").filter(Boolean).pop()||"", next=tw[i+fw.length]||norm(s.after||"").split(" ")[0]||"";
+  const F=fw.join(" ");
+  const fixed=[s.to].concat(s.alt||[]).map(x=>" "+norm((before||"")+" "+String(s.t).replace(s.from,x)+" "+(s.after||""))+" ");
+  const chunks=[[prev,F,next].filter(Boolean).join(" ")]; if(tw.length>1) chunks.push(tw.join(" "));
+  return !chunks.some(c=>inP(c) && !fixed.some(f=>f.indexOf(" "+c+" ")>=0));
+}
 function grade(part,it,a){
   const d=[];
   if(part==="vocab"||part==="gram"){
     it.blanks.forEach((b,i)=>d.push({ok:a[i]===b.ans, label:`${i+1}`,
       mine:a[i]==null?"무응답":b.opt[a[i]], right:b.opt[b.ans], ex:b.ex}));
-  } else if(part==="fix"||part==="word"){
+  } else if(isSegP(part)){
     it.seg.forEach((s,i)=>{
       const m=a[i];
-      let ok = s.wrong ? (m.mk && [s.to].concat(s.acc||[]).some(x=>norm(m.txt)===norm(x))) : !m.mk;
+      let ok = s.wrong ? (m.mk && segOk(s,m.txt,i?it.seg[i-1].after:it.lead)) : !m.mk;
       d.push({ok, label:s.L, mine: m.mk?(m.txt||"(고침 없음)"):"맞다고 표시",
         ex:s.ex, right: s.wrong?`${s.from} → ${s.to}${s.alt&&s.alt.length?` (또는 ${s.alt.join(" / ")})`:""}`:(s.okmsg||"어법상 맞음")});
     });

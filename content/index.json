@@ -47,9 +47,11 @@
       "wmean": 71,
       "wsyn": 20,
       "wsynw": 20,
-      "wdef": 30
+      "wdef": 30,
+      "word": 44,
+      "fix": 58
      },
-     "total": 141,
+     "total": 243,
      "labels": {}
     },
     {
@@ -61,9 +63,11 @@
       "wmean": 56,
       "wsyn": 20,
       "wsynw": 20,
-      "wdef": 30
+      "wdef": 30,
+      "word": 43,
+      "fix": 50
      },
-     "total": 126,
+     "total": 219,
      "labels": {}
     }
    ]
@@ -117,9 +121,10 @@
       "wmean": 144,
       "wsyn": 144,
       "wsynw": 144,
-      "wdef": 288
+      "wdef": 288,
+      "word": 54
      },
-     "total": 720,
+     "total": 774,
      "labels": {}
     },
     {
@@ -131,9 +136,10 @@
       "wmean": 160,
       "wsyn": 160,
       "wsynw": 160,
-      "wdef": 320
+      "wdef": 320,
+      "word": 47
      },
-     "total": 800,
+     "total": 847,
      "labels": {}
     }
    ]
@@ -252,10 +258,14 @@
       "order": 5,
       "insert": 5,
       "arrange": 25,
-      "word": 60
+      "word": 60,
+      "word2": 57
      },
-     "total": 571,
-     "labels": {}
+     "total": 628,
+     "labels": {
+      "word": "통변형 ① 기본 O·X 고치기",
+      "word2": "통변형 ② 심화 O·X 고치기"
+     }
     },
     {
      "id": "e2ne04",
@@ -275,10 +285,14 @@
       "order": 6,
       "insert": 6,
       "arrange": 30,
-      "word": 73
+      "word": 73,
+      "word2": 59
      },
-     "total": 641,
-     "labels": {}
+     "total": 700,
+     "labels": {
+      "word": "통변형 ① 기본 O·X 고치기",
+      "word2": "통변형 ② 심화 O·X 고치기"
+     }
     }
    ]
   },
@@ -314,10 +328,15 @@
       "wmean": 95,
       "wsyn": 20,
       "wsynw": 20,
-      "wdef": 30
+      "wdef": 30,
+      "word": 55,
+      "fix": 70
      },
-     "total": 165,
-     "labels": {}
+     "total": 290,
+     "labels": {
+      "word": "통변형 ① 기본",
+      "fix": "통변형 ② 심화"
+     }
     },
     {
      "id": "e2ybm03",
@@ -345,10 +364,15 @@
       "wmean": 113,
       "wsyn": 20,
       "wsynw": 20,
-      "wdef": 30
+      "wdef": 30,
+      "word": 61,
+      "fix": 69
      },
-     "total": 183,
-     "labels": {}
+     "total": 313,
+     "labels": {
+      "word": "통변형 ① 기본",
+      "fix": "통변형 ② 심화"
+     }
     }
    ]
   },
@@ -386,9 +410,15 @@
       "tf": 50,
       "order": 9,
       "insert": 9,
-      "arrange": 22
+      "arrange": 22,
+      "wmean": 30,
+      "wsyn": 20,
+      "wsynw": 20,
+      "wdef": 40,
+      "word": 74,
+      "word2": 70
      },
-     "total": 357,
+     "total": 611,
      "labels": {}
     },
     {
@@ -409,9 +439,10 @@
       "order": 6,
       "insert": 6,
       "arrange": 30,
-      "word": 60
+      "word": 60,
+      "word2": 58
      },
-     "total": 620,
+     "total": 678,
      "labels": {}
     }
    ],
@@ -472,6 +503,34 @@
      },
      "total": 204,
      "labels": {}
+    },
+    {
+     "id": "e2cjs05",
+     "no": "5과",
+     "title": "7000 Oaks Make a Forest",
+     "file": "content/e2cjs05.json",
+     "pts": {
+      "wmean": 112,
+      "wsyn": 20,
+      "wsynw": 20,
+      "wdef": 30,
+      "word": 56,
+      "word2": 66
+     },
+     "total": 304,
+     "labels": {}
+    },
+    {
+     "id": "e2cjs06",
+     "no": "6과",
+     "title": "See the Future in Movies",
+     "file": "content/e2cjs06.json",
+     "pts": {
+      "word": 57,
+      "word2": 64
+     },
+     "total": 121,
+     "labels": {}
     }
    ],
    "grade": "고2"
@@ -519,10 +578,15 @@
       "wmean": 110,
       "wsyn": 20,
       "wsynw": 20,
-      "wdef": 30
+      "wdef": 30,
+      "word": 47,
+      "fix": 44
      },
-     "total": 180,
-     "labels": {}
+     "total": 271,
+     "labels": {
+      "word": "통변형 O·X 고치기",
+      "fix": "통변형 O·X 고치기 (재시험)"
+     }
     }
    ]
   }
