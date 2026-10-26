@@ -122,10 +122,14 @@
       "wsyn": 144,
       "wsynw": 144,
       "wdef": 288,
-      "word": 54
+      "word": 54,
+      "word2": 60
      },
-     "total": 774,
-     "labels": {}
+     "total": 834,
+     "labels": {
+      "word": "통변형 ① 기본 O·X 고치기",
+      "word2": "통변형 ② 심화 O·X 고치기"
+     }
     },
     {
      "id": "ce2ybm04",
@@ -137,10 +141,14 @@
       "wsyn": 160,
       "wsynw": 160,
       "wdef": 320,
-      "word": 47
+      "word": 47,
+      "word2": 54
      },
-     "total": 847,
-     "labels": {}
+     "total": 901,
+     "labels": {
+      "word": "통변형 ① 기본 O·X 고치기",
+      "word2": "통변형 ② 심화 O·X 고치기"
+     }
     }
    ]
   },
