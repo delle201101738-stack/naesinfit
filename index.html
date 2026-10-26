@@ -1074,7 +1074,7 @@ const HOWTO={
  cloze:"원문 지문의 빈칸에 들어갈 단어를 <b>한국어 뜻과 첫 글자·글자 수 힌트</b>를 보고 직접 씁니다. 철자가 정확해야 정답입니다.",
  choice:"지문을 바탕으로 한 <b>요약문 추론 · 추론 불가 · 함축 의미</b> 5지선다입니다. 정답 번호 하나를 고르세요.",
  mwrite:"원문 참조 없이, 각 지문의 <b>중요 문장</b>을 단어 배열 + <b>어형 변형</b>으로 완성합니다. 어법 포인트가 힌트로 붙어 있어요. "+ARR_PASS+"점 이상 + 어형 변형이 맞아야 정답.",
- wmean:"표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 그중 하나만 써도 되고, '하다/한' 같은 어미 차이는 봐줘요. 자동 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
+ wmean:"표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 그중 하나만 써도 되고, <b>뜻이 비슷한 말</b>도 정답이에요. 단, <b>품사</b>가 다르면 틀려요(예: preserve → 보존하다·지키다 ○ / 보존 ✕). 자동 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  wsyn:"왼쪽 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 같은 유의어는 한 번만 쓰여요.",
  wsynw:"표제어마다 뜻이 가장 가까운 <b>유의어를 영어로 직접</b> 씁니다. 첫 글자·글자 수 힌트를 참고하세요. 대소문자는 봐주지만 철자는 정확해야 해요.",
  wdef:"영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 글자 힌트에 맞춰 <b>유의어</b>도 씁니다. 두 칸이 따로 채점돼요.",
@@ -1313,21 +1313,56 @@ function hintBox(it){
   </div>`;
 }
 /* ───── 모의고사 채점 헬퍼 ───── */
-/* 우리말 뜻 채점 (관대하게: 뜻 중 하나 · 괄호 생략 · 어미 차이 허용) */
-const koCore=s=>String(s||"").replace(/\([^)]*\)/g,"").replace(/[~∼·.,;:!?'"‘’“”\s\-]/g,"");
-const KO_END=/(하다|되다|시키다|이다|하는|되는|시키는|한|된|하게|하기|히|적인|적|의|함|다)$/;
-function koStem(s){ let t=s; for(let k=0;k<2;k++){ const m=t.replace(KO_END,""); if(m.length>=1&&m!==t) t=m; else break; } return t; }
-function koMatch(mine, ans){
+/* 우리말 뜻 채점 — 뜻이 비슷하면 정답, 품사가 다르면 오답
+   ① 교재 뜻 중 하나 · 괄호 생략 OK  ② 단어별 유사 뜻(r.koAlt) OK
+   ③ 같은 어근이라도 품사(동사 -다 / 형용사 -ㄴ·-의 / 부사 -히·-게·-으로 / 명사)가 다르면 오답
+      (단, 형용사 뜻 '중요한'에 서술형 '중요하다'는 인정) */
+const koCore=s=>String(s||"").replace(/\([^)]*\)|\[[^\]]*\]/g,"").replace(/[~∼·.,;:!?'"‘’“”\s\-]/g,"");
+const KO_SUF=[ // [어미, 품사] — 긴 것부터
+  ["으로는","D"],["로는","D"],["에는","D"],["에서","D"],["에","D"],["적으로","D"],["하게","D"],["스럽게","D"],["롭게","D"],["으로","D"],["히","D"],["게","D"],
+  ["시키다","V"],["하다","V"],["되다","V"],["받다","V"],["당하다","V"],["이다","V"],["스럽다","V"],["롭다","V"],["답다","V"],["있다","V"],["없다","V"],["다","V"],
+  ["스러운","A"],["로운","A"],["다운","A"],["적인","A"],["하는","A"],["되는","A"],["있는","A"],["없는","A"],["한","A"],["된","A"],["인","A"],["운","A"],["은","A"],["는","A"],["의","A"],["난","A"],["친","A"],["진","A"],["싼","A"],["른","A"],["란","A"],["힌","A"],["긴","A"],["랜","A"],["린","A"],["찬","A"],["든","A"],["신","A"],
+  ["하기","N"],["시킴","N"],["함","N"],["됨","N"],["적","A"]
+];
+const KO_TAIL=/^(적|하|되|시키|스럽|스러|롭|로운|답|다운|함|히|게|한|된|인|의|은|는|이다|다)/;
+const KO_ADV=new Set("거의 결국 마침내 반드시 스스로 또한 게다가 더욱이 매우 아주 이미 점차 흔히 주로 대략 특히 오직 오로지 다시 함께 서로 홀로 혼자 몹시 무척 가장 더 덜 꽤 잠시 늘 항상 자주 이제 아직 이내 곧 일찍 당장 요컨대 아니면 또는 혹은 대개 보통 직접 계속".split(" "));
+function koSplit(s){ if(KO_ADV.has(s)) return {st:s, sf:"", pos:"D"}; for(const [e,p] of KO_SUF){ if(s.length>e.length && s.endsWith(e)) return {st:s.slice(0,-e.length), sf:e, pos:p}; } return {st:s, sf:"", pos:"N"}; }
+const koPos=s=>koSplit(s).pos;
+/* 서술형(-다) → 관형형(-ㄴ) 후보: 중요하다→중요한, 무섭다→무서운, 크다→큰, 많다→많은 */
+function koAdn(m){
+  if(!m.endsWith("다")||m.length<2) return [];
+  const st=m.slice(0,-1), out=[];
+  const pairs=[["하","한"],["되","된"],["이","인"],["있","있는"],["없","없는"],["스럽","스러운"],["롭","로운"],["답","다운"]];
+  for(const [a,b] of pairs) if(st.endsWith(a)) out.push(st.slice(0,-a.length)+b);
+  const c=st.charCodeAt(st.length-1)-0xAC00;
+  if(c>=0&&c<11172){ const jong=c%28, base=st.slice(0,-1);
+    if(jong===0) out.push(base+String.fromCharCode(0xAC00+c+4));           // 크다→큰
+    else if(jong===17) out.push(base+String.fromCharCode(0xAC00+c-17)+"운"); // 무섭다→무서운 (ㅂ불규칙)
+    else out.push(st+"은");                                                  // 많다→많은
+  }
+  return out;
+}
+function koMatch(mine, ans, alt){
+  const parts=String(mine||"").split(/[,;/]/).map(koCore).filter(Boolean);
+  if(parts.length>1) return parts.every(p=>koMatch1(p, ans, alt)); // 여러 개 쓰면 모두 맞아야 정답
+  return koMatch1(mine, ans, alt);
+}
+function koMatch1(mine, ans, alt){
   const m=koCore(mine); if(!m) return false;
   const vs=new Set();
-  String(ans||"").split(/[,;]/).forEach(p=>{ p=p.trim(); if(!p) return; vs.add(koCore(p)); vs.add(koCore(p.replace(/[()]/g,""))); });
-  const ms=koStem(m);
+  String(ans||"").split(/[,;/]/).forEach(p=>{ p=p.trim(); if(!p) return; vs.add(koCore(p)); vs.add(koCore(p.replace(/[()\[\]]/g,""))); });
+  (alt||[]).forEach(p=>vs.add(koCore(p)));
+  const sm=koSplit(m), adn=koAdn(m);   // 형용사 뜻을 '-다'로 쓴 경우(중요하다→중요한)도 후보로
   for(const v of vs){ if(!v) continue;
-    if(v===m) return true;
-    const st=koStem(v);
-    if(st.length>=1 && st===ms) return true;
-    if(m.length>=2 && m.length>=Math.ceil(v.length*0.5) && v.indexOf(m)>=0) return true;
-    if(st.length>=2 && m.indexOf(st)>=0 && m.length<=st.length+3) return true;
+    if(v===m || adn.includes(v)) return true;
+    const sv=koSplit(v);
+    if(sm.pos===sv.pos){                                          // 품사가 같을 때만 느슨하게 비교
+      if(sv.st.length>=1 && sv.st===sm.st) return true;          // 같은 어근 (보호하다=보호시키다)
+      const at=v.indexOf(m), rest=at>=0?v.slice(at+m.length):"";
+      if(m.length>=2 && m.length>=Math.ceil(v.length*0.5) && at>=0 && !KO_TAIL.test(rest)) return true;  // 긴 뜻의 핵심만 씀 (어미만 뺀 건 X)
+      if(sv.st.length>=2 && m.indexOf(sv.st)>=0 && m.length<=sv.st.length+3 && !(sv.sf && m===sv.st)) return true; // 어근만 쓴 건 X
+    }
+    if(sv.pos==="A") for(const c of adn) if(c.length>=2 && c.length>=Math.ceil(v.length*0.5) && v.indexOf(c)>=0) return true; // 많다→많은⊂수많은
   }
   return false;
 }
@@ -1563,7 +1598,7 @@ function grade(part,it,a){
             right:`${it.ans+1}번 — ${it.opt[it.ans]}`});
   } else if(part==="wmean"){
     it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
-      d.push({ok:koMatch(mine,r.ko), label:r.w, mine:mine||"무응답", right:r.ko}); });
+      d.push({ok:koMatch(mine,r.ko,r.koAlt), label:r.w, mine:mine||"무응답", right:r.ko}); });
   } else if(part==="wsyn"){
     it.rows.forEach((r,i)=>d.push({ok:a[i]===r.ans, label:r.w,
       mine:a[i]==null?"무응답":`${String.fromCharCode(65+a[i])} ${it.opts[a[i]]}`,
