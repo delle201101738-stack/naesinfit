@@ -855,9 +855,14 @@ const bestOf = () => (S.best[UNIT?UNIT.id:"_"] ||= {});
 /* ───── 오답노트 ───── */
 const wrongOf = () => ((S.wrong ||= {})[UNIT?UNIT.id:"_"] ||= {});
 const wkey = it => `${it.sec}|${it.no}`;
+/* 한 번이라도 틀린 자리는 everOf에 계속 남음 → 몇 번이고 다시 풀 수 있음 (맞혀도 지워지지 않음) */
+const everOf = () => ((S.ever ||= {})[UNIT?UNIT.id:"_"] ||= {});
 function markWrong(part, it, bad){
   const w=wrongOf(), m=(w[part] ||= {}), k=wkey(it);
-  if(bad && bad.length) m[k]=bad.slice(); else delete m[k];
+  if(bad && bad.length){
+    m[k]=bad.slice();
+    const e=(everOf()[part] ||= {}); e[k]=[...new Set([...(e[k]||[]), ...bad])].sort((x,y)=>x-y);
+  } else delete m[k];
   if(!Object.keys(m).length) delete w[part];
 }
 /* 틀린 채점 포인트만 남긴 축소 문항 만들기 */
@@ -937,8 +942,8 @@ function subset(part, it, keep){
   if(part==="wdef")                 return Object.assign({}, it);
   return Object.assign({}, it, {_map:keep.slice()});
 }
-function wrongItems(part){
-  const m=wrongOf()[part]||{}, all=(C&&C[part])||[], out=[];
+function wrongItems(part, ever){
+  const m=(ever?everOf():wrongOf())[part]||{}, all=(C&&C[part])||[], out=[];
   Object.keys(m).forEach(k=>{
     const it=all.find(x=>wkey(x)===k); if(!it) return;
     if(curScope()==="본문" && it.sec!=="본문") return;
@@ -954,8 +959,8 @@ const subLen = (part,it) =>
   (part==="tf")                   ? it.st.length :
   (part==="wmean"||part==="wsyn"||part==="wsynw") ? it.rows.length :
   (part==="wdef")                 ? 2 : 1;
-const wrongCount = part => wrongItems(part).reduce((s,it)=>s+pts(part,it),0);
-const wrongTotal = () => livePARTS().reduce((s,p)=>s+wrongCount(p.id),0);
+const wrongCount = (part, ever) => wrongItems(part, ever).reduce((s,it)=>s+pts(part,it),0);
+const wrongTotal = ever => livePARTS().reduce((s,p)=>s+wrongCount(p.id, ever),0);
 function doneCount(){
   const b=bestOf();
   return PARTS.reduce((s,p)=>s+(b[p.id]?.done||0),0);
@@ -1013,13 +1018,13 @@ function renderHome(){
       ${svg("chev","go")}
     </button>`;}).join("");
 
-  const wt=wrongTotal();
-  $("#wrong-slot").innerHTML = wt ? `
-    <div class="sec"><h2>오답노트</h2><span class="more">틀린 것만 모았어요</span></div>
+  const wt=wrongTotal(), we=wrongTotal(true);
+  $("#wrong-slot").innerHTML = we ? `
+    <div class="sec"><h2>오답노트</h2><span class="more">틀렸던 문제는 언제든 다시</span></div>
     <button class="card part-card" data-go="wrong" style="width:100%">
-      <span class="ci" style="background:var(--no-soft);color:var(--no)">${wt}</span>
-      <span style="flex:1"><span class="t">틀린 문제만 다시 풀기</span>
-      <span class="s">${livePARTS().filter(p=>wrongCount(p.id)).map(p=>labelOf(p.id)).join(" · ")}</span></span>
+      <span class="ci" style="background:var(--no-soft);color:var(--no)">${wt||we}</span>
+      <span style="flex:1"><span class="t">${wt?`아직 틀린 문제 ${wt}개 다시 풀기`:`틀렸던 문제 ${we}개 다시 풀기`}</span>
+      <span class="s">${wt?`틀렸던 문제 전체 ${we}개 · `:""}${livePARTS().filter(p=>wrongCount(p.id,true)).map(p=>labelOf(p.id)).join(" · ")}</span></span>
       ${svg("chev","go")}
     </button>` : (tried ? `
     <div class="sec"><h2>오답노트</h2><span class="more">비어 있어요</span></div>
@@ -1094,10 +1099,11 @@ function renderSetup(){
   $("#setup-cta").textContent=`${n.n}${p.k} · ${n.p}개 채점 시작`;
   $("#setup-cta").disabled=n.n===0;
   /* 오답 있으면 '틀린 것만 다시' 버튼 (부분 재시험 동선) */
-  const wn=wrongCount(sel.part), wb=$("#setup-wrong"), bb=bestOf()[sel.part];
+  const wn0=wrongCount(sel.part), we=wrongCount(sel.part,true), wn=wn0||we, wb=$("#setup-wrong"), bb=bestOf()[sel.part];
+  wb.dataset.ever = wn0 ? "" : "1";
   const fullV = !!bb && VERDICT(bb.pct).k==="full";
   const OUTL="flex:1;background:var(--surface);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)";
-  wb.textContent=`틀린 것만 다시 · ${wn}개`;
+  wb.textContent= wn0 ? `틀린 것만 다시 · ${wn0}개` : `틀렸던 문제 다시 · ${we}개`;
   wb.style.cssText = !wn ? "flex:1;display:none" : (fullV ? OUTL : "flex:1");
   $("#setup-cta").style.cssText = (wn && !fullV) ? OUTL : "flex:1";
   if(wn) $("#setup-cta").textContent = `전체 다시 · ${n.p}개`;
@@ -1129,7 +1135,7 @@ $("#setup-body").addEventListener("click",e=>{
   sel.scope=b.dataset.sc; S.scope=sel.scope; save(); renderSetup();
 });
 $("#setup-cta").onclick=()=>startQuiz();
-$("#setup-wrong").onclick=()=>startQuiz({review:true, part:sel.part});
+$("#setup-wrong").onclick=()=>startQuiz({review:true, part:sel.part, ever:!!$("#setup-wrong").dataset.ever});
 
 /* ───── 응시 ───── */
 let Q=null;
@@ -1138,7 +1144,7 @@ function startQuiz(opts){
   let list=[];
   if(opts.review){
     (opts.part ? [opts.part] : livePARTS().map(p=>p.id))
-      .forEach(pid=>wrongItems(pid).forEach(it=>list.push({part:pid, it})));
+      .forEach(pid=>wrongItems(pid, !!opts.ever).forEach(it=>list.push({part:pid, it})));
   } else {
     list=itemsOf(sel.part, sel.scope).map(it=>({part:sel.part, it}));
   }
@@ -1915,7 +1921,7 @@ function showResult(){
     if(!b || pct>b.pct) bestOf()[part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
   }
   save();
-  $("#result-retry").hidden = !wrongTotal();
+  $("#result-retry").hidden = !wrongTotal(true);
   { const wp=(P[part]&&wrongCount(part))||0; $("#result-retry").textContent = wp ? `틀린 것만 다시 · ${wp}개` : "오답노트 보기"; }
   go("result");
 
@@ -1961,39 +1967,41 @@ $("#result-retry").onclick=()=>{
 
 /* ───── 오답노트 화면 ───── */
 function renderWrong(){
-  const rows=livePARTS().map(p=>({p, n:wrongCount(p.id)})).filter(x=>x.n);
-  const tot=rows.reduce((s,x)=>s+x.n,0);
-  $("#wrong-body").innerHTML = tot ? `
+  const rows=livePARTS().map(p=>({p, n:wrongCount(p.id), e:wrongCount(p.id,true)})).filter(x=>x.e);
+  const tot=rows.reduce((s,x)=>s+x.n,0), tote=rows.reduce((s,x)=>s+x.e,0);
+  const redo=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round">${I.redo}</svg>`;
+  const pill=(on)=>`flex:none;display:flex;align-items:center;gap:5px;padding:8px 11px;border-radius:11px;font-size:12.5px;font-weight:800;${on?"background:var(--accent);color:var(--on-accent)":"background:var(--surface-2);color:var(--accent)"}`;
+  $("#wrong-body").innerHTML = tote ? `
     <div class="card" style="padding:18px 16px">
       <div style="display:flex;align-items:center;gap:13px">
-        <span class="ci" style="width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--no-soft);color:var(--no);font-family:Archivo;font-weight:800;font-size:18px">${tot}</span>
-        <div><div style="font-size:17px;font-weight:800;letter-spacing:-.02em">틀린 문제 ${tot}개</div>
-        <div style="font-size:13px;color:var(--ink-3);margin-top:2px">틀린 자리만 콕 집어서 나와요 · 맞히면 목록에서 빠집니다</div></div>
+        <span class="ci" style="width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--no-soft);color:var(--no);font-family:Archivo;font-weight:800;font-size:18px">${tot||tote}</span>
+        <div><div style="font-size:17px;font-weight:800;letter-spacing:-.02em">${tot?`아직 틀린 문제 ${tot}개`:"지금은 다 맞혔어요 👏"}</div>
+        <div style="font-size:13px;color:var(--ink-3);margin-top:2px">한 번이라도 틀렸던 문제 ${tote}개는 맞혀도 지워지지 않아요 · 몇 번이고 다시 풀 수 있어요</div></div>
       </div>
     </div>
-    <div class="sec" style="margin:24px 0 10px"><h2>파트별</h2><span class="more">눌러서 그 파트만 풀기</span></div>
+    <div class="sec" style="margin:24px 0 10px"><h2>파트별</h2><span class="more">아직 틀린 것 / 틀렸던 것 전부</span></div>
     <div class="card">
-      ${rows.map(({p,n})=>`<button class="wrow" data-wp="${p.id}">
-        <span class="ci" style="background:${p.b};color:${p.c}">${n}</span>
+      ${rows.map(({p,n,e})=>`<div class="wrow" style="cursor:default">
+        <span class="ci" style="background:${p.b};color:${p.c}">${n||e}</span>
         <span style="flex:1;min-width:0"><span class="t" style="display:block;font-size:15px;font-weight:700">${labelOf(p.id)}</span>
-        <span class="s" style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">틀린 문제 ${n}개</span></span>
-        <span style="flex:none;display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--accent)">
-          <svg viewBox="0 0 24 24" style="width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round">${I.redo}</svg>
-          다시 풀기</span>
-      </button>`).join("")}
+        <span class="s" style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">아직 틀림 ${n}개 · 틀렸던 문제 ${e}개</span></span>
+        ${n?`<button data-wp="${p.id}" style="${pill(true)}">${redo}${n}</button>`:""}
+        <button data-wp="${p.id}" data-ever="1" style="${pill(false)};margin-left:6px">${redo}전부 ${e}</button>
+      </div>`).join("")}
     </div>
     <div class="card" style="margin-top:16px;padding:15px 16px;font-size:13px;line-height:1.75;color:var(--ink-2)">
-      오답노트 결과도 <b>재시험 기록</b>으로 선생님께 전송돼요. 파트 최고 기록은 파트를 처음부터 다시 풀 때 갱신됩니다.</div>`
+      <b>아직 틀린 것</b>은 지금도 틀려 있는 자리만, <b>전부</b>는 한 번이라도 틀렸던 자리를 모두 다시 풀어요. 오답노트 결과도 <b>재시험 기록</b>으로 선생님께 전송돼요.</div>`
     : `<div class="empty" style="padding:60px 20px;text-align:center">
          <h3 style="margin:0;font-size:18px;font-weight:800">틀린 문제가 없어요 👏</h3>
-         <p style="margin:8px 0 0;font-size:14px;color:var(--ink-3);line-height:1.7">파트를 풀다가 틀리면 여기에 자동으로 쌓입니다.</p></div>`;
-  $("#wrong-cta").hidden = !tot;
-  $("#wrong-cta").textContent = `틀린 문제 ${tot}개 전부 다시 풀기`;
+         <p style="margin:8px 0 0;font-size:14px;color:var(--ink-3);line-height:1.7">파트를 풀다가 틀리면 여기에 자동으로 쌓이고, 맞혀도 계속 다시 풀 수 있어요.</p></div>`;
+  $("#wrong-cta").hidden = !tote;
+  $("#wrong-cta").textContent = tot ? `아직 틀린 문제 ${tot}개 다시 풀기` : `틀렸던 문제 ${tote}개 전부 다시 풀기`;
+  $("#wrong-cta").dataset.ever = tot ? "" : "1";
 }
-$("#wrong-cta").onclick=()=>startQuiz({review:true});
+$("#wrong-cta").onclick=()=>startQuiz({review:true, ever:!!$("#wrong-cta").dataset.ever});
 $("#wrong-body").addEventListener("click",e=>{
   const b=e.target.closest("[data-wp]"); if(!b) return;
-  startQuiz({review:true, part:b.dataset.wp});
+  startQuiz({review:true, part:b.dataset.wp, ever:!!b.dataset.ever});
 });
 
 /* ───── 본문 읽기 ───── */
@@ -2212,7 +2220,7 @@ const UKEY="naesinfit.unit";
 (function migrate(){
   try{
     const REN={"e2-cj-01":"e2cjk01","e2-cj3-03":"e2cjs03"};
-    S.best ||= {}; S.wrong ||= {}; if(S.arrHint==null) S.arrHint=1;
+    S.best ||= {}; S.wrong ||= {}; S.ever ||= {}; if(S.arrHint==null) S.arrHint=1;
     for(const o in REN){ const n=REN[o];
       if(S.best[o]  && !S.best[n])  S.best[n]  = S.best[o];
       if(S.wrong[o] && !S.wrong[n]) S.wrong[n] = S.wrong[o];
@@ -2224,6 +2232,9 @@ const UKEY="naesinfit.unit";
       if(!Object.keys(m).length) delete S.wrong[u];
     }
     for(const u in S.best){ const b=S.best[u]; if(b && b.write) delete b.write; }
+    for(const u in S.wrong){ const ev=(S.ever[u] ||= {});   // 지금 남아 있는 오답을 '틀렸던 문제' 기록으로 옮겨 둠
+      for(const pt in S.wrong[u]){ const e=(ev[pt] ||= {}), m=S.wrong[u][pt]||{};
+        for(const k in m) if(Array.isArray(m[k])) e[k]=[...new Set([...(e[k]||[]), ...m[k]])].sort((x,y)=>x-y); } }
     const cu=localStorage.getItem(UKEY);
     if(cu && REN[cu]) localStorage.setItem(UKEY, REN[cu]);
     save();
