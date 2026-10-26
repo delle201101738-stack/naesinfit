@@ -1319,7 +1319,7 @@ function hintBox(it){
       (단, 형용사 뜻 '중요한'에 서술형 '중요하다'는 인정) */
 const koCore=s=>String(s||"").replace(/\([^)]*\)|\[[^\]]*\]/g,"").replace(/[~∼·.,;:!?'"‘’“”\s\-]/g,"");
 const KO_SUF=[ // [어미, 품사] — 긴 것부터
-  ["으로는","D"],["로는","D"],["에는","D"],["에서","D"],["에","D"],["적으로","D"],["하게","D"],["스럽게","D"],["롭게","D"],["으로","D"],["히","D"],["게","D"],
+  ["마다","D"],["으로는","D"],["로는","D"],["에는","D"],["에서","D"],["에","D"],["적으로","D"],["하게","D"],["스럽게","D"],["롭게","D"],["으로","D"],["히","D"],["게","D"],
   ["시키다","V"],["하다","V"],["되다","V"],["받다","V"],["당하다","V"],["이다","V"],["스럽다","V"],["롭다","V"],["답다","V"],["있다","V"],["없다","V"],["다","V"],
   ["스러운","A"],["로운","A"],["다운","A"],["적인","A"],["하는","A"],["되는","A"],["있는","A"],["없는","A"],["한","A"],["된","A"],["인","A"],["운","A"],["은","A"],["는","A"],["의","A"],["난","A"],["친","A"],["진","A"],["싼","A"],["른","A"],["란","A"],["힌","A"],["긴","A"],["랜","A"],["린","A"],["찬","A"],["든","A"],["신","A"],
   ["하기","N"],["시킴","N"],["함","N"],["됨","N"],["적","A"]
@@ -1349,20 +1349,59 @@ function koMatch(mine, ans, alt){
 }
 function koMatch1(mine, ans, alt){
   const m=koCore(mine); if(!m) return false;
-  const vs=new Set();
-  String(ans||"").split(/[,;/]/).forEach(p=>{ p=p.trim(); if(!p) return; vs.add(koCore(p)); vs.add(koCore(p.replace(/[()\[\]]/g,""))); });
-  (alt||[]).forEach(p=>vs.add(koCore(p)));
+  const vs=new Set(), WB={};   // WB[v] = 띄어쓰기 기준 단어 시작 위치
+  const addV=(src,raw)=>{ if(!raw) addV(src,1); else { src=String(src); } if(!raw) src=String(src).replace(/^\s*[~∼]\s*(을|를|에게|에서|에|의|와|과|으로|로|이|가|은|는)?\s*/,""); const v=koCore(src); if(!v) return; vs.add(v);
+    const b=WB[v]||(WB[v]=new Set([0])); let pos=0;
+    String(src).replace(/\([^)]*\)|\[[^\]]*\]/g,"").split(/\s+/).forEach(t=>{ b.add(pos); pos+=koCore(t).length; }); };
+  String(ans||"").split(/[,;/]/).forEach(p=>{ p=p.trim(); if(!p) return; addV(p); addV(p.replace(/[()\[\]]/g,"")); });
+  (alt||[]).forEach(a=>addV(a));
   const sm=koSplit(m), adn=koAdn(m);   // 형용사 뜻을 '-다'로 쓴 경우(중요하다→중요한)도 후보로
   for(const v of vs){ if(!v) continue;
     if(v===m || adn.includes(v)) return true;
-    const sv=koSplit(v);
+    const sv=koSplit(v); WBG=WB[v];
     if(sm.pos===sv.pos){                                          // 품사가 같을 때만 느슨하게 비교
       if(sv.st.length>=1 && sv.st===sm.st) return true;          // 같은 어근 (보호하다=보호시키다)
       const at=v.indexOf(m), rest=at>=0?v.slice(at+m.length):"";
-      if(m.length>=2 && m.length>=Math.ceil(v.length*0.5) && at>=0 && !KO_TAIL.test(rest)) return true;  // 긴 뜻의 핵심만 씀 (어미만 뺀 건 X)
-      if(sv.st.length>=2 && m.indexOf(sv.st)>=0 && m.length<=sv.st.length+3 && !(sv.sf && m===sv.st)) return true; // 어근만 쓴 건 X
+      if(m.length>=2 && m.length>=Math.ceil(v.length*0.5) && at>=0 && koPrefixOk(v,at,m) && !KO_TAIL.test(rest)) return true;  // 긴 뜻의 핵심만 씀 (어미만 뺀 건 X)
+      if(sv.st.length>=2 && m.indexOf(sv.st)===0 && m.length<=sv.st.length+3 && !(sv.sf && m===sv.st)) return true; // 어근만 쓴 건 X
     }
-    if(sv.pos==="A") for(const c of adn) if(c.length>=2 && c.length>=Math.ceil(v.length*0.5) && v.indexOf(c)>=0) return true; // 많다→많은⊂수많은
+    if(sv.pos==="A") for(const c of adn){ const at=v.indexOf(c); if(c.length>=2 && c.length>=Math.ceil(v.length*0.5) && at>=0 && koPrefixOk(v,at,c)) return true; } // 많다→많은⊂수많은
+  }
+  return koKeyword(m, sm, String(ans||"").split(/[,;/]/).concat(alt||[]));
+}
+/* 핵심어 일치: 품사가 같고, 뜻의 핵심 단어(2글자 이상)를 그대로 쓰면 정답
+   예) 혁명을 일으키다 ← 혁명하다 · 혁명을 하다 ○ / 혁명적인 ✕(품사) / 충분한 ← 불충분한 ✕(부정) */
+const KO_LIGHT=/^(일으키다|하다|시키다|되다|주다|가져오다|내다|받다|이루다|가지다|갖다|지니다|있다|불러일으키다|끼치다|미치다|입다|당하다|불어넣다|안기다|안겨주다|제공하다)$/;
+const KO_LIGHTREST=/^(을|를|이|가|에)?(일으키다|하다|시키다|되다|주다|가져오다|내다|받다|이루다|가지다|갖다|지니다|있다|불러일으키다|끼치다|미치다|입다|당하다|불어넣다|안기다|안겨주다|제공하다|이다)$/;
+const KO_NEG=/(않|없|못|아닌|아니)/, KO_NEGPRE="불비무미몰非";
+const KO_JOSA=/(으로|에서|에게|로|을|를|이|가|에|의|와|과|도|만|은|는)$/;
+const KO_WEAK=new Set(["하","되","있","없","주","가","오","보","받","대한","관한","위한","것","수","등","사람","정도","모든","여러","매우","아주","다른","같은","잘"]);
+/* 긴 뜻에서 앞부분을 뺀 답: 뺀 부분이 꾸밈말(완전히·주요·매우…)일 때만 OK, 명사(신경 쓰다→쓰다)는 X */
+function koPrefixOk(v,at,m){ if(at===0) return true;
+  const pre=v.slice(0,at);
+  if(pre==="수" && m.startsWith("많")) return true;                       // 수많은 ← 많은
+  if(!WBG.has(at)) return false;                                           // 단어 중간이면 X (수정하다 ≠ 정하다)
+  return /^(주요|매우|아주|몹시|대단히|정말|너무|크게|완전|완전히|깊이|잘|더|가장|서로|함께|다시|미리|직접|널리|쉽게|크고|강력히)$/.test(pre)
+      || ["A","D"].includes(koPos(pre)); }
+let WBG=new Set([0]);
+function koKeyword(m, sm, senses){
+  const ms=sm.st.replace(KO_JOSA,"");
+  for(let p of senses){ p=String(p||"").replace(/\([^)]*\)|\[[^\]]*\]/g,"").trim(); const v=koCore(p); if(!v) continue;
+    const sv=koSplit(v);
+    if(sm.pos!==sv.pos) continue;                                   // 품사 다르면 X
+    if(KO_NEG.test(v)!==KO_NEG.test(m)) continue;                   // 한쪽만 부정이면 X
+    // ① 학생 답의 어근이 뜻 안에 들어 있음 (혁명하다 → '혁명'을 일으키다)
+    const tk=p.split(/\s+/).map(koCore).filter(Boolean);
+    const light=tk.length>=2 && KO_LIGHT.test(tk[tk.length-1]);          // '명사 + 일으키다/하다/주다…' 꼴만
+    if(light && ms.length>=2 && !KO_WEAK.has(ms) && tk[0].startsWith(ms)) return true;
+    // ③ 학생 답이 '목적어 + 뜻' 꼴 (돈을 마련하다 ⊇ 마련하다)
+    if(v.length>=2 && m.endsWith(v)){ const pre=m.slice(0,m.length-v.length); if(pre.length>=2 && pre.length<=5 && /(을|를|에|에게|로|으로|와|과)$/.test(pre)) return true; }
+    // ② 뜻의 핵심 단어가 학생 답 안에 들어 있음
+    if(!light) continue;
+    for(let t of tk.slice(0,1)){ t=t.length>=3?t.replace(KO_JOSA,""):t;
+      if(t.length<2 || KO_WEAK.has(t)) continue;
+      if(!KO_LIGHTREST.test(m.slice(t.length))) continue;              // 혁명(을) 하다/시키다/일으키다만
+      if(m.startsWith(t) && m.length-t.length<=6) return true; }      // 학생 답이 그 핵심 단어로 시작
   }
   return false;
 }
