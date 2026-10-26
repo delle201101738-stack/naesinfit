@@ -470,6 +470,17 @@ input{font:inherit; color:inherit}
 .sk-nav button{padding:10px 14px; border-radius:11px; background:var(--surface-2); font-size:13px; font-weight:700; color:var(--ink-2)}
 .sk-nav button:disabled{opacity:.3}
 .sk-all{margin-top:16px}
+.scrollbox{max-height:44vh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
+.scrollbox-lb{display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--ink-3); margin:14px 2px 6px}
+.st-card{margin-top:12px; background:var(--surface); border-radius:16px; padding:16px; box-shadow:var(--shadow); font-size:16px; line-height:1.75; font-weight:600}
+.st-card .n{font-family:'Archivo',sans-serif; color:var(--accent); font-weight:800; margin-right:6px}
+.cz-blank{display:inline-block; min-width:64px; padding:0 6px; border-bottom:2.5px solid var(--line-2); color:var(--ink-3); font-weight:700}
+.cz-blank.cur{border-bottom-color:var(--accent); background:var(--accent-soft); color:var(--ink); border-radius:4px}
+.cz-blank.fill{color:var(--ink); border-bottom-color:var(--ok)}
+.cz-hint{margin-top:12px; background:var(--surface-2); border-radius:14px; padding:12px 14px; font-size:14px; line-height:1.8}
+.cz-hint b{color:var(--ink)} .cz-hint .pat{font-family:'Archivo',monospace; letter-spacing:.06em; font-weight:700; color:var(--accent)}
+.cz-step input{width:100%; box-sizing:border-box; margin-top:10px; padding:13px 14px; border-radius:12px; border:1.5px solid var(--accent); background:var(--surface); font-size:16px}
+.cz-step input:focus{outline:none; border-color:var(--accent-2,var(--accent))}
 .sk-all summary{cursor:pointer; font-size:13px; font-weight:700; color:var(--ink-3); padding:6px 0}
 .sk-all .psg{font-size:14px; line-height:2.05}
 .sk-all .seg.o{border-bottom-color:var(--ok)}
@@ -1094,14 +1105,14 @@ function renderSetup(){
 const HOWTO={
  vocab:"지문 속 <b>초록 상자</b>에서 문맥상 알맞은 낱말을 하나씩 고릅니다. 한 단락이 한 문항이고, 빈칸 하나하나가 따로 채점돼요.",
  gram:"지문 속 상자에서 <b>어법상</b> 알맞은 형태를 고릅니다. 해석이 아니라 문법으로 판단하세요.",
- word:"지문 속 <b>밑줄 친 단어</b> 중 문맥상 어색한 것을 모두 눌러 표시하고, 아래 칸에 바르게 고쳐 씁니다. 표시와 고친 말이 모두 맞아야 정답입니다.",
- fix:"밑줄 친 (A)~(K) 중 <b>어법상 어색한 것</b>을 모두 눌러 표시하고, 아래 칸에 바르게 고쳐 씁니다. 표시와 고친 말이 모두 맞아야 정답입니다.",
- tf:"지문을 읽고 각 문장이 내용과 <b>일치하면 T</b>, 일치하지 않으면 <b>F</b>를 누릅니다.",
+ word:"밑줄이 <b>하나씩</b> 나와요. 문맥상 맞으면 <b>O</b>, 어색하면 <b>X</b>를 누르고 바로 아래 칸에 고쳐 씁니다. 밑줄을 모두 O·X 해야 다음으로 넘어가요.",
+ fix:"밑줄이 <b>하나씩</b> 나와요. 어법상 맞으면 <b>O</b>, 어색하면 <b>X</b>를 누르고 바로 아래 칸에 고쳐 씁니다. 밑줄을 모두 O·X 해야 다음으로 넘어가요.",
+ tf:"문장이 <b>하나씩</b> 나와요. 지문(아래 상자에서 스크롤)과 <b>일치하면 T</b>, 아니면 <b>F</b>를 누르면 다음 문장으로 넘어가요.",
  order:"주어진 글 다음에 이어질 순서대로 (A)(B)(C)를 <b>순서대로 탭</b>하세요. 다시 누르면 취소됩니다.",
  insert:"주어진 문장이 들어가기에 가장 적절한 <b>번호 자리</b>를 누릅니다.",
  arrange:"<b>토막 배열</b>은 흩어진 토막을 끌어서 순서대로 맞춥니다. <b>직접 타이핑</b>은 우리말만 보고 영어로 씁니다 — 관사(a·the)와 사소한 철자 실수는 봐주고, 문장마다 100점 만점으로 채점해 "+ARR_PASS+"점 이상이면 정답입니다. 타이핑에는 <b>힌트</b>가 붙어요 — 기본은 <b>핵심 단어</b>만 섞어서 보여주고, 문제 화면에서 <b>전체 토막</b>이나 <b>없음</b>으로 바꿀 수 있습니다. 위 <b>푸는 방식</b>은 언제든 바꿀 수 있어요.",
  twrite:"각 지문의 <b>주제문</b>을 새로 표현한 문장입니다. 흩어진 단어를 배열하고 <b>굵게 표시된 동사는 어형(시제·태·수일치·분사)을 바꿔</b> 완성하세요. "+ARR_PASS+"점 이상이고 어형 변형까지 맞아야 정답이며, 관사·사소한 철자는 봐줍니다.",
- cloze:"원문 지문의 빈칸에 들어갈 단어를 <b>한국어 뜻과 첫 글자·글자 수 힌트</b>를 보고 직접 씁니다. 철자가 정확해야 정답입니다.",
+ cloze:"빈칸이 <b>하나씩</b> 나와요. <b>한국어 뜻과 첫 글자·글자 수 힌트</b>를 보고 직접 쓰고 Enter를 누르면 다음 빈칸으로 넘어가요. 철자가 정확해야 정답입니다.",
  choice:"지문을 바탕으로 한 <b>요약문 추론 · 추론 불가 · 함축 의미</b> 5지선다입니다. 정답 번호 하나를 고르세요.",
  mwrite:"원문 참조 없이, 각 지문의 <b>중요 문장</b>을 단어 배열 + <b>어형 변형</b>으로 완성합니다. 어법 포인트가 힌트로 붙어 있어요. "+ARR_PASS+"점 이상 + 어형 변형이 맞아야 정답.",
  wmean:"표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 그중 하나만 써도 되고, <b>뜻이 비슷한 말</b>도 정답이에요. 단, <b>품사</b>가 다르면 틀려요(예: preserve → 보존하다·지키다 ○ / 보존 ✕). 자동 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
@@ -1178,11 +1189,8 @@ function renderQ(){
     body=`${tag}<p class="q-stem">${stemOf((part==="word"||part==="word2")?'밑줄 친 단어가 <b>문맥상 맞으면 O</b>, 어색하면 <b>X</b>를 누르고 바르게 고치세요.':'밑줄 친 부분이 <b>어법상 맞으면 O</b>, 어색하면 <b>X</b>를 누르고 바르게 고치세요.')}</p>${it.title?`<p class="hint" style="margin-top:6px">${esc(it.title)}</p>`:""}
       <div id="skbox">${skHTML(it,a)}</div>`;
   } else if(part==="tf"){
-    body=`${tag}<p class="q-stem">지문과 일치하면 T, 아니면 F</p>
-      <div class="psg" style="margin-top:14px;line-height:1.95">${esc(it.passage)}</div>
-      <div class="card" style="margin-top:14px;padding:4px 16px">${it.st.map((s,i)=>
-        `<div class="tfrow"><span class="q">(${i+1}) ${esc(s)}</span>
-        <span class="tfbtns" data-tf="${i}"><button data-v="T" class="${a[i]==="T"?"on":""}">T</button><button data-v="F" class="${a[i]==="F"?"on":""}">F</button></span></div>`).join("")}</div>`;
+    body=`${tag}<p class="q-stem">${stemOf("글의 내용과 <b>일치하면 T</b>, 아니면 <b>F</b>를 누르세요.")}</p>${it.src?`<p class="hint" style="margin-top:6px">${esc(it.src)}</p>`:""}
+      <div id="skbox">${stepHTML(part,it,a)}</div>`;
   } else if(part==="order"){
     body=`${tag}<p class="q-stem">이어질 순서대로 눌러 주세요.</p>
       <div class="given" style="margin-top:14px">${esc(it.lead)}</div>
@@ -1218,18 +1226,13 @@ function renderQ(){
     }
     body=`${tag}<p class="q-stem">주어진 문장이 들어갈 곳은?</p>
       <div class="given" style="margin-top:14px">${esc(it.given)}</div>
-      <div class="psg" style="margin-top:14px;line-height:2.2">${html}</div>`;
+      <div class="scrollbox-lb"><span>지문</span><span>상자 안에서 스크롤</span></div>
+      <div class="psg scrollbox" style="line-height:2.2">${html}</div>`;
   } else if(part==="cloze"){
-    const czText=esc(it.text).replace(/«(\d+)»/g,'<span class="czb num">$1</span>');
-    body=`${tag}<p class="q-stem">${stemOf("한국어 뜻과 힌트(첫 글자·글자 수)를 참고해 빈칸에 들어갈 단어를 쓰세요.")}</p>
+    body=`${tag}<p class="q-stem">${stemOf("우리말 뜻과 힌트(첫 글자·글자 수)를 보고 빈칸에 들어갈 말을 쓰세요.")}</p>
       ${it.src?`<p class="hint" style="margin-top:6px">${esc(it.src)}</p>`:""}
       ${it.ko?`<p class="ko" style="margin-top:12px;font-size:14.5px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>`:""}
-      <div class="psg" style="margin-top:12px;line-height:1.95">${czText}</div>
-      <div class="card" style="margin-top:14px;padding:12px 16px">${it.blanks.map((b,i)=>`
-        <div class="czrow"><span class="czb num">${i+1}</span>
-          ${b.v!=null?`<span class="czh">( <b>${esc(b.v)}</b> ) →</span>`
-          :`<span class="czh">「${esc(b.ko)}」 <b>${esc(b.h)}</b>${"_".repeat(Math.min(10,Math.max(3,b.n-1)))} <span class="num">(${b.n}글자)</span></span>`}
-          <input class="cz-in" data-cz="${i}" value="${esc(a[i]||"")}" placeholder="${b.v!=null?"알맞은 형태":"영어 단어"}" spellcheck="false" autocapitalize="off" autocomplete="off"></div>`).join("")}</div>`;
+      <div id="skbox">${stepHTML(part,it,a)}</div>`;
   } else if(part==="wmean"){
     body=`${tag}<p class="q-stem">${stemOf("표제어를 보고 <b>우리말 뜻</b>을 쓰세요.")}</p>
       <div class="card" style="margin-top:14px;padding:6px 16px">${it.rows.map((r,i)=>`
@@ -1262,7 +1265,7 @@ function renderQ(){
       </div>`;
   } else if(part==="choice"){
     let bh="";
-    if(it.psg) bh+=`<div class="psg" style="margin-top:12px;line-height:1.95">${esc(it.psg)}</div>`;
+    if(it.psg) bh+=`<div class="scrollbox-lb"><span>지문</span><span>상자 안에서 스크롤</span></div><div class="psg scrollbox" style="line-height:1.95">${esc(it.psg)}</div>`;
     if(it.body){
       let t2=esc(it.body);
       if(it.ul){ const u=esc(it.ul); if(t2.indexOf(u)>=0) t2=t2.replace(u, `<u>${u}</u>`); }
@@ -1270,7 +1273,7 @@ function renderQ(){
         ? `<div class="given" style="margin-top:12px;line-height:1.9">${t2}</div>`
         : `<div class="psg" style="margin-top:12px;line-height:1.95">${t2}</div>`;
     }
-    body=`${tag}<p class="q-stem">${esc(it.stem)}</p>${bh}
+    body=`${tag}<p class="q-stem">${esc(it.stem)}</p>${it.src?`<p class="hint" style="margin-top:6px">${esc(it.src)}</p>`:""}${bh}
       <div style="margin-top:14px">${it.opt.map((o,i)=>`
         <button class="ord${a===i?" on":""}" data-ch="${i}"><span class="lb num">${i+1}</span><span style="flex:1;text-align:left">${esc(o)}</span></button>`).join("")}</div>`;
   } else if(part==="twrite"||part==="mwrite"){
@@ -1585,14 +1588,73 @@ function skHTML(it,a){
       `<span class="seg${a[i].done?(a[i].mk?" mk":" o"):""}${i===k?" cur":""}" data-skgo="${i}"><span class="seg-lab">(${esc(x.L)})</span> ${esc(x.t)}</span>${x.after?(/^[.,;:!?)”"’']/.test(x.after)?"":" ")+esc(x.after):""}`).join(" ")}</div></details>`;
 }
 const skPending=a=>a.findIndex(x=>!x.done || (x.mk && !String(x.txt||"").trim()));
+/* ───── 한 문항씩 보여 주는 파트 (통변형 밑줄 · T/F 문장 · 빈칸) ───── */
+const isStepP=p=>isSegP(p)||p==="tf"||p==="cloze";
+const stepN=(p,it)=>isSegP(p)?it.seg.length:p==="tf"?it.st.length:p==="cloze"?it.blanks.length:0;
+const stepWord=p=>isSegP(p)?"밑줄":p==="tf"?"문장":"빈칸";
+function stepLeft(p,it,a){
+  if(isSegP(p)) return a.filter(x=>!x.done||(x.mk&&!String(x.txt||"").trim())).length;
+  if(p==="tf") return a.filter(x=>x==null).length;
+  if(p==="cloze") return a.filter(x=>!String(x||"").trim()).length;
+  return 0;
+}
+function stepPending(p,it,a){
+  if(isSegP(p)) return skPending(a);
+  if(p==="tf") return a.findIndex(x=>x==null);
+  if(p==="cloze") return a.findIndex(x=>!String(x||"").trim());
+  return -1;
+}
+function singleMissing(p,it,a){ // 한 화면 한 문제 파트: 답을 안 골랐는지
+  if(p==="choice"||p==="insert") return a==null;
+  if(p==="order") return a.length < ["A","B","C","D","E","F","G"].filter(x=>it[x]).length;
+  if(p==="vocab"||p==="gram") return a.some(x=>x==null);
+  return false;
+}
+function stepHTML(p,it,a){ return isSegP(p)?skHTML(it,a):p==="tf"?tfStepHTML(it,a):czStepHTML(it,a); }
+function stepDots(p,it,a,k,lab,state){
+  const n=stepN(p,it), left=stepLeft(p,it,a);
+  return `<div class="sk-head"><span>${stepWord(p)} <b>${k+1}</b> / ${n}</span><span>${left?`남은 ${stepWord(p)} ${left}개`:"모두 풀었어요"}</span></div>
+    <div class="sk-dots">${Array.from({length:n},(_,i)=>`<button class="sk-dot${state(i)}${i===k?" cur":""}" data-skgo="${i}">${lab(i)}</button>`).join("")}</div>`;
+}
+function stepNav(p,it,k){ const n=stepN(p,it);
+  return `<div class="sk-nav"><button data-skgo="${k-1}"${k?"":" disabled"}>← 이전 ${stepWord(p)}</button><button data-skgo="${k+1}"${k<n-1?"":" disabled"}>다음 ${stepWord(p)} →</button></div>`; }
+function tfStepHTML(it,a){
+  const k=Math.min(skCur(), it.st.length-1), v=a[k];
+  return stepDots("tf",it,a,k,i=>i+1,i=>a[i]==null?"":a[i]==="T"?" o":" x")
+    +`<div class="st-card"><span class="n">(${k+1})</span>${esc(it.st[k])}</div>
+    <div class="sk-ox"><button class="o${v==="T"?" on":""}" data-tfv="T">T 일치</button><button class="x${v==="F"?" on":""}" data-tfv="F">F 불일치</button></div>
+    ${stepNav("tf",it,k)}
+    <div class="scrollbox-lb"><span>지문</span><span>상자 안에서 스크롤</span></div>
+    <div class="psg scrollbox" style="line-height:1.95">${esc(it.passage)}</div>`;
+}
+function czHintHTML(b,k){
+  if(b.v!=null) return `<div class="cz-hint"><b>(${k+1})</b> ( <b>${esc(b.v)}</b> ) → 알맞은 형태로 쓰기</div>`;
+  const pat = b.hp ? `<span class="pat">${esc(b.hp)}</span>` : `<span class="pat">${esc(b.h)}${"_".repeat(Math.min(12,Math.max(2,(b.n||3)-1)))}</span> <span class="num">(${b.n}글자)</span>`;
+  return `<div class="cz-hint"><b>(${k+1})</b> 「${esc(b.ko||"")}」${b.syn?`<br>유의어 ▸ ${esc(b.syn)}`:""}<br>첫 글자 ▸ ${pat}</div>`;
+}
+function czStepHTML(it,a){
+  const k=Math.min(skCur(), it.blanks.length-1), b=it.blanks[k];
+  const sents=String(it.text).split(/(?=[❶-❿⓫-⓴])/).map(x=>x.trim()).filter(Boolean);
+  let si=sents.findIndex(x=>x.indexOf("«"+(k+1)+"»")>=0); if(si<0) si=0;
+  let ctx=sents[si]; if(ctx.replace(/«\d+»/g,"").length<40 && si>0) ctx=sents[si-1]+" "+ctx;
+  const blankHTML=(t,full)=>esc(t).replace(/«(\d+)»/g,(m,d)=>{ const j=+d-1, v=String(a[j]||"").trim();
+    return `<span class="cz-blank${j===k?" cur":v?" fill":""}"${full?` data-skgo="${j}"`:""}>(${j+1}) ${v?esc(v):"&nbsp;&nbsp;&nbsp;&nbsp;"}</span>`; });
+  return stepDots("cloze",it,a,k,i=>i+1,i=>String(a[i]||"").trim()?" o":"")
+    +`<div class="psg sk-ctx">${si>0?"⋯ ":""}${blankHTML(ctx)}${si<sents.length-1?" ⋯":""}</div>
+    ${czHintHTML(b,k)}
+    <div class="cz-step"><input id="czin" class="cz-in" data-cz="${k}" value="${esc(a[k]||"")}" placeholder="(${k+1}) ${b.v!=null?"알맞은 형태":"원문 표현 그대로"}" spellcheck="false" autocapitalize="off" autocomplete="off" enterkeyhint="next"></div>
+    ${stepNav("cloze",it,k)}
+    <details class="sk-all"><summary>지문 전체 보기</summary><div class="psg">${blankHTML(it.text,true)}</div></details>`;
+}
+
 function skRender(focusFix){
   const it=Q.items[Q.i], a=Q.ans[Q.i], open=document.querySelector(".sk-all")?.open;
-  $("#skbox").innerHTML=skHTML(it,a);
+  $("#skbox").innerHTML=stepHTML(Q.pl[Q.i],it,a);
   if(open) document.querySelector(".sk-all").open=true;
-  if(focusFix){ const f=$("#skfix"); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
+  if(focusFix){ const f=$("#skfix")||$("#czin"); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
   syncCta();
 }
-function skGo(k){ const it=Q.items[Q.i]; if(k<0||k>=it.seg.length) return; Q.sk[Q.i]=k; skRender(false);
+function skGo(k){ const it=Q.items[Q.i]; if(k<0||k>=stepN(Q.pl[Q.i],it)) return; Q.sk[Q.i]=k; skRender(Q.pl[Q.i]==="cloze");
   const box=$("#skbox"); if(box && box.getBoundingClientRect().top<0) box.scrollIntoView({block:"start"}); }
 function fixRows(it,a){
   const rows=it.seg.map((s,i)=>a[i].mk?
@@ -1601,20 +1663,21 @@ function fixRows(it,a){
 }
 const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef"]);
 function syncCta(){
-  const b=$("#quiz-cta"), last=Q.i===Q.items.length-1;
-  if(isSegP(Q.pl[Q.i]) && skCur()<Q.items[Q.i].seg.length-1){ b.disabled=false; b.textContent="다음 밑줄"; return; }
-  if(isSegP(Q.pl[Q.i])){ const left=Q.ans[Q.i].filter(x=>(!x.done||(x.mk&&!String(x.txt||"").trim()))).length;
-    if(left){ b.disabled=false; b.textContent=`안 고른 밑줄 ${left}개 남음`; return; } }
-  if(Q.review && !WORD_PARTS.has(Q.pl[Q.i])){
+  const b=$("#quiz-cta"), last=Q.i===Q.items.length-1, p=Q.pl[Q.i], it=Q.items[Q.i], a=Q.ans[Q.i];
+  b.disabled=false;
+  if(isStepP(p)){
+    if(skCur()<stepN(p,it)-1){ b.textContent=`다음 ${stepWord(p)}`; return; }
+    const left=stepLeft(p,it,a);
+    if(left){ b.textContent=`안 한 ${stepWord(p)} ${left}개 남음`; return; }
+  } else if(singleMissing(p,it,a)){ b.textContent="답을 골라 주세요"; return; }
+  if(Q.review && !WORD_PARTS.has(p)){
     const n=(Q.notes&&Q.notes[Q.i])||{};
     const ok=String(n.why||"").trim()||String(n.voc||"").trim();
     b.disabled=!ok;
     b.textContent = ok ? (last?"제출하고 채점하기":"다음") : "틀린 이유나 몰랐던 단어를 적어 주세요";
     return;
   }
-  b.disabled=false;
-  if(isSegP(Q.pl[Q.i]) && skCur()<Q.items[Q.i].seg.length-1){ b.textContent="다음 밑줄"; return; }
-  b.textContent=last?"제출하고 채점하기":(isSegP(Q.pl[Q.i])&&isSegP(Q.pl[Q.i+1])?"다음 문단":"다음");
+  b.textContent=last?"제출하고 채점하기":(isStepP(p)&&Q.pl[Q.i+1]===p?(isSegP(p)?"다음 문단":"다음 지문"):"다음");
 }
 $("#quiz-body").addEventListener("click",e=>{
   const it=Q.items[Q.i], a=Q.ans[Q.i];
@@ -1625,7 +1688,7 @@ $("#quiz-body").addEventListener("click",e=>{
     return; }
   const pk=e.target.closest(".pick>button");
   if(pk){ a[+pk.parentNode.dataset.b]=+pk.dataset.o;
-    Array.from(pk.parentNode.children).forEach(x=>x.classList.toggle("on",x===pk)); return; }
+    Array.from(pk.parentNode.children).forEach(x=>x.classList.toggle("on",x===pk)); syncCta(); return; }
   const skg=e.target.closest("[data-skgo]");
   if(skg){ e.preventDefault(); skGo(+skg.dataset.skgo); return; }
   const sko=e.target.closest("[data-skox]");
@@ -1634,12 +1697,15 @@ $("#quiz-body").addEventListener("click",e=>{
       if(k<it.seg.length-1) skGo(k+1); else skRender(false); }
     else { m.mk=true; m.done=true; skRender(true); }
     return; }
+  const tfv=e.target.closest("[data-tfv]");
+  if(tfv){ const k=skCur(); a[k]=tfv.dataset.tfv;
+    if(k<it.st.length-1) skGo(k+1); else skRender(false); return; }
   const tf=e.target.closest("[data-tf]>button");
   if(tf){ a[+tf.parentNode.dataset.tf]=tf.dataset.v;
     Array.from(tf.parentNode.children).forEach(x=>x.classList.toggle("on",x===tf)); return; }
   const chb=e.target.closest("[data-ch]");
   if(chb){ Q.ans[Q.i]=+chb.dataset.ch;
-    document.querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===chb)); return; }
+    document.querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===chb)); syncCta(); return; }
   const od=e.target.closest("[data-ord]");
   if(od){ const L=od.dataset.ord, k=a.indexOf(L);
     const N=["A","B","C","D","E","F","G"].filter(x=>it[x]).length;
@@ -1658,12 +1724,12 @@ $("#quiz-body").addEventListener("click",e=>{
   if(un) return;
   const sl=e.target.closest("[data-slot]");
   if(sl){ Q.ans[Q.i]=+sl.dataset.slot;
-    document.querySelectorAll("[data-slot]").forEach(x=>x.classList.toggle("on",x===sl)); return; }
+    document.querySelectorAll("[data-slot]").forEach(x=>x.classList.toggle("on",x===sl)); syncCta(); return; }
 });
 $("#quiz-body").addEventListener("keydown",e=>{
-  if(e.key!=="Enter" || e.target.id!=="skfix" || e.isComposing) return;
+  if(e.key!=="Enter" || (e.target.id!=="skfix" && e.target.id!=="czin") || e.isComposing) return;
   e.preventDefault(); const it=Q.items[Q.i], k=skCur();
-  if(k<it.seg.length-1) skGo(k+1); else $("#quiz-cta").click();
+  if(k<stepN(Q.pl[Q.i],it)-1) skGo(k+1); else $("#quiz-cta").click();
 });
 $("#quiz-body").addEventListener("input",e=>{
   const fx=e.target.closest("[data-fix]");
@@ -1685,10 +1751,14 @@ $("#quiz-body").addEventListener("input",e=>{
   }
 });
 $("#quiz-cta").onclick=()=>{
-  if(isSegP(Q.pl[Q.i])){ const k=skCur(); if(k<Q.items[Q.i].seg.length-1){ skGo(k+1); return; }
-    const pd=skPending(Q.ans[Q.i]);
-    if(pd>=0){ const m=Q.ans[Q.i][pd]; Q.sk[Q.i]=pd; skRender(m.done&&m.mk);
-      toast(m.done?"고쳐 쓴 답을 입력해 주세요":"아직 O·X를 안 고른 밑줄이 있어요"); return; } }
+  const p=Q.pl[Q.i], it=Q.items[Q.i], a=Q.ans[Q.i];
+  if(isStepP(p)){ const k=skCur(); if(k<stepN(p,it)-1){ skGo(k+1); return; }
+    const pd=stepPending(p,it,a);
+    if(pd>=0){ Q.sk[Q.i]=pd;
+      if(isSegP(p)){ const m=a[pd]; skRender(m.done&&m.mk); toast(m.done?"고쳐 쓴 답을 입력해 주세요":"아직 O·X를 안 고른 밑줄이 있어요"); }
+      else { skRender(p==="cloze"); toast(p==="tf"?"아직 T·F를 안 고른 문장이 있어요":"아직 안 채운 빈칸이 있어요"); }
+      return; } }
+  else if(singleMissing(p,it,a)){ toast("답을 골라야 다음으로 넘어가요"); return; }
   if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); }
   else finish();
 };
@@ -1748,12 +1818,12 @@ function grade(part,it,a){
     it.blanks.forEach((b,i)=>{
       const mine=String(a[i]||"").trim();
       const ok=czEq(mine,b.ans) || (b.alt||[]).some(x=>czEq(mine,x));
-      d.push({ok, label:`${i+1}`, mine:mine||"무응답",
+      d.push({ok, label:`${i+1}`, mine:mine||"무응답", ex:[b.ex, i===it.blanks.length-1?it.note:""].filter(Boolean).join(" · ")||undefined,
               right:b.ans+((b.alt&&b.alt.length)?` (허용: ${b.alt.join(", ")})`:"")});
     });
   } else if(part==="choice"){
     d.push({ok:a===it.ans, label:"선택", mine:a==null?"무응답":`${a+1}번`,
-            right:`${it.ans+1}번 — ${it.opt[it.ans]}`});
+            right:`${it.ans+1}번 — ${it.opt[it.ans]}`, ex:it.ex});
   } else if(part==="wmean"){
     it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
       d.push({ok:koMatch(mine,r.ko,r.koAlt), label:r.w, mine:mine||"무응답", right:r.ko}); });
