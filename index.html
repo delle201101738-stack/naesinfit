@@ -529,6 +529,14 @@ input{font:inherit; color:inherit}
 .vd.full{background:var(--no-soft); color:var(--no)}
 .vd-big{display:inline-flex; align-items:center; gap:7px; font-size:15px; font-weight:800; padding:9px 18px; border-radius:var(--r-pill)}
 .wrow{display:flex; align-items:center; gap:13px; width:100%; padding:15px 16px; text-align:left; border-bottom:1px solid var(--line)}
+.wlist{background:var(--surface-2); border-bottom:1px solid var(--line); padding:4px 12px 10px}
+.witem{display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px dashed var(--line)}
+.witem:last-child{border-bottom:0}
+.witem .t{flex:1; min-width:0; font-size:13.5px; font-weight:700}
+.witem .s{display:block; font-size:12px; color:var(--ink-3); font-weight:500; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.wdel{flex:none; padding:7px 10px; border-radius:10px; font-size:12px; font-weight:800; background:var(--surface); color:var(--no); box-shadow:inset 0 0 0 1.2px var(--no-soft)}
+.wdel.sure{background:var(--no); color:#fff; box-shadow:none}
+.wtoggle{flex:none; font-size:12px; font-weight:700; color:var(--ink-3); padding:6px 4px}
 .wrow:last-child{border-bottom:0}
 .wrow .ci{width:40px; height:40px; border-radius:12px; display:grid; place-items:center; flex:none; font-family:Archivo; font-weight:800; font-size:15px}
 .imp{display:inline-block; font-size:10.5px; font-weight:700; color:var(--no); background:var(--no-soft); padding:2px 8px; border-radius:var(--r-pill); margin-left:6px}
@@ -1316,6 +1324,7 @@ function renderQ(){
       <textarea class="wr-in note-in" id="note-voc" placeholder="몰랐던 단어와 뜻 (예: yield 양보하다)">${esc(n.voc)}</textarea>
     </div>`;
   }
+  if(Q.review) body+=`<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="wdel${Q.delSure===Q.i?" sure":""}" data-qdel="1">${(Q.del||{})[Q.i]?"오답노트에서 삭제됨":Q.delSure===Q.i?"정말 오답노트에서 삭제":"🗑 이 문제 오답노트에서 삭제"}</button></div>`;
   $("#quiz-body").innerHTML=body;
   if(part==="write" || part==="twrite" || part==="mwrite" || (part==="arrange" && S.arrMode==="type")){
     const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
@@ -1695,6 +1704,12 @@ $("#quiz-body").addEventListener("click",e=>{
   const pk=e.target.closest(".pick>button");
   if(pk){ a[+pk.parentNode.dataset.b]=+pk.dataset.o;
     Array.from(pk.parentNode.children).forEach(x=>x.classList.toggle("on",x===pk)); syncCta(); return; }
+  const qd=e.target.closest("[data-qdel]");
+  if(qd){ if((Q.del||{})[Q.i]) return;
+    if(Q.delSure!==Q.i){ Q.delSure=Q.i; renderQ(); return; }
+    const src=Q.items[Q.i], k=wkey(src); wrongDel(Q.pl[Q.i], k);
+    (Q.del ||= {})[Q.i]=true; Q.delSure=null; toast("오답노트에서 삭제했어요");
+    renderQ(); return; }
   const skg=e.target.closest("[data-skgo]");
   if(skg){ e.preventDefault(); skGo(+skg.dataset.skgo); return; }
   const sko=e.target.closest("[data-skox]");
@@ -1861,7 +1876,7 @@ function finish(){
   Q.items.forEach((it,i)=>{
     const mp=it._map, bad=[];
     Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
-    markWrong(Q.pl[i], it, bad);
+    if(!(Q.del||{})[i]) markWrong(Q.pl[i], it, bad);   // 풀다가 삭제한 문제는 다시 쌓지 않음
   });
   save();
   showResult();
@@ -1948,7 +1963,7 @@ $("#review-list").addEventListener("click",e=>{
     Q.detail[i][j].ok=true; S.exp+=2;
     (function(){ const mp=Q.items[i]._map, bad=[];
       Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
-      markWrong(Q.pl[i], Q.items[i], bad); })();
+      if(!(Q.del||{})[i]) markWrong(Q.pl[i], Q.items[i], bad); })();
     const {t,c,pct}=tally();
     if(!Q.review){
       const b=bestOf()[Q.part]; if(!b||pct>b.pct) bestOf()[Q.part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
@@ -1966,6 +1981,26 @@ $("#result-retry").onclick=()=>{
 };
 
 /* ───── 오답노트 화면 ───── */
+/* 오답노트 삭제 (아직 틀린 것 + 틀렸던 기록 모두에서 지움) */
+let wOpen={}, wSure="";
+function wrongDel(part, key){
+  for(const st of [wrongOf(), everOf()]){
+    const m=st[part]; if(!m) continue;
+    if(key==null) delete st[part]; else { delete m[key]; if(!Object.keys(m).length) delete st[part]; }
+  }
+  save();
+}
+function wPreview(it){
+  const t=it.title||it.stem||it.given||it.src||it.lead||it.en||it.ko||(it.rows?it.rows.map(r=>r.w).join(", "):"")||it.text||it.passage||"";
+  return String(t).replace(/«\d+»/g,"___").slice(0,60);
+}
+function wItemRows(part){
+  const all=(C&&C[part])||[], now=wrongOf()[part]||{}, ev=everOf()[part]||{};
+  return Object.keys(ev).map(k=>{ const it=all.find(x=>wkey(x)===k); if(!it) return "";
+    const n=(now[k]||[]).length, e=(ev[k]||[]).length, id=part+"|"+k;
+    return `<div class="witem"><span class="t">${esc(itemTag(it))} <span style="font-weight:600;color:var(--ink-3)">· 아직 ${n} / 틀렸던 ${e}</span><span class="s">${esc(wPreview(it))}</span></span>
+      <button class="wdel${wSure===id?" sure":""}" data-wdel="${esc(id)}">${wSure===id?"정말 삭제":"삭제"}</button></div>`; }).join("");
+}
 function renderWrong(){
   const rows=livePARTS().map(p=>({p, n:wrongCount(p.id), e:wrongCount(p.id,true)})).filter(x=>x.e);
   const tot=rows.reduce((s,x)=>s+x.n,0), tote=rows.reduce((s,x)=>s+x.e,0);
@@ -1987,7 +2022,11 @@ function renderWrong(){
         <span class="s" style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">아직 틀림 ${n}개 · 틀렸던 문제 ${e}개</span></span>
         ${n?`<button data-wp="${p.id}" style="${pill(true)}">${redo}${n}</button>`:""}
         <button data-wp="${p.id}" data-ever="1" style="${pill(false)};margin-left:6px">${redo}전부 ${e}</button>
-      </div>`).join("")}
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;padding:0 16px 8px;border-bottom:1px solid var(--line)">
+        <button class="wtoggle" data-wopen="${p.id}">${wOpen[p.id]?"▲ 문제 목록 닫기":"▼ 문제 목록 · 삭제"}</button></div>
+      ${wOpen[p.id]?`<div class="wlist">${wItemRows(p.id)}
+        <div style="display:flex;justify-content:flex-end;padding-top:8px"><button class="wdel${wSure===p.id+"|*"?" sure":""}" data-wdel="${p.id}|*">${wSure===p.id+"|*"?"정말 이 파트 전부 삭제":"이 파트 오답 전부 삭제"}</button></div></div>`:""}`).join("")}
     </div>
     <div class="card" style="margin-top:16px;padding:15px 16px;font-size:13px;line-height:1.75;color:var(--ink-2)">
       <b>아직 틀린 것</b>은 지금도 틀려 있는 자리만, <b>전부</b>는 한 번이라도 틀렸던 자리를 모두 다시 풀어요. 오답노트 결과도 <b>재시험 기록</b>으로 선생님께 전송돼요.</div>`
@@ -2000,6 +2039,13 @@ function renderWrong(){
 }
 $("#wrong-cta").onclick=()=>startQuiz({review:true, ever:!!$("#wrong-cta").dataset.ever});
 $("#wrong-body").addEventListener("click",e=>{
+  const o=e.target.closest("[data-wopen]");
+  if(o){ wOpen[o.dataset.wopen]=!wOpen[o.dataset.wopen]; wSure=""; renderWrong(); return; }
+  const d=e.target.closest("[data-wdel]");
+  if(d){ const id=d.dataset.wdel;
+    if(wSure!==id){ wSure=id; renderWrong(); return; }           // 한 번 더 눌러야 삭제
+    const i=id.indexOf("|"), part=id.slice(0,i), key=id.slice(i+1);
+    wrongDel(part, key==="*"?null:key); wSure=""; renderWrong(); toast("오답노트에서 삭제했어요"); return; }
   const b=e.target.closest("[data-wp]"); if(!b) return;
   startQuiz({review:true, part:b.dataset.wp, ever:!!b.dataset.ever});
 });
