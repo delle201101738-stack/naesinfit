@@ -268,6 +268,21 @@
      }
     },
     {
+     "id": "e2ne03ak",
+     "no": "3과 올킬",
+     "title": "There’s More than One Way to Vote",
+     "file": "content/e2ne03ak.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
+    },
+    {
      "id": "e2ne04",
      "no": "4과",
      "title": "Breaking the Cycle: Solutions to E-waste",
@@ -293,6 +308,21 @@
       "word": "통변형 ① 기본 O·X 고치기",
       "word2": "통변형 ② 심화 O·X 고치기"
      }
+    },
+    {
+     "id": "e2ne04ak",
+     "no": "4과 올킬",
+     "title": "Breaking the Cycle: Solutions to E-waste",
+     "file": "content/e2ne04ak.json",
+     "pts": {
+      "cloze": 12,
+      "tf": 40,
+      "choice": 16,
+      "order": 8,
+      "insert": 8
+     },
+     "total": 84,
+     "labels": {}
     }
    ]
   },
@@ -339,6 +369,21 @@
      }
     },
     {
+     "id": "e2ybm02ak",
+     "no": "2과 올킬",
+     "title": "The Subscription Economy",
+     "file": "content/e2ybm02ak.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
+    },
+    {
      "id": "e2ybm03",
      "no": "3과",
      "title": "The Hidden Lives of Viruses",
@@ -373,6 +418,21 @@
       "word": "통변형 ① 기본",
       "fix": "통변형 ② 심화"
      }
+    },
+    {
+     "id": "e2ybm05ak",
+     "no": "5과 올킬",
+     "title": "The Perfect Match",
+     "file": "content/e2ybm05ak.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
     }
    ]
   },
@@ -422,6 +482,21 @@
      "labels": {}
     },
     {
+     "id": "e2cjk02ak",
+     "no": "2과 올킬",
+     "title": "The Power of Nudges",
+     "file": "content/e2cjk02ak.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
+    },
+    {
      "id": "e2cjk04",
      "no": "4과",
      "title": "The Future Is Now",
@@ -443,6 +518,21 @@
       "word2": 58
      },
      "total": 678,
+     "labels": {}
+    },
+    {
+     "id": "e2cjk04ak",
+     "no": "4과 올킬",
+     "title": "The Future Is Now",
+     "file": "content/e2cjk04ak.json",
+     "pts": {
+      "cloze": 18,
+      "tf": 60,
+      "choice": 24,
+      "order": 12,
+      "insert": 12
+     },
+     "total": 126,
      "labels": {}
     }
    ],
@@ -521,6 +611,21 @@
      "labels": {}
     },
     {
+     "id": "e2cjs05ak",
+     "no": "5과 올킬",
+     "title": "7000 Oaks Make a Forest",
+     "file": "content/e2cjs05ak.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
+    },
+    {
      "id": "e2cjs06",
      "no": "6과",
      "title": "See the Future in Movies",
@@ -530,6 +635,21 @@
       "word2": 64
      },
      "total": 121,
+     "labels": {}
+    },
+    {
+     "id": "e2cjs06ak",
+     "no": "6과 올킬",
+     "title": "See the Future in Movies",
+     "file": "content/e2cjs06ak.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
      "labels": {}
     }
    ],
@@ -587,6 +707,21 @@
       "word": "통변형 O·X 고치기",
       "fix": "통변형 O·X 고치기 (재시험)"
      }
+    },
+    {
+     "id": "gwybmk06ak",
+     "no": "6과 올킬",
+     "title": "관계가 만드는 행복",
+     "file": "content/gwybmk06ak.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
     }
    ]
   }
