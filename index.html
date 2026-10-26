@@ -709,6 +709,7 @@ const PARTS=[
  {id:"write", n:"영작",         s:"중요 표시 문장만 영작하기",        c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"},
  {id:"wmean", n:"단어 뜻 쓰기",   s:"표제어를 보고 우리말 뜻 쓰기",     c:"var(--cat-3)", b:"var(--cat-3-s)", k:"세트"},
  {id:"wsyn",  n:"유의어 연결",    s:"표제어와 뜻이 가장 가까운 유의어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"세트"},
+ {id:"wsynw", n:"유의어 쓰기",    s:"표제어와 뜻이 가장 가까운 유의어 직접 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"세트"},
  {id:"wdef",  n:"영영풀이",       s:"영영풀이 보고 표제어·유의어 쓰기",  c:"var(--cat-4)", b:"var(--cat-4-s)", k:"문항"}
 ];
 const P = Object.fromEntries(PARTS.map(p=>[p.id,p]));
@@ -725,7 +726,7 @@ function pts(part, it){
   if(part==="vocab"||part==="gram"||part==="cloze") return it.blanks.length;
   if(part==="fix"||part==="word") return it.seg.length;
   if(part==="tf") return it.st.length;
-  if(part==="wmean"||part==="wsyn") return it.rows.length;
+  if(part==="wmean"||part==="wsyn"||part==="wsynw") return it.rows.length;
   if(part==="wdef") return 2;
   return 1;
 }
@@ -891,7 +892,7 @@ function subset(part, it, keep){
   if(part==="fix"||part==="word")   return subSeg(it,keep);
   if(part==="tf")                   return subTF(it,keep);
   if(part==="cloze")                return subCloze(it,keep);
-  if(part==="wmean"||part==="wsyn") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
+  if(part==="wmean"||part==="wsyn"||part==="wsynw") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
   if(part==="wdef")                 return Object.assign({}, it);
   return Object.assign({}, it, {_map:keep.slice()});
 }
@@ -910,7 +911,7 @@ const subLen = (part,it) =>
   (part==="vocab"||part==="gram"||part==="cloze") ? it.blanks.length :
   (part==="fix"||part==="word")   ? it.seg.length :
   (part==="tf")                   ? it.st.length :
-  (part==="wmean"||part==="wsyn") ? it.rows.length :
+  (part==="wmean"||part==="wsyn"||part==="wsynw") ? it.rows.length :
   (part==="wdef")                 ? 2 : 1;
 const wrongCount = part => wrongItems(part).reduce((s,it)=>s+pts(part,it),0);
 const wrongTotal = () => livePARTS().reduce((s,p)=>s+wrongCount(p.id),0);
@@ -1075,6 +1076,7 @@ const HOWTO={
  mwrite:"원문 참조 없이, 각 지문의 <b>중요 문장</b>을 단어 배열 + <b>어형 변형</b>으로 완성합니다. 어법 포인트가 힌트로 붙어 있어요. "+ARR_PASS+"점 이상 + 어형 변형이 맞아야 정답.",
  wmean:"표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 그중 하나만 써도 되고, '하다/한' 같은 어미 차이는 봐줘요. 자동 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  wsyn:"왼쪽 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 같은 유의어는 한 번만 쓰여요.",
+ wsynw:"표제어마다 뜻이 가장 가까운 <b>유의어를 영어로 직접</b> 씁니다. 첫 글자·글자 수 힌트를 참고하세요. 대소문자는 봐주지만 철자는 정확해야 해요.",
  wdef:"영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 글자 힌트에 맞춰 <b>유의어</b>도 씁니다. 두 칸이 따로 채점돼요.",
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
 };
@@ -1122,6 +1124,7 @@ function blankAns(part,it){
   if(part==="choice") return null;
   if(part==="wmean") return it.rows.map(()=>"");
   if(part==="wsyn") return it.rows.map(()=>null);
+  if(part==="wsynw") return it.rows.map(()=>"");
   if(part==="wdef") return ["",""];
   return "";
 }
@@ -1213,6 +1216,12 @@ function renderQ(){
         <div class="czrow"><span class="czb num">${esc(r.n||i+1)}</span>
           <span class="czh" style="flex:1 1 40%"><b style="font-size:15px">${esc(r.w)}</b></span>
           <select class="cz-in" data-ws="${i}" style="flex:1 1 50%"><option value="">선택</option>${opts.replace(`value="${a[i]}"`,`value="${a[i]}" selected`)}</select></div>`).join("")}</div>`;
+  } else if(part==="wsynw"){
+    body=`${tag}<p class="q-stem">${stemOf("표제어와 뜻이 가장 가까운 <b>유의어</b>를 영어로 쓰세요.")}</p>
+      <div class="card" style="margin-top:14px;padding:6px 16px">${it.rows.map((r,i)=>`
+        <div class="czrow" style="flex-wrap:wrap"><span class="czb num">${esc(r.n||i+1)}</span>
+          <span class="czh" style="min-width:0;flex:1 1 42%"><b style="font-size:15px">${esc(r.w)}</b>${r.ans?` <span style="font-size:12.5px;color:var(--ink-3,var(--ink-2))">${esc(r.ko||"")}</span>${r.hint?`<br><span class="num" style="font-size:12px;color:var(--ink-3,var(--ink-2))">${esc(r.hint)}</span>`:""}`:`<br><span style="font-size:12.5px;color:var(--ink-3,var(--ink-2))">≒ ${esc(r.sp)}</span>`}</span>
+          <input class="cz-in" data-wy="${i}" value="${esc(a[i]||"")}" placeholder="유의어 (영어)" autocomplete="off" spellcheck="false" autocapitalize="off"></div>`).join("")}</div>`;
   } else if(part==="wdef"){
     body=`${tag}<p class="q-stem">${stemOf("영영풀이를 보고 <b>표제어</b>를 쓰고, 첫 글자에 맞춰 <b>유의어</b>를 쓰세요.")}</p>
       <div class="psg" style="margin-top:14px;line-height:1.85">${esc(it.en)}</div>
@@ -1496,6 +1505,8 @@ $("#quiz-body").addEventListener("input",e=>{
   if(wm){ Q.ans[Q.i][+wm.dataset.wm]=wm.value; }
   const wd=e.target.closest("[data-wd]");
   if(wd){ Q.ans[Q.i][+wd.dataset.wd]=wd.value; }
+  const wy=e.target.closest("[data-wy]");
+  if(wy){ Q.ans[Q.i][+wy.dataset.wy]=wy.value; }
   const ws=e.target.closest("[data-ws]");
   if(ws){ Q.ans[Q.i][+ws.dataset.ws]=ws.value===""?null:+ws.value; }
   if(e.target.id==="note-why"||e.target.id==="note-voc"){
@@ -1557,6 +1568,11 @@ function grade(part,it,a){
     it.rows.forEach((r,i)=>d.push({ok:a[i]===r.ans, label:r.w,
       mine:a[i]==null?"무응답":`${String.fromCharCode(65+a[i])} ${it.opts[a[i]]}`,
       right:`${String.fromCharCode(65+r.ans)} ${it.opts[r.ans]}`}));
+  } else if(part==="wsynw"){
+    it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
+      if(r.ans){ d.push({ok:!!mine && r.ans.some(x=>czEq(mine,x)||czEq(mine,String(x).replace(/\u2019/g,"'"))), label:r.w, mine:mine||"무응답", right:r.ans.join(", "), self:true}); return; }
+      d.push({ok:[r.syn].concat(r.alt||[]).some(x=>czEq(mine,x)), label:r.w, mine:mine||"무응답",
+              right:r.syn+((r.alt&&r.alt.length)?` (허용: ${r.alt.join(", ")})`:"")}); });
   } else if(part==="wdef"){
     const m0=String(a[0]||"").trim(), m1=String(a[1]||"").trim();
     d.push({ok:[it.hw].concat(it.hwAlt||[]).some(x=>czEq(m0,x)), label:"표제어", mine:m0||"무응답", right:it.hw});
@@ -1623,7 +1639,7 @@ function showResult(){
           <span class="k">내 답</span><span class="bad">${esc(x.mine)}</span><br>
           <span class="k">정답</span><span class="good">${esc(x.right)}</span>
           ${x.ex?`<div style="margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.65">💡 ${esc(x.ex)}</div>`:""}
-          ${(Q.pl[i]==="write"||Q.pl[i]==="twrite"||Q.pl[i]==="mwrite"||Q.pl[i]==="wmean"||(Q.pl[i]==="arrange"&&S.arrMode==="type"))?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
+          ${(Q.pl[i]==="write"||Q.pl[i]==="twrite"||Q.pl[i]==="mwrite"||Q.pl[i]==="wmean"||x.self||(Q.pl[i]==="arrange"&&S.arrMode==="type"))?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
         </div>`).join("")||`<div class="expl">전부 맞았어요 👏</div>`}</div></div>`;
   }).join("");
 
