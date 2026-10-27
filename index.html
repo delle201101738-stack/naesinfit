@@ -750,6 +750,9 @@ const PARTS=[
  {id:"fix",   n:"어법 오류 수정", s:"밑줄 중 어색한 곳 찾아 고치기",   c:"var(--cat-2)", b:"var(--cat-2-s)", k:"단락"},
  {id:"tf",    n:"내용일치 TF",   s:"일치하면 T, 아니면 F",           c:"var(--cat-4)", b:"var(--cat-4-s)", k:"단락"},
  {id:"choice",n:"독해",         s:"요약·추론·함축 5지선다",          c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"sjt",   n:"영문선지 비법 TEST", s:"영문 선지 5지선다 · 함정 7종",  c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"gbb",   n:"어법 비법 TEST",    s:"어법 5지선다",                c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문항"},
+ {id:"vbb",   n:"어휘 비법 TEST",    s:"어휘 5지선다",                c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문항"},
  {id:"order", n:"순서 배열",     s:"이어질 글의 순서 정하기",         c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"insert",n:"문장 삽입",     s:"주어진 문장이 들어갈 위치 찾기",   c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문항"},
  {id:"arrange",n:"단어배열",      s:"흩어진 토막을 순서대로 배열하기",  c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"},
@@ -836,6 +839,9 @@ function go(id){
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const isSegP=p=>p==="fix"||p==="word"||p==="word2";
+const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb";
+const multiAns=it=>Array.isArray(it.ans);
+const ulHTML=t=>esc(t).replace(/\[\[(.+?)\]\]/g,"<u>$1</u>");
 const norm=s=>String(s||"").toLowerCase().replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
   .replace(/[^a-z0-9' ]/g," ").replace(/\s+/g," ").trim();
 
@@ -1176,7 +1182,7 @@ function blankAns(part,it){
   if(part==="arrange") return S.arrMode==="type" ? "" : [];
   if(part==="insert") return null;
   if(part==="cloze") return it.blanks.map(()=>"");
-  if(part==="choice") return null;
+  if(isChoiceP(part)) return multiAns(it)?[]:null;
   if(part==="wmean") return it.rows.map(()=>"");
   if(part==="wsyn") return it.rows.map(()=>null);
   if(part==="wsynw") return it.rows.map(()=>"");
@@ -1277,19 +1283,20 @@ function renderQ(){
         <div class="czrow"><span class="czb">유의어</span><span class="czh">${esc(it.sp)}</span>
           <input class="cz-in" data-wd="1" value="${esc(a[1]||"")}" placeholder="유의어" autocomplete="off" spellcheck="false" autocapitalize="off"></div>
       </div>`;
-  } else if(part==="choice"){
+  } else if(isChoiceP(part)){
     let bh="";
-    if(it.psg) bh+=`<div class="scrollbox-lb"><span>지문</span><span>상자 안에서 스크롤</span></div><div class="psg scrollbox" style="line-height:1.95">${esc(it.psg)}</div>`;
+    if(it.psg) bh+=`<div class="scrollbox-lb"><span>지문</span><span>상자 안에서 스크롤</span></div><div class="psg scrollbox" style="line-height:1.95">${ulHTML(it.psg)}</div>`;
     if(it.body){
-      let t2=esc(it.body);
+      let t2=ulHTML(it.body);
       if(it.ul){ const u=esc(it.ul); if(t2.indexOf(u)>=0) t2=t2.replace(u, `<u>${u}</u>`); }
       bh+=it.psg
         ? `<div class="given" style="margin-top:12px;line-height:1.9">${t2}</div>`
-        : `<div class="psg" style="margin-top:12px;line-height:1.95">${t2}</div>`;
+        : `${it.body.length>300?`<div class="scrollbox-lb"><span>지문</span><span>상자 안에서 스크롤</span></div>`:""}<div class="psg${it.body.length>300?" scrollbox":""}" style="margin-top:${it.body.length>300?0:12}px;line-height:1.95">${t2}</div>`;
     }
-    body=`${tag}<p class="q-stem">${esc(it.stem)}</p>${it.src?`<p class="hint" style="margin-top:6px">${esc(it.src)}</p>`:""}${bh}
+    const on=i=>multiAns(it)?(Array.isArray(a)&&a.includes(i)):a===i;
+    body=`${tag}<p class="q-stem">${esc(it.stem)}${multiAns(it)?` <b style="color:var(--accent)">(${it.ans.length}개 고르기)</b>`:""}</p>${it.src?`<p class="hint" style="margin-top:6px">${esc(it.src)}</p>`:""}${bh}
       <div style="margin-top:14px">${it.opt.map((o,i)=>`
-        <button class="ord${a===i?" on":""}" data-ch="${i}"><span class="lb num">${i+1}</span><span style="flex:1;text-align:left">${esc(o)}</span></button>`).join("")}</div>`;
+        <button class="ord${on(i)?" on":""}" data-ch="${i}"><span class="lb num">${i+1}</span><span style="flex:1;text-align:left">${ulHTML(o)}</span></button>`).join("")}</div>`;
   } else if(part==="twrite"||part==="mwrite"){
     const bolds=(it.sv||[]).map(w=>w.toLowerCase());
     const isB=t=>{ const ws=t.toLowerCase().replace(/[^a-z' ]/g," ").split(/\s+/); return bolds.some(b=>ws.includes(b)); };
@@ -1620,7 +1627,8 @@ function stepPending(p,it,a){
   return -1;
 }
 function singleMissing(p,it,a){ // 한 화면 한 문제 파트: 답을 안 골랐는지
-  if(p==="choice"||p==="insert") return a==null;
+  if(isChoiceP(p)) return multiAns(it) ? !(Array.isArray(a)&&a.length===it.ans.length) : a==null;
+  if(p==="insert") return a==null;
   if(p==="order") return a.length < ["A","B","C","D","E","F","G"].filter(x=>it[x]).length;
   if(p==="vocab"||p==="gram") return a.some(x=>x==null);
   return false;
@@ -1725,8 +1733,12 @@ $("#quiz-body").addEventListener("click",e=>{
   if(tf){ a[+tf.parentNode.dataset.tf]=tf.dataset.v;
     Array.from(tf.parentNode.children).forEach(x=>x.classList.toggle("on",x===tf)); return; }
   const chb=e.target.closest("[data-ch]");
-  if(chb){ Q.ans[Q.i]=+chb.dataset.ch;
-    document.querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===chb)); syncCta(); return; }
+  if(chb){ const v=+chb.dataset.ch;
+    if(multiAns(it)){ const arr=Array.isArray(a)?a:(Q.ans[Q.i]=[]); const k=arr.indexOf(v);
+      if(k>=0) arr.splice(k,1); else { arr.push(v); if(arr.length>it.ans.length) arr.shift(); }
+      document.querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",arr.includes(+x.dataset.ch))); }
+    else { Q.ans[Q.i]=v; document.querySelectorAll("[data-ch]").forEach(x=>x.classList.toggle("on",x===chb)); }
+    syncCta(); return; }
   const od=e.target.closest("[data-ord]");
   if(od){ const L=od.dataset.ord, k=a.indexOf(L);
     const N=["A","B","C","D","E","F","G"].filter(x=>it[x]).length;
@@ -1842,9 +1854,14 @@ function grade(part,it,a){
       d.push({ok, label:`${i+1}`, mine:mine||"무응답", ex:[b.ex, i===it.blanks.length-1?it.note:""].filter(Boolean).join(" · ")||undefined,
               right:b.ans+((b.alt&&b.alt.length)?` (허용: ${b.alt.join(", ")})`:"")});
     });
-  } else if(part==="choice"){
-    d.push({ok:a===it.ans, label:"선택", mine:a==null?"무응답":`${a+1}번`,
-            right:`${it.ans+1}번 — ${it.opt[it.ans]}`, ex:it.ex});
+  } else if(isChoiceP(part)){
+    const strip=t=>String(t).replace(/\[\[|\]\]/g,"");
+    if(multiAns(it)){
+      const m=(Array.isArray(a)?a:[]).slice().sort(), r=it.ans.slice().sort();
+      d.push({ok:m.length===r.length&&m.every((x,k)=>x===r[k]), label:"선택", mine:m.length?m.map(x=>`${x+1}번`).join(", "):"무응답",
+              right:r.map(x=>`${x+1}번 — ${strip(it.opt[x])}`).join(" / "), ex:it.ex});
+    } else d.push({ok:a===it.ans, label:"선택", mine:a==null?"무응답":`${a+1}번`,
+            right:`${it.ans+1}번 — ${strip(it.opt[it.ans])}`, ex:it.ex});
   } else if(part==="wmean"){
     it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
       d.push({ok:koMatch(mine,r.ko,r.koAlt), label:r.w, mine:mine||"무응답", right:r.ko}); });
