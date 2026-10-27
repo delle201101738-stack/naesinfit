@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       join hw_classes c on c.id = m.class_id
       left join hw_checks k on k.item_id = i.id and k.student = m.student
       where m.student = ${student}
-      order by i.day desc, i.id desc
+      order by i.day desc, i.id asc
       limit 120`;
 
     if (!rows.length) return res.status(200).json({ ok: true, student, rows: [], cls: [], wrong: [], hw, days: 0 });
