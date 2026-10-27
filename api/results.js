@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   try {
     await ensure();
     const rows = await sql`
-      select id, student, book, part, part_name, scope, total, correct, pct, secs, detail, created_at
+      select id, student, book, unit_id, part, part_name, scope, total, correct, pct, secs, detail, created_at
       from attempts order by created_at desc limit 2000`;
     res.status(200).json({ ok: true, rows });
   } catch (e) {

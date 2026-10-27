@@ -12,12 +12,12 @@ export default async function handler(req, res) {
 
     if (id) {
       const [row] = await sql`
-        select id, book, part, part_name, scope, total, correct, pct, secs, detail, created_at
+        select id, book, unit_id, part, part_name, scope, total, correct, pct, secs, detail, created_at
         from attempts where id = ${Number(id)} and student = ${student} limit 1`;
       return res.status(200).json({ ok: true, row: row || null });
     }
     const rows = await sql`
-      select id, book, part, part_name, scope, total, correct, pct, secs, created_at
+      select id, book, unit_id, part, part_name, scope, total, correct, pct, secs, created_at
       from attempts where student = ${student}
       order by created_at desc limit 300`;
     res.status(200).json({ ok: true, rows });

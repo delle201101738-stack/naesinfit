@@ -33,6 +33,8 @@ export async function ensure() {
     )`;
   await sql`create index if not exists attempts_created_idx on attempts (created_at desc)`;
   await sql`create index if not exists attempts_student_idx on attempts (student)`;
+  // 단원 id (예: ce2ne03) — 리포트가 교재 이름 대신 정확한 단원으로 묶도록
+  await sql`alter table attempts add column if not exists unit_id text not null default ''`;
   ready = true;
 }
 
