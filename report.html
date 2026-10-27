@@ -270,6 +270,25 @@ const uidOf=rows=>{ const c={}; rows.forEach(x=>{ if(x.unit_id) c[x.unit_id]=(c[
 /* ── 렌더 ── */
 const bk=b=>String(b||"").replace(/\s*올킬\s*$/,"").trim();   // 예전 'N과 올킬' 기록은 N과로 합침
 let SELBOOK=new URL(location.href).searchParams.get("book")||"";
+let SELDAY=new URL(location.href).searchParams.get("day")||"";
+const WORDP=new Set(["wmean","wsyn","wsynw","wdef"]);
+const READP=new Set(["tf","order","insert","choice","sjt","cloze"]);
+/* 오답 유형: 파트 성격 먼저, 그다음 틀린 말·정답 비교 */
+function catOf(w){
+  if(WORDP.has(w.part)) return "단어 뜻 · 유의어";
+  if(READP.has(w.part)) return "글의 흐름 · 지시어";
+  if(/^(fixv|vbbw|vbb)$/.test(w.part)) return "어휘 혼동";
+  return classify(w.mine,w.right_,w.part_name||"");
+}
+TIPS["단어 뜻 · 유의어"]="틀린 단어만 모아 <b>뜻 → 유의어 → 예문</b> 순서로 다시 외우게 하세요. 품사까지 같이 확인해야 서술형에서 안 틀립니다.";
+const STRONG_MSG={
+  "단어 뜻 · 유의어":"단어 뜻과 유의어가 탄탄해서 지문 해석의 기본이 잡혀 있어요.",
+  "어휘 혼동":"문맥 속 어휘 판단이 정확해요 — 반의어 함정에 잘 안 넘어가요.",
+  "글의 흐름 · 지시어":"글의 흐름과 내용을 정확히 따라가고 있어요.",
+  "어법":"어법 판단이 정확해요 — 밑줄 O·X 판정과 고쳐 쓰기 모두 안정적이에요."
+};
+const kindOf=p=>WORDP.has(p)?"단어 뜻 · 유의어":READP.has(p)?"글의 흐름 · 지시어":/^(fixv|vbbw|vbb)$/.test(p)?"어휘 혼동":"어법";
+
 function render(D){
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
   if(!RA.length){
@@ -277,7 +296,7 @@ function render(D){
       <p>앱에서 한 파트라도 응시하면 리포트가 만들어집니다.</p></div>`;
     $("#app").hidden=false; return;
   }
-  /* 교재(과) 고르기: 기본은 가장 최근 학습일에 가장 많이 푼 과 — 리포트 전체를 그 과 기록으로만 계산 */
+  /* 과 고르기: 기본은 가장 최근 학습일에 가장 많이 푼 과 */
   const books=[...new Set(RA.map(x=>x.book))];
   const lastOf=b=>RA.filter(x=>x.book===b).reduce((m,x)=>Math.max(m,+new Date(x.created_at)),0);
   books.sort((a,b)=>lastOf(b)-lastOf(a));
@@ -288,210 +307,155 @@ function render(D){
     mainBook=Object.entries(w).sort((a,b)=>b[1]-a[1])[0][0];
   }
   const R=RA.filter(x=>x.book===mainBook);
-  D={...D, cls:(D.cls||[]).filter(x=>bk(x.book)===mainBook), wrong:(D.wrong||[]).filter(x=>bk(x.book)===mainBook)};
-  const tk=dkey(new Date());
-  const today=R.filter(x=>dkey(x.created_at)===tk);
-  const lastDay=dkey(R[R.length-1].created_at);
-  const day=today.length?tk:lastDay;              // 오늘 없으면 마지막 학습일 기준
-  const cur=R.filter(x=>dkey(x.created_at)===day);
-  const days=[...new Set(R.map(x=>dkey(x.created_at)))].sort();
-  const round=days.indexOf(day)+1;
-
-  const sum=a=>({n:a.length,t:a.reduce((s,x)=>s+x.total,0),c:a.reduce((s,x)=>s+x.correct,0)});
-  const pctOf=o=>o.t?Math.round(o.c/o.t*100):0;
-  const T=sum(cur), ALL=sum(R);
-
-  const byBook={};
-  R.forEach(x=>{const o=byBook[x.book]=byBook[x.book]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct;});
   const mu=unitByBook(mainBook, uidOf(R));
-  const bookTotal=mu?mu.u.total:byBook[mainBook].t;
+  const isRe=x=>x.scope==="재시험"||/^오답노트/.test(x.part_name||"");
+  const days=[...new Set(R.map(x=>dkey(x.created_at)))].sort();
+  const day=days.includes(SELDAY)?SELDAY:days[days.length-1];
+  const round=days.indexOf(day)+1;
+  const cur=R.filter(x=>dkey(x.created_at)===day);
+  const curT=cur.filter(x=>!isRe(x)), curRe=cur.filter(isRe);
+  const name=(id,fb)=>partLabel(mu&&mu.u,id,fb);
+  const TD=day===dkey(new Date())?"오늘":"이날";
 
-  /* 점수 = 푼 문항 정답률 (파트마다 최고 기록만 반영 · 안 푼 파트는 계산에서 제외) */
-  const mainRows=R.filter(x=>x.book===mainBook);
-  const bestPart={};
-  mainRows.forEach(x=>{
-    const cur=bestPart[x.part];
-    const r=x.total?x.correct/x.total:0;
-    if(!cur || r>cur.r) bestPart[x.part]={t:x.total,c:x.correct,r};
+  /* 그날 완료한 시험: 파트마다 그날 최고 기록 */
+  const best={};
+  curT.forEach(x=>{const r=x.total?x.correct/x.total:0, o=best[x.part];
+    if(!o||r>o.r) best[x.part]={id:x.part,t:x.total,c:x.correct,r,name:name(x.part,x.part_name),n:(o?o.n:0)+1}; else o.n++;});
+  const clsP={};
+  (D.cls||[]).filter(x=>bk(x.book)===mainBook).forEach(x=>{const o=clsP[x.part]=clsP[x.part]||{t:0,c:0,s:0};o.t+=x.t;o.c+=x.c;o.s=Math.max(o.s,x.s||0);});
+  const tests=PARTORDER.concat(Object.keys(best).filter(k=>!PARTORDER.includes(k))).filter(k=>best[k]).map(k=>{
+    const b=best[k], me=Math.round(b.r*100), cl=clsP[k];
+    const cls=(cl&&cl.t&&cl.s>=2)?Math.round(cl.c/cl.t*100):null;
+    return {...b, me, cls, d:cls===null?null:me-cls};
   });
-  const doneT=Object.values(bestPart).reduce((s,o)=>s+o.t,0);
-  const doneC=Object.values(bestPart).reduce((s,o)=>s+o.c,0);
-  const score=doneT?Math.round(doneC/doneT*100):0;
-  const grade=gradeOf(score);
+  const T={t:tests.reduce((s,x)=>s+x.t,0), c:tests.reduce((s,x)=>s+x.c,0)};
+  const score=T.t?Math.round(T.c/T.t*100):0, grade=gradeOf(score);
+  const RE={t:curRe.reduce((s,x)=>s+x.total,0), c:curRe.reduce((s,x)=>s+x.correct,0), n:curRe.length};
 
-  /* 소화율 = 응시한 파트의 배점 합 ÷ 교재 전체 배점 */
-  const partPts=(mu&&mu.u&&mu.u.pts)||null;
-  const donePartIds=Object.keys(bestPart);
-  const donePts = partPts ? donePartIds.reduce((s,k)=>s+(partPts[k]||0),0) : doneT;
-  const doneRate=Math.min(100, bookTotal?Math.round(donePts/bookTotal*100):0);
-  const restIds = partPts ? Object.keys(partPts).filter(k=>!(k in bestPart)) : [];
-  const restNames = restIds.map(k=>partLabel(mu&&mu.u,k)).filter(Boolean);
-  const VD=vdOf(score, doneRate);
-
-  /* 회차별 정답률 (최근 6일) */
-  const perDay=days.map(d=>{const s=sum(R.filter(x=>dkey(x.created_at)===d)); return {d,pct:pctOf(s)};});
-  const series=perDay.slice(-6);
+  /* 회차(날짜)별 정답률 — 그날 본 시험 기준 */
+  const dayPct=d=>{const bb={}; R.filter(x=>dkey(x.created_at)===d&&!isRe(x)).forEach(x=>{const r=x.total?x.correct/x.total:0;if(!bb[x.part]||r>bb[x.part].r)bb[x.part]={t:x.total,c:x.correct,r};});
+    const v=Object.values(bb), t=v.reduce((s,o)=>s+o.t,0); return t?Math.round(v.reduce((s,o)=>s+o.c,0)/t*100):null;};
+  const series=days.slice(0,round).map(d=>({d,pct:dayPct(d)})).filter(s=>s.pct!==null).slice(-6);
   const prev=series.length>1?series[series.length-2].pct:null;
-  const delta=prev!==null?pctOf(T)-prev:null;
+  const delta=(prev!==null&&tests.length)?score-prev:null;
 
-  /* 파트별 — 학생 vs 반평균 */
-  const myPart={}, clsPart={};
-  R.forEach(x=>{const o=myPart[x.part]=myPart[x.part]||{t:0,c:0,name:x.part_name}; o.t+=x.total; o.c+=x.correct;});
-  (D.cls||[]).forEach(x=>{const o=clsPart[x.part]=clsPart[x.part]||{t:0,c:0,s:0};
-    o.t+=x.t; o.c+=x.c; o.s=Math.max(o.s,x.s||0);});
-  const parts=PARTORDER.filter(k=>myPart[k]).map(k=>({
-    id:k, name:myPart[k].name||PARTBASE[k],
-    me:Math.round(myPart[k].c/myPart[k].t*100),
-    cls:(clsPart[k]&&clsPart[k].t&&clsPart[k].s>=2)?Math.round(clsPart[k].c/clsPart[k].t*100):null
-  })).map(p=>({...p, d:p.cls===null?null:p.me-p.cls})).sort((a,b)=>b.me-a.me);
-  const weak=parts.slice().sort((a,b)=>a.me-b.me)[0];
-
-  /* 반복 오답 + 패턴 */
-  const isWordLevel=w=>{
-    const m=String(w.mine||"").trim(), r=String(w.right_||"").trim();
-    if(!m||!r) return false;
-    if(/^[TF]$/i.test(m)||/^[TF]$/i.test(r)) return false;          // 내용일치
-    if(/^\d+번?$/.test(m)||/^\d+번?$/.test(r)) return false;         // 문장삽입 위치
-    if(/^[A-E](\s*-\s*[A-E])+$/.test(m)||/^[A-E](\s*-\s*[A-E])+$/.test(r)) return false; // 순서배열
-    if(/무응답|맞다고 표시|고침 없음|어법상 맞음/.test(m)) return false;
-    return /[a-zA-Z]/.test(r);
-  };
-  const Wall=(D.wrong||[]).map(w=>({...w, cat:classify(w.mine,w.right_,w.part_name||"")}));
-  const W=Wall.filter(isWordLevel);
-  const readMiss=Wall.filter(w=>!isWordLevel(w)).reduce((s,w)=>s+w.cnt,0);
-  const rep=W.filter(w=>w.cnt>=2).slice(0,6);
-  const catCount={}; W.forEach(w=>{catCount[w.cat]=(catCount[w.cat]||0)+w.cnt;});
+  /* 그날 틀린 자리 → 유형 분석 */
+  const DW=(D.dwrong||[]).filter(w=>bk(w.book)===mainBook && w.day===day && w.scope!=="재시험")
+    .map(w=>({...w, cat:catOf(w)}));
+  const catCount={}; DW.forEach(w=>{catCount[w.cat]=(catCount[w.cat]||0)+1;});
   const topCats=Object.entries(catCount).sort((a,b)=>b[1]-a[1]).slice(0,4);
   const mainCat=topCats.length?topCats[0][0]:null;
+  const rep=(D.wrong||[]).filter(w=>bk(w.book)===mainBook && w.cnt>=2 && /[a-zA-Z가-힣]/.test(w.right_||"") && !/^[TF]$/i.test(w.right_||"")).slice(0,5);
 
-  /* 잘한 점 3개 */
-  const best=parts[0];
-  const goods=[];
-  if(best && best.me>=80) goods.push(["🎯",`${best.name} ${best.me}%`,
-    `${best.cls!==null&&best.d>0?`반평균보다 ${best.d}%p 높아요. `:""}이 영역은 이제 안정적입니다.`]);
-  if(delta!==null && delta>0) goods.push(["🔥",`지난 회차보다 ${delta}%p 상승`,
-    `${prev}% → ${pctOf(T)}%로 올라왔어요. 흐름이 좋습니다.`]);
-  if(doneRate>=60) goods.push(["📚",`전 파트 ${doneRate}% 소화`,
-    `${esc(mainBook)}에서 ${byBook[mainBook].t}문항을 풀었어요. 꾸준함이 점수로 이어집니다.`]);
-  if(days.length>=3) goods.push(["📅",`${days.length}일째 학습`,`빠지지 않고 이어가고 있어요.`]);
-  if(T.n>=2) goods.push(["✍️",`오늘 ${T.n}개 파트 응시`,`한 번에 여러 파트를 소화했습니다.`]);
-  const good3=goods.slice(0,3);
+  /* 강점 · 약점 */
+  const byMe=tests.slice().sort((a,b)=>b.me-a.me);
+  const strong=byMe.filter(x=>x.me>=85).slice(0,3);
+  const weakL=byMe.filter(x=>x.me<75).reverse().slice(0,3);
+  const weak=weakL.length?weakL:(byMe.length>1&&byMe[byMe.length-1].me<90?[byMe[byMe.length-1]]:[]);
+  const kindStrong=[...new Set(strong.map(x=>kindOf(x.id)))].filter(k=>!catCount[k]||catCount[k]<=1);
+  const weakCats=topCats.filter(([c,n])=>n>=2||topCats.length===1);
 
-  /* 코멘트 초안 */
+  /* 코멘트 초안 — 강점·약점을 앞세움 */
+  const nm=esc(D.student);
   const cmt=[];
-  cmt.push(`${esc(D.student)} ${delta!==null&&delta>0?`오늘 <b>${delta}%p 올랐어요.</b>`:"오늘도 꾸준히 했어요."}`
-    + (best&&best.me>=85?` 특히 <b>${esc(best.name)}</b>는 ${best.me}%로 아주 안정적입니다.`:""));
-  if(!mainCat && readMiss && weak) cmt.push(`남은 건 <b>${esc(weak.name)}</b>예요. 낱말보다 <b>글의 흐름</b>에서 갈리고 있어서, 연결어와 지시어를 표시하며 읽는 연습이 필요합니다.`);
-  if(mainCat && weak) cmt.push(`남은 건 <b>${esc(weak.name)}</b>예요. 틀린 자리를 모아보니 <b>${esc(mainCat)}</b>에 몰려 있습니다.`
-    + (rep.length?` 같은 실수를 ${rep.length}군데에서 반복하고 있어요.`:""));
-  cmt.push(`다음 회차는 <b>${esc(weak?weak.name:"약한 파트")}</b>만 다시 돌리겠습니다. 이거 하나만 잡으면 전체가 올라갑니다.`);
+  cmt.push(`${nm} ${TD} <b>${tests.length}개 시험</b>을 완료했고 정답률은 <b>${score}%</b>예요.`
+    +(delta!==null?(delta>0?` 지난 학습일보다 <b>${delta}%p 올랐어요.</b>`:delta<0?` 지난 학습일보다 ${-delta}%p 내려갔어요.`:""):""));
+  if(strong.length) cmt.push(`💪 <b>강점</b> — ${strong.map(x=>`<b>${esc(x.name)}</b> ${x.me}%`).join(", ")}.`
+    +(kindStrong.length?` ${STRONG_MSG[kindStrong[0]]||""}`:"")
+    +(strong[0].d!==null&&strong[0].d>0?` 반평균보다 ${strong[0].d}%p 높아요.`:""));
+  else if(byMe.length) cmt.push(`💪 <b>강점</b> — ${TD} 가장 잘 본 시험은 <b>${esc(byMe[0].name)}</b>(${byMe[0].me}%)예요. 이 감을 유지하면 됩니다.`);
+  if(weak.length||mainCat){
+    let w=`⚠️ <b>약점</b> — `;
+    if(weak.length) w+=weak.map(x=>`<b>${esc(x.name)}</b> ${x.me}%`).join(", ")+". ";
+    if(mainCat) w+=`틀린 ${DW.length}개를 모아 보니 <b>${esc(mainCat)}</b>${josa(mainCat,"이","가")} ${catCount[mainCat]}개로 가장 많아요`
+      +(weakCats.length>1?` (다음: ${weakCats.slice(1).map(([c,n])=>`${esc(c)} ${n}개`).join(", ")})`:"")+". "+(TIPS[mainCat]||"");
+    cmt.push(w);
+  } else if(tests.length) cmt.push(`⚠️ <b>약점</b> — ${TD} 본 시험에서는 눈에 띄는 약점이 없어요. 👏`);
+  if(rep.length) cmt.push(`🔁 같은 실수가 반복되는 자리가 ${rep.length}군데 있어요 (예: <b>${esc(rep[0].mine)}</b> → <b>${esc(rep[0].right_)}</b>, ${rep[0].cnt}회).`);
+  if(RE.n) cmt.push(`📝 오답노트 재시험도 ${RE.n}회 했어요 (${RE.t?Math.round(RE.c/RE.t*100):0}%).`);
+  cmt.push(weak.length||mainCat
+    ? `다음 시간에는 <b>${esc(weak[0]?weak[0].name:mainCat)}</b> 오답노트부터 다시 풀고${mainCat?`, <b>${esc(mainCat)}</b>만 따로 짚겠습니다`:" 넘어가겠습니다"}.`
+    : `다음 시간에는 아직 안 본 시험으로 넘어가겠습니다.`);
 
   const dt=v=>v===null?"":`<div class="dt ${v>=0?"up":"down"}">${v>=0?"▲ +":"▼ "}${v}%p ${v>=0?"상회":"하회"}</div>`;
-  const sparkPath=(vals,w,h)=>vals.map((v,i)=>{
-    const x=vals.length===1?w/2:20+i*((w-40)/(vals.length-1));
-    const y=h-14-(v/100)*(h-42); return `${i?"L":"M"}${x.toFixed(1)} ${y.toFixed(1)}`;}).join(" ");
   const W2=320,H2=132;
   const xs=i=>series.length===1?W2/2:20+i*((W2-40)/(series.length-1));
   const ys=v=>H2-14-(v/100)*(H2-42);
+  const path=series.map((s,i)=>`${i?"L":"M"}${xs(i).toFixed(1)} ${ys(s.pct).toFixed(1)}`).join(" ");
+  const selS="flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:13px";
 
   $("#app").innerHTML=`
   <div class="act">
-    ${books.length>1?`<select id="bksel" style="flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--line,#ddd);background:var(--surface,#fff);color:inherit;font:inherit;font-size:13px">${books.map(b=>`<option value="${esc(b)}"${b===mainBook?" selected":""}>${esc(b)}</option>`).join("")}</select>`:""}
+    ${books.length>1?`<select id="bksel" style="${selS}">${books.map(b=>`<option value="${esc(b)}"${b===mainBook?" selected":""}>${esc(b)}</option>`).join("")}</select>`:""}
+    ${days.length>1?`<select id="daysel" style="${selS};flex:0 0 auto">${days.slice().reverse().map(d=>`<option value="${d}"${d===day?" selected":""}>${fmtDate(d)}</option>`).join("")}</select>`:""}
     <button onclick="window.print()">인쇄 · PDF</button>
     <button onclick="location.href='report'">다른 학생</button>
   </div>
 
   <div class="top">
     <div><div class="eb">DAILY REPORT</div>
-      <div class="sb">hazel_studylog · 영어 내신 데일리 리포트 · ${round}회차</div></div>
+      <div class="sb">hazel_studylog · ${esc(mainBook)} · ${round}회차</div></div>
     <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(day)}</span></div>
   </div>
 
   <div class="hero">
     <div class="hero-in">
-      <div class="grade"><b>${grade}</b><span>정답률 ${score}점</span>
-        <span style="display:block;margin-top:6px;font-size:10px;font-weight:800;background:rgba(255,255,255,.9);color:${VD.c};border-radius:999px;padding:3px 0">${VD.n}</span></div>
+      <div class="grade"><b>${tests.length?grade:"—"}</b><span>정답률 ${tests.length?score+"점":"—"}</span></div>
       <div>
-        <h1>${T.n?`오늘 <mark>${T.n}개 파트</mark> 응시했어요 ${pctOf(T)>=80?"👏":"💪"}`:`오늘은 아직 응시 전이에요`}</h1>
-        <p>${esc(mainBook)} 기준 <b>푼 문항 정답률 ${score}%</b> · 교재 <b>${doneRate}% 소화</b>.
-        ${doneRate<100
-          ? `${restNames.length?`<b>${esc(restNames.join(" · "))}</b>`+josa(restNames[restNames.length-1],"을","를"):"남은 파트를"} 아직 안 봤어요 — 다 풀면 판정이 확정됩니다.`
-          : score>=VD_PASS?`기준(90점)을 넘겨 <b>통과</b>입니다.`
-          : score>=VD_PART?`<b>부분 재시험</b> 대상 — 틀린 문항만 오답노트로 다시 풀면 통과 가능합니다.`
-          : `<b>전체 재시험</b> 대상 — 파트를 처음부터 다시 풀어야 합니다.`}</p>
+        <h1>${tests.length?`${TD} <mark>${tests.length}개 시험</mark> 완료 · 정답률 ${score}% ${score>=85?"👏":"💪"}`:`${TD}은 오답노트 재시험만 했어요`}</h1>
+        <p>${tests.length?`<b>${esc(tests.map(x=>x.name).join(" · "))}</b> — 그날 완료한 시험만으로 계산했어요 (같은 시험을 여러 번 봤으면 최고 기록).`:""}</p>
       </div>
     </div>
     <div class="chips">
-      <div class="chip"><i>📊 오늘 정답률</i><b>${T.n?pctOf(T)+"%":"—"}</b></div>
-      <div class="chip"><i>✏️ 오늘 응시</i><b>${T.n}파트</b></div>
-      <div class="chip"><i>📚 누적 채점</i><b>${ALL.c}<span style="font-size:12px;opacity:.8">/${ALL.t}</span></b></div>
-      <div class="chip"><i>📈 지난 회차 대비</i><b>${delta===null?"—":(delta>=0?"+":"")+delta+"%p"}</b></div>
+      <div class="chip"><i>📊 ${TD} 정답률</i><b>${tests.length?score+"%":"—"}</b></div>
+      <div class="chip"><i>✏️ 완료한 시험</i><b>${tests.length}개</b></div>
+      <div class="chip"><i>✅ 맞힌 문항</i><b>${T.c}<span style="font-size:12px;opacity:.8">/${T.t}</span></b></div>
+      <div class="chip"><i>📈 지난 학습일 대비</i><b>${delta===null?"—":(delta>=0?"+":"")+delta+"%p"}</b></div>
     </div>
   </div>
 
-  ${delta!==null?`<h2 class="s">📈 성장</h2>
-  <div class="card grow">
-    <div class="big"><b style="color:${delta>=0?"var(--ok)":"var(--no)"}">${delta>=0?"▲ +":"▼ "}${delta}%p</b><span>지난 회차 대비</span></div>
-    <div class="txt">
-      <b>${delta>=0?"올라오고 있어요 🎉":"이번 회차는 조금 내려갔어요"}</b>
-      <p>${days.length}일 동안 ${R.length}회 응시했고, 회차별 정답률은 아래와 같아요.
-         ${delta>=0?"틀린 걸 그냥 넘기지 않은 결과입니다.":"어려운 파트를 만난 회차예요. 오답부터 다시 보면 됩니다."}</p>
-      <div class="steps">${series.map((s,i)=>`<em>${s.pct}</em>${i<series.length-1?"<i>›</i>":""}`).join("")}</div>
-    </div>
+  ${tests.length?`<h2 class="s">📋 ${TD} 완료한 시험</h2>
+  <div class="card bars">${tests.map(p=>`
+    <div class="bar" style="grid-template-columns:minmax(90px,150px) 1fr 74px"><span class="lb">${esc(p.name)}<br><span style="font-weight:600;color:var(--ink-3);font-size:11px">${p.c}/${p.t}${p.n>1?` · ${p.n}회 응시`:""}</span></span>
+      <span class="tr"><i class="${p.me>=85?"":p.me>=75?"warn":"bad"}" style="width:${Math.max(p.me,7)}%"><u>${p.me}</u></i>
+      ${p.cls===null?"":`<s style="left:${p.cls}%" data-l="반 ${p.cls}"></s>`}</span>
+      <span class="dt ${p.d===null?"":p.d>=0?"up":"down"}">${p.d===null?"—":(p.d>=0?"▲+":"▼")+p.d+"%p"}</span></div>`).join("")}
+    <div style="font-size:11px;color:var(--ink-3);margin-top:6px">점선 = 같은 시험을 본 전체 학생 평균 (2명 이상일 때)</div>
   </div>`:""}
 
-  ${good3.length?`<h2 class="s">⭐ 특히 잘한 점</h2>
-  <div class="good3">${good3.map(([ic,t,p],i)=>
-    `<div class="g" data-no="0${i+1}"><span class="ic">${ic}</span><b>${t}</b><p>${p}</p></div>`).join("")}</div>`:""}
+  <h2 class="s">💪 강점 · ⚠️ 약점</h2>
+  <div class="good3">
+    <div class="g" data-no="강점"><span class="ic">💪</span><b>${strong.length?esc(strong.map(x=>x.name).join(" · ")):byMe.length?esc(byMe[0].name):"—"}</b>
+      <p>${strong.length?strong.map(x=>`${esc(x.name)} ${x.me}%`).join(" · ")+(kindStrong.length?`<br>${STRONG_MSG[kindStrong[0]]||""}`:""):byMe.length?`${TD} 가장 잘 본 시험 ${byMe[0].me}%`:""}</p></div>
+    <div class="g" data-no="약점"><span class="ic">⚠️</span><b>${weak.length?esc(weak.map(x=>x.name).join(" · ")):mainCat?esc(mainCat):"뚜렷한 약점 없음"}</b>
+      <p>${weak.length?weak.map(x=>`${esc(x.name)} ${x.me}%`).join(" · ")+"<br>":""}${mainCat?`틀린 자리 최다 유형: <b>${esc(mainCat)}</b> ${catCount[mainCat]}개`:""}</p></div>
+  </div>
 
-  <h2 class="s">🔍 파트별 점수 · 반평균과 비교</h2>
-  <div class="sc4">${parts.slice(0,3).concat(weak&&!parts.slice(0,3).includes(weak)?[weak]:[]).map((p,i)=>
-    `<div class="sc ${["a","b","c","d"][i]||"d"}"><i>${esc(p.name)}</i><b>${p.me}<em>%</em></b>
-      <div class="avg">${p.cls===null?"반평균 —":"반평균 "+p.cls+"%"}</div>${dt(p.d)}</div>`).join("")}</div>
+  ${DW.length?`<div class="fix" style="margin-top:12px">
+    <b>${TD} 틀린 ${DW.length}개 — 유형별</b>
+    ${topCats.length?`<div class="home">📌 ${topCats.map(([c,n])=>`<b>${esc(c)}</b> ${n}개`).join(" · ")}</div>`:""}
+    ${mainCat?`<p style="margin-top:10px">${TIPS[mainCat]||""}</p>`:""}
+    <div class="miss">${DW.filter(w=>w.mine&&w.right_&&!/^[TF]$/i.test(w.right_)&&!/^[\d①-⑤]/.test(String(w.right_))&&!/^[A-E](\s*-\s*[A-E])+$/.test(w.right_)).slice(0,6).map(w=>
+      `<div><s>${esc(String(w.mine).slice(0,40))}</s> → <u>${esc(String(w.right_).slice(0,40))}</u><span>${esc(name(w.part,w.part_name))} ${esc(w.no||"")}</span></div>`).join("")}</div>
+  </div>`:""}
 
-  <h2 class="s">📉 회차별 정답률 추이</h2>
+  ${rep.length?`<h2 class="s">🔁 반복해서 틀리는 자리</h2>
+  <div class="fix"><div class="miss" style="margin-top:0">${rep.map(w=>
+      `<div><s>${esc(w.mine)}</s> → <u>${esc(w.right_)}</u><span>${w.cnt}회 · ${esc(w.sec||"")} ${esc(w.no||"")}</span></div>`).join("")}</div></div>`:""}
+
+  ${RE.n?`<h2 class="s">📝 오답노트 재시험</h2>
+  <div class="card" style="padding:15px 18px;font-size:13px;line-height:1.7">${TD} ${RE.n}회 · ${RE.c}/${RE.t} 정답 (${RE.t?Math.round(RE.c/RE.t*100):0}%) — 정답률 계산에는 넣지 않았어요.</div>`:""}
+
+  ${series.length>1?`<h2 class="s">📉 학습일별 정답률</h2>
   <div class="card ch">
-    <h3>${esc(D.student)} · 회차별 전체 정답률</h3><p>최근 ${series.length}회차</p>
-    <svg viewBox="0 0 ${W2} ${H2}" preserveAspectRatio="none" role="img"
-      aria-label="회차별 정답률 ${series.map(s=>s.pct).join(", ")}">
-      <line x1="18" x2="${W2-10}" y1="${ys(100)}" y2="${ys(100)}" stroke="var(--grid)"/>
-      <line x1="18" x2="${W2-10}" y1="${ys(50)}" y2="${ys(50)}" stroke="var(--grid)"/>
-      <line x1="18" x2="${W2-10}" y1="${ys(0)}" y2="${ys(0)}" stroke="var(--grid)"/>
-      <text x="0" y="${ys(100)+3}" font-size="8" fill="var(--ink-3)" font-family="Archivo">100</text>
-      <text x="2" y="${ys(50)+3}" font-size="8" fill="var(--ink-3)" font-family="Archivo">50</text>
-      <text x="8" y="${ys(0)+3}" font-size="8" fill="var(--ink-3)" font-family="Archivo">0</text>
-      <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="var(--pri)" stop-opacity=".2"/>
-        <stop offset="100%" stop-color="var(--pri)" stop-opacity="0"/></linearGradient></defs>
-      <path d="${sparkPath(series.map(s=>s.pct),W2,H2)} L ${xs(series.length-1).toFixed(1)} ${ys(0)} L ${xs(0).toFixed(1)} ${ys(0)} Z" fill="url(#ga)"/>
-      <path d="${sparkPath(series.map(s=>s.pct),W2,H2)}" fill="none" stroke="var(--pri)" stroke-width="2.4"
-        stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      ${series.map((s,i)=>`<circle cx="${xs(i).toFixed(1)}" cy="${ys(s.pct).toFixed(1)}"
-        r="${i===series.length-1?5:3.4}" fill="var(--pri)" stroke="var(--surface)" stroke-width="2"/>`).join("")}
-      <text x="${xs(series.length-1).toFixed(1)}" y="${(ys(series[series.length-1].pct)-9).toFixed(1)}"
-        font-size="9.5" font-weight="700" fill="var(--pri)" text-anchor="middle" font-family="Archivo">${series[series.length-1].pct}%</text>
-      ${series.map((s,i)=>`<text x="${xs(i).toFixed(1)}" y="${H2-2}" font-size="8.5"
-        fill="${i===series.length-1?"var(--pri)":"var(--ink-3)"}" text-anchor="middle" font-family="Archivo">${s.d.slice(5).replace("-",".")}</text>`).join("")}
+    <h3>${esc(D.student)} · ${esc(mainBook)}</h3><p>그날 완료한 시험 기준 · 최근 ${series.length}일</p>
+    <svg viewBox="0 0 ${W2} ${H2}" preserveAspectRatio="none" role="img" aria-label="학습일별 정답률 ${series.map(s=>s.pct).join(", ")}">
+      ${[100,50,0].map(v=>`<line x1="18" x2="${W2-10}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--grid)"/><text x="${v===100?0:v===50?2:8}" y="${ys(v)+3}" font-size="8" fill="var(--ink-3)" font-family="Archivo">${v}</text>`).join("")}
+      <path d="${path}" fill="none" stroke="var(--pri)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      ${series.map((s,i)=>`<circle cx="${xs(i).toFixed(1)}" cy="${ys(s.pct).toFixed(1)}" r="${i===series.length-1?5:3.4}" fill="var(--pri)" stroke="var(--surface)" stroke-width="2"/>
+        <text x="${xs(i).toFixed(1)}" y="${(ys(s.pct)-9).toFixed(1)}" font-size="9" font-weight="700" fill="${i===series.length-1?"var(--pri)":"var(--ink-3)"}" text-anchor="middle" font-family="Archivo">${s.pct}</text>
+        <text x="${xs(i).toFixed(1)}" y="${H2-2}" font-size="8.5" fill="${i===series.length-1?"var(--pri)":"var(--ink-3)"}" text-anchor="middle" font-family="Archivo">${s.d.slice(5).replace("-",".")}</text>`).join("")}
     </svg>
-  </div>
-
-  <h2 class="s">📊 막대는 ${esc(D.student)} 점수, 점선은 반평균이에요</h2>
-  <div class="card bars">${parts.map(p=>`
-    <div class="bar"><span class="lb">${esc(p.name)}</span>
-      <span class="tr"><i class="${p.me>=80?"":p.me>=60?"warn":"bad"}" style="width:${Math.max(p.me,7)}%"><u>${p.me}</u></i>
-      ${p.cls===null?"":`<s style="left:${p.cls}%" data-l="${p.cls}"></s>`}</span>
-      <span class="dt ${p.d===null?"":p.d>=0?"up":"down"}">${p.d===null?"—":(p.d>=0?"▲+":"▼")+p.d}</span></div>`).join("")}
-  </div>
-
-  ${weak?`<h2 class="s">🏁 이것만 더하면 완벽해요</h2>
-  <div class="fix">
-    <b>${esc(weak.name)} ${weak.me}% · 여기 하나만 잡으면 됩니다</b>
-    <p>${mainCat?`반복해서 틀린 자리를 모아보니 <b>${esc(mainCat)}</b>에 몰려 있어요. ${TIPS[mainCat]||""}`
-      :"틀린 문항을 다시 풀어보는 것부터 시작하면 됩니다."}</p>
-    ${rep.length?`<div class="miss">${rep.map(w=>
-      `<div><s>${esc(w.mine)}</s> → <u>${esc(w.right_)}</u><span>${w.cnt}회 · ${esc(w.book||"")} ${esc(w.sec||"")} ${esc(w.no||"")}</span></div>`).join("")}</div>`:""}
-    ${topCats.length?`<div class="home">📌 <b>자주 틀리는 유형</b> — ${topCats.map(([c,n])=>`${esc(c)} ${n}회`).join(" · ")}</div>`:""}
-    ${readMiss?`<div class="home" style="margin-top:8px">📖 <b>독해 파트 오답</b> ${readMiss}개 — 내용일치·순서·삽입은 낱말이 아니라 <b>흐름</b>에서 갈립니다. 지문을 다시 읽고 연결어에 표시하며 풀게 해 주세요.</div>`:""}
   </div>`:""}
 
   <h2 class="s">💬 선생님 코멘트 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(자동 초안 · 수정해서 쓰세요)</span></h2>
@@ -506,13 +470,13 @@ function render(D){
 
   <div class="foot">
     hazel_studylog · 앱에 쌓인 실제 채점 기록으로 자동 생성됩니다.<br>
-    ${fmtDate(day)} · ${round}회차 · 누적 ${R.length}회 응시 · ${ALL.t}문항 채점 · 반평균은 같은 파트를 푼 전체 학생 평균입니다.<br>
-    등급 = <b>푼 문항 정답률(%)</b> 기준 · 파트마다 최고 기록만 반영 · 안 푼 파트는 계산에서 제외 (절대평가)<br>
-    판정 = 교재를 <b>100% 소화</b>했을 때만 확정 · 90↑ 통과 / 75~89 부분 재시험 / 75↓ 전체 재시험 · 소화 전에는 '진행 중'
+    정답률 = <b>그날 완료한 시험</b>의 맞힌 문항 ÷ 전체 문항 (같은 시험을 여러 번 봤으면 최고 기록 · 오답노트 재시험은 제외)<br>
+    등급 95↑ A+ · 90↑ A · 85↑ A- · 80↑ B+ · 75↑ B … (절대평가) · 반평균은 같은 시험을 본 전체 학생 평균입니다.
   </div>`;
   $("#app").hidden=false;
-  const sel=$("#bksel"); if(sel) sel.onchange=()=>{ SELBOOK=sel.value;
-    history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}&book=${encodeURIComponent(SELBOOK)}`); render(LASTD); window.scrollTo(0,0); };
+  const go_=()=>{ history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}&book=${encodeURIComponent(SELBOOK||mainBook)}${SELDAY?`&day=${SELDAY}`:""}`); render(LASTD); window.scrollTo(0,0); };
+  const s1=$("#bksel"); if(s1) s1.onchange=()=>{ SELBOOK=s1.value; SELDAY=""; go_(); };
+  const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELBOOK=mainBook; SELDAY=s2.value; go_(); };
 }
 let LASTD=null;
 
