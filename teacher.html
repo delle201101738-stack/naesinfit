@@ -151,16 +151,25 @@ const vd=(p,done)=> (done!=null&&done<100) ? {k:"todo",n:`진행 ${done}%`}
                   : p>=VD_PASS?{k:"pass",n:"통과"}:p>=VD_PART?{k:"part",n:"부분 재시험"}:{k:"full",n:"전체 재시험"};
 const vdPill=(p,done)=>`<span class="vd ${vd(p,done).k}">${vd(p,done).n}</span>`;
 function unitByBook(book){
+  for(const b of (MF.books||[])) for(const u of (b.units||[]))   // 과목·출판사·과가 정확히 같은 단원 먼저
+    if(book===`${b.subject} · ${b.publisher} · ${u.no}`) return u;
   for(const b of (MF.books||[])) for(const u of (b.units||[]))
     if(book && book.includes(u.no) && book.includes(b.publisher)) return u;
   for(const b of (MF.books||[])) for(const u of (b.units||[]))
     if(book && book.includes(u.no)) return u;
   return null;
 }
+/* 학생의 '지금 보는 과' = 가장 최근 학습일에 가장 많이 푼 과 */
+const dk0=v=>{const d=new Date(v);return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();};
+function mainBookOf(rows){
+  if(!rows.length) return "";
+  const last=rows.reduce((m,x)=>+new Date(x.created_at)>+new Date(m.created_at)?x:m,rows[0]), ld=dk0(last.created_at), w={};
+  rows.filter(x=>dk0(x.created_at)===ld).forEach(x=>{w[x.book]=(w[x.book]||0)+x.total;});
+  return Object.entries(w).sort((a,b)=>b[1]-a[1])[0][0];
+}
+const repHref=(n,rows)=>`report?student=${encodeURIComponent(n)}&book=${encodeURIComponent(mainBookOf(rows))}`;
 function nPartsOf(rows){
-  const byBook={};
-  rows.forEach(r=>{const o=byBook[r.book]=byBook[r.book]||{t:0}; o.t+=r.total;});
-  const main=Object.entries(byBook).sort((a,b)=>b[1].t-a[1].t)[0];
+  const mb=mainBookOf(rows), main=mb?[mb]:null;
   const u=main&&unitByBook(main[0]);
   return (u&&u.pts)?Object.keys(u.pts).length:7;
 }
@@ -168,8 +177,8 @@ function nPartsOf(rows){
 function doneRateOf(rows){
   const byBook={};
   rows.forEach(r=>{const o=byBook[r.book]=byBook[r.book]||{t:0,parts:new Set()}; o.t+=r.total; o.parts.add(r.part);});
-  const main=Object.entries(byBook).sort((a,b)=>b[1].t-a[1].t)[0];
-  if(!main) return null;
+  const mb=mainBookOf(rows); if(!mb) return null;
+  const main=[mb,byBook[mb]];
   const u=unitByBook(main[0]);
   if(!u || !u.pts || !u.total) return null;
   const done=Object.keys(u.pts).filter(k=>main[1].parts.has(k)).reduce((s,k)=>s+u.pts[k],0);
@@ -182,7 +191,7 @@ async function load(){
   const r=await fetch("/api/results",{headers:{"x-pin":PIN}});
   if(r.status===401){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"비밀번호가 맞지 않습니다"); }
   if(!r.ok){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"불러오지 못했습니다"); }
-  const j=await r.json(); ALL=j.rows||[];
+  const j=await r.json(); ALL=(j.rows||[]).map(x=>({...x, book:String(x.book||"").replace(/\s*올킬\s*$/,"").trim()}));
   try{ const cr=await fetch("content/index.json",{cache:"no-store"}); if(cr.ok) MF=await cr.json(); }catch(e){}
 }
 $("#pin-go").onclick=async()=>{
@@ -239,7 +248,7 @@ function render(){
           <button style="font-weight:700;color:var(--accent)" data-stu="${esc(x.n)}">${esc(x.n)}</button>
           <span style="font-size:12.5px;color:var(--ink-3)">${x.parts.slice(0,3).map(esc).join(" · ")}${x.parts.length>3?` 외 ${x.parts.length-3}`:""}</span>
           <span class="num" style="margin-left:auto;font-size:12.5px;color:var(--ink-3)">${x.cnt}회</span>
-          <a class="btn" style="padding:5px 11px;font-size:11.5px" href="report?student=${encodeURIComponent(x.n)}" target="_blank" rel="noopener">리포트</a>
+          <a class="btn" style="padding:5px 11px;font-size:11.5px" href="${repHref(x.n, todayRows.filter(y=>y.student===x.n))}" target="_blank" rel="noopener">리포트</a>
         </div>`).join("")}
       </div>`;
   }
@@ -272,7 +281,7 @@ function render(){
       <td>${vdPill(s.pct, s.done)}</td>
       <td class="num">${s.cnt}회</td><td class="num">${s.parts} / ${s.np||7}</td>
       <td style="color:var(--ink-3);font-size:13px">${fmt(s.last)}</td>
-      <td><a class="btn" href="report?student=${encodeURIComponent(s.n)}" target="_blank" rel="noopener">리포트</a></td></tr>`).join("")+`</tbody>`;
+      <td><a class="btn" href="${repHref(s.n, byS[s.n])}" target="_blank" rel="noopener">리포트</a></td></tr>`).join("")+`</tbody>`;
 
   /* 파트별 */
   const byP={};

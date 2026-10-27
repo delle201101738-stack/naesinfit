@@ -251,6 +251,8 @@ async function load(name){
   return mr.json();
 }
 function unitByBook(book){
+  for(const b of (MF.books||[])) for(const u of (b.units||[]))   // 과목·출판사·과가 정확히 같은 단원 먼저
+    if(book===`${b.subject} · ${b.publisher} · ${u.no}`) return {b,u};
   for(const b of (MF.books||[])) for(const u of (b.units||[]))
     if(book && book.includes(u.no) && book.includes(b.publisher)) return {b,u};
   for(const b of (MF.books||[])) for(const u of (b.units||[]))
@@ -262,13 +264,27 @@ const josa=(w,a,b)=>{const c=String(w||"").trim().slice(-1).charCodeAt(0);
 const partLabel=(u,id,fallback)=> (u&&u.labels&&u.labels[id]) || fallback || PARTBASE[id] || id;
 
 /* ── 렌더 ── */
+const bk=b=>String(b||"").replace(/\s*올킬\s*$/,"").trim();   // 예전 'N과 올킬' 기록은 N과로 합침
+let SELBOOK=new URL(location.href).searchParams.get("book")||"";
 function render(D){
-  const R=D.rows||[];
-  if(!R.length){
+  const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
+  if(!RA.length){
     $("#app").innerHTML=`<div class="empty"><h3>${esc(D.student||"")}님의 기록이 없어요</h3>
       <p>앱에서 한 파트라도 응시하면 리포트가 만들어집니다.</p></div>`;
     $("#app").hidden=false; return;
   }
+  /* 교재(과) 고르기: 기본은 가장 최근 학습일에 가장 많이 푼 과 — 리포트 전체를 그 과 기록으로만 계산 */
+  const books=[...new Set(RA.map(x=>x.book))];
+  const lastOf=b=>RA.filter(x=>x.book===b).reduce((m,x)=>Math.max(m,+new Date(x.created_at)),0);
+  books.sort((a,b)=>lastOf(b)-lastOf(a));
+  let mainBook=books.includes(SELBOOK)?SELBOOK:null;
+  if(!mainBook){
+    const ld=dkey(RA[RA.length-1].created_at), w={};
+    RA.filter(x=>dkey(x.created_at)===ld).forEach(x=>{w[x.book]=(w[x.book]||0)+x.total;});
+    mainBook=Object.entries(w).sort((a,b)=>b[1]-a[1])[0][0];
+  }
+  const R=RA.filter(x=>x.book===mainBook);
+  D={...D, cls:(D.cls||[]).filter(x=>bk(x.book)===mainBook), wrong:(D.wrong||[]).filter(x=>bk(x.book)===mainBook)};
   const tk=dkey(new Date());
   const today=R.filter(x=>dkey(x.created_at)===tk);
   const lastDay=dkey(R[R.length-1].created_at);
@@ -281,10 +297,8 @@ function render(D){
   const pctOf=o=>o.t?Math.round(o.c/o.t*100):0;
   const T=sum(cur), ALL=sum(R);
 
-  /* 주력 교재 = 채점 문항을 가장 많이 푼 교재 */
   const byBook={};
   R.forEach(x=>{const o=byBook[x.book]=byBook[x.book]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct;});
-  const mainBook=Object.entries(byBook).sort((a,b)=>b[1].t-a[1].t)[0][0];
   const mu=unitByBook(mainBook);
   const bookTotal=mu?mu.u.total:byBook[mainBook].t;
 
@@ -378,6 +392,7 @@ function render(D){
 
   $("#app").innerHTML=`
   <div class="act">
+    ${books.length>1?`<select id="bksel" style="flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--line,#ddd);background:var(--surface,#fff);color:inherit;font:inherit;font-size:13px">${books.map(b=>`<option value="${esc(b)}"${b===mainBook?" selected":""}>${esc(b)}</option>`).join("")}</select>`:""}
     <button onclick="window.print()">인쇄 · PDF</button>
     <button onclick="location.href='report'">다른 학생</button>
   </div>
@@ -492,14 +507,17 @@ function render(D){
     판정 = 교재를 <b>100% 소화</b>했을 때만 확정 · 90↑ 통과 / 75~89 부분 재시험 / 75↓ 전체 재시험 · 소화 전에는 '진행 중'
   </div>`;
   $("#app").hidden=false;
+  const sel=$("#bksel"); if(sel) sel.onchange=()=>{ SELBOOK=sel.value;
+    history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}&book=${encodeURIComponent(SELBOOK)}`); render(LASTD); window.scrollTo(0,0); };
 }
+let LASTD=null;
 
 async function start(name){
   $("#err").textContent="";
   try{
     const D=await load(name);
-    $("#gate").hidden=true; render(D);
-    history.replaceState(null,"",`report?student=${encodeURIComponent(name)}`);
+    $("#gate").hidden=true; LASTD=D; render(D);
+    history.replaceState(null,"",`report?student=${encodeURIComponent(name)}${SELBOOK?`&book=${encodeURIComponent(SELBOOK)}`:""}`);
   }catch(e){ $("#err").textContent=e.message||"불러오지 못했습니다"; }
 }
 $("#go").onclick=()=>{ const v=$("#nm").value.trim(); if(v.length<2) return $("#err").textContent="이름을 입력해 주세요"; start(v); };
