@@ -9,10 +9,26 @@ export default async function handler(req, res) {
     await ensure();
     res.setHeader("Cache-Control", "no-store");
 
-    const rows = await sql`
+    // ?day=YYYY-MM-DD → 그날 채점한 모든 칸(맞음·틀림) — 영역별(어법·어휘·독해) 분석용
+    const day = (u.searchParams.get("day") || "").trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+      const items = await sql`
+        select a.id, a.book, a.unit_id, a.part, a.part_name, a.scope,
+               it->>'sec' as sec, it->>'no' as no,
+               d->>'l' as l, (d->>'ok') as ok, d->>'m' as m, d->>'r' as r, d->>'t' as t
+        from attempts a,
+             jsonb_array_elements(a.detail) it,
+             jsonb_array_elements(it->'d') d
+        where a.student = ${student}
+          and to_char(a.created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') = ${day}
+        limit 8000`;
+      return res.status(200).json({ ok: true, day, items });
+    }
+
+    const rows = (await sql`
       select id, book, unit_id, part, part_name, scope, total, correct, pct, secs, created_at
       from attempts where student = ${student}
-      order by created_at asc limit 500`;
+      order by created_at desc limit 1000`).reverse();
 
     if (!rows.length) return res.status(200).json({ ok: true, rows: [], cls: [], wrong: [], days: 0 });
 
