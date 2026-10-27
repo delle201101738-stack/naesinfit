@@ -142,6 +142,9 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .rr,.cc{font-family:'Archivo',sans-serif;font-size:12.5px;text-align:center;white-space:nowrap;color:var(--ink-3)}
 .rr b,.cc b{color:var(--ink);font-size:14px} .rr.all b{color:var(--ok)}
 .cc small{display:block;font-size:10.5px;color:var(--accent)}
+.cpy{display:block;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:6px;padding:2px 6px}
+.cpy:hover{color:var(--accent)}
+.ck .cpy{display:inline-block;margin:0 0 0 4px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
 </style>
 </head>
@@ -236,7 +239,7 @@ function render0(){
             <span class="seg">${Object.entries(ST).map(([v,n])=>`<button class="${v}${k.status===v?" on":""}" data-v="${v}">${n}</button>`).join("")}</span>
             <input class="sc" type="number" min="0" max="100" placeholder="점수" value="${k.score??""}">
             <input class="mm" placeholder="메모 (예: 2쪽 빠짐, 오답 정리 안 함)" value="${esc(k.memo||"")}">
-            <a href="report?student=${encodeURIComponent(s)}&day=${it.day}" target="_blank" rel="noopener">리포트</a></div>`; }).join("")||`<div class="empty" style="padding:20px">반에 학생을 먼저 넣어 주세요</div>`}
+            <a href="report?student=${encodeURIComponent(s)}&day=${it.day}" target="_blank" rel="noopener">리포트</a><button class="cpy" data-copy="report?student=${encodeURIComponent(s)}&day=${it.day}">복사</button></div>`; }).join("")||`<div class="empty" style="padding:20px">반에 학생을 먼저 넣어 주세요</div>`}
       </div>`:""}
     </div>`; }).join(""):`<div class="card empty">아직 낸 숙제가 없어요</div>`}`;
 }
@@ -265,7 +268,7 @@ function gridHTML(mem, items, chk){
   return head+`<div class="card scroll"><table class="grid">
     <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b title="${esc(it.memo||"")}">${esc(it.title)}</b>
       <button class="gall" data-gall="${it.id}">미검사 → 완료</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
-    <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a></td>
+    <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="cpy" data-copy="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}">링크 복사</button></td>
       ${cols.map(it=>cell(it,s)).join("")}<td class="rr" data-rr="${esc(s)}"></td></tr>`).join("")}</tbody>
     <tfoot><tr><td class="stk">완료</td>${cols.map(it=>`<td class="cc" data-cc="${it.id}"></td>`).join("")}<td></td></tr></tfoot>
   </table></div>`;
@@ -300,8 +303,18 @@ async function saveCheck(row, status){
     render(); toast("저장했어요");
   }catch(e){ alert(e.message); }
 }
+/* 링크 복사 — 카톡·문자에 바로 붙여넣기 */
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
+  try{ const a=document.createElement("textarea"); a.value=t; a.style.position="fixed"; a.style.opacity="0"; document.body.appendChild(a); a.select();
+    const ok=document.execCommand("copy"); a.remove(); return ok; }catch(e){ return false; }
+}
+function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
+  e.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#16151F;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:99";
+  document.body.appendChild(e); setTimeout(()=>e.remove(),1800); }
 document.addEventListener("click",async e=>{
   const t=e.target;
+  const cp=t.closest("[data-copy]"); if(cp){ const ok=await copyText(location.origin+"/"+cp.dataset.copy); toast(ok?"리포트 링크를 복사했어요":"복사가 안 돼요"); return; }
   const gm=t.closest("[data-gmode]"); if(gm){ GR.mode=gm.dataset.gmode; localStorage.setItem("hw.gmode",GR.mode); render(); return; }
   const gc=t.closest("[data-gc]"); if(gc){
     const it=gc.dataset.gc, st=gc.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);

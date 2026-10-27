@@ -222,6 +222,7 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 .act{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}
 .act button{padding:9px 15px;border-radius:11px;border:0;background:var(--surface);box-shadow:var(--sh);
   font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.act .cpl{background:var(--pri);color:#fff}
 .empty{text-align:center;padding:70px 24px;color:var(--ink-3)}
 .empty h3{margin:0 0 6px;font-size:18px;font-weight:800;color:var(--ink)}
 @media print{.act{display:none}}
@@ -478,11 +479,12 @@ function renderHwOnly(D, HW){
   const days=[...new Set(HW.map(h=>h.day))].sort();
   const day=days.includes(SELDAY)?SELDAY:days[days.length-1];
   const TD=day===dkey(new Date())?"오늘":"이날";
+  CURURL=`report?student=${encodeURIComponent(D.student)}&day=${day}`;
   const H=hwBlock(HW,day,TD)||{html:"",cmt:""};
   const selS="padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:13px";
   $("#app").innerHTML=`
   <div class="act">${days.length>1?`<select id="daysel" style="${selS}">${days.slice().reverse().map(d=>`<option value="${d}"${d===day?" selected":""}>${fmtDate(d)}</option>`).join("")}</select>`:""}
-    <button onclick="window.print()">인쇄 · PDF</button><button onclick="location.href='report'">다른 학생</button></div>
+    <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button><button onclick="location.href='report'">다른 학생</button></div>
   <div class="top"><div><div class="eb">DAILY REPORT</div><div class="sb">hazel_studylog · 숙제 리포트</div></div>
     <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(day)}</span></div></div>
   ${H.html}
@@ -521,6 +523,7 @@ async function render(D){
   const cur=R.filter(x=>dkey(x.created_at)===day);
   const curT=cur.filter(x=>!isRe(x)), curRe=cur.filter(isRe);
   const name=(id,fb)=>partLabel(mu&&mu.u,id,fb);
+  CURURL=`report?student=${encodeURIComponent(D.student)}&book=${encodeURIComponent(mainBook)}&day=${day}`;
   const TD=day===dkey(new Date())?"오늘":"이날";
 
   /* 그날 완료한 시험: 파트마다 그날 최고 기록 */
@@ -634,7 +637,7 @@ async function render(D){
   <div class="act">
     ${books.length>1?`<select id="bksel" style="${selS}">${books.map(b=>`<option value="${esc(b)}"${b===mainBook?" selected":""}>${esc(b)}</option>`).join("")}</select>`:""}
     ${days.length>1?`<select id="daysel" style="${selS};flex:0 0 auto">${days.slice().reverse().map(d=>`<option value="${d}"${d===day?" selected":""}>${fmtDate(d)}</option>`).join("")}</select>`:""}
-    <button onclick="window.print()">인쇄 · PDF</button>
+    <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button>
     <button onclick="location.href='report'">다른 학생</button>
   </div>
 
@@ -748,7 +751,18 @@ async function render(D){
   const s1=$("#bksel"); if(s1) s1.onchange=()=>{ SELBOOK=s1.value; SELDAY=""; go_(); };
   const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELBOOK=mainBook; SELDAY=s2.value; go_(); };
 }
-let LASTD=null;
+let LASTD=null, CURURL="";
+/* 링크 복사 — 카톡·문자에 바로 붙여넣기 */
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
+  try{ const a=document.createElement("textarea"); a.value=t; a.style.position="fixed"; a.style.opacity="0"; document.body.appendChild(a); a.select();
+    const ok=document.execCommand("copy"); a.remove(); return ok; }catch(e){ return false; }
+}
+function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
+  e.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#16151F;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:99";
+  document.body.appendChild(e); setTimeout(()=>e.remove(),1800); }
+document.addEventListener("click",async e=>{ if(!e.target.closest("[data-cplink]")) return;
+  const ok=await copyText(CURURL?location.origin+"/"+CURURL:location.href); flash(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요 · 주소창 링크를 복사해 주세요"); });
 
 async function start(name){
   $("#err").textContent="";
