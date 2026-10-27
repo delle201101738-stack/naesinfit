@@ -161,7 +161,7 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 .cmpb .cn{display:flex;align-items:baseline;gap:7px;margin-bottom:7px;flex-wrap:wrap}
 .cmpb .cn b{font-size:13.5px;font-weight:800} .cmpb .cn small{font-size:11px;color:var(--ink-3);font-family:'Archivo',sans-serif}
 .cmpb .cn .dt{margin-left:auto;font-size:11.5px;font-weight:800;font-family:'Archivo',sans-serif}
-.cmpb .cr{display:grid;grid-template-columns:22px 1fr 44px;align-items:center;gap:8px;margin-top:4px}
+.cmpb .cr{display:grid;grid-template-columns:40px 1fr 44px;align-items:center;gap:8px;margin-top:4px}
 .cmpb .cr .who{font-size:11px;font-weight:800;color:var(--ink-3)}
 .cmpb .cr .tr{height:16px;border-radius:6px;background:var(--surface-2);overflow:hidden}
 .cmpb .cr .tr i{display:block;height:100%;border-radius:6px}
@@ -189,6 +189,23 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 .area .arow .k.no{color:var(--no)} .area .arow .k.ok{color:var(--ok)}
 .area .arow b{color:var(--no);font-family:'Archivo',sans-serif} .area .arow small{color:var(--ink-3);font-family:'Archivo',sans-serif}
 .area .atip{margin-top:8px;background:var(--surface-2);border-radius:10px;padding:8px 11px;font-size:12px;line-height:1.65;color:var(--ink-2)}
+.hwc{padding:14px 16px}
+.hwc .hsum{background:var(--surface-2);border-radius:11px;padding:9px 12px;font-size:12.5px;margin-bottom:4px}
+.hwc .hsum small{color:var(--ink-3)}
+.hwc .hi{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}
+.hwc .hi:last-of-type{border-bottom:0}
+.hwc .hs{font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap;background:var(--surface-2);color:var(--ink-3)}
+.hwc .hi.ok .hs{background:var(--ok-soft);color:var(--ok)} .hwc .hi.warn .hs{background:var(--warn-soft);color:var(--warn)} .hwc .hi.no .hs{background:var(--no-soft);color:var(--no)}
+.hwc .hb b{display:block;font-size:13.5px;font-weight:800}
+.hwc .hb small{display:block;font-size:11.5px;color:var(--ink-3);line-height:1.5;margin-top:2px}
+.hwc .hb p{margin:5px 0 0;font-size:12px;color:var(--ink-2);background:var(--warn-soft);border-radius:8px;padding:5px 9px}
+.hwc .hn{text-align:right;font-size:12px;white-space:nowrap}
+.hwc .hn b{display:block;font-family:'Archivo',sans-serif;font-size:15px}
+.hwc .hn small{display:block;color:var(--ink-3);font-size:10.5px;margin-top:2px}
+.hwc .hh{font-size:11px;font-weight:800;color:var(--ink-3);margin:12px 0 4px;letter-spacing:.02em}
+.hwc .hp{display:grid;grid-template-columns:38px 1fr auto;gap:8px;font-size:12px;padding:5px 0;border-top:1px dashed var(--line)}
+.hwc .hp span{color:var(--ink-3);font-family:'Archivo',sans-serif} .hwc .hp b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hwc .hp em{font-style:normal;color:var(--ink-2);white-space:nowrap}
 .foot{margin-top:22px;text-align:center;font-size:10.5px;color:var(--ink-3);line-height:1.8}
 @media print{body{background:#fff}.wrap{padding:0}.card,.g,.sc{box-shadow:none;border:1px solid var(--line)}}
 </style><style>
@@ -424,9 +441,62 @@ function analyzeAreas(items,SI){
       wrongSubs:subs.filter(s=>s.w>0).sort((x,y)=>y.w-x.w||x.c/x.t-y.c/y.t),
       goodSubs:subs.filter(s=>s.t>=3&&s.c/s.t>=0.9).sort((x,y)=>y.t-x.t)}; });
 }
+/* ── 숙제 검사 (시험과 별개) ── */
+const HWS={done:["✅","완료","ok"],part:["🟡","일부","warn"],none:["❌","안 함","no"],skip:["➖","면제","mute"]};
+function hwBlock(HW, day, TD){
+  const todays=HW.filter(h=>h.day===day);
+  const chk=todays.filter(h=>h.status&&h.status!=="skip"), td=chk.filter(h=>h.status==="done").length;
+  const rec=HW.filter(h=>h.day<=day&&h.status&&h.status!=="skip").slice(0,10);
+  const rd=rec.filter(h=>h.status==="done").length, rp=rec.length?Math.round(rd/rec.length*100):null;
+  const prev=HW.filter(h=>h.day<day).slice(0,6);
+  if(!todays.length&&!rec.length) return null;
+  const item=h=>{ const st=HWS[h.status]||["⏺","미검사","mute"];
+    return `<div class="hi ${st[2]}"><span class="hs">${st[0]} ${st[1]}</span>
+      <div class="hb"><b>${esc(h.title)}</b><small>${esc(h.class_name||"")}${h.memo?` · ${esc(h.memo)}`:""}</small>${h.cmemo?`<p>📝 ${esc(h.cmemo)}</p>`:""}</div>
+      <span class="hn">${h.score!=null?`<b>${h.score}점</b>`:""}${h.n?`<small>반 완료 ${h.nd}/${h.n}</small>`:""}</span></div>`; };
+  const html=`<h2 class="s">📚 ${TD} 숙제 검사</h2>
+  <div class="card hwc">
+    <div class="hsum">${todays.length?`${TD} 숙제 <b>${td}/${chk.length||todays.length}</b> 완료`:`${TD} 검사한 숙제 없음`}${rp!==null?` · 최근 숙제 완료율 <b>${rp}%</b> <small>(${rd}/${rec.length})</small>`:""}</div>
+    ${todays.map(item).join("")}
+    ${prev.length?`<div class="hh">지난 숙제</div>${prev.map(h=>{const st=HWS[h.status]||["⏺","미검사"];
+      return `<div class="hp"><span>${h.day.slice(5).replace("-",".")}</span><b>${esc(h.title)}</b><em>${st[0]} ${st[1]}${h.score!=null?` · ${h.score}점`:""}</em></div>`;}).join("")}`:""}
+  </div>`;
+  let c="";
+  if(todays.length){
+    if(!chk.length) c=`📚 <b>숙제</b> — ${TD} 숙제 ${todays.length}개는 아직 검사 전이에요.`;
+    else {
+      c=`📚 <b>숙제</b> — ${TD} 숙제 ${chk.length}개 중 <b>${td}개 완료</b>.`;
+      const miss=chk.filter(h=>h.status!=="done");
+      if(miss.length) c+=" "+miss.map(h=>`<b>${esc(h.title)}</b>${josa(h.title,"은","는")} ${h.status==="part"?"일부만 했어요":"하지 않았어요"}${h.cmemo?` (${esc(h.cmemo)})`:""}.`).join(" ");
+      else c+=" 빠짐없이 해 왔어요 👏";
+    }
+  }
+  if(rp!==null&&rec.length>=3) c+=(c?" ":"📚 <b>숙제</b> — ")+`최근 숙제 완료율은 <b>${rp}%</b>예요.`;
+  return {html, cmt:c, chip:todays.length?`${td}/${chk.length||todays.length}`:null};
+}
+function renderHwOnly(D, HW){
+  const days=[...new Set(HW.map(h=>h.day))].sort();
+  const day=days.includes(SELDAY)?SELDAY:days[days.length-1];
+  const TD=day===dkey(new Date())?"오늘":"이날";
+  const H=hwBlock(HW,day,TD)||{html:"",cmt:""};
+  const selS="padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:13px";
+  $("#app").innerHTML=`
+  <div class="act">${days.length>1?`<select id="daysel" style="${selS}">${days.slice().reverse().map(d=>`<option value="${d}"${d===day?" selected":""}>${fmtDate(d)}</option>`).join("")}</select>`:""}
+    <button onclick="window.print()">인쇄 · PDF</button><button onclick="location.href='report'">다른 학생</button></div>
+  <div class="top"><div><div class="eb">DAILY REPORT</div><div class="sb">hazel_studylog · 숙제 리포트</div></div>
+    <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(day)}</span></div></div>
+  ${H.html}
+  <h2 class="s">💬 선생님 코멘트 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(자동 초안 · 수정해서 쓰세요)</span></h2>
+  <div class="card cmt"><div class="av">🧑‍🏫</div><div><div class="who">헤이즐쌤 · 담당 선생님</div>
+    <p contenteditable="true" style="outline:none">${H.cmt||""}<br><br>${TD}은 앱 시험 기록이 없어요.</p></div></div>`;
+  $("#app").hidden=false;
+  const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELDAY=s2.value; history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}&day=${SELDAY}`); render(LASTD); };
+}
 const DAYI={}, CONT={};
 async function render(D){
+  const HW=(D.hw||[]);
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
+  if(!RA.length && HW.length) return renderHwOnly(D, HW);
   if(!RA.length){
     $("#app").innerHTML=`<div class="empty"><h3>${esc(D.student||"")}님의 기록이 없어요</h3>
       <p>앱에서 한 파트라도 응시하면 리포트가 만들어집니다.</p></div>`;
@@ -445,7 +515,7 @@ async function render(D){
   const R=RA.filter(x=>x.book===mainBook);
   const mu=unitByBook(mainBook, uidOf(R));
   const isRe=x=>x.scope==="재시험"||/^오답노트/.test(x.part_name||"");
-  const days=[...new Set(R.map(x=>dkey(x.created_at)))].sort();
+  const days=[...new Set(R.map(x=>dkey(x.created_at)).concat(HW.map(h=>h.day).filter(d=>d<=dkey(new Date()))))].sort();
   const day=days.includes(SELDAY)?SELDAY:days[days.length-1];
   const round=days.indexOf(day)+1;
   const cur=R.filter(x=>dkey(x.created_at)===day);
@@ -519,7 +589,7 @@ async function render(D){
   const cmt=[];
   cmt.push(`${nm} ${TD} <b>${tests.length}개 시험</b>을 완료했고 정답률은 <b>${score}%</b>예요.`
     +(delta!==null?(delta>0?` 지난 학습일보다 <b>${delta}%p 올랐어요.</b>`:delta<0?` 지난 학습일보다 ${-delta}%p 내려갔어요.`:""):"")
-    +(CMP?` 같은 날 같은 시험을 본 반평균은 <b>${CMP.cl}%</b>로, ${CMP.me>=CMP.cl?`<b>${CMP.me-CMP.cl}%p 높아요.</b>`:`${CMP.cl-CMP.me}%p 낮아요.`}`:""));
+    +(CMP?` 반평균은 <b>${CMP.cl}%</b>로, ${CMP.me>=CMP.cl?`<b>${CMP.me-CMP.cl}%p 높아요.</b>`:`${CMP.cl-CMP.me}%p 낮아요.`}`:""));
   if(AR.length){
     if(sA.length) cmt.push(`💪 <b>강점</b> — `+sA.map(a=>`<b>${a.a} ${a.pct}%</b>${a.goodSubs.length?` (${subTxt(a.goodSubs,x=>`${esc(x.k)} ${x.c}/${x.t}`,3)})`:""}`).join(", ")+`. ${AREA_STRONG[sA[0].a]||""}`);
     else { const hi=AR.slice().sort((a,b)=>b.pct-a.pct)[0];
@@ -543,6 +613,8 @@ async function render(D){
   } else if(tests.length) cmt.push(`⚠️ <b>약점</b> — ${TD} 본 시험에서는 눈에 띄는 약점이 없어요. 👏`);
   }
   if(rep.length) cmt.push(`🔁 같은 실수가 반복되는 자리가 ${rep.length}군데 있어요 (예: <b>${esc(rep[0].mine)}</b> → <b>${esc(rep[0].right_)}</b>, ${rep[0].cnt}회).`);
+  const HB=hwBlock(HW,day,TD);
+  if(HB&&HB.cmt) cmt.push(HB.cmt);
   if(RE.n) cmt.push(`📝 오답노트 재시험도 ${RE.n}회 했어요 (${RE.t?Math.round(RE.c/RE.t*100):0}%).`);
   if(AR.length) cmt.push(fixA.length&&topSub
     ? `다음 시간에는 <b>${fixA[0].a}</b> 중 <b>${esc(topSub)}</b>부터 다시 짚고, 오답노트로 틀린 문항을 다시 풀겠습니다.`
@@ -576,30 +648,32 @@ async function render(D){
     <div class="hero-in">
       <div class="grade"><b>${tests.length?grade:"—"}</b><span>정답률 ${tests.length?score+"점":"—"}</span></div>
       <div>
-        <h1>${tests.length?`${TD} <mark>${tests.length}개 시험</mark> 완료 · 정답률 ${score}% ${score>=85?"👏":"💪"}`:`${TD}은 오답노트 재시험만 했어요`}</h1>
+        <h1>${tests.length?`${TD} <mark>${tests.length}개 시험</mark> 완료 · 정답률 ${score}% ${score>=85?"👏":"💪"}`:(RE.n?`${TD}은 오답노트 재시험만 했어요`:`${TD}은 앱 시험 기록이 없어요`)}</h1>
         <p>${tests.length?`<b>${esc(tests.map(x=>x.name).join(" · "))}</b> — 그날 완료한 시험만으로 계산했어요 (같은 시험을 여러 번 봤으면 최고 기록).`:""}</p>
       </div>
     </div>
     <div class="chips">
       <div class="chip"><i>📊 ${TD} 정답률</i><b>${tests.length?score+"%":"—"}</b></div>
       <div class="chip"><i>✏️ 완료한 시험</i><b>${tests.length}개</b></div>
-      <div class="chip"><i>✅ 맞힌 문항</i><b>${T.c}<span style="font-size:12px;opacity:.8">/${T.t}</span></b></div>
+      ${HB&&HB.chip?`<div class="chip"><i>📚 ${TD} 숙제 완료</i><b>${HB.chip}</b></div>`:`<div class="chip"><i>✅ 맞힌 문항</i><b>${T.c}<span style="font-size:12px;opacity:.8">/${T.t}</span></b></div>`}
       <div class="chip"><i>📈 지난 학습일 대비</i><b>${delta===null?"—":(delta>=0?"+":"")+delta+"%p"}</b></div>
     </div>
   </div>
 
-  ${tests.length?`<h2 class="s">📋 ${TD} 완료한 시험 · 반평균 대조</h2>
+  ${HB?HB.html:""}
+
+  ${tests.length?`<h2 class="s">📋 ${TD} 완료한 시험 · 반평균 비교</h2>
   <div class="card cmpb">
-    <div class="lg"><span class="me">${esc(D.student)}</span><span class="cl">반평균 · 같은 날 같은 시험</span></div>
-    ${CMP?`<div class="sum">같은 시험 ${CMP.n}개 합계 — <b>나 ${CMP.me}%</b> vs <b>반 ${CMP.cl}%</b> <span class="dt ${CMP.me>=CMP.cl?"up":"down"}">${CMP.me>=CMP.cl?"▲+":"▼"}${CMP.me-CMP.cl}%p</span></div>`:""}
+    <div class="lg"><span class="me">${esc(D.student)}</span><span class="cl">반평균</span></div>
+    ${CMP?`<div class="sum">${TD} 시험 합계 — <b>나 ${CMP.me}%</b> vs <b>반평균 ${CMP.cl}%</b> <span class="dt ${CMP.me>=CMP.cl?"up":"down"}">${CMP.me>=CMP.cl?"▲+":"▼"}${CMP.me-CMP.cl}%p</span></div>`:""}
     ${tests.map(p=>`
     <div class="cg">
       <div class="cn"><b>${esc(p.name)}</b><small>${p.c}/${p.t}${p.n>1?` · ${p.n}회 응시`:""}</small>
         ${p.d===null?"":`<span class="dt ${p.d>=0?"up":"down"}">${p.d>=0?"▲ +":"▼ "}${p.d}%p</span>`}</div>
       <div class="cr"><span class="who">나</span><span class="tr"><i class="me ${p.me>=85?"":p.me>=75?"warn":"bad"}" style="width:${Math.max(p.me,3)}%"></i></span><em>${p.me}%</em></div>
-      ${p.cls===null?`<div class="cr none"><span class="who">반</span><span class="na">같은 날 이 시험을 본 학생이 2명 이상이면 표시돼요</span></div>`
-        :`<div class="cr"><span class="who">반</span><span class="tr"><i class="cl" style="width:${Math.max(p.cls,3)}%"></i></span><em class="c">${p.cls}%</em></div>
-      <div class="cnote">${p.cn}명 응시 평균</div>`}
+      ${p.cls===null?`<div class="cr none"><span class="who">반평균</span><span class="na">같이 본 학생이 2명 이상이면 표시돼요</span></div>`
+        :`<div class="cr"><span class="who">반평균</span><span class="tr"><i class="cl" style="width:${Math.max(p.cls,3)}%"></i></span><em class="c">${p.cls}%</em></div>
+      <div class="cnote">반평균 · ${p.cn}명</div>`}
     </div>`).join("")}
   </div>`:""}
 
@@ -668,8 +742,7 @@ async function render(D){
   <div class="foot">
     hazel_studylog · 앱에 쌓인 실제 채점 기록으로 자동 생성됩니다.<br>
     정답률 = <b>그날 완료한 시험</b>의 맞힌 문항 ÷ 전체 문항 (같은 시험을 여러 번 봤으면 최고 기록 · 오답노트 재시험은 제외)<br>
-    등급 95↑ A+ · 90↑ A · 85↑ A- · 80↑ B+ · 75↑ B … (절대평가) · 반평균은 같은 시험을 본 전체 학생 평균입니다.
-  </div>`;
+    등급 95↑ A+ · 90↑ A · 85↑ A- · 80↑ B+ · 75↑ B … (절대평가) · 반평균 = 같은 날 같은 시험을 본 학생들의 평균 (학생마다 그날 최고 기록).</div>`;
   $("#app").hidden=false;
   const go_=()=>{ history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}&book=${encodeURIComponent(SELBOOK||mainBook)}${SELDAY?`&day=${SELDAY}`:""}`); render(LASTD); window.scrollTo(0,0); };
   const s1=$("#bksel"); if(s1) s1.onchange=()=>{ SELBOOK=s1.value; SELDAY=""; go_(); };

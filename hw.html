@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>hazel_studylog · 반·숙제</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&family=Archivo:wght@500;600;700&display=swap">
+<style>
+:root{
+  --ground:#EEEFF5; --surface:#fff; --surface-2:#F7F7FB; --surface-3:#EFEFF6;
+  --line:#E4E4EF; --line-2:#D8D8E6;
+  --ink:#16151F; --ink-2:#55536A; --ink-3:#8A87A0;
+  --accent:#6B4EFF; --accent-soft:#EDE9FF; --on-accent:#fff;
+  --ok:#12A150; --ok-soft:#E4F5EA; --no:#E5484D; --no-soft:#FCEBEB; --warn:#E8890C; --warn-soft:#FDF1E0;
+  --shadow:0 1px 2px rgba(22,21,31,.05), 0 10px 26px -16px rgba(22,21,31,.30);
+  --grid:rgba(22,21,31,.07);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#0E0E17; --surface:#1A1A27; --surface-2:#21212F; --surface-3:#282838;
+  --line:#2C2C3D; --line-2:#3A3A4E; --ink:#F1F0F8; --ink-2:#A7A4BB; --ink-3:#7B7894;
+  --accent:#8E76FF; --accent-soft:#241F42; --on-accent:#12101F;
+  --ok:#3ECF7E; --ok-soft:#12301F; --no:#FF6B6F; --no-soft:#3A1B1E; --warn:#F2A93B; --warn-soft:#382712;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -18px rgba(0,0,0,.85); --grid:rgba(241,240,248,.09);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:'Gothic A1','Apple SD Gothic Neo',sans-serif;font-size:15px;line-height:1.55;word-break:keep-all}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:'Archivo',sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 64px}
+header.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
+.bar h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.bar .sub{font-size:12.5px;color:var(--ink-3)}
+.btn{display:inline-block;padding:9px 15px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-2);text-decoration:none}
+.btn:hover{background:var(--surface-3)}
+.btn.pri{background:var(--accent);color:var(--on-accent)}
+.card{background:var(--surface);border-radius:18px;box-shadow:var(--shadow)}
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:30px 0 12px}
+.sec h2{margin:0;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.sec .note{font-size:12.5px;color:var(--ink-3)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{padding:18px 16px;text-align:center}
+.tile b{display:block;font-family:'Archivo',sans-serif;font-size:29px;font-weight:700;letter-spacing:-.02em;line-height:1.05}
+.tile span{display:block;font-size:12px;color:var(--ink-3);font-weight:600;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11.5px;font-weight:700;color:var(--ink-3);letter-spacing:.03em;padding:12px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+.scroll{overflow-x:auto}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;font-family:'Archivo',sans-serif}
+.p-hi{background:var(--ok-soft);color:var(--ok)} .p-mid{background:var(--accent-soft);color:var(--accent)} .p-lo{background:var(--no-soft);color:var(--no)}
+.vd{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap}
+.vd.pass{background:var(--ok-soft);color:var(--ok)}
+.vd.part{background:#FFF3D6;color:#B87A00}
+.vd.full{background:var(--no-soft);color:var(--no)}
+.vd.todo{background:var(--accent-soft);color:var(--accent)}
+@media (prefers-color-scheme: dark){ .vd.part{background:#3A2E10;color:#F0C34B} }
+.meter{display:grid;grid-template-columns:120px 1fr 52px;align-items:center;gap:12px;padding:8px 0}
+.meter .lb{font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.meter .tr{height:10px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.meter .tr>i{display:block;height:100%;border-radius:0 5px 5px 0;background:var(--accent)}
+.meter .vl{font-family:'Archivo',sans-serif;font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.meter .tr>i.lo{background:var(--no)} .meter .tr>i.hi{background:var(--ok)}
+.gate{max-width:400px;margin:14vh auto;padding:0 20px}
+.gate h2{margin:0 0 6px;font-size:23px;font-weight:800;letter-spacing:-.02em}
+.gate p{margin:0 0 22px;font-size:14px;color:var(--ink-2)}
+.gate input{width:100%;padding:15px 16px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--surface);font-size:16px;font-weight:600}
+.gate input:focus{border-color:var(--accent);outline:none}
+.gate button{width:100%;margin-top:12px;padding:15px;border-radius:14px;background:var(--accent);color:var(--on-accent);font-size:15.5px;font-weight:800}
+.err{color:var(--no);font-size:13px;font-weight:700;margin-top:10px;min-height:19px}
+.empty{text-align:center;padding:56px 24px;color:var(--ink-3)}
+dialog{border:0;border-radius:20px;padding:0;background:var(--surface);color:var(--ink);max-width:640px;width:calc(100% - 32px);box-shadow:0 30px 70px -30px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(10,10,20,.5)}
+.dl-h{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+.dl-b{padding:8px 20px 20px;max-height:65vh;overflow:auto}
+.wrongrow{padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.6}
+.wrongrow:last-child{border-bottom:0}
+.k{color:var(--ink-3);font-weight:700;margin-right:6px;font-size:12px}
+.bad{color:var(--no);font-weight:700;text-decoration:line-through}
+.good{color:var(--ok);font-weight:700}
+.tabsw{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabsw button{padding:9px 14px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-3)}
+.tabsw button.on{background:var(--accent);color:var(--on-accent)}
+
+input,textarea,select{font:inherit;color:inherit}
+.fld{width:100%;padding:11px 13px;border-radius:12px;border:1.5px solid var(--line-2);background:var(--surface);font-size:14px}
+.fld:focus{border-color:var(--accent);outline:none}
+textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 14px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:13.5px;font-weight:800;color:var(--ink-2)}
+.chip.on{background:var(--accent);color:var(--on-accent)}
+.chip small{font-weight:600;opacity:.75;margin-left:4px}
+.mem{display:inline-flex;align-items:center;gap:4px;padding:5px 6px 5px 11px;border-radius:999px;background:var(--surface-2);font-size:13px;font-weight:700;margin:0 6px 6px 0}
+.mem button{width:20px;height:20px;border-radius:50%;font-size:12px;color:var(--ink-3)}
+.mem button:hover{background:var(--no-soft);color:var(--no)}
+.sug{display:inline-block;padding:4px 10px;border-radius:999px;border:1px dashed var(--line-2);font-size:12px;color:var(--ink-3);margin:0 6px 6px 0}
+.sug:hover{border-color:var(--accent);color:var(--accent)}
+.hw{padding:0;overflow:hidden;margin-bottom:12px}
+.hw-h{display:flex;gap:12px;align-items:center;padding:15px 18px;cursor:pointer}
+.hw-h .d{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;color:var(--accent);background:var(--accent-soft);padding:4px 9px;border-radius:8px;white-space:nowrap}
+.hw-h .t{flex:1;min-width:0}
+.hw-h .t b{display:block;font-size:14.5px;font-weight:800}
+.hw-h .t span{display:block;font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat{font-size:12px;font-weight:700;color:var(--ink-3);white-space:nowrap}
+.stat b{color:var(--ok)}
+.hw-b{border-top:1px solid var(--line);padding:6px 18px 16px}
+.ck{display:grid;grid-template-columns:110px auto 70px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.ck:last-child{border-bottom:0}
+.ck .nm{font-weight:800;font-size:14px}
+.seg{display:flex;gap:4px}
+.seg button{padding:7px 10px;border-radius:9px;background:var(--surface-2);font-size:12.5px;font-weight:800;color:var(--ink-3);white-space:nowrap}
+.seg button.on.done{background:var(--ok);color:#fff} .seg button.on.part{background:var(--warn);color:#fff}
+.seg button.on.none{background:var(--no);color:#fff} .seg button.on.skip{background:var(--ink-3);color:#fff}
+.ck input{padding:8px 10px;border-radius:9px;border:1.5px solid var(--line-2);background:var(--surface);font-size:13px;width:100%;min-width:0}
+.ck a{font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;white-space:nowrap}
+.saved{font-size:11px;color:var(--ok);font-weight:700}
+@media (max-width:720px){.ck{grid-template-columns:1fr auto;}.ck .seg{grid-column:1 / 3}.ck input.sc{grid-column:1}.ck input.mm{grid-column:1 / 3}}
+.grid{min-width:100%;width:auto;font-size:13px}
+.grid th,.grid td{padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.grid .stk{position:sticky;left:0;background:var(--surface);z-index:2;min-width:96px;white-space:nowrap;box-shadow:1px 0 0 var(--line)}
+.grid td.stk b{display:block;font-size:14px}
+.grid td.stk a{font-size:11px;color:var(--accent);text-decoration:none;font-weight:700}
+.grid .gh{min-width:128px;max-width:170px;white-space:normal;letter-spacing:0;font-size:12px;color:var(--ink-2)}
+.grid .gh .gd{display:inline-block;font-family:'Archivo',sans-serif;font-size:11px;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 6px;margin-bottom:4px}
+.grid .gh b{display:block;font-size:12.5px;color:var(--ink);line-height:1.4;margin-bottom:5px}
+.gall{font-size:11px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:7px;padding:4px 7px}
+.gall:hover{color:var(--ok)}
+.gcell{min-width:128px}
+.gc{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 6px;border-radius:10px;background:var(--surface-2);font-size:15px;font-weight:800;color:var(--ink-3);border:1.5px dashed var(--line-2)}
+.gc span{font-size:12px}
+.gc.done{background:var(--ok-soft);color:var(--ok);border:1.5px solid transparent}
+.gc.part{background:var(--warn-soft);color:var(--warn);border:1.5px solid transparent}
+.gc.none{background:var(--no-soft);color:var(--no);border:1.5px solid transparent}
+.gc.skip{background:var(--surface-3);color:var(--ink-3);border:1.5px solid transparent}
+.gm{width:100%;margin-top:5px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:11.5px}
+.rr,.cc{font-family:'Archivo',sans-serif;font-size:12.5px;text-align:center;white-space:nowrap;color:var(--ink-3)}
+.rr b,.cc b{color:var(--ink);font-size:14px} .rr.all b{color:var(--ok)}
+.cc small{display:block;font-size:10.5px;color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
+</style>
+</head>
+<body>
+<div id="gate" class="gate">
+  <h2>반 · 숙제 관리</h2>
+  <p>선생님 비밀번호를 입력하세요.</p>
+  <input id="pin" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button id="pin-go">들어가기</button>
+  <div class="err" id="pin-err"></div>
+</div>
+<div id="app" hidden>
+  <header class="bar"><div class="bar-in">
+    <div style="flex:1"><h1>반 · 숙제 관리</h1><div class="sub" id="bar-sub">반을 만들고 반별로 숙제를 내고 검사하세요</div></div>
+    <a class="btn" href="teacher">← 대시보드</a>
+    <a class="btn" href="report" target="_blank" rel="noopener">리포트</a>
+  </div></header>
+  <div class="wrap">
+    <div class="sec"><h2>반</h2><span class="note">반을 고르면 학생·숙제가 아래에 나와요</span></div>
+    <div class="chips" id="classes"></div>
+    <div id="cls"></div>
+  </div>
+</div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const today=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+const fmtD=d=>{const [y,m,dd]=d.split("-");const w="일월화수목금토"[new Date(+y,+m-1,+dd).getDay()];return `${+m}.${+dd} (${w})`;};
+const ST={done:"완료",part:"일부",none:"안 함",skip:"면제"};
+let PIN=sessionStorage.getItem("naesinfit.pin")||"", DB=null, CUR=+(localStorage.getItem("hw.class")||0), OPEN={}, EDIT=null;
+let GR={mode:localStorage.getItem("hw.gmode")||"7", day:today()};   // 표 검사 기간: day(그날) / 7(최근 7일) / all(최근 12개)
+const CYCLE=["done","part","none","skip",""];
+const ICON={done:"✅",part:"🟡",none:"❌",skip:"➖","":"·"};
+function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),1700);}
+async function api(body){
+  const r=await fetch("/api/hw",{method:body?"POST":"GET",headers:{"x-pin":PIN,"content-type":"application/json"},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error||"요청 실패");
+  return j;
+}
+async function load(){ DB=await api(); }
+async function act(body,msg){ try{ const j=await api(body); await load(); render(); if(msg) toast(msg); return j; }catch(e){ alert(e.message); } }
+
+function render(){ render0(); gridStats(); }
+function render0(){
+  const C=DB.classes;
+  if(!C.find(c=>+c.id===CUR)) CUR=C[0]?+C[0].id:0;
+  const nOf=id=>DB.members.filter(m=>+m.class_id===+id).length;
+  $("#classes").innerHTML=C.map(c=>`<button class="chip${+c.id===CUR?" on":""}" data-cls="${c.id}">${esc(c.name)}<small>${nOf(c.id)}명</small></button>`).join("")
+    +`<button class="chip" id="cls-new">+ 반 만들기</button>`;
+  if(!CUR){ $("#cls").innerHTML=`<div class="card empty" style="margin-top:14px">아직 반이 없어요. <b>+ 반 만들기</b>로 시작하세요.</div>`; return; }
+  const cls=C.find(c=>+c.id===CUR), mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
+  const others=DB.students.filter(s=>!mem.includes(s));
+  const items=DB.items.filter(i=>+i.class_id===CUR);
+  const chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
+  const stat=it=>{const o={done:0,part:0,none:0,skip:0,no:0}; mem.forEach(s=>{const k=chk[it.id+"|"+s]; o[k?k.status:"no"]++;}); return o;};
+  $("#cls").innerHTML=`
+  <div class="sec"><h2>${esc(cls.name)} · 학생 ${mem.length}명</h2>
+    <span class="note"><button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>
+  <div class="card" style="padding:16px 18px">
+    <div>${mem.map(s=>`<span class="mem">${esc(s)}<button data-rm="${esc(s)}" title="반에서 빼기">✕</button></span>`).join("")||`<span style="color:var(--ink-3);font-size:13px">아직 학생이 없어요</span>`}</div>
+    <div class="row" style="margin-top:10px"><input class="fld" id="mem-in" placeholder="학생 이름 (여러 명은 쉼표·줄바꿈으로)" style="flex:1;min-width:200px"><button class="btn pri" id="mem-add">추가</button></div>
+    ${others.length?`<div style="margin-top:10px;font-size:11.5px;color:var(--ink-3);font-weight:700">앱에서 시험 본 학생 · 눌러서 추가</div><div style="margin-top:6px">${others.map(s=>`<button class="sug" data-add="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>`:""}
+    <div style="margin-top:8px;font-size:11.5px;color:var(--ink-3)">학생이 앱 첫 화면에서 이름과 <b>이 반</b>을 고르면 자동으로 들어와요. 직접 넣을 때는 앱 이름과 똑같이 써야 리포트에 연결돼요.</div>
+  </div>
+
+  <div class="sec"><h2>숙제 내기</h2><span class="note">시험과 별개 · 검사 날짜 기준으로 리포트에 들어가요</span></div>
+  <div class="card" style="padding:16px 18px">
+    <div class="row"><input class="fld" type="date" id="hw-day" value="${EDIT?EDIT.day:today()}" style="width:170px">
+      ${EDIT?`<input class="fld" id="hw-title" value="${esc(EDIT.title)}" style="flex:1;min-width:200px">`
+        :`<textarea class="fld" id="hw-title" rows="3" placeholder="숙제를 한 줄에 하나씩 (여러 개 한 번에)&#10;워크북 3과 p.12–15&#10;단어 3과 30개 뜻 쓰기&#10;통변형 2과 오답 정리" style="flex:1;min-width:200px;min-height:84px"></textarea>`}</div>
+    <textarea class="fld" id="hw-memo" placeholder="(선택) 공통 메모 · 자세한 범위 (예: 다음 수업 시작 전 검사)" style="margin-top:8px">${EDIT?esc(EDIT.memo):""}</textarea>
+    <div class="row" style="margin-top:8px;justify-content:flex-end">${EDIT?`<button class="btn" id="hw-cancel">취소</button><button class="btn pri" id="hw-save">수정 저장</button>`:`<button class="btn pri" id="hw-add">숙제 추가</button>`}</div>
+  </div>
+
+  ${gridHTML(mem, items, chk)}
+
+  <div class="sec"><h2>숙제별로 검사 · 점수</h2><span class="note">숙제를 누르면 학생별로 점수·메모까지 자세히 넣어요</span></div>
+  ${items.length?items.map(it=>{ const o=stat(it), open=!!OPEN[it.id];
+    return `<div class="card hw">
+      <div class="hw-h" data-open="${it.id}"><span class="d">${fmtD(it.day)}</span>
+        <span class="t"><b>${esc(it.title)}</b>${it.memo?`<span>${esc(it.memo)}</span>`:""}</span>
+        <span class="stat"><b>완료 ${o.done}</b> · 일부 ${o.part} · 안 함 ${o.none}${o.no?` · <span style="color:var(--accent)">미검사 ${o.no}</span>`:""}</span>
+        <span style="color:var(--ink-3)">${open?"▲":"▼"}</span></div>
+      ${open?`<div class="hw-b">
+        <div class="row" style="justify-content:space-between;padding:8px 0">
+          <span style="font-size:12px;color:var(--ink-3)">점수(선택)·메모는 입력 후 칸을 벗어나면 저장돼요</span>
+          <span class="row"><button class="btn" data-all="${it.id}">미검사 전원 완료</button><button class="btn" data-edit="${it.id}">수정</button><button class="btn" data-del="${it.id}" style="color:var(--no)">삭제</button></span></div>
+        ${mem.map(s=>{ const k=chk[it.id+"|"+s]||{};
+          return `<div class="ck" data-it="${it.id}" data-st="${esc(s)}"><span class="nm">${esc(s)}</span>
+            <span class="seg">${Object.entries(ST).map(([v,n])=>`<button class="${v}${k.status===v?" on":""}" data-v="${v}">${n}</button>`).join("")}</span>
+            <input class="sc" type="number" min="0" max="100" placeholder="점수" value="${k.score??""}">
+            <input class="mm" placeholder="메모 (예: 2쪽 빠짐, 오답 정리 안 함)" value="${esc(k.memo||"")}">
+            <a href="report?student=${encodeURIComponent(s)}&day=${it.day}" target="_blank" rel="noopener">리포트</a></div>`; }).join("")||`<div class="empty" style="padding:20px">반에 학생을 먼저 넣어 주세요</div>`}
+      </div>`:""}
+    </div>`; }).join(""):`<div class="card empty">아직 낸 숙제가 없어요</div>`}`;
+}
+/* ── 표로 한 번에 검사: 왼쪽 학생, 오른쪽 숙제 ── */
+function gridItems(items){
+  const its=items.slice().sort((a,b)=>a.day<b.day?-1:a.day>b.day?1:a.id-b.id);
+  if(GR.mode==="day") return its.filter(i=>i.day===GR.day);
+  if(GR.mode==="7"){ const d=new Date(); d.setDate(d.getDate()-6); const p=n=>String(n).padStart(2,"0");
+    const from=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; return its.filter(i=>i.day>=from); }
+  return its.slice(-12);
+}
+function gridHTML(mem, items, chk){
+  const cols=gridItems(items);
+  const head=`<div class="sec"><h2>한 번에 검사 (표)</h2><span class="note">칸을 누를 때마다 ✅완료 → 🟡일부 → ❌안 함 → ➖면제 → 미검사 · 바로 저장</span></div>
+  <div class="row" style="margin-bottom:10px">
+    <button class="chip${GR.mode==="day"?" on":""}" data-gmode="day">하루</button>
+    ${GR.mode==="day"?`<input class="fld" type="date" id="g-day" value="${GR.day}" style="width:170px">`:""}
+    <button class="chip${GR.mode==="7"?" on":""}" data-gmode="7">최근 7일</button>
+    <button class="chip${GR.mode==="all"?" on":""}" data-gmode="all">최근 숙제 12개</button>
+  </div>`;
+  if(!mem.length) return head+`<div class="card empty" style="padding:24px">반에 학생이 없어요</div>`;
+  if(!cols.length) return head+`<div class="card empty" style="padding:24px">이 기간에 낸 숙제가 없어요 · 위 '숙제 내기'에서 여러 개를 한 번에 낼 수 있어요</div>`;
+  const cell=(it,s)=>{ const k=chk[it.id+"|"+s]||{}, st=k.status||"";
+    return `<td class="gcell"><button class="gc ${st}" data-gc="${it.id}" data-gs="${esc(s)}" title="${ST[st]||"미검사"}">${ICON[st]}<span>${ST[st]||""}</span></button>
+      <input class="gm" data-gm="${it.id}" data-gs="${esc(s)}" placeholder="메모" value="${esc(k.memo||"")}"></td>`; };
+  return head+`<div class="card scroll"><table class="grid">
+    <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b title="${esc(it.memo||"")}">${esc(it.title)}</b>
+      <button class="gall" data-gall="${it.id}">미검사 → 완료</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
+    <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a></td>
+      ${cols.map(it=>cell(it,s)).join("")}<td class="rr" data-rr="${esc(s)}"></td></tr>`).join("")}</tbody>
+    <tfoot><tr><td class="stk">완료</td>${cols.map(it=>`<td class="cc" data-cc="${it.id}"></td>`).join("")}<td></td></tr></tfoot>
+  </table></div>`;
+}
+function gridStats(){
+  const chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
+  const mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
+  const cols=[...document.querySelectorAll("[data-cc]")].map(e=>+e.dataset.cc);
+  document.querySelectorAll("[data-rr]").forEach(e=>{ const s=e.dataset.rr; const v=cols.map(i=>chk[i+"|"+s]).filter(k=>k&&k.status!=="skip");
+    const d=v.filter(k=>k.status==="done").length, n=cols.filter(i=>!chk[i+"|"+s]||chk[i+"|"+s].status!=="skip").length;
+    e.innerHTML=`<b>${d}</b>/${n}`; e.className="rr"+(n&&d===n?" all":""); });
+  document.querySelectorAll("[data-cc]").forEach(e=>{ const i=+e.dataset.cc; const v=mem.map(s=>chk[i+"|"+s]);
+    const d=v.filter(k=>k&&k.status==="done").length, no=v.filter(k=>!k).length;
+    e.innerHTML=`<b>${d}</b>/${mem.length}${no?`<small>미검사 ${no}</small>`:""}`; });
+}
+async function setCheck(it, st, status, memo){
+  const cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
+  const m=memo!==undefined?memo:(cur?cur.memo:""), sc=cur&&cur.score!=null?cur.score:"";
+  await api({action:"check.set",item_id:+it,student:st,status,score:status?sc:"",memo:status?m:""});
+  if(cur){ if(status){cur.status=status;cur.memo=m;} else DB.checks=DB.checks.filter(k=>k!==cur); }
+  else if(status) DB.checks.push({item_id:+it,student:st,status,score:null,memo:m});
+}
+async function saveCheck(row, status){
+  const it=+row.dataset.it, st=row.dataset.st;
+  const cur=DB.checks.find(k=>+k.item_id===it&&k.student===st);
+  const sc=row.querySelector(".sc").value, mm=row.querySelector(".mm").value;
+  const s=status!==undefined?status:(cur?cur.status:"");
+  if(!s && (sc!==""||mm.trim())){ toast("먼저 완료·일부·안 함 중 하나를 골라 주세요"); return; }
+  try{ await api({action:"check.set",item_id:it,student:st,status:s,score:sc,memo:mm});
+    if(cur){ if(s){cur.status=s;cur.score=sc===""?null:+sc;cur.memo=mm;} else DB.checks=DB.checks.filter(k=>k!==cur); }
+    else if(s) DB.checks.push({item_id:it,student:st,status:s,score:sc===""?null:+sc,memo:mm});
+    render(); toast("저장했어요");
+  }catch(e){ alert(e.message); }
+}
+document.addEventListener("click",async e=>{
+  const t=e.target;
+  const gm=t.closest("[data-gmode]"); if(gm){ GR.mode=gm.dataset.gmode; localStorage.setItem("hw.gmode",GR.mode); render(); return; }
+  const gc=t.closest("[data-gc]"); if(gc){
+    const it=gc.dataset.gc, st=gc.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
+    const nx=CYCLE[(CYCLE.indexOf(cur?cur.status:"")+1)%CYCLE.length];
+    gc.className="gc "+nx; gc.innerHTML=`${ICON[nx]}<span>${ST[nx]||""}</span>`;
+    try{ await setCheck(it,st,nx); gridStats(); }catch(err){ alert(err.message); render(); }
+    return; }
+  const ga=t.closest("[data-gall]"); if(ga){ const it=+ga.dataset.gall, mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
+    const todo=mem.filter(s=>!DB.checks.find(k=>+k.item_id===it&&k.student===s));
+    for(const s of todo){ try{ await setCheck(it,s,"done"); }catch(err){} }
+    render(); toast(`${todo.length}명 완료로 표시했어요`); return; }
+  const c=t.closest("[data-cls]"); if(c){ CUR=+c.dataset.cls; localStorage.setItem("hw.class",CUR); EDIT=null; render(); return; }
+  if(t.closest("#cls-new")){ const n=prompt("반 이름 (예: 경인고 2학년 A반)"); if(n&&n.trim()){ const j=await act({action:"class.create",name:n},"반을 만들었어요"); if(j){ CUR=+j.id; localStorage.setItem("hw.class",CUR); render(); } } return; }
+  if(t.closest("#cls-ren")){ const cl=DB.classes.find(x=>+x.id===CUR); const n=prompt("새 반 이름",cl.name); if(n&&n.trim()) await act({action:"class.rename",id:CUR,name:n},"이름을 바꿨어요"); return; }
+  if(t.closest("#cls-del")){ if(confirm("이 반과 반의 숙제·검사 기록을 모두 지울까요? 되돌릴 수 없어요.")) await act({action:"class.delete",id:CUR},"반을 지웠어요"); return; }
+  const mem=()=>DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
+  const rm=t.closest("[data-rm]"); if(rm){ await act({action:"members.set",class_id:CUR,students:mem().filter(s=>s!==rm.dataset.rm)}); return; }
+  const ad=t.closest("[data-add]"); if(ad){ await act({action:"members.set",class_id:CUR,students:mem().concat(ad.dataset.add)}); return; }
+  if(t.closest("#mem-add")){ const v=$("#mem-in").value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean); if(v.length) await act({action:"members.set",class_id:CUR,students:mem().concat(v)},`${v.length}명 추가했어요`); return; }
+  if(t.closest("#hw-add")||t.closest("#hw-save")){
+    const body={day:$("#hw-day").value,title:$("#hw-title").value,memo:$("#hw-memo").value};
+    if(!body.day||!body.title.trim()){ toast("날짜와 숙제 내용을 넣어 주세요"); return; }
+    if(EDIT){ await act({action:"item.update",id:EDIT.id,...body},"숙제를 고쳤어요"); EDIT=null; render(); }
+    else { const titles=body.title.split(/\n/).map(x=>x.trim()).filter(Boolean);
+      try{ for(const tt of titles) await api({action:"item.create",class_id:CUR,day:body.day,title:tt,memo:body.memo}); }catch(err){ alert(err.message); }
+      GR.mode="day"; GR.day=body.day; localStorage.setItem("hw.gmode","day");
+      await load(); render(); toast(`숙제 ${titles.length}개를 냈어요 · 아래 표에서 바로 검사하세요`); }
+    return; }
+  if(t.closest("#hw-cancel")){ EDIT=null; render(); return; }
+  const ed=t.closest("[data-edit]"); if(ed){ EDIT=DB.items.find(i=>+i.id===+ed.dataset.edit); render(); window.scrollTo({top:$("#hw-day").getBoundingClientRect().top+scrollY-90,behavior:"smooth"}); return; }
+  const dl=t.closest("[data-del]"); if(dl){ if(confirm("이 숙제와 검사 기록을 지울까요?")) await act({action:"item.delete",id:+dl.dataset.del},"숙제를 지웠어요"); return; }
+  const al=t.closest("[data-all]"); if(al){ const it=+al.dataset.all; const todo=mem().filter(s=>!DB.checks.find(k=>+k.item_id===it&&k.student===s));
+    for(const s of todo) await api({action:"check.set",item_id:it,student:s,status:"done",score:"",memo:""}).catch(()=>{});
+    await load(); render(); toast(`${todo.length}명 완료로 표시했어요`); return; }
+  const sv=t.closest(".seg button"); if(sv){ const row=sv.closest(".ck"); const on=sv.classList.contains("on"); await saveCheck(row, on?"":sv.dataset.v); return; }
+  const op=t.closest("[data-open]"); if(op){ OPEN[op.dataset.open]=!OPEN[op.dataset.open]; render(); return; }
+});
+document.addEventListener("change",async e=>{
+  if(e.target.id==="g-day"){ GR.day=e.target.value||today(); render(); return; }
+  const gmi=e.target.closest("[data-gm]"); if(gmi){ const it=gmi.dataset.gm, st=gmi.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
+    if(!cur){ if(!gmi.value.trim()) return; try{ await setCheck(it,st,"part",gmi.value); toast("메모 저장 · 상태는 🟡일부로 표시했어요 (칸을 눌러 바꾸세요)"); render(); }catch(err){ alert(err.message); } return; }
+    try{ await setCheck(it,st,cur.status,gmi.value); toast("메모 저장"); }catch(err){ alert(err.message); } return; } const row=e.target.closest(".ck"); if(row && (e.target.classList.contains("sc")||e.target.classList.contains("mm"))) saveCheck(row); });
+$("#pin-go").onclick=async()=>{ PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
+  try{ await load(); sessionStorage.setItem("naesinfit.pin",PIN); $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ $("#pin-err").textContent=e.message; } };
+$("#pin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pin-go").click(); });
+(async()=>{ if(PIN){ try{ await load(); $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ PIN=""; } } })();
+</script>
+</body>
+</html>

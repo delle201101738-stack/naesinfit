@@ -603,6 +603,7 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
       <p style="margin:10px 0 0;font-size:14px;color:var(--ink-2);line-height:1.65">영어 내신 학습 기록<br>이름을 입력하면 시작합니다. 결과는 선생님께 자동으로 전달돼요.</p>
       <input class="answer-in" id="login-name" placeholder="이름 (예: 김지민)" maxlength="12" autocomplete="name"
         style="margin-top:26px" enterkeyhint="go">
+      <select class="answer-in" id="login-cls" style="margin-top:10px" hidden><option value="">내 반 고르기</option></select>
       <p class="hint" id="login-hint">출석부에 적힌 이름 그대로 써 주세요.</p>
     </div>
     <div class="cta-wrap"><button class="cta" id="login-cta" disabled>이름을 입력해 주세요</button></div>
@@ -2002,7 +2003,7 @@ function showResult(){
   if(!Q.sent){
     Q.sent=true;
     submitResult({
-      student:S.name, book:unitLabel(), unitId:UNIT?UNIT.id:"",
+      student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
       part, partName:Q.review?("오답노트 · "+(part!=="review"&&P[part]?labelOf(part):"전체")):labelOf(part),
       scope:Q.review?"재시험":(SCOPES()[sel.scope]?.short||sel.scope),
       total:t, correct:c, pct, secs,
@@ -2322,13 +2323,13 @@ function renderMy(){
   $("#settings").innerHTML=`
     <button class="set-row" id="set-grade"><span class="ci">${svg("chart")}</span><span class="t">학년 바꾸기</span><span class="v">${esc(S.grade||"미선택")}</span></button>
     <button class="set-row" id="set-book"><span class="ci">${svg("book")}</span><span class="t">교재 · 과 바꾸기</span><span class="v">${UNIT?esc(UNIT.no):"미선택"}</span></button>
-    <button class="set-row" id="set-name"><span class="ci">${svg("user")}</span><span class="t">이름 바꾸기</span><span class="v">${S.name}</span></button>
+    <button class="set-row" id="set-name"><span class="ci">${svg("user")}</span><span class="t">이름 · 반 바꾸기</span><span class="v">${esc(S.name)}${S.cls?` · ${esc(S.cls.name)}`:""}</span></button>
     <div class="set-row"><span class="ci">${svg(dark?"sun":"moon")}</span><span class="t">다크 모드</span><span class="sw${dark?" on":""}" id="sw-theme"><i></i></span></div>
     <button class="set-row" id="set-reset"><span class="ci">${svg("trash")}</span><span class="t" style="color:var(--no)">기록 초기화</span></button>`;
   $("#set-grade").onclick=()=>{renderGrades();go("grade");};
   $("#set-book").onclick=()=>{renderBooks();go("books");};
   $("#sw-theme").onclick=()=>{S.theme=dark?"light":"dark";save();applyTheme();renderMy();};
-  $("#set-name").onclick=()=>{const n=prompt("이름",S.name); if(n&&n.trim()){S.name=n.trim().slice(0,12);save();renderMy();renderHome();}};
+  $("#set-name").onclick=()=>openLogin();
   $("#set-reset").onclick=()=>{if(confirm("모든 기록을 지울까요?")){localStorage.removeItem(KEY);S=Object.assign({},DEF);save();applyTheme();renderHome();renderMy();go("home");toast("초기화했어요");}};
 }
 
@@ -2463,15 +2464,44 @@ $("#books-grade").onclick=()=>{ renderGrades(); go("grade"); };
 $("#home-book").onclick=()=>{ renderBooks(); go("books"); };
 
 /* ───── 이름 입력 ───── */
-const nameIn=$("#login-name"), nameCta=$("#login-cta");
-nameIn.addEventListener("input",()=>{
-  const v=nameIn.value.trim();
-  nameCta.disabled=v.length<2;
-  nameCta.textContent=v.length<2?"이름을 입력해 주세요":`${v}(으)로 시작하기`;
-});
+const nameIn=$("#login-name"), nameCta=$("#login-cta"), clsIn=$("#login-cls");
+/* 반 목록 (선생님이 '반 · 숙제'에서 만든 반) — 이름 + 반을 정확히 받아야 숙제 검사·리포트가 섞이지 않음 */
+let CLASSES=null;
+async function loadClasses(){
+  try{ const r=await fetch("/api/join",{cache:"no-store"}); if(r.ok) CLASSES=(await r.json()).classes||[]; }catch(e){}
+  return CLASSES||[];
+}
+function loginSync(){
+  const v=nameIn.value.trim(), needC=!!(CLASSES&&CLASSES.length), c=clsIn.value;
+  nameCta.disabled=v.length<2 || (needC && !c);
+  nameCta.textContent=v.length<2?"이름을 입력해 주세요":(needC&&!c)?"내 반을 골라 주세요":`${v}(으)로 시작하기`;
+}
+async function openLogin(msg){
+  nameIn.value=S.name||nameIn.value||"";
+  const C=await loadClasses();
+  clsIn.hidden=!C.length;
+  clsIn.innerHTML=`<option value="">내 반 고르기</option>`+C.map(c=>`<option value="${c.id}"${S.cls&&+S.cls.id===+c.id?" selected":""}>${esc(c.name)}</option>`).join("");
+  $("#login-hint").innerHTML=msg||(C.length?"출석부에 적힌 이름 그대로 쓰고, <b>내 반</b>을 골라 주세요. 숙제 검사·리포트가 이 이름과 반으로 연결돼요.":"출석부에 적힌 이름 그대로 써 주세요.");
+  loginSync(); go("login"); setTimeout(()=>nameIn.focus(),300);
+}
+nameIn.addEventListener("input",loginSync);
+clsIn.addEventListener("change",loginSync);
 nameIn.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!nameCta.disabled) nameCta.click(); });
 nameCta.onclick=async()=>{
-  S.name=nameIn.value.trim().slice(0,12); save(); renderMy();
+  const nm=nameIn.value.trim().slice(0,12), cid=+clsIn.value||0;
+  if(cid){
+    const c=(CLASSES||[]).find(x=>+x.id===cid);
+    nameCta.disabled=true; nameCta.textContent="반에 등록하는 중…";
+    try{
+      const r=await fetch("/api/join",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({student:nm,class_id:cid,prev_class_id:(S.cls&&S.name===nm)?S.cls.id:0})});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok){ toast(j.error||"반 등록에 실패했어요"); loginSync(); return; }
+      if(j.others&&j.others.length) toast(`같은 이름이 ${j.others.join(", ")}에도 있어요 · 선생님께 알려 주세요`);
+    }catch(e){ toast("인터넷 연결을 확인해 주세요"); loginSync(); return; }
+    S.cls={id:cid,name:c?c.name:""};
+  }
+  S.name=nm; save(); renderMy();
   if(!S.grade){ renderGrades(); go("grade"); }
   else if(!UNIT){ renderBooks(); go("books"); }
   else { renderHome(); go("home"); flushQueue(); }
@@ -2531,7 +2561,10 @@ applyTheme();
   if(!UNIT && units.length===1){ try{ await loadUnit(units[0]); }catch(e){} }
 
   renderMy();
-  if(!S.name){ go("login"); setTimeout(()=>nameIn.focus(),300); }
+  const CL=await loadClasses();
+  if(S.cls && CLASSES && !CL.find(c=>+c.id===+S.cls.id)){ S.cls=null; save(); }   // 선생님이 지운 반
+  if(!S.name){ openLogin(); }
+  else if(CL.length && !S.cls){ openLogin(`${esc(S.name)}님, <b>내 반</b>을 골라 주세요. 숙제 검사·리포트가 이름과 반으로 연결돼요.`); }
   else if(!S.grade){ renderGrades(); go("grade"); }
   else if(!UNIT){ renderBooks(); go("books"); }
   else { renderHome(); go("home"); flushQueue(); }
