@@ -35,6 +35,19 @@ export async function ensure() {
   await sql`create index if not exists attempts_student_idx on attempts (student)`;
   // 단원 id (예: ce2ne03) — 리포트가 교재 이름 대신 정확한 단원으로 묶도록
   await sql`alter table attempts add column if not exists unit_id text not null default ''`;
+  await sql`alter table attempts add column if not exists class_name text not null default ''`;
+  // 반 · 숙제 검사 (시험과 별개)
+  await sql`create table if not exists hw_classes (
+      id bigserial primary key, name text not null, created_at timestamptz not null default now())`;
+  await sql`create table if not exists hw_members (
+      class_id bigint not null, student text not null, primary key (class_id, student))`;
+  await sql`create table if not exists hw_items (
+      id bigserial primary key, class_id bigint not null, day text not null,
+      title text not null, memo text not null default '', created_at timestamptz not null default now())`;
+  await sql`create table if not exists hw_checks (
+      item_id bigint not null, student text not null, status text not null,
+      score int, memo text not null default '', checked_at timestamptz not null default now(),
+      primary key (item_id, student))`;
   ready = true;
 }
 

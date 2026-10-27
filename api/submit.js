@@ -10,8 +10,8 @@ export default async function handler(req, res) {
 
     await ensure();
     const [row] = await sql`
-      insert into attempts (student, book, unit_id, part, part_name, scope, total, correct, pct, secs, detail)
-      values (${student}, ${String(b.book || "영어II 천재(강상구) 1과").slice(0, 80)},
+      insert into attempts (student, class_name, book, unit_id, part, part_name, scope, total, correct, pct, secs, detail)
+      values (${student}, ${String(b.className || "").slice(0, 40)}, ${String(b.book || "영어II 천재(강상구) 1과").slice(0, 80)},
               ${String(b.unitId || "").replace(/ak$/, "").slice(0, 30)},
               ${String(b.part || "").slice(0, 20)}, ${String(b.partName || "").slice(0, 40)},
               ${String(b.scope || "all").slice(0, 20)},

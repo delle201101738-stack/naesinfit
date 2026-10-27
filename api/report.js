@@ -30,7 +30,22 @@ export default async function handler(req, res) {
       from attempts where student = ${student}
       order by created_at desc limit 1000`).reverse();
 
-    if (!rows.length) return res.status(200).json({ ok: true, rows: [], cls: [], wrong: [], days: 0 });
+    // 숙제 검사 기록 — 학생이 속한 반의 숙제 + 검사 결과 + 반 완료율
+    const hw = await sql`
+      select i.id, i.day, i.title, i.memo, c.name as class_name,
+             k.status, k.score, k.memo as cmemo,
+             (select count(*)::int from hw_members m2 where m2.class_id = i.class_id) as n,
+             (select count(*)::int from hw_checks k2 where k2.item_id = i.id and k2.status = 'done') as nd,
+             (select count(*)::int from hw_checks k3 where k3.item_id = i.id and k3.status <> 'skip') as nc
+      from hw_members m
+      join hw_items i on i.class_id = m.class_id
+      join hw_classes c on c.id = m.class_id
+      left join hw_checks k on k.item_id = i.id and k.student = m.student
+      where m.student = ${student}
+      order by i.day desc, i.id desc
+      limit 120`;
+
+    if (!rows.length) return res.status(200).json({ ok: true, student, rows: [], cls: [], wrong: [], hw, days: 0 });
 
     // 전체 학생 평균(반평균) — 교재·파트별
     // 반평균 — 같은 교재(과)·같은 시험(파트)·같은 날(한국 시간) 본 학생들, 학생마다 그날 최고 기록 1개씩 (재시험 제외)
@@ -78,7 +93,7 @@ export default async function handler(req, res) {
       limit 1500`;
 
     const days = new Set(rows.map(r => new Date(r.created_at).toISOString().slice(0, 10))).size;
-    res.status(200).json({ ok: true, student, rows, cls, wrong, dwrong, days });
+    res.status(200).json({ ok: true, student, rows, cls, wrong, dwrong, hw, days });
   } catch (e) {
     console.error("[report]", e);
     res.status(500).json({ error: "리포트를 만들지 못했습니다" });
