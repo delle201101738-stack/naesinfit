@@ -150,6 +150,27 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 .cmt p b{font-weight:800}
 .cmt .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
 .cmt .tags em{font-style:normal;font-size:11px;font-weight:700;background:var(--surface-2);color:var(--ink-2);padding:4px 10px;border-radius:999px}
+.cmpb{padding:16px 18px}
+.cmpb .lg{display:flex;gap:14px;font-size:11.5px;font-weight:700;color:var(--ink-3);margin-bottom:10px}
+.cmpb .lg span::before{content:"";display:inline-block;width:12px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.cmpb .lg .me::before{background:var(--pri)} .cmpb .lg .cl::before{background:var(--ink-3);opacity:.45}
+.cmpb .sum{background:var(--surface-2);border-radius:11px;padding:9px 12px;font-size:12.5px;margin-bottom:6px}
+.cmpb .sum .dt{font-weight:800;font-family:'Archivo',sans-serif;margin-left:4px}
+.cmpb .cg{padding:11px 0;border-top:1px solid var(--line)}
+.cmpb .cg:first-of-type{border-top:0}
+.cmpb .cn{display:flex;align-items:baseline;gap:7px;margin-bottom:7px;flex-wrap:wrap}
+.cmpb .cn b{font-size:13.5px;font-weight:800} .cmpb .cn small{font-size:11px;color:var(--ink-3);font-family:'Archivo',sans-serif}
+.cmpb .cn .dt{margin-left:auto;font-size:11.5px;font-weight:800;font-family:'Archivo',sans-serif}
+.cmpb .cr{display:grid;grid-template-columns:22px 1fr 44px;align-items:center;gap:8px;margin-top:4px}
+.cmpb .cr .who{font-size:11px;font-weight:800;color:var(--ink-3)}
+.cmpb .cr .tr{height:16px;border-radius:6px;background:var(--surface-2);overflow:hidden}
+.cmpb .cr .tr i{display:block;height:100%;border-radius:6px}
+.cmpb .cr i.me{background:var(--pri)} .cmpb .cr i.me.warn{background:var(--warn)} .cmpb .cr i.me.bad{background:var(--no)}
+.cmpb .cr i.cl{background:var(--ink-3);opacity:.45}
+.cmpb .cr em{font-style:normal;text-align:right;font-family:'Archivo',sans-serif;font-weight:800;font-size:13px}
+.cmpb .cr em.c{color:var(--ink-3)}
+.cmpb .cr.none .na{grid-column:2 / 4;font-size:11px;color:var(--ink-3)}
+.cmpb .cnote{font-size:10.5px;color:var(--ink-3);text-align:right;margin-top:2px}
 .areas{display:grid;gap:10px}
 .area{background:var(--surface);border-radius:16px;box-shadow:var(--sh);padding:14px 16px;border-left:5px solid var(--pri)}
 .area.weak{border-left-color:var(--no)} .area.mid{border-left-color:var(--warn)} .area.strong{border-left-color:var(--ok)}
@@ -437,11 +458,13 @@ async function render(D){
   curT.forEach(x=>{const r=x.total?x.correct/x.total:0, o=best[x.part];
     if(!o||r>o.r) best[x.part]={id:x.part,aid:x.id,t:x.total,c:x.correct,r,name:name(x.part,x.part_name),n:(o?o.n:0)+1}; else o.n++;});
   const clsP={};
-  (D.cls||[]).filter(x=>bk(x.book)===mainBook).forEach(x=>{const o=clsP[x.part]=clsP[x.part]||{t:0,c:0,s:0};o.t+=x.t;o.c+=x.c;o.s=Math.max(o.s,x.s||0);});
+  // 반평균 = 같은 과 · 같은 시험 · 같은 날 본 학생들 (학생마다 그날 최고 기록) 평균
+  (D.cls||[]).filter(x=>bk(x.book)===mainBook && x.day===day).forEach(x=>{const o=clsP[x.part]=clsP[x.part]||{t:0,c:0,s:0,ps:0};
+    o.t+=x.t;o.c+=x.c;o.s+=x.s||0;o.ps+=(x.p!=null?x.p:Math.round(x.c/x.t*100))*(x.s||1);});
   const tests=PARTORDER.concat(Object.keys(best).filter(k=>!PARTORDER.includes(k))).filter(k=>best[k]).map(k=>{
     const b=best[k], me=Math.round(b.r*100), cl=clsP[k];
-    const cls=(cl&&cl.t&&cl.s>=2)?Math.round(cl.c/cl.t*100):null;
-    return {...b, me, cls, d:cls===null?null:me-cls};
+    const cls=(cl&&cl.t&&cl.s>=2)?Math.round(cl.ps/cl.s):null;
+    return {...b, me, cls, cn:cl?cl.s:0, d:cls===null?null:me-cls};
   });
   const T={t:tests.reduce((s,x)=>s+x.t,0), c:tests.reduce((s,x)=>s+x.c,0)};
   const score=T.t?Math.round(T.c/T.t*100):0, grade=gradeOf(score);
@@ -478,6 +501,11 @@ async function render(D){
   const mainCat=topCats.length?topCats[0][0]:null;
   const rep=(D.wrong||[]).filter(w=>bk(w.book)===mainBook && w.cnt>=2 && /[a-zA-Z가-힣]/.test(w.right_||"") && !/^[TF]$/i.test(w.right_||"")).slice(0,5);
 
+  /* 반평균 합계 대조 (반평균이 있는 시험만) */
+  const withC=tests.filter(x=>x.cls!==null);
+  const CMP=withC.length?{n:withC.length, me:Math.round(withC.reduce((a,x)=>a+x.c,0)/withC.reduce((a,x)=>a+x.t,0)*100),
+    cl:Math.round(withC.reduce((a,x)=>a+x.cls*x.t,0)/withC.reduce((a,x)=>a+x.t,0))}:null;
+
   /* 강점 · 약점 */
   const byMe=tests.slice().sort((a,b)=>b.me-a.me);
   const strong=byMe.filter(x=>x.me>=85).slice(0,3);
@@ -490,7 +518,8 @@ async function render(D){
   const nm=esc(D.student);
   const cmt=[];
   cmt.push(`${nm} ${TD} <b>${tests.length}개 시험</b>을 완료했고 정답률은 <b>${score}%</b>예요.`
-    +(delta!==null?(delta>0?` 지난 학습일보다 <b>${delta}%p 올랐어요.</b>`:delta<0?` 지난 학습일보다 ${-delta}%p 내려갔어요.`:""):""));
+    +(delta!==null?(delta>0?` 지난 학습일보다 <b>${delta}%p 올랐어요.</b>`:delta<0?` 지난 학습일보다 ${-delta}%p 내려갔어요.`:""):"")
+    +(CMP?` 같은 날 같은 시험을 본 반평균은 <b>${CMP.cl}%</b>로, ${CMP.me>=CMP.cl?`<b>${CMP.me-CMP.cl}%p 높아요.</b>`:`${CMP.cl-CMP.me}%p 낮아요.`}`:""));
   if(AR.length){
     if(sA.length) cmt.push(`💪 <b>강점</b> — `+sA.map(a=>`<b>${a.a} ${a.pct}%</b>${a.goodSubs.length?` (${subTxt(a.goodSubs,x=>`${esc(x.k)} ${x.c}/${x.t}`,3)})`:""}`).join(", ")+`. ${AREA_STRONG[sA[0].a]||""}`);
     else { const hi=AR.slice().sort((a,b)=>b.pct-a.pct)[0];
@@ -559,13 +588,19 @@ async function render(D){
     </div>
   </div>
 
-  ${tests.length?`<h2 class="s">📋 ${TD} 완료한 시험</h2>
-  <div class="card bars">${tests.map(p=>`
-    <div class="bar" style="grid-template-columns:minmax(90px,150px) 1fr 74px"><span class="lb">${esc(p.name)}<br><span style="font-weight:600;color:var(--ink-3);font-size:11px">${p.c}/${p.t}${p.n>1?` · ${p.n}회 응시`:""}</span></span>
-      <span class="tr"><i class="${p.me>=85?"":p.me>=75?"warn":"bad"}" style="width:${Math.max(p.me,7)}%"><u>${p.me}</u></i>
-      ${p.cls===null?"":`<s style="left:${p.cls}%" data-l="반 ${p.cls}"></s>`}</span>
-      <span class="dt ${p.d===null?"":p.d>=0?"up":"down"}">${p.d===null?"—":(p.d>=0?"▲+":"▼")+p.d+"%p"}</span></div>`).join("")}
-    <div style="font-size:11px;color:var(--ink-3);margin-top:6px">점선 = 같은 시험을 본 전체 학생 평균 (2명 이상일 때)</div>
+  ${tests.length?`<h2 class="s">📋 ${TD} 완료한 시험 · 반평균 대조</h2>
+  <div class="card cmpb">
+    <div class="lg"><span class="me">${esc(D.student)}</span><span class="cl">반평균 · 같은 날 같은 시험</span></div>
+    ${CMP?`<div class="sum">같은 시험 ${CMP.n}개 합계 — <b>나 ${CMP.me}%</b> vs <b>반 ${CMP.cl}%</b> <span class="dt ${CMP.me>=CMP.cl?"up":"down"}">${CMP.me>=CMP.cl?"▲+":"▼"}${CMP.me-CMP.cl}%p</span></div>`:""}
+    ${tests.map(p=>`
+    <div class="cg">
+      <div class="cn"><b>${esc(p.name)}</b><small>${p.c}/${p.t}${p.n>1?` · ${p.n}회 응시`:""}</small>
+        ${p.d===null?"":`<span class="dt ${p.d>=0?"up":"down"}">${p.d>=0?"▲ +":"▼ "}${p.d}%p</span>`}</div>
+      <div class="cr"><span class="who">나</span><span class="tr"><i class="me ${p.me>=85?"":p.me>=75?"warn":"bad"}" style="width:${Math.max(p.me,3)}%"></i></span><em>${p.me}%</em></div>
+      ${p.cls===null?`<div class="cr none"><span class="who">반</span><span class="na">같은 날 이 시험을 본 학생이 2명 이상이면 표시돼요</span></div>`
+        :`<div class="cr"><span class="who">반</span><span class="tr"><i class="cl" style="width:${Math.max(p.cls,3)}%"></i></span><em class="c">${p.cls}%</em></div>
+      <div class="cnote">${p.cn}명 응시 평균</div>`}
+    </div>`).join("")}
   </div>`:""}
 
   ${AR.length?`<h2 class="s">🔍 영역별 분석 — 어휘 · 어법 · 독해</h2>
