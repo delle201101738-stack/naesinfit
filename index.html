@@ -1868,7 +1868,7 @@ function grade(part,it,a){
       const m=a[i];
       const nd = m.done===false;   // 밑줄 하나씩 화면에서 안 고른 밑줄 = 무응답(오답)
       let ok = nd ? false : s.wrong ? (m.mk && segOk(s,m.txt,i?it.seg[i-1].after:it.lead)) : !m.mk;
-      d.push({ok, label:s.L, mine: nd?"무응답":m.mk?(m.txt||"(고침 없음)"):"맞다고 표시", self: !!(s.wrong && m.mk && String(m.txt||"").trim()),
+      d.push({ok, label:s.L, tag:(String(s.ex||"").match(/^\[([^\]]+)\]/)||[])[1], mine: nd?"무응답":m.mk?(m.txt||"(고침 없음)"):"맞다고 표시", self: !!(s.wrong && m.mk && String(m.txt||"").trim()),
         ex:s.ex, right: s.wrong?`${s.from} → ${s.to}${s.alt&&s.alt.length?` (또는 ${s.alt.join(" / ")})`:""}`:(s.okmsg||"어법상 맞음")});
     });
   } else if(part==="tf"){
@@ -2008,7 +2008,7 @@ function showResult(){
       total:t, correct:c, pct, secs,
       detail:Q.items.map((it,i)=>{
         const row={no:it.no, sec:(secLab(it.sec)),
-          d:Q.detail[i].map(x=>x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)})};
+          d:Q.detail[i].map(x=>Object.assign(x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)}, x.tag?{t:String(x.tag).slice(0,12)}:{}))};
         const n=Q.notes&&Q.notes[i];
         if(n && (n.why.trim()||n.voc.trim())){ row.why=n.why.trim().slice(0,300); row.voc=n.voc.trim().slice(0,300); }
         return row;

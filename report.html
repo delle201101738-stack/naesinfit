@@ -150,6 +150,24 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 .cmt p b{font-weight:800}
 .cmt .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
 .cmt .tags em{font-style:normal;font-size:11px;font-weight:700;background:var(--surface-2);color:var(--ink-2);padding:4px 10px;border-radius:999px}
+.areas{display:grid;gap:10px}
+.area{background:var(--surface);border-radius:16px;box-shadow:var(--sh);padding:14px 16px;border-left:5px solid var(--pri)}
+.area.weak{border-left-color:var(--no)} .area.mid{border-left-color:var(--warn)} .area.strong{border-left-color:var(--ok)}
+.area .ah{display:flex;align-items:baseline;gap:8px}
+.area .ah b{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.area .lvb{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2)}
+.area.weak .lvb{background:var(--no-soft,#fde8e8);color:var(--no)} .area.strong .lvb{background:var(--ok-soft,#e3f6ea);color:var(--ok)}
+.area .ah em{margin-left:auto;font-style:normal;font-family:'Archivo',sans-serif;font-size:24px;font-weight:800}
+.area .ah em small{font-size:12px;color:var(--ink-3)}
+.area .cnt{font-size:11.5px;color:var(--ink-3);font-family:'Archivo',sans-serif}
+.area .abar{height:7px;border-radius:5px;background:var(--surface-2);margin:8px 0 10px;overflow:hidden}
+.area .abar i{display:block;height:100%;background:var(--pri);border-radius:5px}
+.area.weak .abar i{background:var(--no)} .area.mid .abar i{background:var(--warn)} .area.strong .abar i{background:var(--ok)}
+.area .arow{display:flex;gap:10px;font-size:12.5px;line-height:1.7;margin-top:3px}
+.area .arow .k{flex:none;width:52px;font-weight:800;font-size:11.5px;padding-top:1px}
+.area .arow .k.no{color:var(--no)} .area .arow .k.ok{color:var(--ok)}
+.area .arow b{color:var(--no);font-family:'Archivo',sans-serif} .area .arow small{color:var(--ink-3);font-family:'Archivo',sans-serif}
+.area .atip{margin-top:8px;background:var(--surface-2);border-radius:10px;padding:8px 11px;font-size:12px;line-height:1.65;color:var(--ink-2)}
 .foot{margin-top:22px;text-align:center;font-size:10.5px;color:var(--ink-3);line-height:1.8}
 @media print{body{background:#fff}.wrap{padding:0}.card,.g,.sc{box-shadow:none;border:1px solid var(--line)}}
 </style><style>
@@ -289,7 +307,104 @@ const STRONG_MSG={
 };
 const kindOf=p=>WORDP.has(p)?"단어 뜻 · 유의어":READP.has(p)?"글의 흐름 · 지시어":/^(fixv|vbbw|vbb)$/.test(p)?"어휘 혼동":"어법";
 
-function render(D){
+/* ── 영역별 분석 (어휘 · 어법 · 독해 · 서술형) ── */
+const AREAS=["어휘","어법","독해","서술형","기타"];
+const TAGMAP={준동사:["어법","준동사"],준:["어법","준동사"],능동수동:["어법","수동태"],태:["어법","수동태"],
+  수일치:["어법","수일치"],수:["어법","수일치"],관계사:["어법","관계사"],관:["어법","관계사"],병렬구조:["어법","병렬 구조"],
+  전치사접속사:["어법","전치사 vs 접속사"],"toV-ing":["어법","to부정사 · 동명사"],대명사:["어법","대명사"],시제:["어법","시제"],
+  접속사that:["어법","접속사 that · what"],도치:["어법","도치"],"형용사·부사":["어법","형용사 · 부사"],품:["어법","형용사 · 부사"],
+  "It-that강조":["어법","강조구문"],가:["어법","가정법"],
+  반의어:["어휘","문맥 어휘 (반의어)"],반:["어휘","문맥 어휘 (반의어)"],어:["어휘","문맥 어휘"],유의어:["어휘","유의어 환언"],유:["어휘","유의어 환언"],
+  뜻:["어휘","단어 뜻"],철:["어휘","철자 비슷한 단어"]};
+const CLS2SUB={"수동태":"수동태","주어–동사 수일치":"수일치","to부정사 · 동명사":"to부정사 · 동명사","분사 (능동·수동)":"분사 (능동·수동)",
+  "준동사 자리":"준동사","관계사 · 접속사":"관계사 · 접속사","시제":"시제"};
+const SUBTIP={
+  "수일치":"동사를 만나면 <b>진짜 주어</b>를 손으로 짚고 단수·복수를 확인하게 하세요 (수식어구·관계절은 괄호로 묶기).",
+  "수동태":"주어가 그 동작을 <b>하는지 받는지</b>부터 보게 하세요. 자동사(occur, happen, come)는 수동태가 안 됩니다.",
+  "준동사":"한 문장에 <b>정동사는 하나</b> — 접속사가 없으면 뒤 동사는 to부정사·동명사·분사로 바뀝니다.",
+  "to부정사 · 동명사":"앞 동사가 무엇을 목적어로 받는지 <b>동사별로 묶어</b> 외우게 하세요 (volunteer to, enjoy -ing).",
+  "분사 (능동·수동)":"꾸밈받는 명사가 <b>하는 쪽(-ing)인지 당하는 쪽(p.p.)인지</b> 묻게 하세요.",
+  "관계사":"뒤 절이 <b>완전한지 불완전한지</b>, 선행사가 사람인지 사물인지 두 가지만 확인하게 하세요.",
+  "관계사 · 접속사":"뒤 절이 <b>완전한지 불완전한지</b>로 갈립니다. 목적어가 없으면 what·관계대명사입니다.",
+  "병렬 구조":"and·or·but 앞뒤를 <b>같은 모양</b>(동사-동사, to-to)으로 맞추는지 확인하게 하세요.",
+  "전치사 vs 접속사":"뒤에 <b>명사(구)면 전치사</b>(during, despite, because of), <b>절이면 접속사</b>(while, although, because).",
+  "대명사":"대명사가 가리키는 명사를 찾아 <b>수·인칭</b>을 맞추게 하세요 (it/they, one/ones, 재귀대명사).",
+  "시제":"문장 속 <b>시간 표현</b>(since, ago, by the time)을 먼저 찾고 동사를 맞추게 하세요.",
+  "접속사 that · what":"뒤 절이 완전하면 <b>that</b>, 불완전하면 <b>what</b>입니다.",
+  "형용사 · 부사":"꾸미는 대상이 <b>명사면 형용사, 동사·형용사면 부사</b> — 2형식 보어 자리는 형용사.",
+  "도치":"부정어·only·so가 문장 앞에 오면 <b>조동사+주어</b> 순서로 바뀌는지 확인하게 하세요.",
+  "문맥 어휘 (반의어)":"밑줄 단어를 넣고 <b>앞뒤 문장과 흐름이 맞는지</b>(긍정↔부정) 확인하는 습관이 필요해요.",
+  "문맥 어휘":"밑줄 단어를 넣고 <b>앞뒤 문장과 흐름이 맞는지</b> 확인하는 습관이 필요해요.",
+  "유의어 환언":"본문 단어가 <b>다른 말로 바뀌어도 같은 뜻</b>이면 O — 유의어 목록을 같이 외우게 하세요.",
+  "단어 뜻":"틀린 단어만 모아 <b>뜻 → 예문</b> 순서로 다시 외우고, 품사까지 같이 확인하게 하세요.",
+  "유의어":"표제어와 <b>유의어를 짝으로</b> 외우게 하세요. 품사가 같은 유의어만 정답입니다.",
+  "영영풀이":"영영풀이의 <b>핵심 동사·명사</b>에 밑줄 치고 표제어와 연결하게 하세요.",
+  "내용 일치":"선지의 <b>원인·결과·주체·수치</b> 중 하나만 바뀐 함정이 많아요 — 본문 근거 문장을 찾아 대조하게 하세요.",
+  "순서 배열":"연결어(However, So)와 지시어(this, they)가 <b>무엇을 받는지</b> 표시하며 읽게 하세요.",
+  "문장 삽입":"주어진 문장의 <b>지시어·연결어</b>가 받는 내용이 바로 앞에 있는지 확인하게 하세요.",
+  "빈칸 추론":"빈칸 앞뒤 문장에서 <b>같은 말을 다르게 한 표현</b>을 찾게 하세요.",
+  "요약 · 추론 · 함축":"글 전체 주제문을 먼저 한 줄로 요약하고 선지와 비교하게 하세요.",
+  "영문 선지 (비법)":"영문 선지의 <b>함정 7종</b>(주체·순서·수치·반의어 등)을 체크하며 본문과 대조하게 하세요.",
+  "영작 · 배열":"주어·동사부터 놓고 수식어를 붙이는 순서로 쓰게 하세요. 어형 변화(수일치·시제)를 마지막에 점검."
+};
+const AREA_STRONG={어휘:"단어와 문맥 어휘가 탄탄해서 지문 해석의 기본이 잡혀 있어요.",
+  어법:"어법 판단이 정확해요 — O·X 판정과 고쳐 쓰기 모두 안정적이에요.",
+  독해:"글의 흐름과 내용을 정확히 따라가고 있어요.", 서술형:"문장을 정확하게 써내는 힘이 있어요.", 기타:""};
+const FW=new Set("a an the to of in on at for by with from as that which who whom whose what where when how why it its this these those they them their he she his her we our you your is are was were be been being have has had do does did can could will would should may might must not no and or but if so than then there".split(" "));
+function lexical(f,t){
+  const w=x=>String(x||"").toLowerCase().match(/[a-z’']+/g)||[];
+  const fc=w(f).filter(x=>!FW.has(x)), tc=w(t).filter(x=>!FW.has(x));
+  if(!fc.length||!tc.length) return false;
+  return !fc.some(a=>tc.some(b=>a.slice(0,4)===b.slice(0,4)));
+}
+function segIndex(C){
+  const m={}; if(!C) return m;
+  for(const p of Object.keys(C)) if(Array.isArray(C[p])) C[p].forEach(it=>{
+    if(it&&Array.isArray(it.seg)) it.seg.forEach(s=>{ m[p+"|"+it.no+"|"+s.L]=s; });
+    if(it&&Array.isArray(it.blanks)) m[p+"|"+it.no+"|blanks"]=it.blanks; });
+  return m;
+}
+function areaOf(x,SI){
+  const p=x.part, ok=x.ok==="1";
+  if(p==="wmean") return ["어휘","단어 뜻"];
+  if(p==="wsyn"||p==="wsynw") return ["어휘","유의어"];
+  if(p==="wdef") return ["어휘","영영풀이"];
+  if(p==="vocab") return ["어휘","어휘 선택 (박스)"];
+  if(p==="vbb") return ["어휘","어휘 5지선다 (비법)"];
+  if(p==="gbb") return ["어법","어법 5지선다 (비법)"];
+  if(p==="tf") return ["독해","내용 일치"];
+  if(p==="order") return ["독해","순서 배열"];
+  if(p==="insert") return ["독해","문장 삽입"];
+  if(p==="choice") return ["독해","요약 · 추론 · 함축"];
+  if(p==="sjt") return ["독해","영문 선지 (비법)"];
+  if(/^(arrange|write|twrite|mwrite)$/.test(p)) return ["서술형","영작 · 배열"];
+  if(p==="cloze"){ const bl=SI[p+"|"+x.no+"|blanks"], b=bl&&bl[(+x.l||1)-1];
+    return (b&&b.v!=null)?["어법","동사 형태 바꾸기"]:["독해","빈칸 추론"]; }
+  if(p==="gram"){ const c=!ok&&CLS2SUB[classify(x.m,x.r,"")]; return ["어법",c||"어법 선택 (박스)"]; }
+  // 밑줄 O·X 고치기(통변형·비법 밑줄)
+  const s=SI[p+"|"+x.no+"|"+x.l];
+  const tag=x.t||(String(s&&s.ex||"").match(/^\[([^\]]+)\]/)||[])[1];
+  if(tag&&TAGMAP[tag]) return TAGMAP[tag];
+  if(/^(fixv|vbbw)$/.test(p)) return ["어휘","문맥 어휘"];
+  if(s&&s.wrong&&s.from&&s.to) return lexical(s.from,s.to)?["어휘","문맥 어휘"]:["어법",CLS2SUB[classify(s.from,s.to,"")]||"기타 어법"];
+  if(s&&/뜻|의미|어휘|반의어|유의어|문맥|흐름/.test(s.ex||"")) return ["어휘","문맥 어휘"];
+  if(!s&&!ok&&x.r&&/→/.test(x.r)){ const [f,t]=x.r.split("→"); return lexical(f,t)?["어휘","문맥 어휘"]:["어법",CLS2SUB[classify(f,t,"")]||"기타 어법"]; }
+  if(s||/^(fix|fixg|word|word2|gbbw)$/.test(p)) return ["어법","기타 어법"];
+  return ["기타",x.part_name||p];
+}
+function analyzeAreas(items,SI){
+  const A={};
+  items.forEach(x=>{ const [a,sub]=areaOf(x,SI), ok=x.ok==="1";
+    const o=A[a]=A[a]||{a,t:0,c:0,sub:{}}; o.t++; if(ok) o.c++;
+    const q=o.sub[sub]=o.sub[sub]||{t:0,c:0}; q.t++; if(ok) q.c++; });
+  return AREAS.filter(a=>A[a]).map(a=>{ const o=A[a], pct=Math.round(o.c/o.t*100);
+    const subs=Object.entries(o.sub).map(([k,v])=>({k,t:v.t,c:v.c,w:v.t-v.c}));
+    return {...o, pct, lv:pct>=85?"strong":pct>=75?"mid":"weak",
+      wrongSubs:subs.filter(s=>s.w>0).sort((x,y)=>y.w-x.w||x.c/x.t-y.c/y.t),
+      goodSubs:subs.filter(s=>s.t>=3&&s.c/s.t>=0.9).sort((x,y)=>y.t-x.t)}; });
+}
+const DAYI={}, CONT={};
+async function render(D){
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
   if(!RA.length){
     $("#app").innerHTML=`<div class="empty"><h3>${esc(D.student||"")}님의 기록이 없어요</h3>
@@ -320,7 +435,7 @@ function render(D){
   /* 그날 완료한 시험: 파트마다 그날 최고 기록 */
   const best={};
   curT.forEach(x=>{const r=x.total?x.correct/x.total:0, o=best[x.part];
-    if(!o||r>o.r) best[x.part]={id:x.part,t:x.total,c:x.correct,r,name:name(x.part,x.part_name),n:(o?o.n:0)+1}; else o.n++;});
+    if(!o||r>o.r) best[x.part]={id:x.part,aid:x.id,t:x.total,c:x.correct,r,name:name(x.part,x.part_name),n:(o?o.n:0)+1}; else o.n++;});
   const clsP={};
   (D.cls||[]).filter(x=>bk(x.book)===mainBook).forEach(x=>{const o=clsP[x.part]=clsP[x.part]||{t:0,c:0,s:0};o.t+=x.t;o.c+=x.c;o.s=Math.max(o.s,x.s||0);});
   const tests=PARTORDER.concat(Object.keys(best).filter(k=>!PARTORDER.includes(k))).filter(k=>best[k]).map(k=>{
@@ -331,6 +446,22 @@ function render(D){
   const T={t:tests.reduce((s,x)=>s+x.t,0), c:tests.reduce((s,x)=>s+x.c,0)};
   const score=T.t?Math.round(T.c/T.t*100):0, grade=gradeOf(score);
   const RE={t:curRe.reduce((s,x)=>s+x.total,0), c:curRe.reduce((s,x)=>s+x.correct,0), n:curRe.length};
+
+  /* 그날 채점한 칸 전부 → 영역(어휘·어법·독해·서술형)별 분석 */
+  const ck=D.student+"|"+day;
+  if(!DAYI[ck]){ try{ DAYI[ck]=(await (await fetch(`api/report?student=${encodeURIComponent(D.student)}&day=${day}`,{cache:"no-store"})).json()).items||[]; }catch(e){ DAYI[ck]=[]; } }
+  const uf=mu&&mu.u&&mu.u.file;
+  if(uf && !(uf in CONT)){ try{ CONT[uf]=await (await fetch(uf,{cache:"no-store"})).json(); }catch(e){ CONT[uf]=null; } }
+  const bestIds=new Set(Object.values(best).map(b=>String(b.aid)));
+  const SI=segIndex(uf?CONT[uf]:null);
+  const DI=DAYI[ck].filter(x=>bestIds.has(String(x.id)));
+  const AR=analyzeAreas(DI,SI);
+  const sA=AR.filter(a=>a.lv==="strong"), wA=AR.filter(a=>a.lv==="weak");
+  let fixA=wA.slice();
+  if(!fixA.length&&AR.length>1){ const lo=AR.slice().sort((a,b)=>a.pct-b.pct)[0]; if(lo.pct<90&&!sA.includes(lo)) fixA=[lo]; }
+  const subTxt=(xs,f,n=4)=>xs.slice(0,n).map(f).join(" · ");
+  const allWrongSubs=AR.flatMap(a=>a.wrongSubs.map(w=>({...w,a:a.a}))).sort((x,y)=>y.w-x.w);
+  const topSub=(fixA[0]&&fixA[0].wrongSubs[0])?fixA[0].wrongSubs[0].k:(allWrongSubs[0]||{}).k;
 
   /* 회차(날짜)별 정답률 — 그날 본 시험 기준 */
   const dayPct=d=>{const bb={}; R.filter(x=>dkey(x.created_at)===d&&!isRe(x)).forEach(x=>{const r=x.total?x.correct/x.total:0;if(!bb[x.part]||r>bb[x.part].r)bb[x.part]={t:x.total,c:x.correct,r};});
@@ -360,6 +491,16 @@ function render(D){
   const cmt=[];
   cmt.push(`${nm} ${TD} <b>${tests.length}개 시험</b>을 완료했고 정답률은 <b>${score}%</b>예요.`
     +(delta!==null?(delta>0?` 지난 학습일보다 <b>${delta}%p 올랐어요.</b>`:delta<0?` 지난 학습일보다 ${-delta}%p 내려갔어요.`:""):""));
+  if(AR.length){
+    if(sA.length) cmt.push(`💪 <b>강점</b> — `+sA.map(a=>`<b>${a.a} ${a.pct}%</b>${a.goodSubs.length?` (${subTxt(a.goodSubs,x=>`${esc(x.k)} ${x.c}/${x.t}`,3)})`:""}`).join(", ")+`. ${AREA_STRONG[sA[0].a]||""}`);
+    else { const hi=AR.slice().sort((a,b)=>b.pct-a.pct)[0];
+      cmt.push(`💪 <b>강점</b> — 가장 안정적인 영역은 <b>${hi.a} ${hi.pct}%</b>예요.`+(hi.goodSubs.length?` 특히 ${subTxt(hi.goodSubs,x=>`${esc(x.k)} ${x.c}/${x.t}`,3)}는 거의 다 맞혔어요.`:"")); }
+    if(fixA.length) fixA.forEach(a=>cmt.push(`⚠️ <b>${a.lv==="weak"?"약점":"보완할 점"}</b> — <b>${a.a} ${a.pct}%</b> (${a.c}/${a.t}). `
+      +(a.wrongSubs.length?`틀린 곳: ${subTxt(a.wrongSubs,x=>`<b>${esc(x.k)}</b> ${x.w}개`)}. `:"")
+      +(a.wrongSubs[0]&&SUBTIP[a.wrongSubs[0].k]?`<br>💡 ${SUBTIP[a.wrongSubs[0].k]}`:"")));
+    else cmt.push(`⚠️ <b>약점</b> — ${TD} 본 시험에서는 영역별로 눈에 띄는 약점이 없어요 👏`
+      +(allWrongSubs.length?` 틀린 곳은 ${subTxt(allWrongSubs,x=>`${esc(x.k)} ${x.w}개`,3)} 정도예요.`:""));
+  } else {
   if(strong.length) cmt.push(`💪 <b>강점</b> — ${strong.map(x=>`<b>${esc(x.name)}</b> ${x.me}%`).join(", ")}.`
     +(kindStrong.length?` ${STRONG_MSG[kindStrong[0]]||""}`:"")
     +(strong[0].d!==null&&strong[0].d>0?` 반평균보다 ${strong[0].d}%p 높아요.`:""));
@@ -371,9 +512,13 @@ function render(D){
       +(weakCats.length>1?` (다음: ${weakCats.slice(1).map(([c,n])=>`${esc(c)} ${n}개`).join(", ")})`:"")+". "+(TIPS[mainCat]||"");
     cmt.push(w);
   } else if(tests.length) cmt.push(`⚠️ <b>약점</b> — ${TD} 본 시험에서는 눈에 띄는 약점이 없어요. 👏`);
+  }
   if(rep.length) cmt.push(`🔁 같은 실수가 반복되는 자리가 ${rep.length}군데 있어요 (예: <b>${esc(rep[0].mine)}</b> → <b>${esc(rep[0].right_)}</b>, ${rep[0].cnt}회).`);
   if(RE.n) cmt.push(`📝 오답노트 재시험도 ${RE.n}회 했어요 (${RE.t?Math.round(RE.c/RE.t*100):0}%).`);
-  cmt.push(weak.length||mainCat
+  if(AR.length) cmt.push(fixA.length&&topSub
+    ? `다음 시간에는 <b>${fixA[0].a}</b> 중 <b>${esc(topSub)}</b>부터 다시 짚고, 오답노트로 틀린 문항을 다시 풀겠습니다.`
+    : `다음 시간에는 아직 안 본 시험으로 넘어가겠습니다.`);
+  else cmt.push(weak.length||mainCat
     ? `다음 시간에는 <b>${esc(weak[0]?weak[0].name:mainCat)}</b> 오답노트부터 다시 풀고${mainCat?`, <b>${esc(mainCat)}</b>만 따로 짚겠습니다`:" 넘어가겠습니다"}.`
     : `다음 시간에는 아직 안 본 시험으로 넘어가겠습니다.`);
 
@@ -423,6 +568,18 @@ function render(D){
     <div style="font-size:11px;color:var(--ink-3);margin-top:6px">점선 = 같은 시험을 본 전체 학생 평균 (2명 이상일 때)</div>
   </div>`:""}
 
+  ${AR.length?`<h2 class="s">🔍 영역별 분석 — 어휘 · 어법 · 독해</h2>
+  <div class="areas">${AR.map(a=>`
+    <div class="area ${a.lv}">
+      <div class="ah"><b>${a.a}</b><span class="lvb">${a.lv==="strong"?"💪 강점":a.lv==="weak"?"⚠️ 약점":"보통"}</span>
+        <em>${a.pct}<small>%</small></em><span class="cnt">${a.c}/${a.t}</span></div>
+      <div class="abar"><i style="width:${Math.max(a.pct,4)}%"></i></div>
+      ${a.wrongSubs.length?`<div class="arow"><span class="k no">틀린 곳</span><span>${a.wrongSubs.slice(0,6).map(x=>`${esc(x.k)} <b>${x.w}</b><small>/${x.t}</small>`).join(" · ")}</span></div>`:`<div class="arow"><span class="k ok">틀린 곳</span><span>없음 👏</span></div>`}
+      ${a.goodSubs.length?`<div class="arow"><span class="k ok">잘한 곳</span><span>${a.goodSubs.slice(0,4).map(x=>`${esc(x.k)} ${x.c}/${x.t}`).join(" · ")}</span></div>`:""}
+      ${a.lv!=="strong"&&a.wrongSubs[0]&&SUBTIP[a.wrongSubs[0].k]?`<div class="atip">💡 ${SUBTIP[a.wrongSubs[0].k]}</div>`:""}
+    </div>`).join("")}
+  </div>
+  <div style="font-size:11px;color:var(--ink-3);margin-top:6px">틀린 곳 숫자 = 틀린 개수/그 유형 전체 · 85%↑ 강점 · 75% 미만 약점</div>`:`
   <h2 class="s">💪 강점 · ⚠️ 약점</h2>
   <div class="good3">
     <div class="g" data-no="강점"><span class="ic">💪</span><b>${strong.length?esc(strong.map(x=>x.name).join(" · ")):byMe.length?esc(byMe[0].name):"—"}</b>
@@ -431,7 +588,11 @@ function render(D){
       <p>${weak.length?weak.map(x=>`${esc(x.name)} ${x.me}%`).join(" · ")+"<br>":""}${mainCat?`틀린 자리 최다 유형: <b>${esc(mainCat)}</b> ${catCount[mainCat]}개`:""}</p></div>
   </div>
 
-  ${DW.length?`<div class="fix" style="margin-top:12px">
+`}
+  ${AR.length&&DI.some(x=>x.ok!=="1"&&x.m&&x.r)?`<h2 class="s">✏️ ${TD} 틀린 문항 예시</h2>
+  <div class="fix"><div class="miss" style="margin-top:0">${DI.filter(x=>x.ok!=="1"&&x.m&&x.r&&!/^[TF]$/i.test(x.r)&&!/^[\d①-⑤]/.test(String(x.r))&&!/^[A-E](\s*-\s*[A-E])+$/.test(x.r)).slice(0,8).map(x=>{ const [a,sub]=areaOf(x,SI);
+      return `<div><s>${esc(String(x.m).slice(0,40))}</s> → <u>${esc(String(x.r).slice(0,48))}</u><span>${a} · ${esc(sub)}</span></div>`; }).join("")}</div></div>`:""}
+  ${!AR.length&&DW.length?`<div class="fix" style="margin-top:12px">
     <b>${TD} 틀린 ${DW.length}개 — 유형별</b>
     ${topCats.length?`<div class="home">📌 ${topCats.map(([c,n])=>`<b>${esc(c)}</b> ${n}개`).join(" · ")}</div>`:""}
     ${mainCat?`<p style="margin-top:10px">${TIPS[mainCat]||""}</p>`:""}
@@ -464,7 +625,8 @@ function render(D){
     <div>
       <div class="who">헤이즐쌤 · 담당 선생님</div>
       <p contenteditable="true" style="outline:none">${cmt.join("<br><br>")}</p>
-      ${topCats.length?`<div class="tags">${topCats.map(([c])=>`<em>${esc(c)}</em>`).join("")}</div>`:""}
+      ${AR.length?`<div class="tags">${AR.map(a=>`<em>${a.a} ${a.pct}%</em>`).join("")}${allWrongSubs.slice(0,3).map(x=>`<em>${esc(x.k)}</em>`).join("")}</div>`
+        :topCats.length?`<div class="tags">${topCats.map(([c])=>`<em>${esc(c)}</em>`).join("")}</div>`:""}
     </div>
   </div>
 
@@ -484,7 +646,7 @@ async function start(name){
   $("#err").textContent="";
   try{
     const D=await load(name);
-    $("#gate").hidden=true; LASTD=D; render(D);
+    $("#gate").hidden=true; LASTD=D; await render(D);
     history.replaceState(null,"",`report?student=${encodeURIComponent(name)}${SELBOOK?`&book=${encodeURIComponent(SELBOOK)}`:""}`);
   }catch(e){ $("#err").textContent=e.message||"불러오지 못했습니다"; }
 }
