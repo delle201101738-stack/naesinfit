@@ -92,7 +92,7 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 
 <div id="gate" class="gate">
   <h2>hazel_studylog</h2>
-  <p>선생님 대시보드 · 비밀번호를 입력하세요.</p>
+  <p>선생님 대시보드 · 비밀번호를 입력하세요.<br><span style="font-size:12.5px;color:var(--ink-3)">이 기기에서 한 번만 입력하면 다음부터는 바로 들어가요.</span></p>
   <input id="pin" type="password" placeholder="비밀번호" autocomplete="current-password">
   <button id="pin-go">들어가기</button>
   <div class="err" id="pin-err"></div>
@@ -143,7 +143,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const PARTNAMES={wmean:"단어 뜻 쓰기",wsyn:"유의어 객관식",wsynw:"유의어 주관식",wdef:"영영풀이",vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",word2:"통변형 ②",fixg:"통변형 ③ 어법 집중",fixv:"통변형 ④ 어휘 집중",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작",twrite:"주제문 영작",cloze:"빈칸 추론",choice:"독해",sjt:"영문선지 비법 TEST",gbbw:"어법 비법 밑줄 고치기",gbb:"어법 비법 TEST",vbbw:"어휘 비법 밑줄 고치기",vbb:"어휘 비법 TEST",mwrite:"중요 문장 영작",review:"오답노트(전체)"};
 const ORDER=["wmean","wsyn","wsynw","wdef","twrite","cloze","vocab","gram","word","word2","fix","fixg","fixv","tf","choice","sjt","gbbw","gbb","vbbw","vbb","order","insert","arrange","mwrite","write"];
-let PIN=sessionStorage.getItem("naesinfit.pin")||"", ALL=[], ROWS=[], TAB="all", BOOK="all";
+let PIN=(()=>{try{return localStorage.getItem("naesinfit.pin")||sessionStorage.getItem("naesinfit.pin")||""}catch(e){return ""}})(), ALL=[], ROWS=[], TAB="all", BOOK="all";
 
 const pctClass=p=>p>=90?"p-hi":p>=75?"p-mid":"p-lo";
 const VD_PASS=90, VD_PART=75;
@@ -172,7 +172,8 @@ function mainBookOf(rows){
   rows.filter(x=>dk0(x.created_at)===ld).forEach(x=>{w[x.book]=(w[x.book]||0)+x.total;});
   return Object.entries(w).sort((a,b)=>b[1]-a[1])[0][0];
 }
-const repHref=(n,rows)=>`report?student=${encodeURIComponent(n)}&book=${encodeURIComponent(mainBookOf(rows))}`;
+const lastDayOf=rows=>{ if(!rows.length) return ""; const l=rows.reduce((m,x)=>+new Date(x.created_at)>+new Date(m.created_at)?x:m,rows[0]); const d=new Date(l.created_at),p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; };
+const repHref=(n,rows)=>`report?student=${encodeURIComponent(n)}&book=${encodeURIComponent(mainBookOf(rows))}&day=${lastDayOf(rows)}`;   // 그 학생이 마지막으로 본 날 · 그날 과로 고정
 function nPartsOf(rows){
   const mb=mainBookOf(rows), main=mb?[mb]:null;
   const u=main&&unitByBook(main[0], uidOf(rows.filter(x=>x.book===main[0])));
@@ -201,7 +202,7 @@ async function load(){
 }
 $("#pin-go").onclick=async()=>{
   PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
-  try{ await load(); sessionStorage.setItem("naesinfit.pin",PIN); $("#gate").hidden=true; $("#app").hidden=false; render(); }
+  try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); }
   catch(e){ $("#pin-err").textContent=e.message; }
 };
 $("#pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pin-go").click();});

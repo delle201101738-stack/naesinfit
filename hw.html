@@ -151,7 +151,7 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 <body>
 <div id="gate" class="gate">
   <h2>반 · 숙제 관리</h2>
-  <p>선생님 비밀번호를 입력하세요.</p>
+  <p>선생님 비밀번호를 입력하세요.<br><span style="font-size:12.5px;color:var(--ink-3)">이 기기에서 한 번만 입력하면 다음부터는 바로 들어가요.</span></p>
   <input id="pin" type="password" placeholder="비밀번호" autocomplete="current-password">
   <button id="pin-go">들어가기</button>
   <div class="err" id="pin-err"></div>
@@ -175,7 +175,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const today=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
 const fmtD=d=>{const [y,m,dd]=d.split("-");const w="일월화수목금토"[new Date(+y,+m-1,+dd).getDay()];return `${+m}.${+dd} (${w})`;};
 const ST={done:"완료",part:"일부",none:"안 함",skip:"면제"};
-let PIN=sessionStorage.getItem("naesinfit.pin")||"", DB=null, CUR=+(localStorage.getItem("hw.class")||0), OPEN={}, EDIT=null;
+let PIN=(()=>{try{return localStorage.getItem("naesinfit.pin")||sessionStorage.getItem("naesinfit.pin")||""}catch(e){return ""}})(), DB=null, CUR=+(localStorage.getItem("hw.class")||0), OPEN={}, EDIT=null;
 let GR={mode:localStorage.getItem("hw.gmode")||"7", day:today()};   // 표 검사 기간: day(그날) / 7(최근 7일) / all(최근 12개)
 const CYCLE=["done","part","none","skip",""];
 const ICON={done:"✅",part:"🟡",none:"❌",skip:"➖","":"·"};
@@ -358,7 +358,7 @@ document.addEventListener("change",async e=>{
     if(!cur){ if(!gmi.value.trim()) return; try{ await setCheck(it,st,"part",gmi.value); toast("메모 저장 · 상태는 🟡일부로 표시했어요 (칸을 눌러 바꾸세요)"); render(); }catch(err){ alert(err.message); } return; }
     try{ await setCheck(it,st,cur.status,gmi.value); toast("메모 저장"); }catch(err){ alert(err.message); } return; } const row=e.target.closest(".ck"); if(row && (e.target.classList.contains("sc")||e.target.classList.contains("mm"))) saveCheck(row); });
 $("#pin-go").onclick=async()=>{ PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
-  try{ await load(); sessionStorage.setItem("naesinfit.pin",PIN); $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ $("#pin-err").textContent=e.message; } };
+  try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ $("#pin-err").textContent=e.message; } };
 $("#pin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pin-go").click(); });
 (async()=>{ if(PIN){ try{ await load(); $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ PIN=""; } } })();
 </script>
