@@ -37,8 +37,21 @@ export default async function handler(req, res) {
       order by cnt desc, a.book
       limit 40`;
 
+    // 날짜별 틀린 자리 — 그날 리포트의 강점·약점 분석용 (한국 시간 기준 날짜)
+    const dwrong = await sql`
+      select a.book, a.part, a.part_name, a.scope,
+             to_char(a.created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') as day,
+             it->>'sec' as sec, it->>'no' as no,
+             d->>'l' as label, d->>'m' as mine, d->>'r' as right_
+      from attempts a,
+           jsonb_array_elements(a.detail) it,
+           jsonb_array_elements(it->'d') d
+      where a.student = ${student} and (d->>'ok') = '0'
+      order by a.created_at desc
+      limit 1500`;
+
     const days = new Set(rows.map(r => new Date(r.created_at).toISOString().slice(0, 10))).size;
-    res.status(200).json({ ok: true, student, rows, cls, wrong, days });
+    res.status(200).json({ ok: true, student, rows, cls, wrong, dwrong, days });
   } catch (e) {
     console.error("[report]", e);
     res.status(500).json({ error: "리포트를 만들지 못했습니다" });
