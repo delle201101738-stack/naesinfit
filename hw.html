@@ -145,6 +145,19 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .cpy{display:block;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:6px;padding:2px 6px}
 .cpy:hover{color:var(--accent)}
 .ck .cpy{display:inline-block;margin:0 0 0 4px}
+.tabs3{display:flex;gap:6px;margin:4px 0 14px;flex-wrap:wrap}
+.tabs3 button{padding:11px 16px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:14px;font-weight:800;color:var(--ink-2)}
+.tabs3 button.on{background:var(--accent);color:var(--on-accent)}
+.tc{text-align:center;white-space:nowrap}
+.tc small{display:block;font-size:10.5px;color:var(--ink-3);font-family:'Archivo',sans-serif}
+.tp{font-family:'Archivo',sans-serif;font-weight:800;font-size:14px}
+.tp.hi{color:var(--ok)} .tp.mid{color:var(--warn)} .tp.lo{color:var(--no)}
+.na{font-size:11.5px;color:var(--ink-3)}
+.snd td,.snd th{padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:13.5px}
+.snd tr.dim td{opacity:.55}
+.snd .ic{letter-spacing:1px}
+.snd td.act{display:flex;gap:6px;justify-content:flex-end}
+.btn.sm{padding:7px 11px;font-size:12px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
 </style>
 </head>
@@ -158,7 +171,7 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 </div>
 <div id="app" hidden>
   <header class="bar"><div class="bar-in">
-    <div style="flex:1"><h1>반 · 숙제 관리</h1><div class="sub" id="bar-sub">반을 만들고 반별로 숙제를 내고 검사하세요</div></div>
+    <div style="flex:1"><h1>반별 관리</h1><div class="sub" id="bar-sub">숙제 검사 · 테스트 현황 · 리포트 보내기를 반별로</div></div>
     <a class="btn" href="teacher">← 대시보드</a>
     <a class="btn" href="report" target="_blank" rel="noopener">리포트</a>
   </div></header>
@@ -202,9 +215,11 @@ function render0(){
   const items=DB.items.filter(i=>+i.class_id===CUR);
   const chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
   const stat=it=>{const o={done:0,part:0,none:0,skip:0,no:0}; mem.forEach(s=>{const k=chk[it.id+"|"+s]; o[k?k.status:"no"]++;}); return o;};
-  $("#cls").innerHTML=`
+  const HEAD=`
   <div class="sec"><h2>${esc(cls.name)} · 학생 ${mem.length}명</h2>
-    <span class="note"><button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>
+    <span class="note"><button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>`;
+  if(TAB!=="hw"){ if(!RES) loadRes().then(render); $("#cls").innerHTML=HEAD+tabsHTML()+(TAB==="test"?testHTML(cls,mem,items):sendHTML(cls,mem,items,chk)); return; }
+  $("#cls").innerHTML=HEAD+tabsHTML()+`
   <div class="card" style="padding:16px 18px">
     <div>${mem.map(s=>`<span class="mem">${esc(s)}<button data-rm="${esc(s)}" title="반에서 빼기">✕</button></span>`).join("")||`<span style="color:var(--ink-3);font-size:13px">아직 학생이 없어요</span>`}</div>
     <div class="row" style="margin-top:10px"><input class="fld" id="mem-in" placeholder="학생 이름 (여러 명은 쉼표·줄바꿈으로)" style="flex:1;min-width:200px"><button class="btn pri" id="mem-add">추가</button></div>
@@ -291,6 +306,80 @@ async function setCheck(it, st, status, memo){
   if(cur){ if(status){cur.status=status;cur.memo=m;} else DB.checks=DB.checks.filter(k=>k!==cur); }
   else if(status) DB.checks.push({item_id:+it,student:st,status,score:null,memo:m});
 }
+/* ── 반별 탭: 숙제 검사 / 테스트 현황 / 리포트 보내기 ── */
+let TAB=localStorage.getItem("hw.tab")||"hw", RES=null, RESERR="", VD=today();
+const baseNm=n=>String(n||"").replace(/[A-Za-z0-9]+$/,"");
+const dkeyL=v=>{const d=new Date(v),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+async function loadRes(){
+  try{ const r=await fetch("/api/results",{headers:{"x-pin":PIN},cache:"no-store"}); const j=await r.json();
+    if(!r.ok) throw new Error(j.error||"불러오지 못했어요");
+    RES=(j.rows||[]).map(x=>({...x, book:String(x.book||"").replace(/\s*올킬\s*$/,"").trim(), day:dkeyL(x.created_at)})); RESERR=""; }
+  catch(e){ RES=[]; RESERR=e.message; }
+}
+function tabsHTML(){
+  const T=[["hw","✅ 숙제 검사"],["test","📝 테스트 현황"],["send","📤 리포트 보내기"]];
+  return `<div class="tabs3">${T.map(([k,n])=>`<button class="${TAB===k?"on":""}" data-tab="${k}">${n}</button>`).join("")}</div>`;
+}
+/* 학생 이름 → 그 학생 시험 기록 (명단 이름, 또는 구분자 뺀 예전 이름이 반 전체에서 하나뿐일 때) */
+function rowsOfMem(s){
+  const allMem=DB.members.map(m=>m.student), b=baseNm(s);
+  const uniq=allMem.filter(m=>baseNm(m)===b).length===1;
+  return (RES||[]).filter(x=>x.student===s || (uniq && b!==s && x.student===b));
+}
+function dayChips(mem, items){
+  const ds=new Set(items.map(i=>i.day)); mem.forEach(s=>rowsOfMem(s).forEach(x=>ds.add(x.day)));
+  const list=[...ds].filter(d=>d<=today()).sort().reverse().slice(0,8);
+  if(!list.includes(VD)) list.unshift(VD);
+  return `<div class="row" style="margin:4px 0 12px"><input class="fld" type="date" id="v-day" value="${VD}" style="width:170px">
+    ${list.map(d=>`<button class="chip${d===VD?" on":""}" data-vday="${d}">${fmtD(d)}</button>`).join("")}</div>`;
+}
+function dayTests(s){   // 그날 시험: 파트마다 최고 기록 (재시험 제외)
+  const best={};
+  rowsOfMem(s).filter(x=>x.day===VD && x.scope!=="재시험" && !/^오답노트/.test(x.part_name||"")).forEach(x=>{
+    const k=x.book+"|"+x.part, r=x.total?x.correct/x.total:0;
+    if(!best[k]||r>best[k].r) best[k]={k,book:x.book,part:x.part,name:x.part_name,t:x.total,c:x.correct,r}; });
+  return Object.values(best);
+}
+function testHTML(cls, mem, items){
+  if(!RES) return `<div class="card empty">테스트 기록을 불러오는 중…</div>`;
+  if(RESERR) return `<div class="card empty">${esc(RESERR)}</div>`;
+  const per={}; mem.forEach(s=>{ per[s]=dayTests(s); });
+  const cols=[]; mem.forEach(s=>per[s].forEach(x=>{ if(!cols.find(c=>c.k===x.k)) cols.push({k:x.k,book:x.book,name:x.name}); }));
+  cols.sort((a,b)=>a.book<b.book?-1:a.book>b.book?1:0);
+  const head=`<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 테스트 현황</h2><span class="note">학생마다 그날 최고 기록 · 재시험 제외</span></div>`+dayChips(mem, items);
+  if(!cols.length) return head+`<div class="card empty" style="padding:24px">${fmtD(VD)}에 이 반 학생이 본 시험이 없어요</div>`;
+  const pc=v=>v>=85?"hi":v>=75?"mid":"lo";
+  const colAvg=c=>{ const v=mem.map(s=>per[s].find(x=>x.k===c.k)).filter(Boolean); return v.length?{p:Math.round(v.reduce((a,x)=>a+x.r,0)/v.length*100),n:v.length}:null; };
+  return head+`<div class="card scroll"><table class="grid">
+    <thead><tr><th class="stk">학생</th>${cols.map(c=>`<th class="gh"><span class="gd">${esc(c.book.split(" · ").pop())}</span><b>${esc(c.name)}</b></th>`).join("")}<th class="gh">합계</th></tr></thead>
+    <tbody>${mem.map(s=>{ const v=per[s], t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
+      return `<tr><td class="stk"><b>${esc(s)}</b></td>${cols.map(col=>{ const x=v.find(y=>y.k===col.k);
+        return `<td class="tc">${x?`<span class="tp ${pc(Math.round(x.r*100))}">${Math.round(x.r*100)}%</span><small>${x.c}/${x.t}</small>`:`<span class="na">미응시</span>`}</td>`; }).join("")}
+        <td class="tc">${t?`<span class="tp ${pc(Math.round(c/t*100))}">${Math.round(c/t*100)}%</span><small>${v.length}개</small>`:`<span class="na">—</span>`}</td></tr>`; }).join("")}</tbody>
+    <tfoot><tr><td class="stk">반평균</td>${cols.map(c=>{ const a=colAvg(c); return `<td class="tc">${a?`<b>${a.p}%</b><small>${a.n}명</small>`:""}</td>`; }).join("")}<td></td></tr></tfoot>
+  </table></div>`;
+}
+function sendHTML(cls, mem, items, chk){
+  if(!RES) return `<div class="card empty">기록을 불러오는 중…</div>`;
+  const its=items.filter(i=>i.day===VD);
+  const ICN={done:"✅",part:"🟡",none:"❌",skip:"➖"};
+  const rows=mem.map(s=>{ const ks=its.map(i=>chk[i.id+"|"+s]), cc=ks.filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
+    const v=dayTests(s), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
+    return {s, hw:its.length?{d,n:cc.length,icons:ks.map(k=>k?ICN[k.status]:"⏺").join("")}:null, ts:v.length?{n:v.length,p:Math.round(c/t*100)}:null,
+      url:`${location.origin}/report?student=${encodeURIComponent(s)}&day=${VD}`}; });
+  const has=rows.filter(r=>r.hw||r.ts);
+  return `<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 숙제+테스트 리포트 보내기</h2><span class="note">링크를 눌러 복사해서 카톡·문자에 바로 붙여넣으세요</span></div>`+dayChips(mem, items)+`
+  <div class="card" style="padding:14px 16px;margin-bottom:10px">
+    <div class="row" style="justify-content:space-between"><span style="font-size:13px;color:var(--ink-2)">숙제 ${its.length}개 · 기록 있는 학생 <b>${has.length}</b>/${mem.length}명</span>
+      <button class="btn pri" data-copyall="1">📋 반 전체 링크 한 번에 복사</button></div></div>
+  <div class="card scroll"><table class="snd">
+    <thead><tr><th>학생</th><th>📚 숙제</th><th>📝 테스트</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr${r.hw||r.ts?"":` class="dim"`}><td><b>${esc(r.s)}</b></td>
+      <td>${r.hw?`<span class="ic">${r.hw.icons}</span> ${r.hw.n?`<b>${r.hw.d}/${r.hw.n}</b>`:`<span class="na">미검사</span>`}`:`<span class="na">숙제 없음</span>`}</td>
+      <td>${r.ts?`${r.ts.n}개 · <b class="tp ${r.ts.p>=85?"hi":r.ts.p>=75?"mid":"lo"}">${r.ts.p}%</b>`:`<span class="na">미응시</span>`}</td>
+      <td class="act"><button class="btn pri sm" data-copy1="${esc(r.url)}">🔗 링크 복사</button><a class="btn sm" href="${esc(r.url)}" target="_blank" rel="noopener">열기</a></td></tr>`).join("")}</tbody>
+  </table></div>`;
+}
 async function saveCheck(row, status){
   const it=+row.dataset.it, st=row.dataset.st;
   const cur=DB.checks.find(k=>+k.item_id===it&&k.student===st);
@@ -315,6 +404,12 @@ function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
 document.addEventListener("click",async e=>{
   const t=e.target;
   const cp=t.closest("[data-copy]"); if(cp){ const ok=await copyText(location.origin+"/"+cp.dataset.copy); toast(ok?"리포트 링크를 복사했어요":"복사가 안 돼요"); return; }
+  const tb=t.closest("[data-tab]"); if(tb){ TAB=tb.dataset.tab; localStorage.setItem("hw.tab",TAB); if(TAB!=="hw") RES=null; render(); return; }
+  const vd=t.closest("[data-vday]"); if(vd){ VD=vd.dataset.vday; render(); return; }
+  const c1=t.closest("[data-copy1]"); if(c1){ const ok=await copyText(c1.dataset.copy1); toast(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요"); return; }
+  if(t.closest("[data-copyall]")){ const cls=DB.classes.find(c=>+c.id===CUR), mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
+    const txt=`[${cls.name} · ${fmtD(VD)} 숙제·테스트 리포트]\n`+mem.map(s=>`${s} ${location.origin}/report?student=${encodeURIComponent(s)}&day=${VD}`).join("\n");
+    const ok=await copyText(txt); toast(ok?`${mem.length}명 링크를 한 번에 복사했어요`:"복사가 안 돼요"); return; }
   const gm=t.closest("[data-gmode]"); if(gm){ GR.mode=gm.dataset.gmode; localStorage.setItem("hw.gmode",GR.mode); render(); return; }
   const gc=t.closest("[data-gc]"); if(gc){
     const it=gc.dataset.gc, st=gc.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
@@ -353,6 +448,7 @@ document.addEventListener("click",async e=>{
   const op=t.closest("[data-open]"); if(op){ OPEN[op.dataset.open]=!OPEN[op.dataset.open]; render(); return; }
 });
 document.addEventListener("change",async e=>{
+  if(e.target.id==="v-day"){ VD=e.target.value||today(); render(); return; }
   if(e.target.id==="g-day"){ GR.day=e.target.value||today(); render(); return; }
   const gmi=e.target.closest("[data-gm]"); if(gmi){ const it=gmi.dataset.gm, st=gmi.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
     if(!cur){ if(!gmi.value.trim()) return; try{ await setCheck(it,st,"part",gmi.value); toast("메모 저장 · 상태는 🟡일부로 표시했어요 (칸을 눌러 바꾸세요)"); render(); }catch(err){ alert(err.message); } return; }
