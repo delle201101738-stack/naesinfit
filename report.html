@@ -250,7 +250,9 @@ async function load(name){
   MF=cr.ok?await cr.json():{books:[]};
   return mr.json();
 }
-function unitByBook(book){
+function unitByBook(book, uid){
+  if(uid) for(const b of (MF.books||[])) for(const u of (b.units||[]))      // 저장된 단원 id가 있으면 그게 정답
+    if(u.id===String(uid).replace(/ak$/,"")) return {b,u};
   for(const b of (MF.books||[])) for(const u of (b.units||[]))   // 과목·출판사·과가 정확히 같은 단원 먼저
     if(book===`${b.subject} · ${b.publisher} · ${u.no}`) return {b,u};
   for(const b of (MF.books||[])) for(const u of (b.units||[]))
@@ -263,6 +265,8 @@ const josa=(w,a,b)=>{const c=String(w||"").trim().slice(-1).charCodeAt(0);
   return (c>=0xAC00&&c<=0xD7A3) ? ((c-0xAC00)%28?a:b) : a;};
 const partLabel=(u,id,fallback)=> (u&&u.labels&&u.labels[id]) || fallback || PARTBASE[id] || id;
 
+const uidOf=rows=>{ const c={}; rows.forEach(x=>{ if(x.unit_id) c[x.unit_id]=(c[x.unit_id]||0)+1; });
+  return (Object.entries(c).sort((a,b)=>b[1]-a[1])[0]||[])[0]||""; };
 /* ── 렌더 ── */
 const bk=b=>String(b||"").replace(/\s*올킬\s*$/,"").trim();   // 예전 'N과 올킬' 기록은 N과로 합침
 let SELBOOK=new URL(location.href).searchParams.get("book")||"";
@@ -299,7 +303,7 @@ function render(D){
 
   const byBook={};
   R.forEach(x=>{const o=byBook[x.book]=byBook[x.book]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct;});
-  const mu=unitByBook(mainBook);
+  const mu=unitByBook(mainBook, uidOf(R));
   const bookTotal=mu?mu.u.total:byBook[mainBook].t;
 
   /* 점수 = 푼 문항 정답률 (파트마다 최고 기록만 반영 · 안 푼 파트는 계산에서 제외) */

@@ -150,7 +150,9 @@ let MF={books:[]};
 const vd=(p,done)=> (done!=null&&done<100) ? {k:"todo",n:`진행 ${done}%`}
                   : p>=VD_PASS?{k:"pass",n:"통과"}:p>=VD_PART?{k:"part",n:"부분 재시험"}:{k:"full",n:"전체 재시험"};
 const vdPill=(p,done)=>`<span class="vd ${vd(p,done).k}">${vd(p,done).n}</span>`;
-function unitByBook(book){
+function unitByBook(book, uid){
+  if(uid) for(const b of (MF.books||[])) for(const u of (b.units||[]))      // 저장된 단원 id가 있으면 그게 정답
+    if(u.id===String(uid).replace(/ak$/,"")) return u;
   for(const b of (MF.books||[])) for(const u of (b.units||[]))   // 과목·출판사·과가 정확히 같은 단원 먼저
     if(book===`${b.subject} · ${b.publisher} · ${u.no}`) return u;
   for(const b of (MF.books||[])) for(const u of (b.units||[]))
@@ -159,6 +161,8 @@ function unitByBook(book){
     if(book && book.includes(u.no)) return u;
   return null;
 }
+const uidOf=rows=>{ const c={}; rows.forEach(x=>{ if(x.unit_id) c[x.unit_id]=(c[x.unit_id]||0)+1; });
+  return (Object.entries(c).sort((a,b)=>b[1]-a[1])[0]||[])[0]||""; };
 /* 학생의 '지금 보는 과' = 가장 최근 학습일에 가장 많이 푼 과 */
 const dk0=v=>{const d=new Date(v);return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();};
 function mainBookOf(rows){
@@ -170,7 +174,7 @@ function mainBookOf(rows){
 const repHref=(n,rows)=>`report?student=${encodeURIComponent(n)}&book=${encodeURIComponent(mainBookOf(rows))}`;
 function nPartsOf(rows){
   const mb=mainBookOf(rows), main=mb?[mb]:null;
-  const u=main&&unitByBook(main[0]);
+  const u=main&&unitByBook(main[0], uidOf(rows.filter(x=>x.book===main[0])));
   return (u&&u.pts)?Object.keys(u.pts).length:7;
 }
 /* 학생의 주력 교재 소화율 = 응시한 파트 배점 합 ÷ 교재 전체 배점 */
@@ -179,7 +183,7 @@ function doneRateOf(rows){
   rows.forEach(r=>{const o=byBook[r.book]=byBook[r.book]||{t:0,parts:new Set()}; o.t+=r.total; o.parts.add(r.part);});
   const mb=mainBookOf(rows); if(!mb) return null;
   const main=[mb,byBook[mb]];
-  const u=unitByBook(main[0]);
+  const u=unitByBook(main[0], uidOf(rows.filter(x=>x.book===main[0])));
   if(!u || !u.pts || !u.total) return null;
   const done=Object.keys(u.pts).filter(k=>main[1].parts.has(k)).reduce((s,k)=>s+u.pts[k],0);
   return Math.min(100, Math.round(done/u.total*100));

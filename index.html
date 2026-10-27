@@ -2187,7 +2187,7 @@ async function renderRecord(){
   const recent=R.slice(0,10).reverse().map(x=>({pct:x.pct,d:dayKey(x.at),partName:x.name}));
 
   const byName={}; R.forEach(x=>{ const o=byName[x.name]=byName[x.name]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct; });
-  const byBook={}; R.forEach(x=>{ const k=x.book||"기타"; const o=byBook[k]=byBook[k]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct; });
+  const byBook={}; R.forEach(x=>{ const k=String(x.book||"기타").replace(/\s*올킬\s*$/,""); const o=byBook[k]=byBook[k]||{t:0,c:0}; o.t+=x.total; o.c+=x.correct; });
   const days=[...new Set(R.map(x=>dayKey(x.at)))].length;
 
   $("#record-body").innerHTML=`
