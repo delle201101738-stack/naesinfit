@@ -14,13 +14,7 @@
   ],
   "rewrites": [
     {
-      "source": "/report",
-      "has": [
-        {
-          "type": "query",
-          "key": "student"
-        }
-      ],
+      "source": "/r",
       "destination": "/api/rpage"
     }
   ]

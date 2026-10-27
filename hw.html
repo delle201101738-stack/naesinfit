@@ -382,7 +382,7 @@ function sendHTML(cls, mem, items, chk){
   const rows=mem.map(s=>{ const ks=its.map(i=>chk[i.id+"|"+s]), cc=ks.filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
     const v=dayTests(s), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
     return {s, hw:its.length?{d,n:cc.length,icons:ks.map(k=>k?ICN[k.status]:"⏺").join("")}:null, ts:v.length?{n:v.length,p:Math.round(c/t*100)}:null,
-      url:`${location.origin}/report?student=${encodeURIComponent(s)}&day=${VD}`, cur:dayStat(s,VD,items,chk), prev:prevStat(s,items,chk)}; });
+      url:`${location.origin}/r?student=${encodeURIComponent(s)}&day=${VD}`, cur:dayStat(s,VD,items,chk), prev:prevStat(s,items,chk)}; });
   const has=rows.filter(r=>r.hw||r.ts);
   return `<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 숙제+테스트 리포트 보내기</h2><span class="note">링크를 눌러 복사해서 카톡·문자에 바로 붙여넣으세요</span></div>`+dayChips(mem, items)+`
   <div class="card" style="padding:14px 16px;margin-bottom:10px">
@@ -420,12 +420,12 @@ function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
   document.body.appendChild(e); setTimeout(()=>e.remove(),1800); }
 document.addEventListener("click",async e=>{
   const t=e.target;
-  const cp=t.closest("[data-copy]"); if(cp){ const ok=await copyText(location.origin+"/"+cp.dataset.copy); toast(ok?"리포트 링크를 복사했어요":"복사가 안 돼요"); return; }
+  const cp=t.closest("[data-copy]"); if(cp){ const ok=await copyText(location.origin+"/"+cp.dataset.copy.replace(/^report\?/,"r?")); toast(ok?"리포트 링크를 복사했어요":"복사가 안 돼요"); return; }
   const tb=t.closest("[data-tab]"); if(tb){ TAB=tb.dataset.tab; localStorage.setItem("hw.tab",TAB); if(TAB!=="hw") RES=null; render(); return; }
   const vd=t.closest("[data-vday]"); if(vd){ VD=vd.dataset.vday; render(); return; }
   const c1=t.closest("[data-copy1]"); if(c1){ const ok=await copyText(c1.dataset.copy1); toast(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요"); return; }
   if(t.closest("[data-copyall]")){ const cls=DB.classes.find(c=>+c.id===CUR), mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
-    const txt=`[${cls.name} · ${fmtD(VD)} 숙제·테스트 리포트]\n`+mem.map(s=>`${s} ${location.origin}/report?student=${encodeURIComponent(s)}&day=${VD}`).join("\n");
+    const txt=`[${cls.name} · ${fmtD(VD)} 숙제·테스트 리포트]\n`+mem.map(s=>`${s} ${location.origin}/r?student=${encodeURIComponent(s)}&day=${VD}`).join("\n");
     const ok=await copyText(txt); toast(ok?`${mem.length}명 링크를 한 번에 복사했어요`:"복사가 안 돼요"); return; }
   const gm=t.closest("[data-gmode]"); if(gm){ GR.mode=gm.dataset.gmode; localStorage.setItem("hw.gmode",GR.mode); render(); return; }
   const gc=t.closest("[data-gc]"); if(gc){
