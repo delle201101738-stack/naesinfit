@@ -2353,8 +2353,16 @@ const UKEY="naesinfit.unit";
     for(const u in S.wrong){ const ev=(S.ever[u] ||= {});   // 지금 남아 있는 오답을 '틀렸던 문제' 기록으로 옮겨 둠
       for(const pt in S.wrong[u]){ const e=(ev[pt] ||= {}), m=S.wrong[u][pt]||{};
         for(const k in m) if(Array.isArray(m[k])) e[k]=[...new Set([...(e[k]||[]), ...m[k]])].sort((x,y)=>x-y); } }
+    if(!S.mig1027){   // 올킬 단원(…ak)을 원래 과 안의 'Allkill TEST' 묶음으로 합침 + 시그니처 워크북 기록 정리
+      const SIG=["e2cjk02","e2cjk04","e2ne03","e2ne04"], SP=["vocab","gram","cloze","fix","tf","order","insert","arrange"];
+      for(const u of SIG) for(const st of [S.best,S.wrong,S.ever]) if(st[u]) SP.forEach(p=>delete st[u][p]);
+      for(const st of [S.best,S.wrong,S.ever]) for(const k of Object.keys(st)) if(/ak$/.test(k)){
+        const n=k.slice(0,-2); st[n]=Object.assign(st[n]||{}, st[k]||{}); delete st[k]; }
+      S.mig1027=1;
+    }
     const cu=localStorage.getItem(UKEY);
     if(cu && REN[cu]) localStorage.setItem(UKEY, REN[cu]);
+    if(cu && /^(e2|gw)\w+ak$/.test(cu)) localStorage.setItem(UKEY, cu.slice(0,-2));
     save();
   }catch(e){}
 })();
