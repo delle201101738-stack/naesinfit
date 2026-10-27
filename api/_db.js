@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { TEACHER_PIN } from "./_config.js";
+import { ROSTER, ROSTER_VERSION } from "./_roster.js";
 
 const URL_ =
   process.env.DATABASE_URL ||
@@ -48,6 +49,17 @@ export async function ensure() {
       item_id bigint not null, student text not null, status text not null,
       score int, memo text not null default '', checked_at timestamptz not null default now(),
       primary key (item_id, student))`;
+  // 학원 명단(학교+학년 = 반) 한 번만 넣기 — 버전이 바뀌면 다시 맞춤 (있는 학생·반은 그대로 둠)
+  await sql`create table if not exists hw_meta (k text primary key, v text not null)`;
+  const [mv] = await sql`select v from hw_meta where k = 'roster'`;
+  if (!mv || mv.v !== ROSTER_VERSION) {
+    for (const [cname, names] of Object.entries(ROSTER)) {
+      let [c] = await sql`select id from hw_classes where name = ${cname} order by id limit 1`;
+      if (!c) [c] = await sql`insert into hw_classes (name) values (${cname}) returning id`;
+      for (const n of names) await sql`insert into hw_members (class_id, student) values (${c.id}, ${n}) on conflict do nothing`;
+    }
+    await sql`insert into hw_meta (k, v) values ('roster', ${ROSTER_VERSION}) on conflict (k) do update set v = excluded.v`;
+  }
   ready = true;
 }
 

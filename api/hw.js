@@ -7,7 +7,7 @@ const STATUS = new Set(["done", "part", "none", "skip"]);
 
 async function snapshot() {
   const [classes, members, items, checks, students] = await Promise.all([
-    sql`select id, name, created_at from hw_classes order by name`,
+    sql`select id, name, created_at from hw_classes order by right(name, 1), name`,
     sql`select class_id, student from hw_members order by student`,
     sql`select id, class_id, day, title, memo, created_at from hw_items order by day desc, id desc limit 1500`,
     sql`select item_id, student, status, score, memo, checked_at from hw_checks`,
