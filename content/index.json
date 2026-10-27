@@ -49,10 +49,17 @@
       "wsynw": 20,
       "wdef": 30,
       "word": 44,
-      "fix": 58
+      "fix": 58,
+      "sjt": 20,
+      "gbb": 14,
+      "vbb": 13
      },
-     "total": 243,
-     "labels": {}
+     "total": 290,
+     "labels": {
+      "sjt": "영문선지 비법 TEST",
+      "gbb": "어법 비법 TEST",
+      "vbb": "어휘 비법 TEST"
+     }
     },
     {
      "id": "ce2ne04",
@@ -65,10 +72,13 @@
       "wsynw": 20,
       "wdef": 30,
       "word": 43,
-      "fix": 50
+      "fix": 50,
+      "sjt": 20
      },
-     "total": 219,
-     "labels": {}
+     "total": 239,
+     "labels": {
+      "sjt": "영문선지 비법 TEST"
+     }
     }
    ]
   },
