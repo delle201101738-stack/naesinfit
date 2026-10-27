@@ -60,6 +60,14 @@ export async function ensure() {
     }
     await sql`insert into hw_meta (k, v) values ('roster', ${ROSTER_VERSION}) on conflict (k) do update set v = excluded.v`;
   }
+  // 예전에 구분자 없이 쓴 이름(김강민)의 시험 기록 → 명단 이름(김강민j)으로 한 번 옮김 (명단 전체에서 그 이름이 하나뿐일 때만)
+  const [am] = await sql`select v from hw_meta where k = 'alias'`;
+  if (!am || am.v !== ROSTER_VERSION) {
+    await sql`with m as (select distinct student, regexp_replace(student, '[A-Za-z0-9]+$', '') as b from hw_members),
+                   u as (select b, min(student) as s from m group by b having count(*) = 1)
+              update attempts a set student = u.s from u where a.student = u.b and u.b <> u.s and u.b <> ''`;
+    await sql`insert into hw_meta (k, v) values ('alias', ${ROSTER_VERSION}) on conflict (k) do update set v = excluded.v`;
+  }
   ready = true;
 }
 

@@ -9,9 +9,15 @@ export default async function handler(req, res) {
     const num = (v, d = 0) => (Number.isFinite(+v) ? Math.round(+v) : d);
 
     await ensure();
+    // 예전 앱(반 고르기 전)에서 구분자 없이 보낸 이름 → 명단 이름으로 (명단에 그 이름이 하나뿐일 때만)
+    let stu = student;
+    if (!/[A-Za-z0-9]$/.test(stu)) {
+      const hit = await sql`select distinct student from hw_members where regexp_replace(student, '[A-Za-z0-9]+$', '') = ${stu}`;
+      if (hit.length === 1) stu = hit[0].student;
+    }
     const [row] = await sql`
       insert into attempts (student, class_name, book, unit_id, part, part_name, scope, total, correct, pct, secs, detail)
-      values (${student}, ${String(b.className || "").slice(0, 40)}, ${String(b.book || "영어II 천재(강상구) 1과").slice(0, 80)},
+      values (${stu}, ${String(b.className || "").slice(0, 40)}, ${String(b.book || "영어II 천재(강상구) 1과").slice(0, 80)},
               ${String(b.unitId || "").replace(/ak$/, "").slice(0, 30)},
               ${String(b.part || "").slice(0, 20)}, ${String(b.partName || "").slice(0, 40)},
               ${String(b.scope || "all").slice(0, 20)},
