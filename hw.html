@@ -158,6 +158,8 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .snd .ic{letter-spacing:1px}
 .snd td.act{display:flex;gap:6px;justify-content:flex-end}
 .btn.sm{padding:7px 11px;font-size:12px}
+.dlt{font-size:12.5px} .dlt small{color:var(--ink-3);font-size:11px}
+.up{color:var(--ok);font-weight:800;font-family:'Archivo',sans-serif} .dn{color:var(--no);font-weight:800;font-family:'Archivo',sans-serif}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
 </style>
 </head>
@@ -333,9 +335,9 @@ function dayChips(mem, items){
   return `<div class="row" style="margin:4px 0 12px"><input class="fld" type="date" id="v-day" value="${VD}" style="width:170px">
     ${list.map(d=>`<button class="chip${d===VD?" on":""}" data-vday="${d}">${fmtD(d)}</button>`).join("")}</div>`;
 }
-function dayTests(s){   // 그날 시험: 파트마다 최고 기록 (재시험 제외)
-  const best={};
-  rowsOfMem(s).filter(x=>x.day===VD && x.scope!=="재시험" && !/^오답노트/.test(x.part_name||"")).forEach(x=>{
+function dayTests(s, d){   // 그날 시험: 파트마다 최고 기록 (재시험 제외)
+  const best={}; d=d||VD;
+  rowsOfMem(s).filter(x=>x.day===d && x.scope!=="재시험" && !/^오답노트/.test(x.part_name||"")).forEach(x=>{
     const k=x.book+"|"+x.part, r=x.total?x.correct/x.total:0;
     if(!best[k]||r>best[k].r) best[k]={k,book:x.book,part:x.part,name:x.part_name,t:x.total,c:x.correct,r}; });
   return Object.values(best);
@@ -359,6 +361,20 @@ function testHTML(cls, mem, items){
     <tfoot><tr><td class="stk">반평균</td>${cols.map(c=>{ const a=colAvg(c); return `<td class="tc">${a?`<b>${a.p}%</b><small>${a.n}명</small>`:""}</td>`; }).join("")}<td></td></tr></tfoot>
   </table></div>`;
 }
+/* 학생 한 명의 하루 요약 + 바로 전 학습일 */
+function dayStat(s, d, items, chk){
+  const v=dayTests(s,d), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
+  const ks=items.filter(i=>i.day===d).map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip"), hd=ks.filter(k=>k.status==="done").length;
+  return {tp:t?Math.round(c/t*100):null, hp:ks.length?Math.round(hd/ks.length*100):null};
+}
+function prevStat(s, items, chk){
+  const ds=new Set(rowsOfMem(s).map(x=>x.day)); items.forEach(i=>{ if(chk[i.id+"|"+s]) ds.add(i.day); });
+  const before=[...ds].filter(d=>d<VD).sort().reverse();
+  let pt=null, ph=null;
+  for(const d of before){ const st=dayStat(s,d,items,chk); if(pt===null&&st.tp!==null) pt={d,v:st.tp}; if(ph===null&&st.hp!==null) ph={d,v:st.hp}; if(pt&&ph) break; }
+  return {pt, ph};
+}
+const arr=(v)=>v===null?"":v>0?`<span class="up">▲${v}</span>`:v<0?`<span class="dn">▼${-v}</span>`:`<span class="na">–</span>`;
 function sendHTML(cls, mem, items, chk){
   if(!RES) return `<div class="card empty">기록을 불러오는 중…</div>`;
   const its=items.filter(i=>i.day===VD);
@@ -366,17 +382,18 @@ function sendHTML(cls, mem, items, chk){
   const rows=mem.map(s=>{ const ks=its.map(i=>chk[i.id+"|"+s]), cc=ks.filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
     const v=dayTests(s), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
     return {s, hw:its.length?{d,n:cc.length,icons:ks.map(k=>k?ICN[k.status]:"⏺").join("")}:null, ts:v.length?{n:v.length,p:Math.round(c/t*100)}:null,
-      url:`${location.origin}/report?student=${encodeURIComponent(s)}&day=${VD}`}; });
+      url:`${location.origin}/report?student=${encodeURIComponent(s)}&day=${VD}`, cur:dayStat(s,VD,items,chk), prev:prevStat(s,items,chk)}; });
   const has=rows.filter(r=>r.hw||r.ts);
   return `<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 숙제+테스트 리포트 보내기</h2><span class="note">링크를 눌러 복사해서 카톡·문자에 바로 붙여넣으세요</span></div>`+dayChips(mem, items)+`
   <div class="card" style="padding:14px 16px;margin-bottom:10px">
     <div class="row" style="justify-content:space-between"><span style="font-size:13px;color:var(--ink-2)">숙제 ${its.length}개 · 기록 있는 학생 <b>${has.length}</b>/${mem.length}명</span>
       <button class="btn pri" data-copyall="1">📋 반 전체 링크 한 번에 복사</button></div></div>
   <div class="card scroll"><table class="snd">
-    <thead><tr><th>학생</th><th>📚 숙제</th><th>📝 테스트</th><th></th></tr></thead>
+    <thead><tr><th>학생</th><th>📚 숙제</th><th>📝 테스트</th><th>📈 지난 학습일 대비</th><th></th></tr></thead>
     <tbody>${rows.map(r=>`<tr${r.hw||r.ts?"":` class="dim"`}><td><b>${esc(r.s)}</b></td>
       <td>${r.hw?`<span class="ic">${r.hw.icons}</span> ${r.hw.n?`<b>${r.hw.d}/${r.hw.n}</b>`:`<span class="na">미검사</span>`}`:`<span class="na">숙제 없음</span>`}</td>
       <td>${r.ts?`${r.ts.n}개 · <b class="tp ${r.ts.p>=85?"hi":r.ts.p>=75?"mid":"lo"}">${r.ts.p}%</b>`:`<span class="na">미응시</span>`}</td>
+      <td class="dlt">${r.prev.ph&&r.cur.hp!==null?`숙제 ${arr(r.cur.hp-r.prev.ph.v)}%p`:""}${r.prev.pt&&r.cur.tp!==null?` 시험 ${arr(r.cur.tp-r.prev.pt.v)}%p <small>(${fmtD(r.prev.pt.d)} ${r.prev.pt.v}%)</small>`:""}${!(r.prev.ph&&r.cur.hp!==null)&&!(r.prev.pt&&r.cur.tp!==null)?`<span class="na">—</span>`:""}</td>
       <td class="act"><button class="btn pri sm" data-copy1="${esc(r.url)}">🔗 링크 복사</button><a class="btn sm" href="${esc(r.url)}" target="_blank" rel="noopener">열기</a></td></tr>`).join("")}</tbody>
   </table></div>`;
 }
