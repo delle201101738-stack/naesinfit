@@ -751,6 +751,8 @@ const PARTS=[
  {id:"tf",    n:"내용일치 TF",   s:"일치하면 T, 아니면 F",           c:"var(--cat-4)", b:"var(--cat-4-s)", k:"단락"},
  {id:"choice",n:"독해",         s:"요약·추론·함축 5지선다",          c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"sjt",   n:"영문선지 비법 TEST", s:"영문 선지 5지선다 · 함정 7종",  c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"gbbw",  n:"어법 비법 밑줄 고치기", s:"밑줄마다 O·X, X는 고쳐 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문항"},
+ {id:"vbbw",  n:"어휘 비법 밑줄 고치기", s:"밑줄마다 O·X, X는 고쳐 쓰기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문항"},
  {id:"gbb",   n:"어법 비법 TEST",    s:"어법 5지선다",                c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문항"},
  {id:"vbb",   n:"어휘 비법 TEST",    s:"어휘 5지선다",                c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문항"},
  {id:"order", n:"순서 배열",     s:"이어질 글의 순서 정하기",         c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
@@ -838,7 +840,7 @@ function go(id){
   $$(".tab").forEach((t,i)=>t.classList.toggle("on",map[id]===i));
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-const isSegP=p=>p==="fix"||p==="word"||p==="word2";
+const isSegP=p=>p==="fix"||p==="word"||p==="word2"||p==="gbbw"||p==="vbbw";
 const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb";
 const multiAns=it=>Array.isArray(it.ans);
 const ulHTML=t=>esc(t).replace(/\[\[(.+?)\]\]/g,"<u>$1</u>");
