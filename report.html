@@ -870,7 +870,7 @@ function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
   e.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#16151F;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:99";
   document.body.appendChild(e); setTimeout(()=>e.remove(),1800); }
 document.addEventListener("click",async e=>{ if(!e.target.closest("[data-cplink]")) return;
-  const ok=await copyText(CURURL?location.origin+"/"+CURURL.replace(/^report\?/,"r?"):location.href);   // /r = 서버에서 글로 채운 리포트 (어디 붙여도 바로 읽힘) flash(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요 · 주소창 링크를 복사해 주세요"); });
+  const ok=await copyText(CURURL?location.origin+"/"+CURURL.replace(/^report\?/,"r?"):location.href); /* /r = 서버에서 글로 채운 리포트 (어디 붙여도 바로 읽힘) */ flash(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요 · 주소창 링크를 복사해 주세요"); });
 
 async function start(name){
   $("#err").textContent="";
