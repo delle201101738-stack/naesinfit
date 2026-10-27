@@ -33,11 +33,22 @@ export default async function handler(req, res) {
     if (!rows.length) return res.status(200).json({ ok: true, rows: [], cls: [], wrong: [], days: 0 });
 
     // 전체 학생 평균(반평균) — 교재·파트별
+    // 반평균 — 같은 교재(과)·같은 시험(파트)·같은 날(한국 시간) 본 학생들, 학생마다 그날 최고 기록 1개씩 (재시험 제외)
+    const books = [...new Set(rows.map(r => r.book))];
     const cls = await sql`
-      select book, part, part_name,
-             sum(total)::int as t, sum(correct)::int as c,
-             count(*)::int as n, count(distinct student)::int as s
-      from attempts group by book, part, part_name`;
+      with x as (
+        select student, book, part, total, correct,
+               to_char(created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') as day
+        from attempts
+        where scope <> '재시험' and total > 0 and book = any(${books})
+      ), b as (
+        select distinct on (student, book, part, day) student, book, part, day, total, correct
+        from x
+        order by student, book, part, day, (correct::float / total) desc
+      )
+      select book, part, day, sum(total)::int as t, sum(correct)::int as c,
+             count(*)::int as s, round(avg(correct * 100.0 / total))::int as p
+      from b group by book, part, day`;
 
     // 반복 오답 — 같은 자리에서 여러 번 틀린 것
     const wrong = await sql`
