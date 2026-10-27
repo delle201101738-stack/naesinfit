@@ -280,37 +280,19 @@
       "wsyn": 20,
       "wsynw": 20,
       "wdef": 30,
-      "vocab": 39,
-      "gram": 69,
-      "cloze": 138,
-      "fix": 50,
-      "tf": 25,
-      "order": 5,
-      "insert": 5,
-      "arrange": 25,
       "word": 60,
-      "word2": 57
-     },
-     "total": 628,
-     "labels": {
-      "word": "통변형 ① 기본 O·X 고치기",
-      "word2": "통변형 ② 심화 O·X 고치기"
-     }
-    },
-    {
-     "id": "e2ne03ak",
-     "no": "3과 올킬",
-     "title": "There’s More than One Way to Vote",
-     "file": "content/e2ne03ak.json",
-     "pts": {
+      "word2": 57,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 105,
-     "labels": {}
+     "total": 377,
+     "labels": {
+      "word": "통변형 ① 기본 O·X 고치기",
+      "word2": "통변형 ② 심화 O·X 고치기"
+     }
     },
     {
      "id": "e2ne04",
@@ -322,37 +304,19 @@
       "wsyn": 20,
       "wsynw": 20,
       "wdef": 30,
-      "vocab": 49,
-      "gram": 66,
-      "cloze": 137,
-      "fix": 60,
-      "tf": 30,
-      "order": 6,
-      "insert": 6,
-      "arrange": 30,
       "word": 73,
-      "word2": 59
-     },
-     "total": 700,
-     "labels": {
-      "word": "통변형 ① 기본 O·X 고치기",
-      "word2": "통변형 ② 심화 O·X 고치기"
-     }
-    },
-    {
-     "id": "e2ne04ak",
-     "no": "4과 올킬",
-     "title": "Breaking the Cycle: Solutions to E-waste",
-     "file": "content/e2ne04ak.json",
-     "pts": {
+      "word2": 59,
       "cloze": 12,
       "tf": 40,
       "choice": 16,
       "order": 8,
       "insert": 8
      },
-     "total": 84,
-     "labels": {}
+     "total": 400,
+     "labels": {
+      "word": "통변형 ① 기본 O·X 고치기",
+      "word2": "통변형 ② 심화 O·X 고치기"
+     }
     }
    ]
   },
@@ -390,28 +354,18 @@
       "wsynw": 20,
       "wdef": 30,
       "word": 55,
-      "fix": 70
-     },
-     "total": 290,
-     "labels": {
-      "word": "통변형 ① 기본",
-      "fix": "통변형 ② 심화"
-     }
-    },
-    {
-     "id": "e2ybm02ak",
-     "no": "2과 올킬",
-     "title": "The Subscription Economy",
-     "file": "content/e2ybm02ak.json",
-     "pts": {
+      "fix": 70,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 105,
-     "labels": {}
+     "total": 395,
+     "labels": {
+      "word": "통변형 ① 기본",
+      "fix": "통변형 ② 심화"
+     }
     },
     {
      "id": "e2ybm03",
@@ -441,28 +395,18 @@
       "wsynw": 20,
       "wdef": 30,
       "word": 61,
-      "fix": 69
-     },
-     "total": 313,
-     "labels": {
-      "word": "통변형 ① 기본",
-      "fix": "통변형 ② 심화"
-     }
-    },
-    {
-     "id": "e2ybm05ak",
-     "no": "5과 올킬",
-     "title": "The Perfect Match",
-     "file": "content/e2ybm05ak.json",
-     "pts": {
+      "fix": 69,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 105,
-     "labels": {}
+     "total": 418,
+     "labels": {
+      "word": "통변형 ① 기본",
+      "fix": "통변형 ② 심화"
+     }
     }
    ]
   },
@@ -494,36 +438,19 @@
      "title": "The Power of Nudges",
      "file": "content/e2cjk02.json",
      "pts": {
-      "vocab": 81,
-      "gram": 110,
-      "fix": 76,
-      "tf": 50,
-      "order": 9,
-      "insert": 9,
-      "arrange": 22,
       "wmean": 30,
       "wsyn": 20,
       "wsynw": 20,
       "wdef": 40,
       "word": 74,
-      "word2": 70
-     },
-     "total": 611,
-     "labels": {}
-    },
-    {
-     "id": "e2cjk02ak",
-     "no": "2과 올킬",
-     "title": "The Power of Nudges",
-     "file": "content/e2cjk02ak.json",
-     "pts": {
+      "word2": 70,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 105,
+     "total": 359,
      "labels": {}
     },
     {
@@ -536,33 +463,15 @@
       "wsyn": 20,
       "wsynw": 20,
       "wdef": 30,
-      "vocab": 54,
-      "gram": 63,
-      "cloze": 102,
-      "fix": 60,
-      "tf": 30,
-      "order": 6,
-      "insert": 6,
-      "arrange": 30,
       "word": 60,
-      "word2": 58
-     },
-     "total": 678,
-     "labels": {}
-    },
-    {
-     "id": "e2cjk04ak",
-     "no": "4과 올킬",
-     "title": "The Future Is Now",
-     "file": "content/e2cjk04ak.json",
-     "pts": {
+      "word2": 58,
       "cloze": 18,
       "tf": 60,
       "choice": 24,
       "order": 12,
       "insert": 12
      },
-     "total": 126,
+     "total": 453,
      "labels": {}
     }
    ],
@@ -635,24 +544,14 @@
       "wsynw": 20,
       "wdef": 30,
       "word": 56,
-      "word2": 66
-     },
-     "total": 304,
-     "labels": {}
-    },
-    {
-     "id": "e2cjs05ak",
-     "no": "5과 올킬",
-     "title": "7000 Oaks Make a Forest",
-     "file": "content/e2cjs05ak.json",
-     "pts": {
+      "word2": 66,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 105,
+     "total": 409,
      "labels": {}
     },
     {
@@ -662,24 +561,14 @@
      "file": "content/e2cjs06.json",
      "pts": {
       "word": 57,
-      "word2": 64
-     },
-     "total": 121,
-     "labels": {}
-    },
-    {
-     "id": "e2cjs06ak",
-     "no": "6과 올킬",
-     "title": "See the Future in Movies",
-     "file": "content/e2cjs06ak.json",
-     "pts": {
+      "word2": 64,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 105,
+     "total": 226,
      "labels": {}
     }
    ],
@@ -730,28 +619,18 @@
       "wsynw": 20,
       "wdef": 30,
       "word": 47,
-      "fix": 44
-     },
-     "total": 271,
-     "labels": {
-      "word": "통변형 O·X 고치기",
-      "fix": "통변형 O·X 고치기 (재시험)"
-     }
-    },
-    {
-     "id": "gwybmk06ak",
-     "no": "6과 올킬",
-     "title": "관계가 만드는 행복",
-     "file": "content/gwybmk06ak.json",
-     "pts": {
+      "fix": 44,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 105,
-     "labels": {}
+     "total": 376,
+     "labels": {
+      "word": "통변형 O·X 고치기",
+      "fix": "통변형 O·X 고치기 (재시험)"
+     }
     }
    ]
   }
