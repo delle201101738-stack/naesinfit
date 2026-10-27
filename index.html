@@ -1799,12 +1799,25 @@ $("#quiz-cta").onclick=()=>{
 /* ───── 채점 ───── */
 /* 고치기 채점: 정답(to·acc)과 똑같거나, 정답 표현을 포함한 문장을 쓰고 틀린 형태(from+앞뒤 단어)가 남아 있지 않으면 정답 */
 function segOk(s,txt,before){
-  const A=[s.to].concat(s.acc||[]).filter(x=>x!=null&&String(x).trim()!=="");
+  const R=x=>/(삭제|생략)\s*$/.test(String(x||""))?"":String(x||"");   // 'that is 삭제' = 밑줄 말을 지움
+  const REPL=[s.to].concat(s.alt||[]).map(R);
+  if(REPL.includes("") && /삭제|생략/.test(String(txt||""))) return true;
+  const A=REPL.concat(s.acc||[]).filter(x=>x!=null&&String(x).trim()!=="");
   const n=norm(txt); if(!n) return false;
-  if(A.some(x=>n===norm(x))) return true;
+  if(A.some(x=>n===norm(x))) return true;                       // ① 해설지 정답·또는·등록된 문장과 같음
+  const T=x=>norm(x).split(" ").filter(Boolean);
+  // ② 고친 핵심만 써도 정답: 원래 말과 정답에서 같은 앞뒤를 뺀 나머지 (condition → condition that ⇒ "that")
+  const core=(from,to)=>{ const f=T(from), t=T(to); let a=0; while(a<f.length&&a<t.length&&f[a]===t[a]) a++;
+    let b=0; while(b<f.length-a&&b<t.length-a&&f[f.length-1-b]===t[t.length-1-b]) b++;
+    return t.slice(a,t.length-b).join(" "); };
+  if(s.from && REPL.some(x=>{ const c=core(s.from,x); return c && n===c; })) return true;
   if(!s.from || String(s.t||"").indexOf(s.from)<0) return false;
   const P=" "+n+" ", inP=k=>!!k && P.indexOf(" "+k+" ")>=0;
   if(!A.some(x=>inP(norm(x)))) return false;
+  // ③ 정답을 포함하더라도 원래 틀린 말이 남아 있으면 오답 (정답 문장에도 원래 있는 단어는 예외)
+  const fixedT=REPL.map(x=>" "+norm(String(s.t).replace(s.from,x))+" ");
+  const gone=T(s.from).filter(w=>!fixedT.some(f=>f.indexOf(" "+w+" ")>=0));
+  if(gone.some(w=>inP(w))) return false;
   const tw=norm(s.t).split(" "), fw=norm(s.from).split(" ").filter(Boolean);
   if(!fw.length) return false;
   let i=-1;
@@ -1812,7 +1825,7 @@ function segOk(s,txt,before){
   if(i<0) return false;
   const prev=tw[i-1]||norm(before||"").split(" ").filter(Boolean).pop()||"", next=tw[i+fw.length]||norm(s.after||"").split(" ")[0]||"";
   const F=fw.join(" ");
-  const fixed=[s.to].concat(s.alt||[]).map(x=>" "+norm((before||"")+" "+String(s.t).replace(s.from,x)+" "+(s.after||""))+" ");
+  const fixed=REPL.map(x=>" "+norm((before||"")+" "+String(s.t).replace(s.from,x)+" "+(s.after||""))+" ");
   const chunks=[[prev,F,next].filter(Boolean).join(" ")]; if(tw.length>1) chunks.push(tw.join(" "));
   return !chunks.some(c=>inP(c) && !fixed.some(f=>f.indexOf(" "+c+" ")>=0));
 }
@@ -1826,7 +1839,7 @@ function grade(part,it,a){
       const m=a[i];
       const nd = m.done===false;   // 밑줄 하나씩 화면에서 안 고른 밑줄 = 무응답(오답)
       let ok = nd ? false : s.wrong ? (m.mk && segOk(s,m.txt,i?it.seg[i-1].after:it.lead)) : !m.mk;
-      d.push({ok, label:s.L, mine: nd?"무응답":m.mk?(m.txt||"(고침 없음)"):"맞다고 표시",
+      d.push({ok, label:s.L, mine: nd?"무응답":m.mk?(m.txt||"(고침 없음)"):"맞다고 표시", self: !!(s.wrong && m.mk && String(m.txt||"").trim()),
         ex:s.ex, right: s.wrong?`${s.from} → ${s.to}${s.alt&&s.alt.length?` (또는 ${s.alt.join(" / ")})`:""}`:(s.okmsg||"어법상 맞음")});
     });
   } else if(part==="tf"){
