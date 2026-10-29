@@ -41,7 +41,11 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans 
 .sec{margin-top:var(--g,5mm)}
 .sec:first-child{margin-top:0}
 .eb{font-size:11pt;font-weight:900;letter-spacing:.32em;color:var(--gold)}
-.h1{font-size:25pt;font-weight:900;color:var(--navy);letter-spacing:-.02em;margin:1.2mm 0 0;line-height:1.25}
+.h1{font-size:23pt;font-weight:900;color:var(--navy);letter-spacing:-.02em;margin:1.2mm 0 0;line-height:1.25}
+.h1 .nm{font-size:31pt;color:var(--navy);background:linear-gradient(transparent 66%, #F3E3B0 66%);padding:0 .6mm}
+.spl{margin:0;padding:0 0 0 5mm;font-size:13.4pt;line-height:1.7}
+.spl li{margin:.6mm 0}
+.spl li::marker{color:var(--gold)}
 .h1s{font-size:12pt;font-weight:900;letter-spacing:.2em;color:var(--navy);margin-top:1.4mm}
 .intro{margin-top:2.6mm;border-left:3px solid var(--cream-line);padding-left:3.4mm;font-size:11.5pt;line-height:1.65;color:var(--ink2)}
 .steps{display:flex;gap:2.4mm;margin-top:2.6mm}
@@ -52,9 +56,10 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans 
 .info div:first-child{border-left:0}
 .info small{display:block;font-size:11pt;color:var(--ink3);letter-spacing:.1em}
 .info b{font-size:14pt;font-weight:900;color:var(--ink)}
+.info div:first-child b{font-size:19pt}
 .info b em{font-style:normal;font-size:11pt;font-weight:700;color:var(--ink2);margin-left:1.4mm}
 .slim{display:flex;align-items:baseline;gap:3mm;border-bottom:2.4px solid var(--navy);padding-bottom:2.4mm}
-.slim .t{font-size:15pt;font-weight:900;color:var(--navy)}
+.slim .t{font-size:22pt;font-weight:900;color:var(--navy)}
 .slim .m{font-size:12pt;color:var(--ink2);font-weight:700}
 .slim .eb{margin-left:auto;font-size:10.5pt}
 .st{font-size:11pt;font-weight:900;letter-spacing:.42em;color:var(--gold);border-bottom:1.4px solid var(--ink);padding-bottom:1.6mm;margin-bottom:2.6mm}
@@ -131,6 +136,10 @@ function chipOf(g){ if(RANK[g]) return {cls:g,t:g}; if(g==="미완") return {cls
 function phraseOf(i,g){ if(g==="미완") return "숙제 미완 · 미검사"; if(g==="미검사") return "이번 회차 검사 안 함"; if(!g) return "이번 회차 기록 없음"; return (i===3?PHW:PH)[g]||""; }
 const chip=(g,extra="")=>{ const c=chipOf(g); return `<span class="chip ${c.cls} ${extra}">${c.t}</span>`; };
 const mdText=d=>{ if(!d) return ""; const [,m,dd]=d.split("-"); return `${+m}월 ${+dd}일`; };
+/* 부르는 이름: 성 빼고, 받침 있으면 '이' (김강민 → 강민이, 김지유 → 지유) */
+const given=n=>{ n=String(n||"").trim(); return n.length>=3?n.slice(1):n; };
+const callName=n=>{ const g=given(n), c=g.charCodeAt(g.length-1); return c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28?g+"이":g; };
+const specialOf=R=>[R.data.special,R.x_special].filter(Boolean).join("\n").trim();
 const tName=t=>!t?"헤이즐 쌤":/^헤이즐$/.test(t.trim())?"헤이즐 쌤":t;
 /* **강조** → 노란 형광 밑줄 (한 문단에 최대 2군데) */
 function para(text){
@@ -141,15 +150,18 @@ function para(text){
 /* ── 섹션 ── */
 function S_header(R){ const d=R.data;
   return `<div class="sec" data-k="head"><div class="eb">INTERVIEW → CHECK → MISSION</div>
-    <div class="h1">헤이즐쌤의 꼼꼼한 인터뷰</div><div class="h1s">1:1 인터뷰 결과리포트 · ${d.round}차</div>
+    <div class="h1">헤이즐쌤과 <span class="nm">${esc(callName(d.name))}</span>와의 꼼꼼한 인터뷰</div><div class="h1s">1:1 인터뷰 결과리포트 · ${d.round}차</div>
     <div class="intro" data-opt="intro">선생님 1명과 학생 1명이 마주 앉아, 시험 범위에서 예고 없이 뽑은 질문에 학생이 직접 말로 답하는 시간입니다. 답을 맞혀도 이유를 모르면, 지문이 조금만 비틀린 순간 무너지기 때문입니다.</div>
     <div class="steps" data-opt="steps"><div><i>1</i>1:1로 마주 앉습니다</div><div><i>2</i>예고 없이 묻습니다</div><div><i>3</i>말로 설명하게 합니다</div></div>
     <div class="info"><div><small>학 생</small><b>${esc(d.name)}<em>${esc(d.cls)}</em></b></div><div><small>범 위</small><b>${esc(d.scope||"—")}</b></div>
       <div><small>회 차</small><b>${d.round}차<em>${mdText(R.day)}</em></b></div><div><small>담 당</small><b>${esc(tName(d.teacher))}</b></div></div></div>`; }
 function S_slim(R){ const d=R.data;
-  return `<div class="sec" data-k="slim"><div class="slim"><span class="t">${esc(d.name)}</span><span class="m">${esc(d.cls)} · ${d.round}차 · ${mdText(R.day)} · ${esc(d.scope||"")}</span><span class="eb">INTERVIEW REPORT</span></div></div>`; }
+  return `<div class="sec" data-k="slim"><div class="slim"><span class="t">${esc(d.name)}</span><span class="m">${esc(callName(d.name))}와의 꼼꼼한 인터뷰 · ${d.round}차 · ${mdText(R.day)}</span><span class="eb">${esc(d.cls)}</span></div></div>`; }
 function S_comment(R){ if(!R.c_title&&!R.c_body) return "";
   return `<div class="sec" data-k="comment"><div class="st">헤이즐 쌤 코멘트</div><div class="cmt">${R.c_title?`<h3>${esc(R.c_title.replace(/\*\*/g,""))}</h3>`:""}${para(R.c_body)}</div></div>`; }
+function S_special(R){ const sp=specialOf(R); if(!sp) return "";
+  const L=sp.split(/\n+|(?:^|\s)[-•]\s+/).map(x=>x.trim()).filter(Boolean);
+  return `<div class="sec" data-k="special"><div class="st">인터뷰에서 본 장면</div><ul class="spl">${L.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`; }
 function S_grades(R){ const g=R.data.cur;
   return `<div class="sec" data-k="grades"><div class="st">이번 회차 결과</div><div class="grades">${AREAS.map((a,i)=>`<div class="gc"><div class="a">${a}</div>${chip(g[i])}<div class="d">${phraseOf(i,g[i])}</div></div>`).join("")}</div></div>`; }
 function S_answers(R){ const A=R.data.answers||[];
@@ -192,6 +204,7 @@ function fitPage(pg, allowScale){
   inn.style.setProperty("--g",GAPS[0]);
   while(!fits(pg)&&gi<GAPS.length-1){ gi++; inn.style.setProperty("--g",GAPS[gi]); }
   for(const k of ["crit","intro","steps"]){ if(fits(pg)) break; const el=inn.querySelector(`[data-opt="${k}"]`); if(el) el.remove(); }
+  while(gi>0){ inn.style.setProperty("--g",GAPS[gi-1]); if(fits(pg)) gi--; else { inn.style.setProperty("--g",GAPS[gi]); break; } }   // 빼고 나서 남는 자리는 다시 간격으로
   let k=1;
   if(!fits(pg)&&allowScale){
     const need=availH(pg)/inn.scrollHeight; k=Math.max(0.6,Math.floor(need*1000)/1000);
@@ -205,15 +218,16 @@ function buildReport(R, host){
   const showCrit=!longComment(R);
   host.innerHTML="";
   if(!two){
-    host.innerHTML=pageHTML(R,[S_header(R),S_comment(R),S_grades(R),S_answers(R),S_prevMissions(R),S_fills(R),S_missions(R),S_home(R),showCrit?S_crit():""].join(""),1,1);
+    host.innerHTML=pageHTML(R,[S_header(R),S_comment(R),S_special(R),S_grades(R),S_answers(R),S_prevMissions(R),S_fills(R),S_missions(R),S_home(R),showCrit?S_crit():""].join(""),1,1);
     const f=fitPage(host.querySelector(".page"),true); return [f];
   }
-  const p1=[S_header(R),S_comment(R),S_grades(R),S_answers(R)], p2=[S_slim(R),S_prevMissions(R),S_change(R),S_fills(R),S_missions(R),S_home(R)];
+  const p1=[S_header(R),S_comment(R),S_special(R),S_grades(R),S_answers(R)], p2=[S_slim(R),S_prevMissions(R),S_change(R),S_fills(R),S_missions(R),S_home(R)];
   host.innerHTML=pageHTML(R,p1.join("")+(showCrit?S_crit():""),1,2)+pageHTML(R,p2.join(""),2,2);
   const [pg1,pg2]=host.querySelectorAll(".page");
   let f1=fitPage(pg1,false);
-  if(f1.over){   // 1쪽이 넘치면 학생 답변을 2쪽 머리로 옮김 (글자는 줄이지 않음)
-    const a=pg1.querySelector('[data-k="answers"]'); if(a){ pg2.querySelector('[data-k="slim"]').insertAdjacentElement("afterend",a); f1=fitPage(pg1,false); }
+  for(const k of ["answers","special"]){   // 1쪽이 넘치면 학생 답변 → 인터뷰 장면 순서로 2쪽 머리로 옮김 (글자는 줄이지 않음)
+    if(!f1.over) break; const a=pg1.querySelector(`[data-k="${k}"]`);
+    if(a){ const anchor=pg2.querySelector('[data-k="answers"]')||pg2.querySelector('[data-k="slim"]'); (k==="special"?pg2.querySelector('[data-k="slim"]'):anchor).insertAdjacentElement("afterend",a); f1=fitPage(pg1,false); }
   }
   if(f1.over) f1=fitPage(pg1,true);
   if(showCrit && !pg1.querySelector('[data-k="crit"]')) pg2.querySelector(".in").insertAdjacentHTML("beforeend",S_crit());   // 1쪽에 못 들어가면 2쪽 여유에
