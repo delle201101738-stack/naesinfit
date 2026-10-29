@@ -71,6 +71,8 @@ export async function ensure() {
       c_title text not null default '', c_body text not null default '', c_src text not null default 'memo',
       memo_changed boolean not null default false, synced_at timestamptz not null default now(),
       unique (sheet_id, sheet_student, day, round))`;
+  // 인터뷰 누적 시작값 (예전 구글 시트에 쌓인 회차별 등급·마지막 미션)
+  await sql`create table if not exists iv_seed (student text primary key, data jsonb not null default '{}'::jsonb, updated_at timestamptz not null default now())`;
   await sql`alter table interview_reports add column if not exists x_special text not null default ''`;   // 선생님이 화면에서 적은 특이사항
   // 학부모 링크 열람 기록 · 비밀번호 틀림 잠금
   await sql`create table if not exists report_views (

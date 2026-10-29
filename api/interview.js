@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { sql, ensure, readBody, checkPin, pinError, tokenFor, nameFromText } from "./_db.js";
 import { listSheets, readTab, saEmail } from "./_google.js";
-import { parseSheet } from "./_ivparse.js";
+import { parseSheet, normGrade } from "./_ivparse.js";
 
 const FOLDER = process.env.INTERVIEW_FOLDER_ID || "1uctrfd1UOQ_i9q1KEZOqfnA5HarT83JG";   // 헤이즐쌤 > 인터뷰지 > [조교 입력시트]
 const kday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
@@ -96,6 +96,60 @@ async function aiComment(d) {
   const o = JSON.parse(m[0]); return { title: String(o.title || "").trim(), body: String(o.body || "").trim() };
 }
 
+// ── 앱 안 입력표 · 누적 ──
+const EMPTY4 = ["", "", "", ""];
+const baseName = s => String(s || "").replace(/[A-Za-z0-9]+$/, "");
+// 이 날짜 전까지의 인터뷰 기록 → 회차별 등급 · 마지막 회차 · 마지막 '이번 미션'(= 다음 회차의 '지난 미션')
+async function historyOf(student, day) {
+  const reps = await sql`select day, round, data from interview_reports where student = ${student} and day < ${day} order by day, round`;
+  const [seed] = await sql`select data from iv_seed where student = ${student}`;
+  const by = {}; let last = 0, missions = [], scope = "", lastDay = "";
+  if (seed) { const s = seed.data || {}; Object.entries(s.byRound || {}).forEach(([k, g]) => { if (g && g.some(Boolean)) by[k] = g; }); last = +s.round || 0; missions = s.missions || []; scope = s.scope || ""; }
+  for (const r of reps) {
+    const d = r.data || {}; if (!d.cur || d.cur.every(x => !x)) continue;
+    (d.pastRounds || []).forEach(p => { if (!by[p.n] && p.g) by[p.n] = p.g; });
+    (d.past || []).forEach((g, i) => { if (g && g.some(Boolean) && !by[i + 1]) by[i + 1] = g; });
+    by[r.round] = d.cur;
+    if (r.round >= last) { last = r.round; missions = d.missions || []; scope = d.scope || scope; lastDay = r.day; }
+  }
+  return { last, next: last + 1, byRound: by, missions, scope, lastDay };
+}
+const T = (v, n) => String(v ?? "").trim().slice(0, n);
+async function saveGridRow(cid, day, student, row) {
+  const [c] = await sql`select name from hw_classes where id = ${cid}`;
+  const sid = "app:" + cid;
+  const cur = [row.g0, row.g1, row.g2, row.g3].map(normGrade);
+  const txt = ["title", "body", "special", "a1", "a2", "a3", "change", "f1", "f2", "f3", "m1", "m2", "m3", "home"].some(k => T(row[k], 9))
+    || cur.some(Boolean) || (row.mr || []).some(Boolean);
+  if (!txt) { await sql`delete from interview_reports where sheet_id = ${sid} and sheet_student = ${student} and day = ${day}`; return null; }
+  const h = await historyOf(student, day);
+  const round = Math.max(1, Math.min(20, Number(row.round) || h.next));
+  const prevN = Object.keys(h.byRound).map(Number).filter(n => n < round).sort((a, b) => a - b);
+  const fill = t => { t = T(t, 600); if (!t) return null; const p = t.split("::"); return p.length > 1 ? { area: p[0].trim(), text: p.slice(1).join("::").trim() } : { area: "", text: t }; };
+  const data = {
+    row: 0, name: baseName(student), cls: c ? c.name : "", scope: T(row.scope, 60) || h.scope, round, day, dayRaw: day, teacher: T(row.teacher, 30) || "헤이즐",
+    cur, past: [1, 2, 3].map(k => h.byRound[k] || EMPTY4), pastRounds: prevN.slice(-3).map(n => ({ n, g: h.byRound[n] })),
+    title: T(row.title, 200), body: T(row.body, 3000), special: T(row.special, 2000),
+    answers: [1, 2, 3].map(k => ({ q: T(row["a" + k], 500), ctx: T(row["c" + k], 200) })).filter(x => x.q),
+    missionsPrev: h.missions.map((t, i) => ({ t, r: T((row.mr || [])[i], 2).toUpperCase() })),
+    change: T(row.change, 1000), fills: [row.f1, row.f2, row.f3].map(fill).filter(Boolean),
+    missions: [row.m1, row.m2, row.m3].map(x => T(x, 300)).filter(Boolean), home: T(row.home, 400), input: row
+  };
+  const mh = hash({ t: data.title, b: data.body, cur });
+  await sql`delete from interview_reports where sheet_id = ${sid} and sheet_student = ${student} and day = ${day} and round <> ${round}`;
+  const [old] = await sql`select id, c_src from interview_reports where sheet_id = ${sid} and sheet_student = ${student} and day = ${day} and round = ${round}`;
+  if (!old) {
+    const [r] = await sql`insert into interview_reports (sheet_id, sheet_name, day, round, sheet_student, student, cls, data, memo_hash, c_title, c_body, c_src)
+      values (${sid}, ${data.cls}, ${day}, ${round}, ${student}, ${student}, ${data.cls}, ${JSON.stringify(data)}::jsonb, ${mh}, ${data.title}, ${data.body}, 'memo') returning id`;
+    return r.id;
+  }
+  if (old.c_src === "edit" || old.c_src === "ai")
+    await sql`update interview_reports set data = ${JSON.stringify(data)}::jsonb, memo_hash = ${mh}, memo_changed = (memo_hash <> ${mh}) or memo_changed, synced_at = now() where id = ${old.id}`;
+  else
+    await sql`update interview_reports set data = ${JSON.stringify(data)}::jsonb, memo_hash = ${mh}, c_title = ${data.title}, c_body = ${data.body}, synced_at = now() where id = ${old.id}`;
+  return old.id;
+}
+
 const pub = r => ({ id: r.id, day: r.day, round: r.round, student: r.student, sheet_student: r.sheet_student, cls: r.cls, sheet_name: r.sheet_name,
   data: r.data, x_special: r.x_special || "", c_title: r.c_title, c_body: r.c_body, c_src: r.c_src, memo_changed: r.memo_changed, synced_at: r.synced_at, warn: warnOf(r.data) });
 
@@ -114,13 +168,23 @@ export default async function handler(req, res) {
     }
     const gate = await checkPin(req).catch(() => ({ ok: false, why: "ERR" }));
     if (!gate.ok) return res.status(401).json({ error: pinError(gate) });
+    if (req.method === "GET" && u.searchParams.get("grid")) {   // 입력표: 반 명단 + 누적(회차·지난 등급·지난 미션) + 그날 입력한 줄
+      const cid = Number(u.searchParams.get("class_id")) || 0, day = DAY(u.searchParams.get("day")) || kday();
+      const mem = (await sql`select student from hw_members where class_id = ${cid}`).map(m => m.student).sort((a, b) => a.localeCompare(b, "ko"));
+      const rows = await sql`select id, sheet_student, data from interview_reports where sheet_id = ${"app:" + cid} and day = ${day}`;
+      const out = [];
+      for (const s of mem) { const h = await historyOf(s, day), r = rows.find(x => x.sheet_student === s);
+        out.push({ student: s, name: baseName(s), hist: h, id: r ? r.id : null, input: r ? (r.data.input || null) : null }); }
+      return res.status(200).json({ ok: true, day, class_id: cid, members: out });
+    }
     if (req.method === "GET") {
       const day = DAY(u.searchParams.get("day")) || kday();
       const ids = (u.searchParams.get("ids") || "").split(",").map(Number).filter(Boolean);
       const list = ids.length ? await sql`select * from interview_reports where id = any(${ids}) order by cls, student`
                               : await sql`select * from interview_reports where day = ${day} order by cls, student`;
       const days = await sql`select day, count(*)::int as n from interview_reports group by day order by day desc limit 30`;
-      return res.status(200).json({ ok: true, day, list: list.map(pub), days, sa: saEmail(), ai: !!process.env.ANTHROPIC_API_KEY });
+      const ok = list.filter(r => (r.data.cur || []).some(Boolean)), noGrade = list.filter(r => !(r.data.cur || []).some(Boolean)).map(r => r.data.name + (r.cls ? ` (${r.cls})` : ""));
+      return res.status(200).json({ ok: true, day, list: ok.map(pub), noGrade, days, sa: saEmail(), ai: !!process.env.ANTHROPIC_API_KEY });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "GET·POST만 받습니다" });
     const b = await readBody(req);
@@ -161,6 +225,19 @@ export default async function handler(req, res) {
         const rows = await sql`select id, student from interview_reports where id = any(${ids})`;
         const tk = await tokenFor([...new Set(rows.map(r => r.student))]);
         return res.status(200).json({ ok: true, tokens: Object.fromEntries(rows.map(r => [r.id, tk[r.student]])) });
+      }
+      case "iv.save": {        // 입력표 한 줄 저장 (칸을 바꿀 때마다)
+        const cid = Number(b.class_id) || 0, day = DAY(b.day), st = T(b.student, 20);
+        if (!cid || !day || !st) return res.status(400).json({ error: "반·날짜·학생이 없습니다" });
+        const id = await saveGridRow(cid, day, st, b.row || {});
+        return res.status(200).json({ ok: true, id, hist: await historyOf(st, day) });
+      }
+      case "iv.seed": {        // 예전 구글 시트 기록을 누적 시작값으로
+        const rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 400); let n = 0;
+        for (const r of rows) { const st = T(r.student, 20); if (!st) continue;
+          await sql`insert into iv_seed (student, data, updated_at) values (${st}, ${JSON.stringify({ round: +r.round || 0, byRound: r.byRound || {}, missions: r.missions || [], scope: T(r.scope, 60), from: T(r.from, 60) })}::jsonb, now())
+                    on conflict (student) do update set data = excluded.data, updated_at = now()`; n++; }
+        return res.status(200).json({ ok: true, n });
       }
       case "delete": {
         const id = Number(b.id) || 0; await sql`delete from interview_reports where id = ${id}`; return res.status(200).json({ ok: true });
