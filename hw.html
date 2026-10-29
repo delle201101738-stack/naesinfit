@@ -207,6 +207,7 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 <div id="app" hidden>
   <header class="bar"><div class="bar-in">
     <div style="flex:1"><h1>반별 관리</h1><div class="sub" id="bar-sub">숙제 검사 · 테스트 현황 · 리포트 보내기를 반별로</div></div>
+    <button class="btn pri" id="iv-btn" title="조교 입력시트의 그날 인터뷰로 리포트 만들기">🎤 인터뷰 리포트</button>
     <button class="btn" id="names-btn" title="갈라진 이름 기록 합치기 · 동명이인 정리">🧹 이름 정리</button>
     <button class="btn" id="backup-btn" title="반·숙제·시험 기록 전체를 엑셀로">💾 엑셀 백업</button>
     <a class="btn" href="teacher">← 대시보드</a>
@@ -256,6 +257,7 @@ function render0(){
   <div class="sec"><h2>${esc(cls.name)} · 학생 ${mem.length}명</h2>
     <span class="note"><button class="btn" id="cls-exam">📅 시험 ${cls.exam_date?`${esc(cls.exam_name||"내신")} ${fmtD(cls.exam_date)} (D-${Math.max(0,Math.round((new Date(cls.exam_date)-new Date(today()))/864e5))})`:"날짜 넣기"}</button> <button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>`;
   if(VIEW==="names"){ $("#cls").innerHTML=namesHTML(); return; }
+  if(VIEW==="iv"){ $("#cls").innerHTML=ivHTML(); return; }
   if(!RES){ loadRes().then(()=>{ if(TAB==="hw") paintAlerts(); else render(); }); }
   if(TAB!=="hw"){ $("#cls").innerHTML=HEAD+`<div id="alerts"></div>`+tabsHTML()+(TAB==="test"?testHTML(cls,mem,items):sendHTML(cls,mem,items,chk)); return; }
   $("#cls").innerHTML=HEAD+`<div id="alerts"></div>`+tabsHTML()+`
@@ -541,7 +543,66 @@ function namesHTML(){
     ${dups.length?`<div style="margin-top:6px">📚 두 반 이상에 있는 이름: ${dups.map(n=>`<b>${esc(n)}</b> <small style="color:var(--ink-3)">(${esc(clsOf(n).join(", "))})</small>`).join(" · ")} — 같은 학생이 아니라면 한쪽 이름에 구분 글자를 붙여 주세요</div>`:""}
     <div style="margin-top:8px;font-size:12px;color:var(--ink-3)">학생이 새로 들어올 때 다른 반에 같은 이름이 있으면 앱이 자동으로 뒤에 번호를 붙여요 (김민준 → 김민준2). 같은 반 동명이인은 학생이 목록에서 자기 이름을 골라요.</div></div>`;
 }
+/* ── 🎤 꼼꼼한 인터뷰 리포트 (조교 입력시트 동기화) ── */
+let IV={day:today(), list:null, info:null, last:null, edit:null, busy:""};
+async function ivApi(body){ const r=await fetch("/api/interview"+(body?"":`?day=${IV.day}`),{method:body?"POST":"GET",headers:{"x-pin":PIN,"content-type":"application/json"},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"요청 실패"); return j; }
+async function ivLoad(){ try{ const j=await ivApi(); IV.list=j.list; IV.info=j; }catch(e){ IV.list=[]; IV.info={error:e.message}; } render(); }
+const ivSrc={memo:["조교 메모 그대로","#6B7280"],ai:["AI로 다듬음","#2563EB"],edit:["직접 고침","#047857"]};
+function ivHTML(){
+  if(!IV.list){ ivLoad(); return `<div class="card empty">불러오는 중…</div>`; }
+  const I=IV.info||{}, L=IV.last, by={};
+  IV.list.forEach(R=>{ (by[R.sheet_name] ||= []).push(R); });
+  const gchip=g=>`<span style="display:inline-block;min-width:24px;text-align:center;padding:2px 6px;border-radius:6px;font-weight:800;font-size:12px;color:#fff;background:${{A:"#2E7D4F",B:"#D08A1A",C:"#C0392B",D:"#7B1E1E"}[g]||"#A3A8B4"}">${esc(g||"—")}</span>`;
+  return `<div class="sec"><h2>🎤 꼼꼼한 인터뷰 리포트</h2><span class="note"><button class="btn" id="iv-close">← 반 화면으로</button></span></div>
+  <div class="card" style="padding:14px 16px">
+    <div class="row" style="gap:8px"><input class="fld" type="date" id="iv-day" value="${IV.day}" style="width:170px">
+      <button class="btn pri" id="iv-sync">${IV.busy==="sync"?"불러오는 중…":"🔄 구글 시트에서 그날 인터뷰 불러오기"}</button>
+      ${IV.list.length?`<a class="btn" href="interview?day=${IV.day}" target="_blank" rel="noopener">📄 전체 보기 · 합본 PDF · ZIP</a>`:""}
+      ${IV.list.length&&I.ai?`<button class="btn" id="iv-ai-all">${IV.busy==="ai"?"다듬는 중…":"✍️ 코멘트 모두 AI로 다듬기"}</button>`:""}</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--ink-3);line-height:1.7">조교 입력시트 폴더(헤이즐쌤 › 인터뷰지 › [조교 입력시트])의 시트를 모두 읽어서, <b>인터뷰일자가 이 날짜인 줄</b>만 리포트로 만들어요.
+      ${I.sa?`<br>구글 연결: <b>${esc(I.sa)}</b> — 새 시트를 만들면 이 폴더 안에 두면 돼요.`:`<br><b style="color:var(--no)">구글 연결 전</b> — Vercel 환경변수 GOOGLE_SA_JSON을 넣어야 불러올 수 있어요.`}
+      ${I.ai?"":`<br>AI 코멘트 다듬기 꺼짐 — 지금은 조교 메모가 그대로 나가요 (ANTHROPIC_API_KEY를 넣으면 켜져요). 아래 ✏️로 직접 고칠 수 있어요.`}</div>
+  </div>
+  ${I.error?`<div class="alerts">${esc(I.error)}</div>`:""}
+  ${L?`<div class="alerts" style="background:#F2F4F9;border-color:var(--line);color:var(--ink-2)">
+      시트 ${L.sheets.length}개 읽음 (${L.sheets.map(s=>`${esc(s.name.replace(/^\[.*?\]\s*/,""))} ${s.today}명`).join(" · ")}) · 리포트 <b>${L.made.length}명</b>
+      ${L.skipNoGrade.length?`<br>⚠ 등급 네 칸이 비어 <b>리포트를 만들지 않은 학생</b>: ${esc(L.skipNoGrade.join(", "))}`:""}
+      ${L.noDate?`<br>ℹ 인터뷰일자가 비어 있는 줄 ${L.noDate}개는 건너뛰었어요 (날짜를 적어야 불러와요)`:""}
+      ${L.errors.length?`<br>❗ ${esc(L.errors.join(" / "))}`:""}</div>`:""}
+  ${IV.list.length?Object.entries(by).map(([sh,rs])=>`<div class="sec"><h2 style="font-size:15px">${esc(sh.replace(/^\[.*?\]\s*/,""))} · ${rs.length}명</h2></div>
+    <div class="card" style="padding:4px 16px">${rs.map(R=>{ const d=R.data, src=ivSrc[R.c_src]||ivSrc.memo, ed=String(IV.edit)===String(R.id);
+      return `<div class="nmrow" style="align-items:flex-start">
+        <span class="who"><b>${esc(d.name)}</b>${R.student!==d.name?` <small style="display:inline">→ ${esc(R.student)}</small>`:""} <small style="display:inline">${d.round}차 · ${esc(d.scope||"")}</small>
+          <span style="display:flex;gap:4px;margin-top:5px">${d.cur.map(gchip).join("")}</span>
+          <small style="margin-top:5px;color:${src[1]}">💬 ${src[0]}${R.memo_changed?` · <b style="color:var(--no)">시트 메모가 바뀌었어요 (되돌리면 새 메모로)</b>`:""}</small>
+          ${R.c_title?`<small style="color:var(--ink);margin-top:3px"><b>${esc(R.c_title)}</b> ${esc((R.c_body||"").slice(0,90))}${(R.c_body||"").length>90?"…":""}</small>`:""}
+          ${R.warn.length?`<small style="color:#B45309;margin-top:3px">⚠ ${esc(R.warn.join(" · "))}</small>`:""}
+          ${ed?`<div style="margin-top:8px"><input class="fld" id="iv-et" value="${esc(R.c_title)}" placeholder="코멘트 제목 (한 문장)" style="width:100%">
+            <textarea class="fld" id="iv-eb" rows="6" style="width:100%;margin-top:6px" placeholder="코멘트 본문 · **별표 두 개**는 노란 형광 밑줄 (한 문단 최대 2군데)">${esc(R.c_body)}</textarea>
+            <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn" data-ivreset="${R.id}">조교 메모로 되돌리기</button><button class="btn" data-ivcancel="1">취소</button><button class="btn pri" data-ivsave="${R.id}">저장</button></div></div>`:""}
+        </span>
+        <span class="row" style="gap:6px">${I.ai?`<button class="btn sm" data-ivai="${R.id}">✍️ AI</button>`:""}<button class="btn sm" data-ivedit="${R.id}">✏️ 고치기</button>
+          <a class="btn sm" href="interview?ids=${R.id}" target="_blank" rel="noopener">보기 · PDF</a><button class="btn sm pri" data-ivlink="${R.id}">🔗 학부모 링크</button></span></div>`; }).join("")}</div>`).join("")
+    :`<div class="card empty" style="padding:24px">${fmtD(IV.day)}에 불러온 인터뷰가 없어요 · 위 버튼으로 시트에서 불러오세요</div>`}`;
+}
+async function ivClick(t){
+  if(t.closest("#iv-btn")){ VIEW="iv"; IV.list=null; render(); scrollTo({top:0}); return true; }
+  if(t.closest("#iv-close")){ VIEW=""; render(); return true; }
+  if(t.closest("#iv-sync")){ IV.busy="sync"; render(); try{ IV.last=await ivApi({action:"sync",day:IV.day}); toast(`인터뷰 ${IV.last.made.length}명을 불러왔어요`); }catch(e){ alert(e.message); } IV.busy=""; await ivLoad(); return true; }
+  if(t.closest("#iv-ai-all")){ if(!confirm(`${IV.list.length}명 코멘트를 AI로 다듬을까요? 직접 고친 코멘트도 다시 써져요.`)) return true;
+    IV.busy="ai"; render(); try{ const j=await ivApi({action:"comment.ai",ids:IV.list.map(R=>R.id)}); if(j.fail.length) alert("못 다듬은 학생:\n"+j.fail.join("\n")); }catch(e){ alert(e.message); } IV.busy=""; await ivLoad(); return true; }
+  const a=t.closest("[data-ivai]"); if(a){ a.textContent="다듬는 중…"; a.disabled=true; try{ const j=await ivApi({action:"comment.ai",ids:[+a.dataset.ivai]}); if(j.fail.length) alert(j.fail.join("\n")); }catch(e){ alert(e.message); } await ivLoad(); return true; }
+  const e=t.closest("[data-ivedit]"); if(e){ IV.edit=e.dataset.ivedit; render(); return true; }
+  if(t.closest("[data-ivcancel]")){ IV.edit=null; render(); return true; }
+  const s=t.closest("[data-ivsave]"); if(s){ try{ await ivApi({action:"comment.set",id:+s.dataset.ivsave,title:$("#iv-et").value,body:$("#iv-eb").value}); IV.edit=null; toast("코멘트를 저장했어요"); }catch(err){ alert(err.message); } await ivLoad(); return true; }
+  const rs=t.closest("[data-ivreset]"); if(rs){ if(!confirm("조교 메모로 되돌릴까요?")) return true; try{ await ivApi({action:"comment.set",id:+rs.dataset.ivreset,reset:true}); IV.edit=null; }catch(err){ alert(err.message); } await ivLoad(); return true; }
+  const lk=t.closest("[data-ivlink]"); if(lk){ try{ const j=await ivApi({action:"tokens",ids:[+lk.dataset.ivlink]}); const R=IV.list.find(x=>String(x.id)===lk.dataset.ivlink);
+      const ok=await copyText(`${location.origin}/iv/${j.tokens[lk.dataset.ivlink]}?d=${R.day}`); toast(ok?"인터뷰 리포트 링크를 복사했어요":"복사가 안 돼요"); }catch(err){ alert(err.message); } return true; }
+  return false;
+}
 async function namesClick(t){
+  if(await ivClick(t)) return true;
   if(t.closest("#names-btn")){ VIEW="names"; render(); scrollTo({top:0}); return true; }
   if(t.closest("#names-close")){ VIEW=""; render(); return true; }
   const mg=t.closest("[data-merge]"), go=t.closest("#mg-go");
@@ -763,6 +824,7 @@ document.addEventListener("click",async e=>{
   const op=t.closest("[data-open]"); if(op){ OPEN[op.dataset.open]=!OPEN[op.dataset.open]; render(); return; }
 });
 document.addEventListener("change",async e=>{
+  if(e.target.id==="iv-day"){ IV.day=e.target.value||today(); IV.list=null; IV.last=null; render(); return; }
   if(e.target.id==="att-day"){ AD=e.target.value||today(); render(); return; }
   const amI=e.target.closest&&e.target.closest("[data-am]"); if(amI){ const s=amI.dataset.am, cur=attRec(s,AD);
     try{ await setAtt(s, cur?cur.status:"etc", amI.value.trim()); if(!cur) render(); toast(cur?"메모 저장":"메모 저장 · 상태는 📝기타로 표시했어요"); }catch(err){ alert(err.message); } return; }
