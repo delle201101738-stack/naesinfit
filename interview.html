@@ -133,7 +133,12 @@ const PH={A:"자기 말로 설명함",B:"이유를 못 댐",C:"답 자체가 흔
 const PHW={A:"오답까지 정리됨",B:"정리했지만 이유가 빠짐",C:"정리가 부족함",D:"정리하지 않음"};
 const RANK={A:4,B:3,C:2,D:1};
 function chipOf(g){ if(RANK[g]) return {cls:g,t:g}; if(g==="미완") return {cls:"G",t:"미완"}; if(g==="미검사") return {cls:"G",t:"미검사"}; return {cls:"E",t:"—"}; }
-function phraseOf(i,g){ if(g==="미완") return "숙제 미완 · 미검사"; if(g==="미검사") return "이번 회차 검사 안 함"; if(!g) return "이번 회차 기록 없음"; return (i===3?PHW:PH)[g]||""; }
+/* 등급 칩 아래 한 줄: ① 선생님이 고친/AI가 피드백 보고 쓴 영역별 한 줄 → ② '보완' 칸에 그 영역의 짧은 설명 → ③ 등급 기본 뜻 */
+const AREA_KEY=[/독해|내용|주제|빈칸|순서|삽입/,/어휘|단어/,/어법|문법/,/오답|교재|숙제/];
+function phraseOf(i,g,R){ if(g==="미완") return "숙제 미완 · 미검사"; if(g==="미검사") return "이번 회차 검사 안 함"; if(!g) return "이번 회차 기록 없음";
+  const own=R&&R.c_areas&&String(R.c_areas[i]||"").trim(); if(own) return own;
+  const f=R&&(R.data.fills||[]).find(x=>x.area&&AREA_KEY[i].test(x.area)); if(f&&f.text&&f.text.replace(/\s/g,"").length<=18) return f.text;
+  return (i===3?PHW:PH)[g]||""; }
 const chip=(g,extra="")=>{ const c=chipOf(g); return `<span class="chip ${c.cls} ${extra}">${c.t}</span>`; };
 const mdText=d=>{ if(!d) return ""; const [,m,dd]=d.split("-"); return `${+m}월 ${+dd}일`; };
 /* 부르는 이름: 성 빼고, 받침 있으면 '이' (김강민 → 강민이, 김지유 → 지유) */
@@ -163,7 +168,7 @@ function S_special(R){ const sp=specialOf(R); if(!sp) return "";
   const L=sp.split(/\n+|(?:^|\s)[-•]\s+/).map(x=>x.trim()).filter(Boolean);
   return `<div class="sec" data-k="special"><div class="st">인터뷰에서 본 장면</div><ul class="spl">${L.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`; }
 function S_grades(R){ const g=R.data.cur;
-  return `<div class="sec" data-k="grades"><div class="st">이번 회차 결과</div><div class="grades">${AREAS.map((a,i)=>`<div class="gc"><div class="a">${a}</div>${chip(g[i])}<div class="d">${phraseOf(i,g[i])}</div></div>`).join("")}</div></div>`; }
+  return `<div class="sec" data-k="grades"><div class="st">이번 회차 결과</div><div class="grades">${AREAS.map((a,i)=>`<div class="gc"><div class="a">${a}</div>${chip(g[i])}<div class="d">${esc(phraseOf(i,g[i],R))}</div></div>`).join("")}</div></div>`; }
 function S_answers(R){ const A=R.data.answers||[];
   return `<div class="sec" data-k="answers"><div class="st">학생이 실제로 한 답변</div>${A.length?A.map(a=>`<div class="ans"><div class="q">${esc(a.q)}</div>${a.ctx?`<div class="c">${esc(a.ctx)}</div>`:""}</div>`).join(""):`<div class="ans empty"></div>`}</div>`; }
 function S_crit(){ return `<div class="sec" data-k="crit" data-opt="crit"><div class="st">A · B · C 판정 기준</div><div class="crit"><div class="r">
@@ -317,6 +322,11 @@ window.addEventListener("resize",fitScreen);
       const r=await fetch(`/api/interview?${ids?`ids=${encodeURIComponent(ids)}`:`day=${encodeURIComponent(day)}${cls?`&cls=${encodeURIComponent(cls)}`:""}`}`,{cache:"no-store",headers:{"x-pin":PIN}}); const j=await r.json();
       if(!r.ok) throw new Error(j.error||"불러오지 못했어요");
       LIST=j.list||[]; if(!LIST.length) throw new Error("이 날짜에 동기화된 인터뷰가 없어요");
+      // 아직 안 다듬은 코멘트(조교 메모 그대로)·메모가 바뀐 AI 코멘트는 열자마자 AI로 다듬기 (직접 고친 건 그대로)
+      if(j.ai){ const need=LIST.filter(R=>R.c_src!=="edit"&&R.c_src!=="raw"&&(R.c_src==="memo"||R.memo_changed||!(R.c_areas||[]).some(Boolean)));
+        for(let k=0;k<need.length;k++){ $("#gate").textContent=`✍️ 메모를 리포트 문장으로 다듬는 중… ${k+1}/${need.length}`;
+          try{ await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"comment.ai",ids:[need[k].id]})}); }catch(e){} }
+        if(need.length){ const r2=await fetch(`/api/interview?ids=${LIST.map(x=>x.id).join(",")}`,{cache:"no-store",headers:{"x-pin":PIN}}); const j2=await r2.json(); if(r2.ok) LIST=j2.list||LIST; } }
       try{ const t=await (await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"tokens",ids:LIST.map(x=>x.id)})})).json();
         LIST.forEach(R=>{ const k=(t.tokens||{})[R.id]; if(k) R.link=`${location.origin}/iv/${k}?d=${R.day}`; }); }catch(e){}
       render(true);

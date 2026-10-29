@@ -4,6 +4,9 @@
   "functions": {
     "api/mock.js": {
       "maxDuration": 60
+    },
+    "api/interview.js": {
+      "maxDuration": 60
     }
   },
   "headers": [

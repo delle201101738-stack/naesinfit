@@ -216,6 +216,7 @@ details.more[open]>summary{border-bottom:1px solid var(--line);margin-bottom:6px
 @media print{details.more{display:block}.nsave,.vsel{display:none}}
 .cum{padding:14px 16px}
 .cum svg{width:100%;height:140px;display:block;overflow:visible;margin:4px 0 10px}
+.cum .cv{font-size:10.5px;color:var(--ink-3);margin-top:1px} .cum .cv .up{font-size:10.5px} .cum .cv .down{font-size:10.5px}
 .lgd2{display:flex;gap:14px;font-size:11.5px;font-weight:700;color:var(--ink-3)}
 .lgd2 span::before{content:"";display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:3px}
 .lgd2 .h::before{background:var(--ok)} .lgd2 .t::before{background:var(--pri)}
@@ -537,17 +538,24 @@ function hwBlock(HW, day, TD){
   if(rp!==null&&rec.length>=3) c+=(c?" ":"📚 <b>숙제</b> — ")+(rp>=90?`최근 숙제 완료율 <b>${rp}%</b>로 아주 성실해요.`:rp>=70?`최근 숙제 완료율은 <b>${rp}%</b>예요.`:`최근 숙제 완료율은 <b>${rp}%</b>예요 — 숙제 습관을 함께 잡아 갈게요.`);
   return {html, cmt:c, chip:todays.length?`${td}/${chk.length||todays.length}`:null, td, tot, pct, chk:chk.length, miss, rp};
 }
-/* ── 누적 기록: 학습일마다 숙제 완료율 + 시험 정답률 (모든 과) ── */
+/* ── 누적 기록: 학습일마다 숙제 완료율 + 시험 정답률 (모든 과) + 반평균 ── */
+let CLSIDX={};
 function cumulative(D, upto){
+  CLSIDX={}; (D.cls||[]).forEach(x=>{ CLSIDX[bk(x.book)+"|"+x.part+"|"+x.day]=x; });
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)})), HW=D.hw||[];
   const isRe=x=>x.scope==="재시험"||/^오답노트/.test(x.part_name||"");
   const ds=[...new Set(RA.map(x=>dkey(x.created_at)).concat(HW.map(h=>h.day),attDays(D)))].filter(d=>d<=upto).sort();
   return ds.map(d=>{
     const best={}; RA.filter(x=>dkey(x.created_at)===d&&!isRe(x)).forEach(x=>{ const k=x.book+"|"+x.part, r=x.total?x.correct/x.total:0;
-      if(!best[k]||r>best[k].r) best[k]={t:x.total,c:x.correct,r,book:x.book}; });
+      if(!best[k]||r>best[k].r) best[k]={t:x.total,c:x.correct,r,book:x.book,part:x.part}; });
     const v=Object.values(best), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
     const hs=HW.filter(h=>h.day===d&&h.status&&h.status!=="skip"), hd=hs.filter(h=>h.status==="done").length;
+    // 반평균: 그날 이 학생이 본 시험과 같은 시험(같은 과·파트·날)을 본 학생 3명 이상일 때, 문항 수 가중 평균
+    let ct=0, cs=0; v.forEach(x=>{ const cl=CLSIDX[x.book+"|"+x.part+"|"+d]; if(cl&&cl.s>=3){ ct+=x.t; cs+=(cl.p!=null?cl.p:Math.round(cl.c/cl.t*100))*x.t; } });
+    // 반 숙제 완료율: 그날 숙제들의 반 전체 완료 ÷ 검사한 칸
+    const hall=HW.filter(h=>h.day===d&&h.nc), hn_=hall.reduce((a,h)=>a+(+h.nc||0),0), hdn=hall.reduce((a,h)=>a+(+h.nd||0),0);
     return {d, tp:t?Math.round(c/t*100):null, tn:v.length, books:[...new Set(v.map(x=>x.book.split(" · ").pop()))],
+      tc:ct?Math.round(cs/ct):null, hcls:hn_>=3?Math.round(hdn/hn_*100):null,
       hp:hs.length?Math.round(hd/hs.length*100):null, hd, hc:hs.length, hn:HW.filter(h=>h.day===d).length, at:(attOf(D,d)||{}).status||""};
   });
 }
@@ -560,24 +568,27 @@ const arrow=(v,u="점")=>v===null||v===undefined?"":v>0?`<span class="up">▲ ${
 function cumHTML(CUM, day, name){
   const L=CUM.slice(-8); if(L.length<2) return "";
   const W=320,H=140, xs=i=>L.length===1?W/2:22+i*((W-44)/(L.length-1)), ys=v=>H-18-(v/100)*(H-44);
+  const dash=(k,col)=>{ const pts=L.map((x,i)=>x[k]==null?null:[xs(i),ys(x[k])]).filter(Boolean);
+    return pts.length>1?`<path d="${pts.map((p,i)=>`${i?"L":"M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ")}" fill="none" stroke="${col}" stroke-opacity=".55" stroke-width="1.6" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>`
+      :pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="none" stroke="${col}" stroke-opacity=".6" stroke-width="1.4"/>`).join(""); };
   const line=(k,col)=>{ const pts=L.map((x,i)=>x[k]===null?null:[xs(i),ys(x[k])]).filter(Boolean);
     return pts.length?`<path d="${pts.map((p,i)=>`${i?"L":"M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`
       +L.map((x,i)=>x[k]===null?"":`<circle cx="${xs(i).toFixed(1)}" cy="${ys(x[k]).toFixed(1)}" r="${x.d===day?5:3.4}" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`).join(""):""; };
   const rows=L.slice().reverse().map((x,i,arr)=>{ const pv=arr.slice(i+1);
     const pt=pv.find(y=>y.tp!==null), ph=pv.find(y=>y.hp!==null);
     return `<tr${x.d===day?` class="cur"`:""}><td><b>${x.d.slice(5).replace("-",".")}</b>${x.at&&ATT[x.at]?` <span title="${ATT[x.at][1]}">${ATT[x.at][0]}</span>`:""}${x.d===day?` <em>이날</em>`:""}</td>
-      <td>${x.hc?`<b>${x.hd}/${x.hc}</b> <small>${x.hp}%</small> ${arrow(ph&&x.hp!==null?x.hp-ph.hp:null)}`:x.hn?`<small>미검사</small>`:`<small>—</small>`}</td>
-      <td>${x.tp!==null?`<b>${x.tp}%</b> <small>${x.tn}개 · ${esc(x.books.join(", "))}</small> ${arrow(pt?x.tp-pt.tp:null)}`:`<small>—</small>`}</td></tr>`; }).join("");
+      <td>${x.hc?`<b>${x.hd}/${x.hc}</b> <small>${x.hp}%</small> ${arrow(ph&&x.hp!==null?x.hp-ph.hp:null)}${x.hcls!=null?`<div class="cv">반평균 ${x.hcls}%</div>`:""}`:x.hn?`<small>미검사</small>`:`<small>—</small>`}</td>
+      <td>${x.tp!==null?`<b>${x.tp}%</b> <small>${x.tn}개 · ${esc(x.books.join(", "))}</small> ${arrow(pt?x.tp-pt.tp:null)}${x.tc!=null?`<div class="cv">반평균 ${x.tc}% <span class="${x.tp>=x.tc?"up":"down"}">${x.tp>=x.tc?"▲":"▼"} ${Math.abs(x.tp-x.tc)}점</span></div>`:""}`:`<small>—</small>`}</td></tr>`; }).join("");
   return `<h2 class="s">📈 ${esc(name)} 누적 기록 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(최근 ${L.length}번 학습일 · 날짜별로 따로 계산)</span></h2>
   <div class="card cum">
-    <div class="lgd2"><span class="h">📚 숙제 완료율</span><span class="t">📝 시험 정답률</span></div>
+    <div class="lgd2"><span class="h">📚 숙제 완료율</span><span class="t">📝 시험 정답률</span><span style="color:var(--ink-3);font-size:11px">┄ 점선 = 반평균</span></div>
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="학습일별 숙제 완료율과 시험 정답률">
       ${[100,50,0].map(v=>`<line x1="20" x2="${W-10}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--grid)"/><text x="0" y="${ys(v)+3}" font-size="8" fill="var(--ink-3)" font-family="Archivo">${v}</text>`).join("")}
-      ${line("hp","var(--ok)")}${line("tp","var(--pri)")}
+      ${dash("hcls","var(--ok)")}${dash("tc","var(--pri)")}${line("hp","var(--ok)")}${line("tp","var(--pri)")}
       ${L.map((x,i)=>`<text x="${xs(i).toFixed(1)}" y="${H-3}" font-size="8.5" fill="${x.d===day?"var(--pri)":"var(--ink-3)"}" text-anchor="middle" font-family="Archivo">${x.d.slice(5).replace("-",".")}</text>`).join("")}
     </svg>
     <table class="cumt"><thead><tr><th>날짜</th><th>📚 숙제</th><th>📝 시험</th></tr></thead><tbody>${rows}</tbody></table>
-    <div style="font-size:10.5px;color:var(--ink-3);margin-top:6px">▲▼ = 바로 전 학습일과 비교 · 각 날짜 점수는 그날 기록만으로 계산</div>
+    <div style="font-size:10.5px;color:var(--ink-3);margin-top:6px">▲▼ = 바로 전 학습일과 비교 · 각 날짜 점수는 그날 기록만으로 계산 · 반평균 = 같은 날 같은 시험을 본 학생 3명 이상 평균(숙제는 반 전체 완료율)</div>
   </div>`;
 }
 /* 날짜 고르기 칸: 그날 본 과·숙제를 같이 표시 */

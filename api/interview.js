@@ -68,32 +68,40 @@ async function sync(day) {
 
 // ── 코멘트 다듬기 (Anthropic API · 키가 있을 때만)
 const GL = { A: "자기 말로 설명함", B: "이유를 못 댐", C: "답 자체가 흔들림", D: "답을 하지 못함" };
-const SYS = `너는 영어 학원 '헤이즐쌤'의 1:1 인터뷰 리포트 코멘트를 쓰는 사람이다. 조교가 반말·축약형으로 적은 메모를 학부모가 읽을 존댓말 코멘트로 풀어 쓴다.
+const SYS = `너는 영어 학원 '헤이즐쌤'이 직접 손으로 써 온 1:1 인터뷰 리포트처럼, 조교가 반말·축약형으로 적은 메모를 학부모가 읽을 리포트 문장으로 다듬는다.
 규칙:
-- 메모와 등급에 있는 사실만 쓴다. 없는 사실을 만들거나, 등급에 없는 평가를 붙이지 않는다. 학생 이름 외의 사람·장면을 지어내지 않는다.
-- 본문은 5~6문장. 실제로 아이 앞에 앉아서 본 사람이 말하듯 쓴다. 보고서 문어체·AI 말투 금지. 같은 어미('~습니다')를 계속 반복하지 말고 '~했어요', '~더라고요', '~입니다'를 섞는다. 메모에 있는 구체적인 장면을 살린다.
-- 안 된 것은 흐리지 않되, 그 뒤에 지금 무엇을 하면 되는지 한 줄 붙인다. 과장하지 않고 아이를 깎아내리지 않는다.
+- 메모·등급·특이사항·학생 답변·보완점·미션에 있는 사실만 쓴다. 없는 사실을 만들거나, 등급에 없는 평가를 붙이지 않는다. 학생 이름 외의 사람·장면을 지어내지 않는다.
+- 메모를 그대로 옮기지 말고 완전히 다시 쓴다. 축약어·화살표·기호(→, ㅇㅇ, ~함, ~X)를 풀어서 자연스러운 문장으로 만든다.
+- 본문은 5~6문장(특이사항이 있으면 6~7문장). 실제로 아이 앞에 앉아서 본 선생님이 학부모께 말하듯 쓴다. 보고서 문어체·AI 말투 금지. '~습니다'만 반복하지 말고 '~했어요', '~더라고요', '~입니다'를 섞는다.
+- 흐름: ① 이번 인터뷰에서 가장 눈에 띈 장면이나 변화 → ② 잘한 것(구체적 장면·학생이 한 말) → ③ 아직 흔들리는 것과 이유 → ④ 다음까지 무엇을 하면 되는지 한 줄.
+- 안 된 것은 흐리지 않되 깎아내리지 않는다. 과장하지 않는다.
 - 오답·교재가 '미완'이면 '숙제를 다 해 오지 않아 교재 검사를 하지 못했다'는 뜻이다. '검사해 보니 부족했다'로 쓰지 않는다.
 - 가장 중요한 한두 구절을 **별표 두 개**로 감싼다. 한 문단에 최대 2군데.
-- 제목은 한 문장, 존댓말 또는 명사형, 25자 안팎. 메모 제목의 뜻을 그대로 살린다.
-- 특이사항이 있으면 그 장면(아이가 한 행동·말·태도)을 코멘트에 구체적으로 살려서 더 풍성하게 쓴다. 특이사항에도 없는 내용은 쓰지 않는다. 특이사항이 있으면 6~7문장까지 써도 된다.
+- 제목은 한 문장, 존댓말 또는 명사형, 25자 안팎. 메모 제목의 뜻을 살린다.
 - 학생 이름은 성을 빼고 부른다 (김강민 → 강민이는 / 김지유 → 지유는).
-- 출력은 JSON 한 개만: {"title":"...","body":"..."}`;
+- areas: 독해·어휘·어법·오답·교재 4칸 각각의 등급 칩 아래에 들어갈 한 줄 평(16자 이내, 명사형 또는 '~함' 끝). 메모·보완점에 그 영역 이야기가 있으면 그 내용을 반영해서 쓴다(예: B라도 '근거 문장은 찾음, 해석이 흔들림'처럼). 그 영역 정보가 메모에 없으면 등급 기본 뜻(A 자기 말로 설명함 / B 이유를 못 댐 / C 답 자체가 흔들림 / D 답을 하지 못함, 오답·교재는 A 오답까지 정리됨 / B 정리했지만 이유가 빠짐 / C 정리가 부족함 / D 정리하지 않음)을 쓴다. 등급이 미완·미검사·없음이면 빈 문자열.
+- 출력은 JSON 한 개만: {"title":"...","body":"...","areas":["독해","어휘","어법","오답·교재"]}`;
 async function aiComment(d) {
   const key = process.env.ANTHROPIC_API_KEY; if (!key) throw new Error("NO_KEY");
   const g = d.cur.map((x, i) => `${["독해", "어휘", "어법", "오답·교재"][i]} ${x || "기록 없음"}${GL[x] ? `(${GL[x]})` : x === "미완" ? "(숙제 미완 · 미검사)" : ""}`).join(", ");
   const sp = [d.special, d.xSpecial].filter(Boolean).join("\n");
   const msg = `학생: ${d.name} / 범위: ${d.scope} / ${d.round}차 인터뷰\n이번 회차 등급: ${g}\n조교 메모 제목: ${d.title || "(없음)"}\n조교 메모 본문: ${d.body || "(없음)"}`
     + `\n특이사항(인터뷰에서 실제로 본 장면·태도·말): ${sp || "(없음)"}`
-    + (d.answers && d.answers.length ? `\n학생이 실제로 한 말: ${d.answers.map(a => `"${a.q}"${a.ctx ? ` (${a.ctx})` : ""}`).join(" / ")}` : "");
+    + (d.answers && d.answers.length ? `\n학생이 실제로 한 말: ${d.answers.map(a => `"${a.q}"${a.ctx ? ` (${a.ctx})` : ""}`).join(" / ")}` : "")
+    + ((d.fills || []).length ? `\n지금 채워야 할 것(영역::설명): ${d.fills.map(f => `${f.area || "기타"}::${f.text}`).join(" / ")}` : "")
+    + (d.change ? `\n지난 회차 대비 변화 메모: ${d.change}` : "")
+    + ((d.missionsPrev || []).length ? `\n지난 미션 결과: ${d.missionsPrev.map(m => `${m.t}(${m.r || "확인 전"})`).join(" / ")}` : "")
+    + ((d.missions || []).length ? `\n이번 미션: ${d.missions.join(" / ")}` : "");
   const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5", max_tokens: 900, system: SYS, messages: [{ role: "user", content: msg }] }) });
+    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5", max_tokens: 1400, system: SYS, messages: [{ role: "user", content: msg }] }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error("AI 요청 실패: " + ((j.error && j.error.message) || r.status));
   const txt = (j.content || []).map(c => c.text || "").join("");
   const m = txt.match(/\{[\s\S]*\}/); if (!m) throw new Error("AI 답을 읽지 못했어요");
-  const o = JSON.parse(m[0]); return { title: String(o.title || "").trim(), body: String(o.body || "").trim() };
+  const o = JSON.parse(m[0]);
+  const areas = [0, 1, 2, 3].map(i => /^[A-D]$/.test(d.cur[i] || "") ? String((o.areas || [])[i] || "").trim().slice(0, 24) : "");
+  return { title: String(o.title || "").trim(), body: String(o.body || "").trim(), areas };
 }
 
 // ── 앱 안 입력표 · 누적 ──
@@ -164,7 +172,7 @@ async function saveGridRow(cid, day, student, row) {
 }
 
 const pub = r => ({ id: r.id, day: r.day, round: r.round, student: r.student, sheet_student: r.sheet_student, cls: r.cls, sheet_name: r.sheet_name,
-  data: r.data, x_special: r.x_special || "", c_title: r.c_title, c_body: r.c_body, c_src: r.c_src, memo_changed: r.memo_changed, synced_at: r.synced_at, warn: warnOf(r.data) });
+  data: r.data, x_special: r.x_special || "", c_areas: r.c_areas || [], c_title: r.c_title, c_body: r.c_body, c_src: r.c_src, memo_changed: r.memo_changed, synced_at: r.synced_at, warn: warnOf(r.data) });
 
 export default async function handler(req, res) {
   try {
@@ -218,8 +226,9 @@ export default async function handler(req, res) {
       }
       case "comment.set": {
         const id = Number(b.id) || 0; if (!id) return res.status(400).json({ error: "리포트가 없습니다" });
-        if (b.reset) await sql`update interview_reports set c_title = data->>'title', c_body = data->>'body', c_src = 'memo', memo_changed = false where id = ${id}`;
-        else if (b.special !== undefined && b.title === undefined) await sql`update interview_reports set x_special = ${String(b.special || "").slice(0, 2000)} where id = ${id}`;
+        if (Array.isArray(b.areas)) await sql`update interview_reports set c_areas = ${JSON.stringify(b.areas.slice(0, 4).map(x => String(x || "").trim().slice(0, 24)))}::jsonb where id = ${id}`;
+        if (b.reset) await sql`update interview_reports set c_title = data->>'title', c_body = data->>'body', c_areas = '[]'::jsonb, c_src = 'raw', memo_changed = false where id = ${id}`;   // 선생님이 '메모 그대로' 고름 → 자동 다듬기 안 함
+        else if (b.title === undefined) { if (b.special !== undefined) await sql`update interview_reports set x_special = ${String(b.special || "").slice(0, 2000)} where id = ${id}`; }
         else {
           await sql`update interview_reports set c_title = ${String(b.title || "").slice(0, 200)}, c_body = ${String(b.body || "").slice(0, 4000)}, c_src = 'edit', memo_changed = false where id = ${id}`;
           if (b.special !== undefined) await sql`update interview_reports set x_special = ${String(b.special || "").slice(0, 2000)} where id = ${id}`;
@@ -232,9 +241,9 @@ export default async function handler(req, res) {
         const done = [], fail = [];
         for (const r of rows) {
           r.data.xSpecial = r.x_special || "";
-          if (!r.data.title && !r.data.body && !r.data.special && !r.x_special) { fail.push(`${r.student}: 메모가 비어 있어 코멘트를 생략해요`); continue; }
+          if (!r.data.title && !r.data.body && !r.data.special && !r.x_special && !(r.data.fills || []).length) { fail.push(`${r.student}: 메모가 비어 있어 코멘트를 생략해요`); continue; }
           try { const o = await aiComment(r.data);
-            await sql`update interview_reports set c_title = ${o.title}, c_body = ${o.body}, c_src = 'ai', memo_changed = false where id = ${r.id}`; done.push(r.id); }
+            await sql`update interview_reports set c_title = ${o.title}, c_body = ${o.body}, c_areas = ${JSON.stringify(o.areas)}::jsonb, c_src = 'ai', memo_changed = false where id = ${r.id}`; done.push(r.id); }
           catch (e) { if (e.message === "NO_KEY") return res.status(400).json({ error: "AI 키가 없어요 (Vercel 환경변수 ANTHROPIC_API_KEY)" }); fail.push(`${r.student}: ${e.message}`); }
         }
         return res.status(200).json({ ok: true, done, fail });
