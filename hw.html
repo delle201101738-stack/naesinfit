@@ -193,6 +193,23 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .aseg button.a-etc.sel{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 .att .am{flex:1;min-width:150px;padding:7px 10px;font-size:12.5px}
 @media (max-width:700px){ .att .an{width:100%} .att .am{min-width:100%} }
+.ivg-wrap{padding:0;overflow:auto;max-height:calc(100vh - 230px)}
+.ivg{border-collapse:separate;border-spacing:0;font-size:13px}
+.ivg th{position:sticky;top:0;z-index:2;background:var(--surface-2);font-size:12px;font-weight:800;color:var(--ink-2);padding:8px 6px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.ivg td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:3px;vertical-align:top;background:var(--surface)}
+.ivg .sk{position:sticky;left:0;z-index:1;min-width:92px;background:var(--surface);box-shadow:1px 0 0 var(--line)}
+.ivg th.sk{z-index:3;background:var(--surface-2)}
+.ivg td.sk{padding:6px 8px}.ivg td.sk b{display:block;font-size:14px}.ivg td.sk small{font-size:10.5px;color:var(--ink-3)}
+.ivg .rs{font-size:11px;font-weight:800;color:var(--ok);margin-left:4px}.ivg .rs.no{color:var(--no)}
+.ivg td.hs{min-width:96px;font-size:11px;color:var(--ink-2);padding:5px 6px;line-height:1.7;white-space:nowrap}
+.ivg input,.ivg textarea,.ivg select{width:100%;font:inherit;font-size:13px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--ink);padding:6px 6px;resize:none;line-height:1.45}
+.ivg input:focus,.ivg textarea:focus,.ivg select:focus{border-color:var(--accent);background:var(--surface);outline:none}
+.ivg textarea{min-height:32px;overflow:hidden}
+.gg{display:inline-block;min-width:16px;text-align:center;border-radius:4px;color:#fff;font-weight:800;font-size:10.5px;margin-right:2px;padding:0 3px}
+.gg.g1,.gsel.g1{background:#2E7D4F!important}.gg.g2,.gsel.g2{background:#D08A1A!important}.gg.g3,.gsel.g3{background:#C0392B!important}.gg.g4,.gsel.g4{background:#7B1E1E!important}.gg.g5,.gg.g6,.gsel.g5,.gsel.g6{background:#A3A8B4!important}
+.gsel{font-weight:800;text-align:center}.gsel.g1,.gsel.g2,.gsel.g3,.gsel.g4,.gsel.g5,.gsel.g6{color:#fff!important}
+.mrt{font-size:11px;color:var(--ink-2);line-height:1.35;padding:3px 4px 0;max-height:30px;overflow:hidden}
+.mrs.ok{color:var(--ok);font-weight:800}.mrs.no{color:var(--no);font-weight:800}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
 </style>
 </head>
@@ -543,25 +560,111 @@ function namesHTML(){
     ${dups.length?`<div style="margin-top:6px">📚 두 반 이상에 있는 이름: ${dups.map(n=>`<b>${esc(n)}</b> <small style="color:var(--ink-3)">(${esc(clsOf(n).join(", "))})</small>`).join(" · ")} — 같은 학생이 아니라면 한쪽 이름에 구분 글자를 붙여 주세요</div>`:""}
     <div style="margin-top:8px;font-size:12px;color:var(--ink-3)">학생이 새로 들어올 때 다른 반에 같은 이름이 있으면 앱이 자동으로 뒤에 번호를 붙여요 (김민준 → 김민준2). 같은 반 동명이인은 학생이 목록에서 자기 이름을 골라요.</div></div>`;
 }
+/* ── ✍️ 인터뷰 입력표 (앱 안 엑셀) ── */
+const GR_G=["","A","B","C","D","미완","미검사"];
+const IVCOLS=[
+  {k:"round",h:"회차",w:70,t:"round"},{k:"scope",h:"범위",w:110},{k:"teacher",h:"담당",w:76},
+  {k:"g0",h:"독해",w:66,t:"g"},{k:"g1",h:"어휘",w:66,t:"g"},{k:"g2",h:"어법",w:66,t:"g"},{k:"g3",h:"오답·교재",w:76,t:"g"},
+  {k:"title",h:"코멘트 제목",w:200},{k:"body",h:"코멘트 본문 (**강조**)",w:300,t:"ta"},{k:"special",h:"특이사항 (장면·태도·한 말)",w:260,t:"ta"},
+  {k:"a1",h:"학생답변1 (그대로)",w:220,t:"ta"},{k:"c1",h:"답변1 맥락",w:160},{k:"a2",h:"학생답변2",w:200,t:"ta"},{k:"c2",h:"답변2 맥락",w:150},{k:"a3",h:"학생답변3",w:200,t:"ta"},{k:"c3",h:"답변3 맥락",w:150},
+  {k:"mr0",h:"지난미션1 결과",w:150,t:"mr",i:0},{k:"mr1",h:"지난미션2 결과",w:150,t:"mr",i:1},{k:"mr2",h:"지난미션3 결과",w:150,t:"mr",i:2},
+  {k:"change",h:"변화메모 (선택)",w:180},{k:"f1",h:"보완1 (영역::설명)",w:240,t:"ta"},{k:"f2",h:"보완2",w:200,t:"ta"},{k:"f3",h:"보완3",w:200,t:"ta"},
+  {k:"m1",h:"이번미션1",w:200},{k:"m2",h:"이번미션2",w:180},{k:"m3",h:"이번미션3",w:180},{k:"home",h:"가정에서 한 가지만",w:240,t:"ta"}];
+let IVG={cid:0, data:null, st:{}};
+async function ivGridLoad(){ try{ const r=await fetch(`/api/interview?grid=1&class_id=${IVG.cid}&day=${IV.day}`,{headers:{"x-pin":PIN},cache:"no-store"}); const j=await r.json(); if(!r.ok) throw new Error(j.error||"불러오지 못했어요"); IVG.data=j; }catch(e){ IVG.data={error:e.message,members:[]}; } render(); }
+const gTxt=g=>g?`<span class="gg g${GR_G.indexOf(g)}">${esc(g)}</span>`:"";
+function histTxt(h){ const ks=Object.keys(h.byRound||{}).map(Number).sort((a,b)=>a-b); return ks.length?ks.slice(-3).map(k=>`<div>${k}차 ${(h.byRound[k]||[]).map(g=>g?gTxt(g):"·").join("")}</div>`).join(""):`<span class="na">처음</span>`; }
+function ivCell(c, m, v){
+  const h=m.hist, val=v[c.k]??"";
+  if(c.t==="round"){ const cur=v.round||h.next; return `<select data-f="round">${Array.from({length:12},(_,i)=>i+1).map(n=>`<option value="${n}"${+cur===n?" selected":""}>${n}차${n===h.next?" ✓":""}</option>`).join("")}</select>`; }
+  if(c.t==="g") return `<select data-f="${c.k}" class="gsel g${GR_G.indexOf(val)}">${GR_G.map(g=>`<option value="${g}"${val===g?" selected":""}>${g||"·"}</option>`).join("")}</select>`;
+  if(c.t==="mr"){ const t=(h.missions||[])[c.i]; if(!t) return `<span class="na">—</span>`; const r=(v.mr||[])[c.i]||"";
+    return `<div class="mrt" title="${esc(t)}">${esc(t)}</div><select data-f="mr" data-i="${c.i}" class="mrs ${r==="O"?"ok":r==="X"?"no":""}"><option value=""${!r?" selected":""}>확인 전</option><option value="O"${r==="O"?" selected":""}>O 해 옴</option><option value="X"${r==="X"?" selected":""}>X 못 함</option></select>`; }
+  const ph=c.k==="scope"?(h.scope||"예) 2과"):c.k==="teacher"?"헤이즐":c.k==="f1"?"오답·교재::설명":"";
+  return c.t==="ta"?`<textarea data-f="${c.k}" rows="1" placeholder="${esc(ph)}">${esc(val)}</textarea>`:`<input data-f="${c.k}" value="${esc(val)}" placeholder="${esc(ph)}">`;
+}
+function ivGridHTML(){
+  const C=DB.classes; if(!IVG.cid) IVG.cid=CUR||(C[0]&&+C[0].id)||0;
+  const head=`<div class="card" style="padding:12px 14px;margin-bottom:10px">
+    <div class="row" style="gap:6px;margin-bottom:8px">${C.map(c=>`<button class="chip${+c.id===IVG.cid?" on":""}" data-ivcls="${c.id}">${esc(c.name)}</button>`).join("")}</div>
+    <div class="row" style="gap:8px"><input class="fld" type="date" id="iv-day" value="${IV.day}" style="width:170px">
+      <button class="btn" data-ivmode="list">📋 리포트 보기 · 보내기</button><button class="btn" id="ivg-xlsx">📥 엑셀로 받기</button>
+      <span class="na" id="ivg-stat" style="flex:1;min-width:160px">칸을 바꾸면 바로 저장돼요 · 엑셀에서 복사해 붙여넣기도 돼요</span></div>
+    <div style="margin-top:6px;font-size:11.5px;color:var(--ink-3);line-height:1.6">회차·지난 등급·지난 미션은 지난 인터뷰에서 자동으로 채워져요(✓ = 다음 회차). 등급 네 칸이 비어 있는 학생은 리포트를 만들지 않아요. 학생답변은 아이가 실제로 한 말만 적어 주세요.</div></div>`;
+  if(!IVG.data||IVG.data.class_id!==IVG.cid||IVG.data.day!==IV.day){ ivGridLoad(); return head+`<div class="card empty">불러오는 중…</div>`; }
+  if(IVG.data.error) return head+`<div class="alerts">${esc(IVG.data.error)}</div>`;
+  const M=IVG.data.members; if(!M.length) return head+`<div class="card empty">반에 학생이 없어요</div>`;
+  return head+`<div class="card ivg-wrap"><table class="ivg"><thead><tr><th class="sk">학생</th><th class="hs">지난 등급</th>${IVCOLS.map(c=>`<th style="min-width:${c.w}px">${esc(c.h)}</th>`).join("")}<th>리포트</th></tr></thead>
+    <tbody>${M.map((m,ri)=>{ const v=m.input||{}; return `<tr data-ivr="${ri}" data-st="${esc(m.student)}"><td class="sk"><b>${esc(m.name)}</b><small>${esc(m.student!==m.name?m.student:"")}</small><span class="rs" id="rs${ri}">${m.id?"✓":""}</span></td>
+      <td class="hs">${histTxt(m.hist)}</td>${IVCOLS.map((c,ci)=>`<td data-ci="${ci}">${ivCell(c,m,v)}</td>`).join("")}
+      <td>${m.id?`<a class="btn sm" href="interview?ids=${m.id}" target="_blank" rel="noopener">보기</a>`:""}</td></tr>`; }).join("")}</tbody></table></div>`;
+}
+function ivRowVals(tr){ const v={mr:["","",""]}; tr.querySelectorAll("[data-f]").forEach(el=>{ if(el.dataset.f==="mr") v.mr[+el.dataset.i]=el.value; else v[el.dataset.f]=el.value; }); return v; }
+const ivTimers={};
+function ivQueue(tr){ const ri=tr.dataset.ivr; clearTimeout(ivTimers[ri]); const rs=$("#rs"+ri); if(rs) rs.textContent="…"; ivTimers[ri]=setTimeout(()=>ivSaveRow(tr),450); }
+async function ivSaveRow(tr){
+  const ri=+tr.dataset.ivr, m=IVG.data.members[ri], row=ivRowVals(tr), rs=$("#rs"+ri);
+  try{ const r=await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"iv.save",class_id:IVG.cid,day:IV.day,student:m.student,row})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||"저장 실패");
+    m.input=row; m.id=j.id; if(rs){ rs.textContent=j.id?"✓":""; rs.className="rs ok"; }
+    const lk=tr.lastElementChild; lk.innerHTML=j.id?`<a class="btn sm" href="interview?ids=${j.id}" target="_blank" rel="noopener">보기</a>`:"";
+    const st=$("#ivg-stat"); if(st) st.textContent=`${m.name} 저장됨 · ${new Date().toTimeString().slice(0,5)}`;
+  }catch(e){ if(rs){ rs.textContent="!"; rs.className="rs no"; rs.title=e.message; } const st=$("#ivg-stat"); if(st) st.textContent="저장 실패: "+e.message; }
+}
+/* 엑셀에서 복사한 칸을 그대로 붙여넣기 (탭·줄바꿈으로 나눔) */
+function ivPaste(e){
+  const el=e.target.closest(".ivg [data-f]"); if(!el) return;
+  const txt=(e.clipboardData||window.clipboardData).getData("text"); if(!/[\t\n]/.test(txt.replace(/\n$/,""))) return;
+  e.preventDefault();
+  const td=el.closest("td"), tr=el.closest("tr"), ci0=+td.dataset.ci, rows=[...document.querySelectorAll(".ivg tbody tr")], r0=rows.indexOf(tr);
+  const lines=txt.replace(/\r/g,"").replace(/\n$/,"").split("\n"), touched=new Set();
+  lines.forEach((ln,dr)=>{ const tr2=rows[r0+dr]; if(!tr2) return; ln.split("\t").forEach((val,dc)=>{ const td2=tr2.querySelector(`td[data-ci="${ci0+dc}"]`); if(!td2) return;
+      const f=td2.querySelector("[data-f]"); if(!f) return; let v=val.trim();
+      if(f.tagName==="SELECT"){ if(f.classList.contains("gsel")) v=v.toUpperCase().replace(/^([ABCD]).*/,"$1"); if(f.dataset.f==="round") v=(v.match(/\d+/)||[""])[0]; if(f.dataset.f==="mr") v=/^o|○/i.test(v)?"O":/^x|✕|×/i.test(v)?"X":"";
+        if([...f.options].some(o=>o.value===v)) f.value=v; } else f.value=v;
+      touched.add(tr2); }); });
+  touched.forEach(t=>{ t.querySelectorAll(".gsel").forEach(s=>s.className=`gsel g${GR_G.indexOf(s.value)}`); ivSaveRow(t); });
+}
+async function ivXlsx(){
+  if(!IVG.data) return;
+  if(!window.XLSX) await new Promise((ok,no)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; sc.onload=ok; sc.onerror=()=>no(new Error("엑셀 도구를 불러오지 못했어요")); document.head.appendChild(sc); });
+  const cls=(DB.classes.find(c=>+c.id===IVG.cid)||{}).name||"";
+  const rows=IVG.data.members.map(m=>{ const v=m.input||{}, h=m.hist, o={이름:m.name,반:cls,범위:v.scope||h.scope||"",회차:`${v.round||h.next}차`,인터뷰일자:IV.day,담당선생님:v.teacher||"헤이즐",독해:v.g0||"",어휘:v.g1||"",어법:v.g2||"","오답·교재":v.g3||""};
+    [1,2,3].forEach(k=>["독해","어휘","어법","오답·교재"].forEach((a,i)=>{ o[`${k}회전 ${a}`]=((h.byRound||{})[k]||[])[i]||""; }));
+    Object.assign(o,{코멘트제목:v.title||"",코멘트본문:v.body||"",특이사항:v.special||""});
+    [1,2,3].forEach(k=>{ o["학생답변"+k]=v["a"+k]||""; o[`학생답변${k}맥락`]=v["c"+k]||""; });
+    [0,1,2].forEach(i=>{ o[`지난미션${i+1}`]=(h.missions||[])[i]||""; o[`지난미션${i+1}결과`]=(v.mr||[])[i]||""; });
+    Object.assign(o,{변화메모:v.change||"",보완1:v.f1||"",보완2:v.f2||"",보완3:v.f3||"",이번미션1:v.m1||"",이번미션2:v.m2||"",이번미션3:v.m3||"",가정요청:v.home||""}); return o; });
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),"인터뷰기록");
+  XLSX.writeFile(wb,`[인터뷰 입력] ${cls}_${IV.day}.xlsx`);
+}
+document.addEventListener("paste",ivPaste);
+document.addEventListener("input",e=>{ const el=e.target.closest(".ivg [data-f]"); if(!el) return; if(el.tagName==="TEXTAREA"){ el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,160)+"px"; } if(el.tagName!=="SELECT") ivQueue(el.closest("tr")); });
+document.addEventListener("keydown",e=>{ const el=e.target.closest&&e.target.closest(".ivg [data-f]"); if(!el||e.key!=="Enter"||e.isComposing) return; if(el.tagName==="TEXTAREA"&&!e.ctrlKey&&!e.metaKey) return;
+  e.preventDefault(); const td=el.closest("td"), tr=el.closest("tr").nextElementSibling; const n=tr&&tr.querySelector(`td[data-ci="${td.dataset.ci}"] [data-f]`); if(n) n.focus(); });
 /* ── 🎤 꼼꼼한 인터뷰 리포트 (조교 입력시트 동기화) ── */
-let IV={day:today(), list:null, info:null, last:null, edit:null, busy:""};
+let IV={day:today(), list:null, info:null, last:null, edit:null, busy:"", mode:"input"};
 async function ivApi(body){ const r=await fetch("/api/interview"+(body?"":`?day=${IV.day}`),{method:body?"POST":"GET",headers:{"x-pin":PIN,"content-type":"application/json"},body:body?JSON.stringify(body):undefined});
   const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"요청 실패"); return j; }
 async function ivLoad(){ try{ const j=await ivApi(); IV.list=j.list; IV.info=j; }catch(e){ IV.list=[]; IV.info={error:e.message}; } render(); }
 const ivSrc={memo:["조교 메모 그대로","#6B7280"],ai:["AI로 다듬음","#2563EB"],edit:["직접 고침","#047857"]};
 function ivHTML(){
+  const top=`<div class="sec"><h2>🎤 꼼꼼한 인터뷰</h2><span class="note"><button class="btn" id="iv-close">← 반 화면으로</button></span></div>
+    <div class="tabs3"><button class="${IV.mode==="input"?"on":""}" data-ivmode="input">✍️ 인터뷰 입력하기</button><button class="${IV.mode==="list"?"on":""}" data-ivmode="list">📋 리포트 보기 · 보내기</button></div>`;
+  if(IV.mode==="input") return top+ivGridHTML();
+  return top+ivListHTML();
+}
+function ivListHTML(){
   if(!IV.list){ ivLoad(); return `<div class="card empty">불러오는 중…</div>`; }
   const I=IV.info||{}, L=IV.last, by={};
   IV.list.forEach(R=>{ (by[R.sheet_name] ||= []).push(R); });
   const gchip=g=>`<span style="display:inline-block;min-width:24px;text-align:center;padding:2px 6px;border-radius:6px;font-weight:800;font-size:12px;color:#fff;background:${{A:"#2E7D4F",B:"#D08A1A",C:"#C0392B",D:"#7B1E1E"}[g]||"#A3A8B4"}">${esc(g||"—")}</span>`;
-  return `<div class="sec"><h2>🎤 꼼꼼한 인터뷰 리포트</h2><span class="note"><button class="btn" id="iv-close">← 반 화면으로</button></span></div>
-  <div class="card" style="padding:14px 16px">
+  return `<div class="card" style="padding:14px 16px">
     <div class="row" style="gap:8px"><input class="fld" type="date" id="iv-day" value="${IV.day}" style="width:170px">
-      <button class="btn pri" id="iv-sync">${IV.busy==="sync"?"불러오는 중…":"🔄 구글 시트에서 그날 인터뷰 불러오기"}</button>
+      ${I.sa?`<button class="btn" id="iv-sync">${IV.busy==="sync"?"불러오는 중…":"🔄 구글 시트에서도 불러오기"}</button>`:""}
       ${IV.list.length?`<a class="btn" href="interview?day=${IV.day}" target="_blank" rel="noopener">📄 전체 보기 · 합본 PDF · ZIP</a>`:""}
       ${IV.list.length&&I.ai?`<button class="btn" id="iv-ai-all">${IV.busy==="ai"?"다듬는 중…":"✍️ 코멘트 모두 AI로 다듬기"}</button>`:""}</div>
-    <div style="margin-top:8px;font-size:12px;color:var(--ink-3);line-height:1.7">조교 입력시트 폴더(헤이즐쌤 › 인터뷰지 › [조교 입력시트])의 시트를 모두 읽어서, <b>인터뷰일자가 이 날짜인 줄</b>만 리포트로 만들어요.
-      ${I.sa?`<br>구글 연결: <b>${esc(I.sa)}</b> — 새 시트를 만들면 이 폴더 안에 두면 돼요.`:`<br><b style="color:var(--no)">구글 연결 전</b> — Vercel 환경변수 GOOGLE_SA_JSON을 넣어야 불러올 수 있어요.`}
+    <div style="margin-top:8px;font-size:12px;color:var(--ink-3);line-height:1.7">'✍️ 인터뷰 입력하기'에서 이 날짜에 입력한 학생(등급이 있는 학생)이 여기 리포트로 나와요.${(I.noGrade||[]).length?`<br>⚠ 등급 네 칸이 비어 리포트를 만들지 않은 학생: <b>${esc(I.noGrade.join(", "))}</b>`:""}
       ${I.ai?"":`<br>AI 코멘트 다듬기 꺼짐 — 지금은 조교 메모가 그대로 나가요 (ANTHROPIC_API_KEY를 넣으면 켜져요). 아래 ✏️로 직접 고칠 수 있어요.`}</div>
   </div>
   ${I.error?`<div class="alerts">${esc(I.error)}</div>`:""}
@@ -591,7 +694,10 @@ function ivHTML(){
     :`<div class="card empty" style="padding:24px">${fmtD(IV.day)}에 불러온 인터뷰가 없어요 · 위 버튼으로 시트에서 불러오세요</div>`}`;
 }
 async function ivClick(t){
-  if(t.closest("#iv-btn")){ VIEW="iv"; IV.list=null; render(); scrollTo({top:0}); return true; }
+  if(t.closest("#iv-btn")){ VIEW="iv"; IV.list=null; IV.mode="input"; IVG.data=null; render(); scrollTo({top:0}); return true; }
+  const mo=t.closest("[data-ivmode]"); if(mo){ IV.mode=mo.dataset.ivmode; IV.list=null; IVG.data=null; render(); return true; }
+  const ic=t.closest("[data-ivcls]"); if(ic){ IVG.cid=+ic.dataset.ivcls; IVG.data=null; render(); return true; }
+  if(t.closest("#ivg-xlsx")){ try{ await ivXlsx(); }catch(err){ alert(err.message); } return true; }
   if(t.closest("#iv-close")){ VIEW=""; render(); return true; }
   if(t.closest("#iv-sync")){ IV.busy="sync"; render(); try{ IV.last=await ivApi({action:"sync",day:IV.day}); toast(`인터뷰 ${IV.last.made.length}명을 불러왔어요`); }catch(e){ alert(e.message); } IV.busy=""; await ivLoad(); return true; }
   if(t.closest("#iv-ai-all")){ if(!confirm(`${IV.list.length}명 코멘트를 AI로 다듬을까요? 직접 고친 코멘트도 다시 써져요.`)) return true;
@@ -832,6 +938,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("change",async e=>{
   if(e.target.id==="iv-day"){ IV.day=e.target.value||today(); IV.list=null; IV.last=null; render(); return; }
+  const ge=e.target.closest&&e.target.closest(".ivg select[data-f]"); if(ge){ if(ge.classList.contains("gsel")) ge.className=`gsel g${GR_G.indexOf(ge.value)}`; if(ge.dataset.f==="mr") ge.className=`mrs ${ge.value==="O"?"ok":ge.value==="X"?"no":""}`; ivQueue(ge.closest("tr")); return; }
   if(e.target.id==="att-day"){ AD=e.target.value||today(); render(); return; }
   const amI=e.target.closest&&e.target.closest("[data-am]"); if(amI){ const s=amI.dataset.am, cur=attRec(s,AD);
     try{ await setAtt(s, cur?cur.status:"etc", amI.value.trim()); if(!cur) render(); toast(cur?"메모 저장":"메모 저장 · 상태는 📝기타로 표시했어요"); }catch(err){ alert(err.message); } return; }

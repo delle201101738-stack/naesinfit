@@ -175,7 +175,9 @@ function S_prevMissions(R){ const M=R.data.missionsPrev||[]; if(!M.length) retur
   return `<div class="sec" data-k="prevm"><div class="st">지난 미션 수행 확인</div><div class="ms">${M.map(m=>{ const ok=/^O|○/.test(m.r), no=/^X|✕|×/.test(m.r);
     return `<div><span class="o ${ok?"ok":no?"no":""}">${ok?"✓":no?"✗":"·"}</span><span>${esc(m.t)}</span><span class="rs" style="color:${ok?"var(--A)":no?"var(--C)":"var(--ink3)"}">${ok?"해 왔어요":no?"못 했어요":"확인 전"}</span></div>`; }).join("")}</div></div>`; }
 function S_change(R){ const d=R.data; if(d.round<2) return "";
-  const cards=AREAS.map((a,i)=>{ const seq=[]; for(let k=1;k<d.round&&k<=3;k++){ const g=(d.past[k-1]||[])[i]; if(g) seq.push({lab:`${k}회전`,g}); }
+  const cards=AREAS.map((a,i)=>{ const seq=[];
+    if(d.pastRounds&&d.pastRounds.length) d.pastRounds.forEach(p=>{ const g=(p.g||[])[i]; if(g) seq.push({lab:`${p.n}차`,g}); });
+    else for(let k=1;k<d.round&&k<=3;k++){ const g=(d.past[k-1]||[])[i]; if(g) seq.push({lab:`${k}회전`,g}); }
     const cur=d.cur[i], last=seq.length?seq[seq.length-1].g:"";
     let v="", vc="eq";
     if(RANK[cur]&&RANK[last]){ const df=RANK[cur]-RANK[last]; v=df>0?`${last} → ${cur} 올라왔어요`:df<0?`${last} → ${cur} 내려갔어요`:`${cur} 그대로예요`; vc=df>0?"up":df<0?"dn":"eq"; }
