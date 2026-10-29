@@ -588,7 +588,7 @@ function ivGridHTML(){
   const head=`<div class="card" style="padding:12px 14px;margin-bottom:10px">
     <div class="row" style="gap:6px;margin-bottom:8px">${C.map(c=>`<button class="chip${+c.id===IVG.cid?" on":""}" data-ivcls="${c.id}">${esc(c.name)}</button>`).join("")}</div>
     <div class="row" style="gap:8px"><input class="fld" type="date" id="iv-day" value="${IV.day}" style="width:170px">
-      <button class="btn" data-ivmode="list">📋 리포트 보기 · 보내기</button><button class="btn" id="ivg-xlsx">📥 엑셀로 받기</button>
+      <button class="btn" data-ivmode="list">📋 리포트 보기 · 보내기</button><button class="btn pri" id="ivg-batch">🖨 이 반 리포트 일괄 생성</button><button class="btn" id="ivg-xlsx">📥 엑셀로 받기</button>
       <span class="na" id="ivg-stat" style="flex:1;min-width:160px">칸을 바꾸면 바로 저장돼요 · 엑셀에서 복사해 붙여넣기도 돼요</span></div>
     <div style="margin-top:6px;font-size:11.5px;color:var(--ink-3);line-height:1.6">회차·지난 등급·지난 미션은 지난 인터뷰에서 자동으로 채워져요(✓ = 다음 회차). 등급 네 칸이 비어 있는 학생은 리포트를 만들지 않아요. 학생답변은 아이가 실제로 한 말만 적어 주세요.</div></div>`;
   if(!IVG.data||IVG.data.class_id!==IVG.cid||IVG.data.day!==IV.day){ ivGridLoad(); return head+`<div class="card empty">불러오는 중…</div>`; }
@@ -662,7 +662,7 @@ function ivListHTML(){
   return `<div class="card" style="padding:14px 16px">
     <div class="row" style="gap:8px"><input class="fld" type="date" id="iv-day" value="${IV.day}" style="width:170px">
       ${I.sa?`<button class="btn" id="iv-sync">${IV.busy==="sync"?"불러오는 중…":"🔄 구글 시트에서도 불러오기"}</button>`:""}
-      ${IV.list.length?`<a class="btn" href="interview?day=${IV.day}" target="_blank" rel="noopener">📄 전체 보기 · 합본 PDF · ZIP</a>`:""}
+      ${IV.list.length?`<a class="btn pri" href="interview?day=${IV.day}&auto=zip" target="_blank" rel="noopener">🖨 전체 일괄 생성 (ZIP)</a><a class="btn" href="interview?day=${IV.day}" target="_blank" rel="noopener">📄 전체 보기 · 합본 PDF</a>`:""}
       ${IV.list.length&&I.ai?`<button class="btn" id="iv-ai-all">${IV.busy==="ai"?"다듬는 중…":"✍️ 코멘트 모두 AI로 다듬기"}</button>`:""}</div>
     <div style="margin-top:8px;font-size:12px;color:var(--ink-3);line-height:1.7">'✍️ 인터뷰 입력하기'에서 이 날짜에 입력한 학생(등급이 있는 학생)이 여기 리포트로 나와요.${(I.noGrade||[]).length?`<br>⚠ 등급 네 칸이 비어 리포트를 만들지 않은 학생: <b>${esc(I.noGrade.join(", "))}</b>`:""}
       ${I.ai?"":`<br>AI 코멘트 다듬기 꺼짐 — 지금은 조교 메모가 그대로 나가요 (ANTHROPIC_API_KEY를 넣으면 켜져요). 아래 ✏️로 직접 고칠 수 있어요.`}</div>
@@ -697,6 +697,10 @@ async function ivClick(t){
   if(t.closest("#iv-btn")){ VIEW="iv"; IV.list=null; IV.mode="input"; IVG.data=null; render(); scrollTo({top:0}); return true; }
   const mo=t.closest("[data-ivmode]"); if(mo){ IV.mode=mo.dataset.ivmode; IV.list=null; IVG.data=null; render(); return true; }
   const ic=t.closest("[data-ivcls]"); if(ic){ IVG.cid=+ic.dataset.ivcls; IVG.data=null; render(); return true; }
+  if(t.closest("#ivg-batch")){ const cls=(DB.classes.find(c=>+c.id===IVG.cid)||{}).name||"";
+    const n=(IVG.data&&IVG.data.members||[]).filter(m=>m.input&&["g0","g1","g2","g3"].some(k=>m.input[k])).length;
+    if(!n){ toast("등급을 입력한 학생이 없어요"); return true; }
+    window.open(`interview?day=${IV.day}&cls=${encodeURIComponent(cls)}&auto=zip`,"_blank","noopener"); toast(`${cls} ${n}명 리포트를 새 탭에서 만들고 있어요 (ZIP으로 받아져요)`); return true; }
   if(t.closest("#ivg-xlsx")){ try{ await ivXlsx(); }catch(err){ alert(err.message); } return true; }
   if(t.closest("#iv-close")){ VIEW=""; render(); return true; }
   if(t.closest("#iv-sync")){ IV.busy="sync"; render(); try{ IV.last=await ivApi({action:"sync",day:IV.day}); toast(`인터뷰 ${IV.last.made.length}명을 불러왔어요`); }catch(e){ alert(e.message); } IV.busy=""; await ivLoad(); return true; }
@@ -711,7 +715,7 @@ async function ivClick(t){
       IV.edit=null; toast("저장했어요"); }catch(err){ alert(err.message); } await ivLoad(); return true; }
   const rs=t.closest("[data-ivreset]"); if(rs){ if(!confirm("조교 메모로 되돌릴까요?")) return true; try{ await ivApi({action:"comment.set",id:+rs.dataset.ivreset,reset:true}); IV.edit=null; }catch(err){ alert(err.message); } await ivLoad(); return true; }
   const lk=t.closest("[data-ivlink]"); if(lk){ try{ const j=await ivApi({action:"tokens",ids:[+lk.dataset.ivlink]}); const R=IV.list.find(x=>String(x.id)===lk.dataset.ivlink);
-      const ok=await copyText(`${location.origin}/iv/${j.tokens[lk.dataset.ivlink]}?d=${R.day}`); toast(ok?"인터뷰 리포트 링크를 복사했어요":"복사가 안 돼요"); }catch(err){ alert(err.message); } return true; }
+      const ok=await copyText(`헤이즐 쌤과 ${R.data.name}의 1:1 밀착인터뷰 결과(${R.day.slice(5).replace("-",".")})\n${location.origin}/iv/${j.tokens[lk.dataset.ivlink]}?d=${R.day}`); toast(ok?"인터뷰 리포트 링크를 복사했어요":"복사가 안 돼요"); }catch(err){ alert(err.message); } return true; }
   return false;
 }
 async function namesClick(t){

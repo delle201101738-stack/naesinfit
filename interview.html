@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>꼼꼼한 인터뷰 리포트 · hazel_studylog</title>
+<title>헤이즐 쌤 1:1 밀착인터뷰 결과 · hazel_studylog</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
 <script>document.documentElement.classList.add("js")</script>
@@ -266,7 +266,7 @@ function render(teacher){
   const app=$("#app");
   const skip=[], noCmt=[], noAns=[];
   LIST.forEach(R=>{ if(!R.c_title&&!R.c_body) noCmt.push(R.data.name); if(!(R.data.answers||[]).length) noAns.push(R.data.name); });
-  app.innerHTML=(teacher?`<div class="bar"><b>🎤 꼼꼼한 인터뷰 리포트 · ${LIST.length}명</b><span class="sp"></span>
+  app.innerHTML=(teacher?`<div class="bar"><b>🎤 1:1 밀착인터뷰 리포트 · ${esc(QS.get("cls")||"")} ${LIST.length}명</b><span class="sp"></span><button class="btn" id="b-links">🔗 학부모 링크 모두 복사</button>
       <button class="btn" id="b-all-pdf">📚 전체 합본 PDF</button><button class="btn pri" id="b-zip">📦 전부 받기 (개별 PDF · PNG · 합본)</button></div>
     <div class="list">${noCmt.length?`<div class="warn">코멘트가 비어 코멘트 섹션을 뺀 학생: <b>${esc(noCmt.join(", "))}</b></div>`:""}${noAns.length?`<div class="warn">학생 답변 칸이 비어 빈 칸으로 나간 학생: <b>${esc(noAns.join(", "))}</b> (지어내지 않았어요)</div>`:""}<div class="warn" id="scales" style="background:#F2F4F9;border-color:#D9DCE5;color:#454B5C"></div></div>`
     :`<div class="bar"><b>${esc((LIST[0]||{}).data?LIST[0].data.name:"")} 인터뷰 리포트</b><span class="sp"></span>${LIST.length>1?`<select class="btn" id="b-pick">${LIST.map((R,i)=>`<option value="${i}">${R.data.round}차 · ${mdText(R.day)}</option>`).join("")}</select>`:""}<button class="btn pri" id="b-one">📄 PDF 저장</button></div>`)
@@ -286,6 +286,8 @@ document.addEventListener("click",async e=>{
   const g=t.closest("[data-png]"); if(g){ const i=+g.dataset.png; return busy(g,async()=>{ const b=await reportPNGs(pagesOf(i)); b.forEach((x,k)=>save(x,fname(LIST[i])+(b.length>1?`_${k+1}`:"")+".png")); }); }
   const l=t.closest("[data-link]"); if(l){ const R=LIST[+l.dataset.link]; try{ await navigator.clipboard.writeText(R.link); l.textContent="복사했어요 ✓"; }catch(err){ prompt("링크",R.link); } return; }
   if(t.closest("#b-one")){ const i=+(($("#b-pick")||{}).value||0); return busy(t.closest("#b-one"),async()=>save((await reportPDF(pagesOf(i))).output("blob"),fname(LIST[i])+".pdf")); }
+  if(t.closest("#b-links")){ const txt=LIST.filter(R=>R.link).map(R=>`헤이즐 쌤과 ${R.data.name}의 1:1 밀착인터뷰 결과(${R.day.slice(5).replace("-",".")})\n${R.link}`).join("\n\n");
+    try{ await navigator.clipboard.writeText(txt); t.closest("#b-links").textContent="복사했어요 ✓"; }catch(err){ prompt("링크",txt); } return; }
   if(t.closest("#b-all-pdf")) return busy(t.closest("#b-all-pdf"),async()=>{ let pdf=null; for(let i=0;i<LIST.length;i++) pdf=await reportPDF(pagesOf(i),pdf); save(pdf.output("blob"),`인터뷰리포트_합본_${LIST[0]?LIST[0].day:""}.pdf`); });
   if(t.closest("#b-zip")) return busy(t.closest("#b-zip"),async()=>{
     await loadJS("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",()=>window.JSZip);
@@ -311,13 +313,14 @@ window.addEventListener("resize",fitScreen);
       LIST=L; render(false);
     } else {
       if(!PIN) throw new Error("선생님 화면(반 관리)에서 열어 주세요");
-      const ids=QS.get("ids")||"", day=QS.get("day")||"";
-      const r=await fetch(`/api/interview?${ids?`ids=${encodeURIComponent(ids)}`:`day=${encodeURIComponent(day)}`}`,{cache:"no-store",headers:{"x-pin":PIN}}); const j=await r.json();
+      const ids=QS.get("ids")||"", day=QS.get("day")||"", cls=QS.get("cls")||"";
+      const r=await fetch(`/api/interview?${ids?`ids=${encodeURIComponent(ids)}`:`day=${encodeURIComponent(day)}${cls?`&cls=${encodeURIComponent(cls)}`:""}`}`,{cache:"no-store",headers:{"x-pin":PIN}}); const j=await r.json();
       if(!r.ok) throw new Error(j.error||"불러오지 못했어요");
       LIST=j.list||[]; if(!LIST.length) throw new Error("이 날짜에 동기화된 인터뷰가 없어요");
       try{ const t=await (await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"tokens",ids:LIST.map(x=>x.id)})})).json();
         LIST.forEach(R=>{ const k=(t.tokens||{})[R.id]; if(k) R.link=`${location.origin}/iv/${k}?d=${R.day}`; }); }catch(e){}
       render(true);
+      if(QS.get("auto")==="zip"){ const b=$("#b-zip"); if(b) setTimeout(()=>b.click(),600); }   // 일괄 생성: 열리자마자 ZIP 만들기
     }
   }catch(err){ $("#gate").textContent=err.message; }
 })();
