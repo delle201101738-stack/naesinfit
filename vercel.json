@@ -1,6 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "functions": {
+    "api/mock.js": {
+      "maxDuration": 60
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -13,6 +18,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/mo/:t",
+      "destination": "/api/rpage?mo=1&t=:t"
+    },
     {
       "source": "/iv/:t",
       "destination": "/api/rpage?iv=1&t=:t"

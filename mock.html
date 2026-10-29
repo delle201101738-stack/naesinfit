@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>hazel_studylog · 동형모고 OMR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&family=Archivo:wght@500;600;700&family=Noto+Sans+KR:wght@500;700;900&display=swap">
+<style>
+:root{
+  --ground:#EEEFF5; --surface:#fff; --surface-2:#F7F7FB; --surface-3:#EFEFF6;
+  --line:#E4E4EF; --line-2:#D8D8E6; --ink:#16151F; --ink-2:#55536A; --ink-3:#8A87A0;
+  --accent:#6B4EFF; --accent-soft:#EDE9FF; --on-accent:#fff;
+  --ok:#12A150; --ok-soft:#E4F5EA; --no:#E5484D; --no-soft:#FCEBEB; --warn:#E8890C; --warn-soft:#FDF1E0; --hl:#FFF3B0;
+  --shadow:0 1px 2px rgba(22,21,31,.05), 0 10px 26px -16px rgba(22,21,31,.30);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#0E0E17; --surface:#1A1A27; --surface-2:#21212F; --surface-3:#282838;
+  --line:#2C2C3D; --line-2:#3A3A4E; --ink:#F1F0F8; --ink-2:#A7A4BB; --ink-3:#7B7894;
+  --accent:#8E76FF; --accent-soft:#241F42; --on-accent:#12101F;
+  --ok:#3ECF7E; --ok-soft:#12301F; --no:#FF6B6F; --no-soft:#3A1B1E; --warn:#F2A93B; --warn-soft:#382712; --hl:#4A3F10;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -18px rgba(0,0,0,.85);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:'Gothic A1','Apple SD Gothic Neo',sans-serif;font-size:15px;line-height:1.55;word-break:keep-all}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:'Archivo',sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+header.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 90%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.bar .sub{font-size:12.5px;color:var(--ink-3)}
+.btn{display:inline-block;padding:9px 15px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-2);text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--surface-3)} .btn:disabled{opacity:.45;cursor:default}
+.btn.pri{background:var(--accent);color:var(--on-accent)} .btn.ok{background:var(--ok);color:#fff} .btn.no{color:var(--no)}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:9px}
+.card{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:28px 0 12px;flex-wrap:wrap}
+.sec h2{margin:0;font-size:15px;font-weight:800}
+.note{font-size:12.5px;color:var(--ink-3)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 14px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:13.5px;font-weight:800;color:var(--ink-2)}
+.chip.on{background:var(--accent);color:var(--on-accent)} .chip small{font-weight:600;opacity:.75;margin-left:4px}
+.fld{padding:9px 11px;border-radius:10px;border:1.5px solid var(--line-2);background:var(--surface);font-size:14px}
+.fld:focus{border-color:var(--accent);outline:none}
+textarea.fld{width:100%;min-height:60px;resize:vertical;line-height:1.5}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--ink-3)}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 16px}
+.steps button{padding:10px 14px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:13.5px;font-weight:800;color:var(--ink-2)}
+.steps button.on{background:var(--ink);color:var(--surface)}
+.steps button i{font-style:normal;font-size:11px;margin-left:6px;padding:2px 7px;border-radius:99px;background:var(--surface-3);color:var(--ink-3)}
+.steps button.on i{background:rgba(255,255,255,.18);color:inherit}
+.exams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.ex{text-align:left;padding:16px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow)}
+.ex b{display:block;font-size:15px} .ex span{display:block;font-size:12.5px;color:var(--ink-3);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11.5px;font-weight:700;color:var(--ink-3);padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--surface)}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.scroll{overflow:auto;max-height:70vh}
+td input.fld,td select.fld{padding:6px 8px;font-size:13px;border-radius:8px}
+tr.diff td{background:var(--warn-soft)} tr.nokey td{background:var(--no-soft)}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:800;white-space:nowrap}
+.t-ok{background:var(--ok-soft);color:var(--ok)} .t-no{background:var(--no-soft);color:var(--no)} .t-warn{background:var(--warn-soft);color:var(--warn)} .t-mute{background:var(--surface-3);color:var(--ink-3)}
+.drop{border:2px dashed var(--line-2);border-radius:16px;padding:22px;text-align:center;color:var(--ink-2)}
+.drop.on{border-color:var(--accent);background:var(--accent-soft)}
+.prog{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden;margin:10px 0} .prog i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.log{font-size:12.5px;color:var(--ink-2);max-height:180px;overflow:auto;background:var(--surface-2);border-radius:10px;padding:8px 10px;margin-top:8px;white-space:pre-wrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.qs{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.q{border-radius:10px;padding:6px 8px;background:var(--surface-2);font-size:12.5px;text-align:left;border:1.5px solid transparent}
+.q b{font-family:'Archivo',sans-serif} .q .m{font-weight:800;font-size:14px}
+.q.ok{background:var(--ok-soft)} .q.x{background:var(--no-soft)} .q.flag{border-color:var(--warn);background:var(--hl)}
+.sheetimg{width:100%;border-radius:10px;border:1px solid var(--line);background:#fff}
+.crop{display:block;max-width:100%;border-radius:6px;border:1px solid var(--line);margin:4px 0;background:#fff}
+.pick{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.pick button{min-width:34px;padding:6px 8px;border-radius:8px;background:var(--surface-3);font-weight:800;font-size:13px}
+.pick button.on{background:var(--accent);color:var(--on-accent)}
+.subbox{border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:60;max-width:90vw}
+.gate{max-width:400px;margin:14vh auto;padding:0 20px}
+.gate h2{margin:0 0 6px;font-size:23px;font-weight:800}
+.gate input{width:100%;padding:15px 16px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--surface);font-size:16px;font-weight:600}
+.gate button{width:100%;margin-top:12px;padding:15px;border-radius:14px;background:var(--accent);color:var(--on-accent);font-size:15.5px;font-weight:800}
+.err{color:var(--no);font-size:13px;font-weight:700;margin-top:10px;min-height:19px}
+.empty{text-align:center;padding:40px 20px;color:var(--ink-3)}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;margin:10px 0}
+details summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--ink-2)}
+@media (max-width:700px){ .wrap{padding:0 12px 80px} .bar-in{padding:10px 12px} .card{padding:14px} }
+</style>
+</head>
+<body>
+<div id="gate" class="gate">
+  <h2>동형모고 OMR</h2>
+  <p style="font-size:14px;color:var(--ink-2)">선생님 비밀번호를 입력하세요.</p>
+  <input id="pin" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button id="pin-go">들어가기</button>
+  <div class="err" id="pin-err"></div>
+</div>
+<div id="app" hidden>
+  <header class="bar"><div class="bar-in">
+    <div style="flex:1"><h1>📝 동형모고 OMR 리포트</h1><div class="sub">정답 확정 → OMR 뽑기 → 찍어 올리기 → 리포트 보내기</div></div>
+    <a class="btn" href="hw">← 반별 관리</a>
+  </div></header>
+  <div class="wrap">
+    <div class="sec"><h2>반</h2><span class="note">한 반에 시험 하나씩 만들어요</span></div>
+    <div class="chips" id="classes"></div>
+    <div id="main"></div>
+  </div>
+</div>
+<input type="file" id="f-omr" accept="image/*,application/pdf" multiple hidden>
+<input type="file" id="f-cam" accept="image/*" capture="environment" hidden>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script charset="utf-8" src="omr.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const today=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+const fmtD=d=>{ if(!d) return ""; const [y,m,dd]=d.split("-"); return `${+m}.${+dd} (${"일월화수목금토"[new Date(+y,+m-1,+dd).getDay()]})`; };
+const baseNm=n=>String(n||"").replace(/[A-Za-z0-9]+$/,"");
+let PIN=(()=>{try{return localStorage.getItem("naesinfit.pin")||sessionStorage.getItem("naesinfit.pin")||""}catch(e){return ""}})();
+let DB=null, CUR=+(localStorage.getItem("hw.class")||0), EXAMS=null, KINDS=[], AI=false, EX=null, STATS=null, STEP=localStorage.getItem("mock.step")||"key", OPEN=null, PENDING=[], BUSY="";
+const QS=new URLSearchParams(location.search);
+function toast(t,ms){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),ms||2600); }
+function loadJS(src,test){ return test()?Promise.resolve():new Promise((ok,no)=>{ const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>no(new Error("도구를 불러오지 못했어요")); document.head.appendChild(s); }); }
+async function libsPDF(){ await loadJS("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",()=>window.jspdf); }
+async function libsPDFJS(){ await loadJS("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",()=>window.pdfjsLib); window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }
+async function api(path,body){
+  const r=await fetch(path,{method:body?"POST":"GET",headers:{"x-pin":PIN,"content-type":"application/json"},body:body?JSON.stringify(body):undefined,cache:"no-store"});
+  const j=await r.json().catch(()=>({})); if(!r.ok){ const e=new Error(j.error||"서버 오류"); e.noKey=j.noKey; throw e; } return j;
+}
+const mock=b=>api("/api/mock",b);
+async function loadAll(){ DB=await api("/api/hw"); if(!DB.classes.find(c=>+c.id===CUR)) CUR=DB.classes[0]?+DB.classes[0].id:0; await loadExams(); }
+async function loadExams(){ const j=await api(`/api/mock?list=1&class_id=${CUR}`); EXAMS=j.exams; KINDS=j.kinds; AI=j.ai; }
+async function openExam(id){ const same=EX&&+EX.id===+id; const j=await api(`/api/mock?exam=${id}`); EX=j.exam; STATS=j.stats; KINDS=j.kinds; AI=j.ai; if(!same){ OPEN=null; PENDING=[]; } else if(OPEN&&!sheetOf(OPEN)) OPEN=null; }
+const members=()=>DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student).sort((a,b)=>a.localeCompare(b,"ko"));
+const cls=()=>DB.classes.find(c=>+c.id===CUR)||{};
+const items=()=>((EX&&EX.cfg.items)||[]);
+const omrItems=()=>((EX&&EX.cfg.omr&&EX.cfg.omr.items)||items());
+const sheetOf=s=>(EX.sheets||[]).find(x=>x.student===s);
+const roster=()=>(EX.cfg.roster||[]);
+const sortN=(a,b)=>{ const sa=/^서/.test(a.n), sb=/^서/.test(b.n); if(sa!==sb) return sa?1:-1; return (parseFloat(String(a.n).replace(/\D/g,""))||0)-(parseFloat(String(b.n).replace(/\D/g,""))||0); };
+
+/* ───────── 화면 ───────── */
+function render(){
+  $("#classes").innerHTML=DB.classes.map(c=>`<button class="chip${+c.id===CUR?" on":""}" data-cls="${c.id}">${esc(c.name)}<small>${DB.members.filter(m=>+m.class_id===+c.id).length}명</small></button>`).join("");
+  if(!CUR){ $("#main").innerHTML=`<div class="card empty" style="margin-top:14px">반 관리에서 반을 먼저 만들어 주세요.</div>`; return; }
+  if(!EX){ $("#main").innerHTML=listHTML(); return; }
+  const S=[["key","① 시험 · 정답", items().length?`${items().length}문항${EX.cfg.keyDone?" ✓":""}`:""],["print","② OMR 뽑기",""],["scan","③ OMR 올리기 · 확인",`${EX.sheets.filter(s=>s.confirmed).length}/${members().length}`],["report","④ 리포트 보내기",""]];
+  $("#main").innerHTML=`<div class="sec"><h2>${esc(EX.title)} <span class="note">${fmtD(EX.day)} · ${esc(cls().name||"")}</span></h2><span class="row"><button class="btn sm" id="ex-back">← 시험 목록</button><button class="btn sm no" id="ex-del">시험 삭제</button></span></div>
+    <div class="steps">${S.map(([k,n,c])=>`<button class="${STEP===k?"on":""}" data-step="${k}">${n}${c?`<i>${c}</i>`:""}</button>`).join("")}</div>
+    <div id="step">${STEP==="key"?keyHTML():STEP==="print"?printHTML():STEP==="scan"?scanHTML():reportHTML()}</div>`;
+  if(STEP==="scan"&&OPEN) paintOpen();
+}
+function listHTML(){
+  const L=EXAMS||[];
+  return `<div class="sec"><h2>${esc(cls().name)} 동형모고</h2><button class="btn pri" id="ex-new">+ 새 동형모고</button></div>
+  ${L.length?`<div class="exams">${L.map(e=>`<button class="ex" data-ex="${e.id}"><b>${esc(e.title)}</b><span>${fmtD(e.day)} · ${e.nItems}문항 ${e.keyDone?"· 정답 확정 ✓":"· 정답 확정 전"}</span><span>OMR ${e.sheets}장 · 확정 ${e.confirmed}명</span></button>`).join("")}</div>`
+  :`<div class="card empty">아직 동형모고가 없어요. <b>+ 새 동형모고</b>로 시작하세요.</div>`}
+  ${AI?"":`<div class="warnbox">🤖 AI 키(ANTHROPIC_API_KEY)가 아직 없어요 — 정답 AI 추출·검수, 서술형 채점, 코멘트는 키를 넣으면 켜져요. 객관식 OMR 인식·채점·리포트는 지금도 돼요.</div>`}`;
+}
+
+/* ── ① 시험·정답 ── */
+let KEYF={key:null,paper:null}, AILOG="", AIP=0;
+function keyHTML(){
+  const it=items().slice().sort(sortN), g=EX.cfg.grade||{mode:"csat",cuts:[]};
+  const tot=it.reduce((s,x)=>s+(+x.p||0),0), nDiff=it.filter(x=>x.chk==="diff").length, nNo=it.filter(x=>x.t!=="s"&&!x.a).length;
+  const kindOpts=v=>`<option value="">유형</option>`+KINDS.map(k=>`<option${k===v?" selected":""}>${esc(k)}</option>`).join("")+(v&&!KINDS.includes(v)?`<option selected>${esc(v)}</option>`:"");
+  return `<div class="card">
+    <div class="row" style="align-items:flex-end">
+      <label class="f" style="flex:2;min-width:220px">시험 이름<input class="fld" id="k-title" value="${esc(EX.title)}"></label>
+      <label class="f">날짜<input class="fld" type="date" id="k-day" value="${EX.day}"></label>
+      <label class="f">등급 기준<select class="fld" id="k-gmode">
+        <option value="csat"${g.mode==="csat"?" selected":""}>모고형 · 수능 영어 절대평가</option>
+        <option value="score"${g.mode==="score"?" selected":""}>내신형 · 점수만</option>
+        <option value="cut"${g.mode==="cut"?" selected":""}>내신형 · 커트라인 입력</option></select></label>
+      ${g.mode==="cut"?`<label class="f" style="min-width:200px">커트라인(1등급부터, 원점수)<input class="fld" id="k-cuts" placeholder="예: 92 85 76 64" value="${esc((g.cuts||[]).join(" "))}"></label>`:""}
+    </div>
+  </div>
+  <div class="sec"><h2>🤖 AI로 정답 · 유형 · 해설 채우기</h2><span class="note">해설지에서 정답을 뽑고, 시험지는 AI가 직접 풀어 정답과 다른 문항만 ⚠ 로 알려 줘요</span></div>
+  <div class="card">
+    <div class="row">
+      <label class="drop" style="flex:1;min-width:220px;cursor:pointer" for="f-key">📘 정답·해설지 (PDF/사진)<br><b id="fn-key">${KEYF.key?esc(KEYF.key.name):"파일 고르기"}</b></label>
+      <label class="drop" style="flex:1;min-width:220px;cursor:pointer" for="f-paper">📄 시험지 (PDF/사진)<br><b id="fn-paper">${KEYF.paper?esc(KEYF.paper.name):"파일 고르기"}</b></label>
+    </div>
+    <input type="file" id="f-key" accept="application/pdf,image/*" hidden><input type="file" id="f-paper" accept="application/pdf,image/*" hidden>
+    <div class="row" style="margin-top:12px"><button class="btn pri" id="ai-run"${BUSY||!AI?" disabled":""}>🤖 AI로 채우기</button>
+      ${AI?`<span class="note">해설지만 올려도 돼요(검수는 시험지가 있어야 해요). 페이지가 많으면 몇 분 걸려요.</span>`:`<span class="note">AI 키가 없어 꺼져 있어요 — 아래 '정답 한 번에 붙여넣기'로 넣어 주세요.</span>`}</div>
+    ${BUSY==="ai"||AILOG?`<div class="prog"><i style="width:${AIP}%"></i></div><div class="log" id="ai-log">${esc(AILOG)}</div>`:""}
+  </div>
+  <div class="sec"><h2>문항 · 정답표 <span class="note">총 ${it.length}문항 · ${tot}점 만점</span></h2>
+    <span class="row">${nDiff?`<span class="tag t-warn">⚠ AI와 다른 문항 ${nDiff}</span>`:""}${nNo?`<span class="tag t-no">정답 없음 ${nNo}</span>`:""}${EX.cfg.keyDone?`<span class="tag t-ok">정답 확정 ✓</span>`:""}</span></div>
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <label class="f">객관식<input class="fld num" id="k-no" type="number" min="0" max="60" style="width:80px" value="${it.filter(x=>x.t!=="s").length||45}"></label>
+      <label class="f">배점<input class="fld num" id="k-po" type="number" step="0.1" style="width:70px" value="2"></label>
+      <label class="f">서술형<input class="fld num" id="k-ns" type="number" min="0" max="20" style="width:80px" value="${it.filter(x=>x.t==="s").length}"></label>
+      <label class="f">배점<input class="fld num" id="k-ps" type="number" step="0.5" style="width:70px" value="5"></label>
+      <button class="btn" id="k-frame" style="align-self:flex-end">문항 틀 맞추기</button>
+      <details style="flex:1;min-width:260px;align-self:flex-end"><summary>정답 한 번에 붙여넣기</summary>
+        <div class="row" style="margin-top:6px"><input class="fld" id="k-paste" placeholder="예: 3 1 4 5 2 ... 또는 31452..." style="flex:1"><button class="btn sm" id="k-paste-go">객관식 1번부터 넣기</button></div></details>
+    </div>
+    <div class="scroll"><table><thead><tr><th>번호</th><th>정답</th><th>배점</th><th>유형</th><th>AI 검수</th><th>해설 · 모범답안</th></tr></thead><tbody>
+    ${it.map(x=>{ const i=items().indexOf(x);
+      return `<tr class="${x.chk==="diff"?"diff":x.t!=="s"&&!x.a?"nokey":""}" data-it="${i}">
+      <td><b class="num">${esc(x.n)}</b>${x.t==="s"?` <span class="tag t-mute">서술형</span>`:""}</td>
+      <td>${x.t==="s"?`<span class="note">모범답안 →</span>`:`<input class="fld num" data-f="a" value="${esc(x.a)}" style="width:62px" placeholder="1~5">`}</td>
+      <td><input class="fld num" data-f="p" value="${x.p}" style="width:58px"></td>
+      <td><select class="fld" data-f="k">${kindOpts(x.k)}</select></td>
+      <td>${x.t==="s"?(x.ai?`<span class="note">AI 답: ${esc(x.ai)}</span>`:""):x.chk==="diff"?`<div><span class="tag t-warn">⚠ AI는 ${esc(x.ai)}번</span></div><div class="note" style="max-width:240px">${esc(x.why)}</div>
+          <div class="row" style="margin-top:4px"><button class="btn sm" data-keep="${i}">해설지 ${esc(x.a)}번 유지</button><button class="btn sm" data-useai="${i}">${esc(x.ai)}번으로</button></div>`
+        :x.chk==="ok"?`<span class="tag t-ok">✓ 일치</span>`:x.ai?`<span class="note">AI ${esc(x.ai)}</span>`:`<span class="note">—</span>`}</td>
+      <td style="min-width:260px">${x.t==="s"?`<textarea class="fld" data-f="m" placeholder="모범답안">${esc(x.m)}</textarea><textarea class="fld" data-f="r" placeholder="채점 기준 · 부분점수 (없으면 AI가 기본 규칙으로)" style="margin-top:4px;min-height:40px">${esc(x.r)}</textarea>`:""}
+        <textarea class="fld" data-f="e" placeholder="해설 (리포트 '틀린 문항'에 나가요)" style="min-height:40px${x.t==="s"?";margin-top:4px":""}">${esc(x.e)}</textarea></td></tr>`; }).join("")}
+    </tbody></table></div>
+    <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" id="k-save">💾 저장</button><button class="btn ok" id="k-done">✅ 정답 확정</button></div>
+  </div>`;
+}
+function readKeyForm(){
+  if(!$("#k-title")) return;
+  const it=items();
+  $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
+  const g={mode:($("#k-gmode")||{}).value||"csat",cuts:(($("#k-cuts")||{}).value||"").split(/[\s,]+/).map(Number).filter(x=>x>0)};
+  EX.cfg.grade=g; EX.title=$("#k-title").value.trim()||EX.title; EX.day=$("#k-day").value||EX.day;
+}
+async function saveExam(extra,noRead){
+  if(!noRead) readKeyForm(); Object.assign(EX.cfg,extra||{});
+  const j=await mock({action:"exam.save",id:EX.id,class_id:CUR,title:EX.title,day:EX.day,cfg:EX.cfg});
+  const sh=EX.sheets; EX=j.exam; EX.sheets=sh; return EX;
+}
+function frameItems(no,po,ns,ps){
+  const old=items(), keep=n=>old.find(x=>x.n===n);
+  const out=[]; for(let i=1;i<=no;i++) out.push(keep(String(i))||{n:String(i),t:"o",a:"",p:po,k:"",e:""});
+  for(let i=1;i<=ns;i++) out.push(keep("서"+i)||{n:"서"+i,t:"s",a:"",p:ps,k:"",e:"",m:"",r:""});
+  EX.cfg.items=out;
+}
+/* AI: 해설지 → 정답, 시험지 → 직접 풀기 · 유형 */
+async function runAI(){
+  if(!KEYF.key&&!KEYF.paper) return toast("정답·해설지나 시험지 파일을 골라 주세요");
+  readKeyForm(); BUSY="ai"; AILOG=""; AIP=2; render();
+  const log=t=>{ AILOG+=t+"\n"; const el=$("#ai-log"); if(el){ el.textContent=AILOG; el.scrollTop=1e9; } };
+  const prog=p=>{ AIP=p; const el=$(".prog i"); if(el) el.style.width=p+"%"; };
+  try{
+    await libsPDFJS();
+    const key=KEYF.key?await OMR.pagesForAI(KEYF.key):[], paper=KEYF.paper?await OMR.pagesForAI(KEYF.paper):[];
+    log(`해설지 ${key.length}쪽 · 시험지 ${paper.length}쪽을 읽어요`);
+    const jobs=[];
+    for(let i=0;i<key.length;i++) jobs.push({role:"ai.key",pages:[i],src:key});
+    if(paper.length===1) jobs.push({role:"ai.paper",pages:[0],src:paper});
+    for(let i=0;i+1<paper.length;i++) jobs.push({role:"ai.paper",pages:[i,i+1],src:paper});
+    const K=[],P=[]; let done=0;
+    const run=async jb=>{ for(let t=0;t<2;t++){ try{ const j=await mock({action:jb.role,images:jb.pages.map(p=>jb.src[p]),pages:jb.pages.map(p=>p+1).join(",")});
+          (jb.role==="ai.key"?K:P).push(...j.items); log(`✓ ${jb.role==="ai.key"?"해설지":"시험지"} ${jb.pages.map(p=>p+1).join("·")}쪽: ${j.items.length}문항`); break; }
+        catch(e){ if(e.noKey) throw e; log(`… ${jb.role==="ai.key"?"해설지":"시험지"} ${jb.pages.map(p=>p+1).join("·")}쪽 다시 시도 (${e.message})`); if(t) log(`✗ ${jb.pages.map(p=>p+1).join("·")}쪽은 건너뜀`); } }
+      done++; prog(5+Math.round(done/jobs.length*90)); };
+    const q=[...jobs]; await Promise.all([0,1,2].map(async()=>{ while(q.length) await run(q.shift()); }));
+    mergeAI(K,P); log(`끝! 정답 ${K.length?"추출":"없음"} · ⚠ AI와 다른 문항 ${items().filter(x=>x.chk==="diff").length}개`);
+    await saveExam(null,true); prog(100);
+  }catch(e){ log("✗ "+e.message); toast(e.message,4000); }
+  BUSY=""; render();
+}
+function mergeAI(K,P){
+  const it=items(), by=n=>it.find(x=>x.n===n);
+  const add=(n,t)=>{ let x=by(n); if(!x){ x={n,t:t==="s"?"s":"o",a:"",p:t==="s"?5:2,k:"",e:"",m:"",r:""}; it.push(x); } return x; };
+  K.forEach(k=>{ const x=add(k.n,k.t); if(k.t) x.t=k.t==="s"?"s":"o"; if(x.t!=="s"&&k.a) x.a=String(k.a).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,"");
+    if(k.e) x.e=k.e; if(k.m) x.m=k.m; if(k.r) x.r=k.r; if(k.p!=null&&+k.p>0) x.p=+k.p; });
+  const best={}; P.forEach(p=>{ if(!best[p.n]||(p.full&&!best[p.n].full)) best[p.n]=p; else if(p.full&&best[p.n].full&&String(p.ai)!==String(best[p.n].ai)) best[p.n].dis=String(p.ai); });
+  Object.values(best).forEach(p=>{ const x=add(p.n,p.t); if(p.k) x.k=p.k; if(p.q) x.q=p.q; if(p.p!=null&&+p.p>0&&!K.find(k=>k.n===p.n&&k.p)) x.p=+p.p;
+    if(p.full!==false&&p.ai!==""&&p.ai!=null){ x.ai=String(p.ai).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).trim(); x.why=(p.why||"")+(p.dis?` (다른 풀이에선 ${p.dis}번)`:""); } });
+  it.forEach(x=>{ if(x.t==="s"||!x.ai||!x.a){ if(x.t!=="s"&&x.a&&!x.ai) x.chk=""; return; }
+    x.chk=x.a.split(",").includes(x.ai)&&!(x.why||"").includes("다른 풀이")?"ok":"diff"; });
+  it.sort(sortN); EX.cfg.items=it;
+}
+
+/* ── ② OMR 뽑기 ── */
+function printHTML(){
+  const ro=roster(), mem=members(), printed=EX.cfg.omr;
+  const changed=printed&&JSON.stringify(printed.items.map(x=>[x.n,x.t]))!==JSON.stringify(items().map(x=>[x.n,x.t]));
+  return `<div class="card">
+    <p style="margin:0 0 10px">학생마다 이름 · QR · 코드 줄이 찍힌 OMR을 만들어요. 객관식 ${items().filter(x=>x.t!=="s").length}문항${items().some(x=>x.t==="s")?` + 서술형 답안지 ${items().filter(x=>x.t==="s").length}칸(뒷장)`:""}.</p>
+    ${!items().length?`<div class="warnbox">① 시험 · 정답에서 문항 틀을 먼저 만들어 주세요.</div>`:""}
+    ${changed?`<div class="warnbox">⚠ OMR을 뽑은 뒤 문항 수가 바뀌었어요. 이미 나눠 준 OMR이 있으면 그대로 두고, 새로 뽑으면 새 양식으로 바뀌어요.</div>`:""}
+    <div class="row" style="margin:8px 0">${mem.map(s=>`<label class="chip" style="cursor:pointer"><input type="checkbox" class="p-st" value="${esc(s)}" checked> ${esc(s)}</label>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><label class="f">이름 빈칸 OMR (명단에 없는 학생용)<input class="fld num" id="p-blank" type="number" min="0" max="30" value="2" style="width:90px"></label>
+      <button class="btn pri" id="p-go" style="align-self:flex-end"${items().length?"":" disabled"}>🖨 OMR PDF 만들기</button></div>
+    <p class="note" style="margin-top:12px">인쇄할 때 '실제 크기(100%)'가 가장 좋지만, 크기가 달라져도 네 모서리 네모로 맞춰 읽어요. 네모 · 아래 코드 줄 · QR을 가리거나 접지 않게만 해 주세요.${printed?` · 마지막으로 뽑은 때 ${esc(String(printed.at||"").slice(0,16).replace("T"," "))}`:""}</p>
+  </div>`;
+}
+async function makeOMR(){
+  await libsPDF();
+  const sel=$$(".p-st").filter(x=>x.checked).map(x=>x.value), nb=Math.max(0,Math.min(30,+$("#p-blank").value||0));
+  EX.cfg.omr={items:items().map(x=>({n:x.n,t:x.t,p:x.p})),at:new Date().toISOString()};
+  const j=await mock({action:"exam.save",id:EX.id,class_id:CUR,title:EX.title,day:EX.day,cfg:EX.cfg}); const sh=EX.sheets; EX=j.exam; EX.sheets=sh;
+  const ro=roster(); const sts=sel.map(s=>({name:baseNm(s)||s,code:(ro.find(r=>r.student===s)||{}).code})).filter(x=>x.code);
+  for(let i=0;i<nb;i++) sts.push({name:"",code:0});
+  const pdf=await OMR.makePDF({id:EX.id,title:EX.title,cls:cls().name,day:EX.day,items:omrItems()},sts);
+  const a=document.createElement("a"); a.href=URL.createObjectURL(pdf.output("blob")); a.download=`OMR_${cls().name}_${EX.title}.pdf`.replace(/[\\/:*?"<>|]/g,""); document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1500);
+  toast(`OMR ${sts.length}명분 PDF를 받았어요`);
+}
+
+/* ── ③ OMR 올리기 · 확인 ── */
+let SCAN={log:"",n:0,done:0};
+function scanHTML(){
+  if(!items().length) return `<div class="card warnbox">① 시험 · 정답에서 문항 틀을 먼저 만들어 주세요.</div>`;
+  const mem=members(), sc=(STATS&&STATS.scores)||{}, nSub=omrItems().filter(x=>x.t==="s").length;
+  const rows=mem.map(s=>{ const sh=sheetOf(s), fl=sh?Object.values(sh.flags||{}).filter(f=>f&&f!=="blank").length:0, bl=sh?Object.values(sh.flags||{}).filter(f=>f==="blank").length:0;
+    const subs=sh?Object.keys(sh.subs||{}).length:0, subG=sh?Object.values(sh.subs||{}).filter(v=>v.score!=null&&v.score!=="").length:0;
+    return `<tr><td><b>${esc(s)}</b></td><td>${sh&&sh.has_img?`<span class="tag t-ok">OMR ✓</span>`:sh?`<span class="tag t-mute">일부</span>`:`<span class="tag t-mute">없음</span>`}</td>
+      <td>${fl?`<span class="tag t-warn">⚠ ${fl}</span>`:""}${bl?` <span class="tag t-mute">빈칸 ${bl}</span>`:""}</td>
+      ${nSub?`<td>${sh?`${subs?`${subG}/${nSub} 채점`:`<span class="note">답안지 없음</span>`}`:""}</td>`:""}
+      <td class="num">${sh&&sh.confirmed&&sc[s]?`<b>${sc[s].score}</b>/${STATS.total} · ${sc[s].rank}등${sc[s].grade?" · "+sc[s].grade:""}`:""}</td>
+      <td>${sh?(sh.confirmed?`<span class="tag t-ok">확정 ✓</span>`:`<span class="tag t-warn">확인 전</span>`):""}</td>
+      <td>${sh?`<button class="btn sm${OPEN===s?" pri":""}" data-open="${esc(s)}">확인 · 고치기</button>`:""}</td></tr>`; }).join("");
+  const extra=(EX.sheets||[]).filter(s=>!mem.includes(s.student));
+  const ready=mem.filter(s=>{ const sh=sheetOf(s); return sh&&!sh.confirmed&&sh.has_img&&!Object.values(sh.flags||{}).some(f=>f&&f!=="blank")&&(!nSub||Object.values(sh.subs||{}).every(v=>v.score!=null&&v.score!=="")); });
+  return `<div class="card">
+    <div class="drop" id="drop">📷 OMR 사진 · 스캔 PDF를 여기에 끌어다 놓거나 <button class="btn sm pri" id="u-pick">여러 장 고르기</button> <button class="btn sm" id="u-cam">📱 폰으로 한 장 찍기</button>
+      <div class="note" style="margin-top:6px">순서 · 방향 상관없어요. 코드 줄로 학생 · 쪽을 알아서 찾아요.</div></div>
+    ${SCAN.n?`<div class="prog"><i style="width:${Math.round(SCAN.done/SCAN.n*100)}%"></i></div>`:""}${SCAN.log?`<div class="log" id="scan-log">${esc(SCAN.log)}</div>`:""}
+  </div>
+  ${PENDING.length?`<div class="sec"><h2>🙋 이름을 정해 주세요 (${PENDING.length}장)</h2><span class="note">이름 빈칸 OMR이거나 명단에 없는 코드예요</span></div>
+    <div class="card">${PENDING.map((p,i)=>`<div class="row" style="margin-bottom:12px;align-items:flex-start"><img src="${p.img}" style="width:220px;border-radius:8px;border:1px solid var(--line)">
+      <div><div class="note">${esc(p.name)}${p.kind==="sub"?" · 서술형 답안지":""}</div><select class="fld" data-pend="${i}"><option value="">학생 고르기</option>${mem.map(s=>`<option>${esc(s)}</option>`).join("")}</select>
+      <button class="btn sm" data-pend-x="${i}">버리기</button></div></div>`).join("")}</div>`:""}
+  <div class="sec"><h2>학생별 확인</h2><span class="row">
+    ${nSub&&AI?`<button class="btn" id="g-subs"${BUSY?" disabled":""}>🤖 서술형 모두 AI 채점</button>`:""}
+    <button class="btn ok" id="c-all"${ready.length?"":" disabled"}>✅ 문제없는 ${ready.length}명 확정</button></span></div>
+  <div class="card"><div class="scroll" style="max-height:none"><table><thead><tr><th>학생</th><th>OMR</th><th>확인할 칸</th>${nSub?"<th>서술형</th>":""}<th>점수</th><th>상태</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${extra.length?`<div class="warnbox">명단에 없는 이름의 OMR: ${extra.map(s=>esc(s.student)).join(", ")}</div>`:""}</div>
+  <div id="open"></div>`;
+}
+const IMGC={};
+async function sheetImg(s,sub){ const k=s+"|"+(sub||""); if(IMGC[k]) return IMGC[k]; const j=await api(`/api/mock?exam=${EX.id}&img=1&student=${encodeURIComponent(s)}${sub?`&sub=${encodeURIComponent(sub)}`:""}`); return IMGC[k]=j.img; }
+async function paintOpen(){
+  const box=$("#open"); if(!box||!OPEN) return; const s=OPEN, sh=sheetOf(s); if(!sh){ box.innerHTML=""; return; }
+  const pg=OMR.layout({items:omrItems()}).find(p=>p.kind==="obj"), it=items(), key=n=>it.find(x=>x.n===n)||{};
+  const objIt=omrItems().filter(x=>x.t!=="s"), subIt=omrItems().filter(x=>x.t==="s");
+  box.innerHTML=`<div class="sec"><h2>🔎 ${esc(s)} 확인</h2><span class="row"><select class="fld" id="mv-to"><option value="">다른 학생 OMR이에요 →</option>${members().filter(m=>m!==s).map(m=>`<option>${esc(m)}</option>`).join("")}</select>
+    <button class="btn sm no" id="sh-del">이 OMR 지우기</button>${sh.confirmed?`<button class="btn sm" id="sh-unc">확정 풀기</button>`:`<button class="btn ok" id="sh-ok">✅ ${esc(s)} 확정</button>`}</span></div>
+  <div class="grid2"><div class="card"><div class="note" style="margin-bottom:6px">원근을 바로 편 OMR (노란 칸 = 확인 필요)</div><canvas id="sheet-cv" class="sheetimg"></canvas></div>
+  <div class="card"><div class="note">칸을 누르면 고칠 수 있어요. 초록 = 정답 · 빨강 = 오답 · 노랑 = 흐림/두 개/지운 자국</div>
+    <div class="qs" style="margin-top:8px">${objIt.map(x=>{ const m=(sh.marks||{})[x.n]??"", f=(sh.flags||{})[x.n]||"", k=key(x.n), ok=k.a&&m&&!m.includes(",")&&(k.a.split(",").includes(m)||k.a==="*");
+      return `<button class="q ${f&&f!=="blank"?"flag":k.a?(ok?"ok":"x"):""}" data-q="${esc(x.n)}"><b>${esc(x.n)}</b> <span class="m">${m?esc(m):"·"}</span> <span class="note">${k.a?"정답 "+esc(k.a):""}</span>${f&&f!=="blank"?`<div class="note">${{multi:"두 개 칠함",faint:"흐리게",check:"지운 자국?"}[f]||f}</div>`:""}</button>`; }).join("")}</div>
+    <div id="q-edit"></div>
+    ${subIt.length?`<div class="sec" style="margin-top:18px"><h2>서술형</h2>${AI?`<button class="btn sm" id="g-sub1">🤖 ${esc(s)} 서술형 AI 채점</button>`:""}</div>
+      ${subIt.map(x=>{ const v=(sh.subs||{})[x.n]||{}, k=key(x.n); return `<div class="subbox"><div class="row" style="justify-content:space-between"><b>서술형 ${esc(x.n)} <span class="note">${k.p||x.p}점</span></b>${v.src?`<span class="tag ${v.src==="ai"?"t-mute":"t-ok"}">${v.src==="ai"?"AI 채점":"선생님 수정"}</span>`:""}</div>
+        ${v.img?`<img class="crop" data-subimg="${esc(x.n)}" alt="">`:`<div class="note">답안지 사진 없음 (뒷장을 올려 주세요)</div>`}
+        <div class="note" style="margin-top:4px">모범답안: ${esc(k.m||"—")}</div>
+        <textarea class="fld" data-sub-read="${esc(x.n)}" placeholder="학생 답 (AI가 옮겨 적음)" style="margin-top:6px;min-height:40px">${esc(v.read||"")}</textarea>
+        <div class="row" style="margin-top:6px"><label class="f">점수<input class="fld num" data-sub-score="${esc(x.n)}" value="${v.score??""}" style="width:70px"></label><label class="f" style="flex:1">감점 이유 (리포트에 나가요)<input class="fld" data-sub-why="${esc(x.n)}" value="${esc(v.why||"")}"></label><button class="btn sm" data-sub-save="${esc(x.n)}" style="align-self:flex-end">저장</button></div></div>`; }).join("")}`:""}
+  </div></div>`;
+  try{ const src=await sheetImg(s); if(src){ const im=new Image(); im.src=src; await im.decode(); const cv=$("#sheet-cv"); if(!cv) return; cv.width=im.width; cv.height=im.height; const g=cv.getContext("2d"); g.drawImage(im,0,0);
+    const k=im.width/210; if(pg){ g.lineWidth=3; pg.items.forEach(x=>{ const f=(sh.flags||{})[x.n]; if(f&&f!=="blank"){ g.strokeStyle="#E8890C"; g.fillStyle="rgba(255,220,0,.25)"; g.fillRect((x.x0+2)*k,(x.y-pg.rp/2)*k,(pg.cw-3)*k,pg.rp*k); g.strokeRect((x.x0+2)*k,(x.y-pg.rp/2)*k,(pg.cw-3)*k,pg.rp*k); } }); }
+    cv.dataset.k=k; } }catch(e){}
+  for(const el of $$("[data-subimg]")) sheetImg(s,el.dataset.subimg).then(u=>{ el.src=u; }).catch(()=>{});
+}
+function qEdit(n){
+  const s=OPEN, sh=sheetOf(s), m=(sh.marks||{})[n]??"", pg=OMR.layout({items:omrItems()}).find(p=>p.kind==="obj"), x=pg.items.find(i=>i.n===n);
+  const cv=$("#sheet-cv"); let crop="";
+  if(cv&&cv.width&&x){ const k=+cv.dataset.k, c=document.createElement("canvas"), w=pg.cw*k, h=pg.rp*1.4*k; c.width=w; c.height=h; c.getContext("2d").drawImage(cv,x.x0*k,(x.y-pg.rp*0.7)*k,w,h,0,0,w,h); crop=c.toDataURL(); }
+  const cur=m.split(",").filter(Boolean);
+  $("#q-edit").innerHTML=`<div class="subbox"><b>${esc(n)}번</b> ${crop?`<img class="crop" src="${crop}" style="max-width:320px">`:""}
+    <div class="pick">${[1,2,3,4,5].map(v=>`<button class="${cur.includes(String(v))?"on":""}" data-pk="${v}">${v}</button>`).join("")}<button class="${!cur.length?"on":""}" data-pk="">빈칸</button></div>
+    <div class="note">두 개를 칠한 그대로 두려면 두 개 다 누르세요(오답 처리).</div>
+    <div class="row" style="margin-top:6px"><button class="btn sm pri" data-pk-save="${esc(n)}">저장</button></div></div>`;
+  $("#q-edit").dataset.sel=cur.join(",");
+}
+async function handleFiles(files){
+  if(!files.length) return;
+  if(!EX.cfg.omr) { toast("② OMR 뽑기에서 OMR을 먼저 만들어 주세요 (양식 기준이 필요해요)",4000); return; }
+  SCAN={log:"",n:0,done:0}; BUSY="scan"; render();
+  const log=t=>{ SCAN.log+=t+"\n"; const el=$("#scan-log"); if(el){ el.textContent=SCAN.log; el.scrollTop=1e9; } else render(); };
+  try{
+    if([...files].some(f=>/pdf/i.test(f.type)||/\.pdf$/i.test(f.name))) await libsPDFJS();
+    log(`파일 ${files.length}개를 여는 중…`);
+    const cs=await OMR.filesToCanvases([...files]); SCAN.n=cs.length; log(`${cs.length}장 읽기 시작`);
+    const ro=roster(), lay={id:EX.id,items:omrItems()}; let ok=0, bad=0;
+    for(const {c,name} of cs){
+      await new Promise(r=>setTimeout(r,20));
+      const R=OMR.readSheet(c,info=>info.exam6===EX.id%64?lay:null); SCAN.done++;
+      const pe=$(".prog i"); if(pe) pe.style.width=Math.round(SCAN.done/SCAN.n*100)+"%";
+      if(!R.ok){ bad++; log(`✗ ${name}: ${R.why}`); continue; }
+      const st=(ro.find(r=>r.code===R.code)||{}).student;
+      const payload=R.kind==="sub"?{kind:"sub",subs:Object.fromEntries(R.subs.map(x=>[x.n,{img:x.img}]))}
+        :{kind:"obj",marks:Object.fromEntries(R.ns.map((n,i)=>[n,R.marks[i]])),flags:Object.fromEntries(R.ns.map((n,i)=>[n,R.flags[i]])),img:R.img};
+      if(!st){ PENDING.push({name,img:R.img,kind:R.kind,payload}); log(`? ${name}: 이름 빈칸 OMR → 아래에서 학생을 골라 주세요`); continue; }
+      await mock({action:"sheet.save",exam_id:EX.id,student:st,...payload}); Object.keys(IMGC).filter(k=>k.startsWith(st+"|")).forEach(k=>delete IMGC[k]);
+      const fl=R.flags?R.flags.filter(f=>f&&f!=="blank").length:0; ok++;
+      log(`✓ ${name} → ${st}${R.kind==="sub"?" 서술형 답안지":""}${fl?` (확인할 칸 ${fl})`:""}${R.viaQR?" · QR로 찾음":""}`);
+    }
+    log(`끝 — 저장 ${ok}장${bad?` · 못 읽음 ${bad}장 (다시 찍어 주세요)`:""}${PENDING.length?` · 이름 정할 것 ${PENDING.length}장`:""}`);
+    await openExam(EX.id);
+  }catch(e){ log("✗ "+e.message); }
+  BUSY=""; render();
+}
+async function gradeSubs(list){
+  BUSY="sub"; let n=0; toast(`서술형 AI 채점 중… (${list.length}명)`,3000);
+  for(const s of list){ try{ await mock({action:"sub.grade",exam_id:EX.id,student:s}); n++; }catch(e){ toast(`${s}: ${e.message}`,4000); if(e.noKey) break; } }
+  await openExam(EX.id); BUSY=""; render(); toast(`서술형 채점 끝 (${n}명) — 점수·이유를 확인하고 확정해 주세요`,4000);
+}
+
+/* ── ④ 리포트 ── */
+let RP={busy:false,log:""};
+function reportHTML(){
+  const done=EX.sheets.filter(s=>s.confirmed).sort((a,b)=>a.student.localeCompare(b.student,"ko")), sc=(STATS&&STATS.scores)||{};
+  if(!done.length) return `<div class="card empty">③에서 확정한 학생이 아직 없어요.</div>`;
+  const noC=done.filter(s=>!(s.comment&&s.comment.body)).length;
+  return `<div class="card"><div class="row">
+    <span class="tag t-mute">응시 ${STATS.n}명 · 평균 ${STATS.avg} · 최고 ${STATS.max} · 최저 ${STATS.min} (${STATS.total}점 만점)</span><span style="flex:1"></span>
+    ${AI?`<button class="btn" id="r-cmt"${RP.busy?" disabled":""}>🤖 코멘트 AI 작성 ${noC?`(${noC}명 남음)`:"(다시 쓰기)"}</button>`:""}
+    <a class="btn" href="mockr?exam=${EX.id}" target="_blank" rel="noopener">📄 전체 보기 · 합본 PDF</a>
+    <a class="btn pri" href="mockr?exam=${EX.id}&auto=zip" target="_blank" rel="noopener">🖨 일괄 생성 (ZIP)</a>
+    <button class="btn" id="r-links">🔗 학부모 링크 모두 복사</button></div>
+    ${RP.log?`<div class="log">${esc(RP.log)}</div>`:""}</div>
+  <div class="card" style="margin-top:12px"><table><thead><tr><th>학생</th><th>점수</th><th>석차</th><th>등급</th><th>코멘트</th><th></th></tr></thead><tbody>
+  ${done.map(s=>`<tr><td><b>${esc(s.student)}</b></td><td class="num">${sc[s.student]?sc[s.student].score:""}/${STATS.total}</td><td class="num">${sc[s.student]?sc[s.student].rank+"등":""}</td><td>${sc[s.student]?esc(sc[s.student].grade):""}</td>
+    <td style="max-width:420px">${s.comment&&s.comment.body?`<b>${esc(s.comment.title)}</b><div class="note">${esc(String(s.comment.body).replace(/\*\*/g,"").slice(0,90))}…</div>`:`<span class="note">없음${AI?"":" (AI 키가 없으면 리포트에 코멘트 칸이 빠져요)"}</span>`}</td>
+    <td class="row"><a class="btn sm" href="mockr?exam=${EX.id}&student=${encodeURIComponent(s.student)}" target="_blank" rel="noopener">보기 · PDF</a><button class="btn sm" data-cedit="${esc(s.student)}">코멘트 고치기</button></td></tr>`).join("")}
+  </tbody></table></div><div id="cedit"></div>`;
+}
+async function aiComments(){
+  const done=EX.sheets.filter(s=>s.confirmed), todo=done.filter(s=>!(s.comment&&s.comment.body)), list=todo.length?todo:done;
+  if(!todo.length&&!confirm("모든 학생 코멘트를 AI로 다시 쓸까요? (직접 고친 것도 바뀌어요)")) return;
+  RP.busy=true; RP.log=""; render(); let n=0;
+  for(const s of list){ try{ await mock({action:"comment.ai",exam_id:EX.id,student:s.student}); n++; RP.log+=`✓ ${s.student}\n`; }catch(e){ RP.log+=`✗ ${s.student}: ${e.message}\n`; if(e.noKey) break; } const el=$(".log"); if(el) el.textContent=RP.log; }
+  await openExam(EX.id); RP.busy=false; render(); toast(`코멘트 ${n}명 작성`);
+}
+
+/* ───────── 이벤트 ───────── */
+document.addEventListener("click",async e=>{
+  const t=e.target;
+  const c=t.closest("[data-cls]"); if(c){ CUR=+c.dataset.cls; localStorage.setItem("hw.class",CUR); EX=null; await loadExams(); render(); return; }
+  if(t.closest("#ex-new")){ const title=prompt("시험 이름",`${cls().name} 동형모의고사 ${(EXAMS||[]).length+1}회`); if(!title) return;
+    const j=await mock({action:"exam.save",class_id:CUR,title,day:today(),cfg:{grade:{mode:"csat"},items:[]}}); await openExam(j.exam.id); STEP="key"; frameItems(45,2,0,5); await saveExam(null,true); render(); return; }
+  const ex=t.closest("[data-ex]"); if(ex){ await openExam(+ex.dataset.ex); history.replaceState(null,"",`?exam=${EX.id}`); render(); return; }
+  if(t.closest("#ex-back")){ EX=null; history.replaceState(null,"","mock"); await loadExams(); render(); return; }
+  if(t.closest("#ex-del")){ if(!confirm(`'${EX.title}' 시험과 OMR 기록을 모두 지울까요?`)) return; await mock({action:"exam.delete",id:EX.id}); EX=null; await loadExams(); render(); return; }
+  const st=t.closest("[data-step]"); if(st){ if(STEP==="key") readKeyForm(); STEP=st.dataset.step; localStorage.setItem("mock.step",STEP); render(); return; }
+  // ① 정답
+  if(t.closest("#k-frame")){ readKeyForm(); frameItems(+$("#k-no").value||0,+$("#k-po").value||2,+$("#k-ns").value||0,+$("#k-ps").value||5); render(); return; }
+  if(t.closest("#k-paste-go")){ readKeyForm(); const v=$("#k-paste").value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1); const a=/\s|,/.test(v.trim())?v.trim().split(/[\s,]+/):v.replace(/\D/g,"").split("");
+    const ob=items().filter(x=>x.t!=="s").sort(sortN); a.forEach((x,i)=>{ if(ob[i]&&/^[1-5]$/.test(x)) ob[i].a=x; }); render(); toast(`${Math.min(a.length,ob.length)}문항 정답을 넣었어요`); return; }
+  const kp=t.closest("[data-keep]"); if(kp){ readKeyForm(); items()[+kp.dataset.keep].chk="ok"; render(); return; }
+  const ua=t.closest("[data-useai]"); if(ua){ readKeyForm(); const x=items()[+ua.dataset.useai]; x.a=x.ai; x.chk="ok"; render(); return; }
+  if(t.closest("#ai-run")){ runAI(); return; }
+  if(t.closest("#k-save")){ try{ await saveExam(); toast("저장했어요"); render(); }catch(err){ toast(err.message); } return; }
+  if(t.closest("#k-done")){ readKeyForm(); const it=items(); const nNo=it.filter(x=>x.t!=="s"&&!x.a).length, nD=it.filter(x=>x.chk==="diff").length, nK=it.filter(x=>!x.k).length;
+    if(nNo) return toast(`정답이 빈 객관식이 ${nNo}문항 있어요`);
+    if(nD&&!confirm(`⚠ AI와 다른 문항이 ${nD}개 남았어요. 해설지 답대로 확정할까요?`)) return;
+    if(nK&&!confirm(`유형이 빈 문항이 ${nK}개예요. 리포트 유형 분석에서 '기타'로 묶여요. 확정할까요?`)) return;
+    it.forEach(x=>{ if(x.chk==="diff") x.chk="ok"; }); await saveExam({keyDone:true}); await openExam(EX.id); toast("정답을 확정했어요. 이미 올린 OMR도 새 정답으로 다시 채점돼요"); render(); return; }
+  // ② OMR
+  if(t.closest("#p-go")){ const b=t.closest("#p-go"); b.disabled=true; b.textContent="만드는 중…"; try{ await makeOMR(); }catch(err){ toast(err.message); } render(); return; }
+  // ③ 올리기
+  if(t.closest("#u-pick")){ $("#f-omr").click(); return; }
+  if(t.closest("#u-cam")){ $("#f-cam").click(); return; }
+  const px=t.closest("[data-pend-x]"); if(px){ PENDING.splice(+px.dataset.pendX,1); render(); return; }
+  const op=t.closest("[data-open]"); if(op){ OPEN=OPEN===op.dataset.open?null:op.dataset.open; render(); if(OPEN) setTimeout(()=>$("#open").scrollIntoView({behavior:"smooth"}),50); return; }
+  const q=t.closest("[data-q]"); if(q){ qEdit(q.dataset.q); return; }
+  const pk=t.closest("[data-pk]"); if(pk){ const box=$("#q-edit"); let cur=(box.dataset.sel||"").split(",").filter(Boolean); const v=pk.dataset.pk;
+    if(!v) cur=[]; else cur=cur.includes(v)?cur.filter(x=>x!==v):[...cur,v].sort(); box.dataset.sel=cur.join(",");
+    box.querySelectorAll("[data-pk]").forEach(b=>b.classList.toggle("on",b.dataset.pk?cur.includes(b.dataset.pk):!cur.length)); return; }
+  const pks=t.closest("[data-pk-save]"); if(pks){ const n=pks.dataset.pkSave, v=$("#q-edit").dataset.sel||""; await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,marks:{[n]:v}}); await openExam(EX.id); render(); return; }
+  const ss=t.closest("[data-sub-save]"); if(ss){ const n=ss.dataset.subSave; await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,sub:{n,score:$(`[data-sub-score="${n}"]`).value,read:$(`[data-sub-read="${n}"]`).value,why:$(`[data-sub-why="${n}"]`).value}}); await openExam(EX.id); render(); toast("저장했어요"); return; }
+  if(t.closest("#g-sub1")){ gradeSubs([OPEN]); return; }
+  if(t.closest("#g-subs")){ gradeSubs(EX.sheets.filter(s=>Object.keys(s.subs||{}).length).map(s=>s.student)); return; }
+  if(t.closest("#sh-ok")){ const sh=sheetOf(OPEN), nSub=omrItems().filter(x=>x.t==="s").length;
+    if(nSub&&Object.values(sh.subs||{}).filter(v=>v.score!=null&&v.score!=="").length<nSub&&!confirm("채점 안 된 서술형이 있어요(0점 처리). 확정할까요?")) return;
+    await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,confirmed:true}); await openExam(EX.id); render(); toast(`${OPEN} 확정`); return; }
+  if(t.closest("#sh-unc")){ await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,confirmed:false}); await openExam(EX.id); render(); return; }
+  if(t.closest("#sh-del")){ if(!confirm(`${OPEN} OMR 기록을 지울까요?`)) return; await mock({action:"sheet.delete",exam_id:EX.id,student:OPEN}); OPEN=null; await openExam(EX.id); render(); return; }
+  if(t.closest("#c-all")){ const nSub=omrItems().filter(x=>x.t==="s").length;
+    const L=members().filter(s=>{ const sh=sheetOf(s); return sh&&!sh.confirmed&&sh.has_img&&!Object.values(sh.flags||{}).some(f=>f&&f!=="blank")&&(!nSub||Object.values(sh.subs||{}).every(v=>v.score!=null&&v.score!=="")); });
+    for(const s of L) await mock({action:"sheet.set",exam_id:EX.id,student:s,confirmed:true}); await openExam(EX.id); render(); toast(`${L.length}명 확정`); return; }
+  // ④ 리포트
+  if(t.closest("#r-cmt")){ aiComments(); return; }
+  if(t.closest("#r-links")){ const j=await api(`/api/mock?exam=${EX.id}&report=1`); const [,m,d]=EX.day.split("-");
+    const txt=j.list.map(r=>`헤이즐 쌤 동형모의고사 성적표 · ${r.name} (${+m}.${+d})\n${location.origin}/mo/${r.token}?e=${EX.id}`).join("\n\n");
+    try{ await navigator.clipboard.writeText(txt); toast(`${j.list.length}명 링크를 복사했어요`); }catch(err){ prompt("링크",txt); } return; }
+  const ce=t.closest("[data-cedit]"); if(ce){ const s=ce.dataset.cedit, sh=sheetOf(s), cm=sh.comment||{};
+    $("#cedit").innerHTML=`<div class="card" style="margin-top:12px"><b>${esc(s)} 코멘트</b><input class="fld" id="ce-t" style="width:100%;margin:8px 0" value="${esc(cm.title||"")}" placeholder="제목"><textarea class="fld" id="ce-b" style="min-height:140px" placeholder="본문 (**강조**는 노란 형광펜)">${esc(cm.body||"")}</textarea>
+      <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn pri" data-csave="${esc(s)}">저장</button></div></div>`; $("#cedit").scrollIntoView({behavior:"smooth"}); return; }
+  const cs=t.closest("[data-csave]"); if(cs){ await mock({action:"sheet.set",exam_id:EX.id,student:cs.dataset.csave,comment:{title:$("#ce-t").value,body:$("#ce-b").value}}); await openExam(EX.id); render(); toast("저장했어요"); return; }
+});
+document.addEventListener("change",async e=>{
+  const t=e.target;
+  if(t.id==="f-key"||t.id==="f-paper"){ KEYF[t.id==="f-key"?"key":"paper"]=t.files[0]||null; readKeyForm(); render(); return; }
+  if(t.id==="k-gmode"){ readKeyForm(); render(); return; }
+  if(t.id==="f-omr"||t.id==="f-cam"){ const f=[...t.files]; t.value=""; handleFiles(f); return; }
+  if(t.dataset.pend!=null&&t.value){ const p=PENDING[+t.dataset.pend]; await mock({action:"sheet.save",exam_id:EX.id,student:t.value,...p.payload}); PENDING.splice(+t.dataset.pend,1); await openExam(EX.id); render(); toast(`${t.value}에게 붙였어요`); return; }
+  if(t.id==="mv-to"&&t.value){ if(!confirm(`이 OMR을 ${t.value} 학생 것으로 옮길까요?`)) return; try{ await mock({action:"sheet.move",exam_id:EX.id,from:OPEN,to:t.value}); OPEN=t.value; await openExam(EX.id); render(); }catch(err){ toast(err.message,4000); } return; }
+});
+const dz=()=>$("#drop");
+document.addEventListener("dragover",e=>{ if(dz()&&STEP==="scan"){ e.preventDefault(); dz().classList.add("on"); } });
+document.addEventListener("dragleave",e=>{ if(dz()&&e.target===dz()) dz().classList.remove("on"); });
+document.addEventListener("drop",e=>{ if(dz()&&STEP==="scan"){ e.preventDefault(); dz().classList.remove("on"); handleFiles([...e.dataTransfer.files]); } });
+
+async function start(){
+  await loadAll();
+  const id=+QS.get("exam")||0; if(id){ try{ await openExam(id); if(+EX.class_id!==CUR){ CUR=+EX.class_id; await loadExams(); } }catch(e){ EX=null; } }
+  $("#gate").hidden=true; $("#app").hidden=false; render();
+}
+$("#pin-go").onclick=async()=>{ PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
+  try{ await start(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} }catch(e){ $("#pin-err").textContent=e.message; } };
+$("#pin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pin-go").click(); });
+(async()=>{ if(PIN){ try{ await start(); }catch(e){ PIN=""; } } })();
+</script>
+</body>
+</html>

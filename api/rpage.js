@@ -2,6 +2,7 @@
 // → 클로드·카톡 미리보기처럼 자바스크립트를 실행하지 않는 곳에서도 내용이 바로 읽힘
 import { sql, ensure } from "./_db.js";
 import { PNAME } from "./_pname.js";
+import { ensureMock, reportData, loadExam } from "./_mock.js";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const kday = v => new Date(new Date(v).getTime() + 9 * 3600e3).toISOString().slice(0, 10);   // 한국 날짜
@@ -186,9 +187,54 @@ async function ivPage(req, res, u) {
   res.status(200).send(page);
 }
 
+
+// 동형모고 성적표 링크(/mo/토큰?e=시험) — 카톡 미리보기 + 글로 읽히는 내용
+async function moPage(req, res, u) {
+  const tok = (u.searchParams.get("t") || "").trim().slice(0, 40), eid = Number(u.searchParams.get("e")) || 0;
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  let page = "";
+  try { page = await (await fetch(`https://${host}/mockr`, { cache: "no-store" })).text(); } catch (e) {}
+  if (!page) page = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>동형모의고사 성적표</title></head><body><div id="gate"></div></body></html>`;
+  let ssr = "<p>성적표 링크가 올바르지 않아요. 선생님께 새 링크를 받아 주세요.</p>", title = "", desc = "";
+  try {
+    await ensure(); await ensureMock();
+    const [m] = await sql`select student from report_tokens where token = ${tok}`;
+    if (m) {
+      const ex = eid ? [{ id: eid }] : await sql`select e.id from mock_exams e join mock_sheets s on s.exam_id = e.id where s.student = ${m.student} and s.confirmed order by e.day desc, e.id desc limit 1`;
+      const e = ex[0] ? await loadExam(ex[0].id) : null;
+      const sh = e ? await sql`select student, marks, subs, confirmed, comment from mock_sheets where exam_id = ${e.id}` : [];
+      const R = e ? await reportData(e, sh, m.student, e.cls) : null;
+      if (!R) ssr = "<p>아직 동형모고 성적표가 없어요.</p>";
+      else {
+        const [, mm, dd] = R.exam.day.split("-");
+        title = `헤이즐 쌤 동형모의고사 성적표 · ${R.name} (${+mm}.${+dd})`;
+        desc = `${R.exam.title} · ${R.score}/${R.total}점${R.grade ? " · " + R.grade.label : ""} · 반 ${R.rank}등/${R.n}명 · 반 평균 ${R.avg}점`;
+        const L2 = [`<h1>${esc(title)}</h1><p>${esc(R.exam.title)} · ${esc(R.exam.cls)} · ${+mm}월 ${+dd}일</p>`,
+          `<h2>결과</h2><p>${esc(desc)}</p>`];
+        if (R.comment && R.comment.body) L2.push(`<h2>헤이즐 쌤 코멘트</h2><p><b>${esc(R.comment.title)}</b></p><p>${esc(String(R.comment.body).replace(/\*\*/g, "")).replace(/\n/g, "<br>")}</p>`);
+        L2.push(`<h2>유형별 정답률</h2><ul>${R.kinds.map(k => `<li>${esc(k.k)}: ${k.ok}/${k.n} (${k.pct}%${k.cls != null ? `, 반 평균 ${k.cls}%` : ""})</li>`).join("")}</ul>`);
+        const W = R.items.filter(i => !i.ok);
+        if (W.length) L2.push(`<h2>틀린 문항</h2><ul>${W.map(i => `<li>${esc(i.n)}번 ${esc(i.k)} — ${i.t === "s" ? `${i.got}/${i.p}점` : `내 답 ${esc(i.mark || "빈칸")} → 정답 ${esc(i.a)}`}${i.e ? ` · ${esc(i.e)}` : ""}</li>`).join("")}</ul>`);
+        ssr = L2.join("\n");
+      }
+    }
+  } catch (e) { console.error("[mopage]", e); ssr = "<p>성적표를 불러오지 못했습니다.</p>"; }
+  const og = `https://${host}/og-mo.jpg`;
+  if (title) page = page.replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title><meta name="description" content="${esc(desc)}">`
+    + `<meta property="og:type" content="website"><meta property="og:site_name" content="헤이즐쌤 동형모의고사 성적표">`
+    + `<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">`
+    + `<meta property="og:image" content="${og}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">`
+    + `<meta name="twitter:card" content="summary_large_image">`);
+  page = page.replace(/<article id="ssr"><\/article>/, () => `<article id="ssr" style="max-width:720px;margin:24px auto;padding:0 18px;font-size:14px;line-height:1.7">${ssr}</article>`);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.status(200).send(page);
+}
+
 export default async function handler(req, res) {
   const u = new URL(req.url, "http://x");
   if (u.searchParams.get("iv")) return ivPage(req, res, u);
+  if (u.searchParams.get("mo")) return moPage(req, res, u);
   const tok = (u.searchParams.get("t") || "").trim().slice(0, 40);
   const host = req.headers["x-forwarded-host"] || req.headers.host;
   let page = "";
