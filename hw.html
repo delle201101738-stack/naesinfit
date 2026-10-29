@@ -211,6 +211,9 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .mrt{font-size:11px;color:var(--ink-2);line-height:1.35;padding:3px 4px 0;max-height:30px;overflow:hidden}
 .mrs.ok{color:var(--ok);font-weight:800}.mrs.no{color:var(--no);font-weight:800}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
+#live{position:fixed;left:12px;bottom:12px;z-index:50;background:#111;color:#fff;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:999px;opacity:0;transition:opacity .4s;pointer-events:none}
+#live.on{opacity:.92}
+.ivg .live-new{background:#FFF3B0!important;transition:background .6s}
 </style>
 </head>
 <body>
@@ -252,9 +255,33 @@ async function api(body){
   const r=await fetch("/api/hw",{method:body?"POST":"GET",headers:{"x-pin":PIN,"content-type":"application/json"},body:body?JSON.stringify(body):undefined});
   const j=await r.json().catch(()=>({}));
   if(!r.ok) throw new Error(j.error||"요청 실패");
+  if(body&&j.stamp) ownStamp(j.stamp);
   return j;
 }
-async function load(){ DB=await api(); }
+async function load(){ DB=await api(); HWSTAMP=+DB.stamp||0; }
+/* ── 👥 여러 조교 동시 입력: 5초마다 '바뀐 게 있나'(숫자 도장)만 확인 → 다른 사람이 바꿨을 때만 다시 불러옴 ── */
+let HWSTAMP=0;
+function ownStamp(n){ n=+n; if(n===HWSTAMP+1) HWSTAMP=n; }   // 내가 방금 한 저장이면 다시 안 불러옴 (사이에 다른 사람이 있었으면 다음 확인 때 불러옴)
+const typing=()=>{ const a=document.activeElement; return !!a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName); };
+function liveNote(t){ let e=$("#live"); if(!e){ e=document.createElement("div"); e.id="live"; document.body.appendChild(e); }
+  e.textContent=t; e.classList.add("on"); clearTimeout(liveNote.t); liveNote.t=setTimeout(()=>e.classList.remove("on"),3500); }
+const hhmm=()=>new Date().toTimeString().slice(0,8);
+let LIVE_BUSY=false;
+async function livePoll(){
+  if(LIVE_BUSY||document.hidden||!DB||!$("#gate").hidden) return;
+  LIVE_BUSY=true;
+  try{
+    if(VIEW==="iv"){ if(IV.mode==="input"&&IVG.data&&!IVG.data.error&&IVG.data.members) await ivLive(); return; }
+    if(VIEW==="names") return;
+    const r=await fetch("/api/hw?stamp=1",{headers:{"x-pin":PIN},cache:"no-store"}); const j=await r.json().catch(()=>({}));
+    if(!r.ok||+j.stamp===HWSTAMP) return;
+    if(typing()) return;                       // 칸에 쓰는 중이면 다음 확인 때
+    const y=scrollY; await load(); render(); scrollTo(0,y);
+    liveNote(`👥 다른 선생님 입력 반영 · ${hhmm()}`);
+  }catch(e){} finally{ LIVE_BUSY=false; }
+}
+setInterval(livePoll,5000);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) livePoll(); });
 async function act(body,msg){ try{ const j=await api(body); await load(); render(); if(msg) toast(msg); return j; }catch(e){ alert(e.message); } }
 
 function render(){ render0(); gridStats(); paintAlerts(); }
@@ -600,16 +627,50 @@ function ivGridHTML(){
       <td>${m.id?`<a class="btn sm" href="interview?ids=${m.id}" target="_blank" rel="noopener">보기</a>`:""}</td></tr>`; }).join("")}</tbody></table></div>`;
 }
 function ivRowVals(tr){ const v={mr:["","",""]}; tr.querySelectorAll("[data-f]").forEach(el=>{ if(el.dataset.f==="mr") v.mr[+el.dataset.i]=el.value; else v[el.dataset.f]=el.value; }); return v; }
-const ivTimers={};
+const ivTimers={}, ivDirty={};
+const fkey=el=>el.dataset.f==="mr"?"mr"+el.dataset.i:el.dataset.f;
+function ivMark(el){ const tr=el.closest("tr"); if(!tr) return; (ivDirty[tr.dataset.ivr] ||= new Set()).add(fkey(el)); }
+/* 서버에서 온 값을 칸에 넣기 — 지금 쓰는 칸·아직 저장 안 된 칸은 그대로 둠 */
+function ivApply(tr, v, flash){ if(!v) return 0; const d=ivDirty[tr.dataset.ivr]||new Set(); let n=0;
+  tr.querySelectorAll("[data-f]").forEach(el=>{ const k=fkey(el); if(d.has(k)||el===document.activeElement) return;
+    let nv=el.dataset.f==="mr"?(v.mr||[])[+el.dataset.i]:v[el.dataset.f]; if(nv==null) return; nv=String(nv);
+    if(el.dataset.f==="round"&&!nv) return; if(el.value===nv) return;
+    if(el.tagName==="SELECT"&&![...el.options].some(o=>o.value===nv)) return;
+    el.value=nv; n++;
+    if(el.classList.contains("gsel")) el.className=`gsel g${GR_G.indexOf(nv)}`;
+    if(el.dataset.f==="mr") el.className=`mrs ${nv==="O"?"ok":nv==="X"?"no":""}`;
+    if(el.tagName==="TEXTAREA"){ el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,160)+"px"; }
+    if(flash){ el.classList.add("live-new"); setTimeout(()=>el.classList.remove("live-new"),2500); } });
+  return n; }
+function ivLink(tr,id){ const lk=tr.lastElementChild; lk.innerHTML=id?`<a class="btn sm" href="interview?ids=${id}" target="_blank" rel="noopener">보기</a>`:""; }
+async function ivLive(){
+  const q=`class_id=${IVG.cid}&day=${IV.day}`;
+  const r=await fetch(`/api/interview?ivstamp=1&${q}`,{headers:{"x-pin":PIN},cache:"no-store"}); const j=await r.json().catch(()=>({}));
+  if(!r.ok||+j.stamp===+IVG.data.stamp) return;
+  const r2=await fetch(`/api/interview?grid=1&${q}`,{headers:{"x-pin":PIN},cache:"no-store"}); const g=await r2.json().catch(()=>({}));
+  if(!r2.ok||!IVG.data||+g.class_id!==+IVG.cid||g.day!==IV.day) return;
+  const M=IVG.data.members, same=g.members.length===M.length&&g.members.every((m,i)=>m.student===M[i].student);
+  if(!same){ if(typing()) return; IVG.data=g; render(); liveNote(`👥 명단이 바뀌어 다시 불러왔어요 · ${hhmm()}`); return; }
+  let n=0;
+  g.members.forEach((m,i)=>{ const cur=M[i], tr=document.querySelector(`.ivg tr[data-ivr="${i}"]`); cur.id=m.id; cur.input=m.input;
+    if(!tr) return; n+=ivApply(tr,m.input,true); ivLink(tr,m.id);
+    const rs=$("#rs"+i); if(rs&&!(ivDirty[i]&&ivDirty[i].size)&&rs.textContent!=="…"&&rs.textContent!=="!") rs.textContent=m.id?"✓":""; });
+  IVG.data.stamp=g.stamp;
+  if(n){ liveNote(`👥 다른 선생님 입력 ${n}칸 반영 · ${hhmm()}`); const st=$("#ivg-stat"); if(st) st.textContent=`다른 선생님 입력 ${n}칸 반영 · ${hhmm().slice(0,5)}`; }
+}
 function ivQueue(tr){ const ri=tr.dataset.ivr; clearTimeout(ivTimers[ri]); const rs=$("#rs"+ri); if(rs) rs.textContent="…"; ivTimers[ri]=setTimeout(()=>ivSaveRow(tr),450); }
 async function ivSaveRow(tr){
-  const ri=+tr.dataset.ivr, m=IVG.data.members[ri], row=ivRowVals(tr), rs=$("#rs"+ri);
-  try{ const r=await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"iv.save",class_id:IVG.cid,day:IV.day,student:m.student,row})});
+  const ri=+tr.dataset.ivr, m=IVG.data.members[ri], rs=$("#rs"+ri);
+  const keys=[...(ivDirty[ri]||[])]; ivDirty[ri]=new Set(); if(!keys.length){ if(rs&&rs.textContent==="…") rs.textContent=m.id?"✓":""; return; }
+  const patch={}; keys.forEach(k=>{ const el=/^mr\d$/.test(k)?tr.querySelector(`[data-f="mr"][data-i="${k[2]}"]`):tr.querySelector(`[data-f="${k}"]`); if(el) patch[k]=el.value; });
+  try{ const r=await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"iv.save",class_id:IVG.cid,day:IV.day,student:m.student,patch})});
     const j=await r.json(); if(!r.ok) throw new Error(j.error||"저장 실패");
-    m.input=row; m.id=j.id; if(rs){ rs.textContent=j.id?"✓":""; rs.className="rs ok"; }
-    const lk=tr.lastElementChild; lk.innerHTML=j.id?`<a class="btn sm" href="interview?ids=${j.id}" target="_blank" rel="noopener">보기</a>`:"";
+    m.input=j.input; m.id=j.id; if(+j.stamp===+IVG.data.stamp+1) IVG.data.stamp=j.stamp;
+    ivApply(tr,j.input,true);           // 같은 줄을 다른 선생님이 고친 칸이 있으면 바로 보임
+    if(rs){ rs.textContent=(ivDirty[ri]&&ivDirty[ri].size)?"…":j.id?"✓":""; rs.className="rs ok"; }
+    ivLink(tr,j.id);
     const st=$("#ivg-stat"); if(st) st.textContent=`${m.name} 저장됨 · ${new Date().toTimeString().slice(0,5)}`;
-  }catch(e){ if(rs){ rs.textContent="!"; rs.className="rs no"; rs.title=e.message; } const st=$("#ivg-stat"); if(st) st.textContent="저장 실패: "+e.message; }
+  }catch(e){ keys.forEach(k=>(ivDirty[ri] ||= new Set()).add(k)); if(rs){ rs.textContent="!"; rs.className="rs no"; rs.title=e.message; } const st=$("#ivg-stat"); if(st) st.textContent="저장 실패: "+e.message+" (다음에 칸을 바꾸면 다시 저장해요)"; }
 }
 /* 엑셀에서 복사한 칸을 그대로 붙여넣기 (탭·줄바꿈으로 나눔) */
 function ivPaste(e){
@@ -622,7 +683,7 @@ function ivPaste(e){
       const f=td2.querySelector("[data-f]"); if(!f) return; let v=val.trim();
       if(f.tagName==="SELECT"){ if(f.classList.contains("gsel")) v=v.toUpperCase().replace(/^([ABCD]).*/,"$1"); if(f.dataset.f==="round") v=(v.match(/\d+/)||[""])[0]; if(f.dataset.f==="mr") v=/^o|○/i.test(v)?"O":/^x|✕|×/i.test(v)?"X":"";
         if([...f.options].some(o=>o.value===v)) f.value=v; } else f.value=v;
-      touched.add(tr2); }); });
+      ivMark(f); touched.add(tr2); }); });
   touched.forEach(t=>{ t.querySelectorAll(".gsel").forEach(s=>s.className=`gsel g${GR_G.indexOf(s.value)}`); ivSaveRow(t); });
 }
 async function ivXlsx(){
@@ -639,7 +700,7 @@ async function ivXlsx(){
   XLSX.writeFile(wb,`[인터뷰 입력] ${cls}_${IV.day}.xlsx`);
 }
 document.addEventListener("paste",ivPaste);
-document.addEventListener("input",e=>{ const el=e.target.closest(".ivg [data-f]"); if(!el) return; if(el.tagName==="TEXTAREA"){ el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,160)+"px"; } if(el.tagName!=="SELECT") ivQueue(el.closest("tr")); });
+document.addEventListener("input",e=>{ const el=e.target.closest(".ivg [data-f]"); if(!el) return; if(el.tagName==="TEXTAREA"){ el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,160)+"px"; } if(el.tagName!=="SELECT"){ ivMark(el); ivQueue(el.closest("tr")); } });
 document.addEventListener("keydown",e=>{ const el=e.target.closest&&e.target.closest(".ivg [data-f]"); if(!el||e.key!=="Enter"||e.isComposing) return; if(el.tagName==="TEXTAREA"&&!e.ctrlKey&&!e.metaKey) return;
   e.preventDefault(); const td=el.closest("td"), tr=el.closest("tr").nextElementSibling; const n=tr&&tr.querySelector(`td[data-ci="${td.dataset.ci}"] [data-f]`); if(n) n.focus(); });
 /* ── 🎤 꼼꼼한 인터뷰 리포트 (조교 입력시트 동기화) ── */
@@ -942,7 +1003,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("change",async e=>{
   if(e.target.id==="iv-day"){ IV.day=e.target.value||today(); IV.list=null; IV.last=null; render(); return; }
-  const ge=e.target.closest&&e.target.closest(".ivg select[data-f]"); if(ge){ if(ge.classList.contains("gsel")) ge.className=`gsel g${GR_G.indexOf(ge.value)}`; if(ge.dataset.f==="mr") ge.className=`mrs ${ge.value==="O"?"ok":ge.value==="X"?"no":""}`; ivQueue(ge.closest("tr")); return; }
+  const ge=e.target.closest&&e.target.closest(".ivg select[data-f]"); if(ge){ if(ge.classList.contains("gsel")) ge.className=`gsel g${GR_G.indexOf(ge.value)}`; if(ge.dataset.f==="mr") ge.className=`mrs ${ge.value==="O"?"ok":ge.value==="X"?"no":""}`; ivMark(ge); ivQueue(ge.closest("tr")); return; }
   if(e.target.id==="att-day"){ AD=e.target.value||today(); render(); return; }
   const amI=e.target.closest&&e.target.closest("[data-am]"); if(amI){ const s=amI.dataset.am, cur=attRec(s,AD);
     try{ await setAtt(s, cur?cur.status:"etc", amI.value.trim()); if(!cur) render(); toast(cur?"메모 저장":"메모 저장 · 상태는 📝기타로 표시했어요"); }catch(err){ alert(err.message); } return; }
