@@ -1,6 +1,6 @@
 // 학생 앱: 학교+학년(반) 목록 + 이름 확인·등록 (비밀번호 없음)
 // 이름 뒤 알파벳·숫자 구분자(김승현4, 김재희n)는 빼고 써도 명단 이름으로 찾아 줌
-import { sql, ensure, readBody, nameFromText } from "./_db.js";
+import { sql, ensure, readBody, nameFromText, bump } from "./_db.js";
 
 const clean = s => String(s || "").replace(/\s+/g, "").slice(0, 20);
 const base = s => clean(s).replace(/[A-Za-z0-9]+$/, "");
@@ -56,6 +56,7 @@ export default async function handler(req, res) {
       const taken = async n => (await sql`select 1 from hw_members where student = ${n} limit 1`).length > 0;
       if (await taken(name)) { let k = 2; while (k < 100 && await taken(typed + k)) k++; name = typed + k; renamed = true; }
       await sql`insert into hw_members (class_id, student) values (${cid}, ${name}) on conflict do nothing`;
+      await bump("hw").catch(() => {});
       added = true;
     }
 

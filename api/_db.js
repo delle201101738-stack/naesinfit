@@ -82,6 +82,7 @@ export async function ensure() {
       ip text primary key, n int not null default 0, until timestamptz, updated_at timestamptz not null default now())`;
   // 학원 명단(학교+학년 = 반) 한 번만 넣기 — 버전이 바뀌면 다시 맞춤 (있는 학생·반은 그대로 둠)
   await sql`create table if not exists hw_meta (k text primary key, v text not null)`;
+  await sql`create table if not exists iv_input (cid bigint not null, day text not null, student text not null, input jsonb not null default '{}'::jsonb, updated_at timestamptz not null default now(), primary key (cid, day, student))`;
   const [mv] = await sql`select v from hw_meta where k = 'roster'`;
   if (!mv || mv.v !== ROSTER_VERSION) {
     for (const [cname, names] of Object.entries(ROSTER)) {
@@ -103,6 +104,16 @@ export async function ensure() {
 }
 
 // 학부모 링크용 비공개 토큰 (추측 불가 10자)
+// 여러 조교 동시 입력: 무언가 바뀌면 도장(시각)을 찍고, 화면은 도장만 가볍게 확인해서 바뀐 것만 다시 불러옴
+export async function bump(k) {   // 숫자 도장 +1 (한 번에 하나씩 올라감)
+  const [r] = await sql`insert into hw_meta (k, v) values (${"stamp:" + k}, '1')
+    on conflict (k) do update set v = (coalesce(nullif(regexp_replace(hw_meta.v, '[^0-9]', '', 'g'), ''), '0')::bigint + 1)::text returning v`;
+  return Number(r.v);
+}
+export async function stampOf(k) {
+  const [r] = await sql`select v from hw_meta where k = ${"stamp:" + k}`;
+  return r ? Number(String(r.v).replace(/[^0-9]/g, "")) || 0 : 0;
+}
 export async function tokenFor(students) {
   const out = {};
   const have = await sql`select token, student from report_tokens where student = any(${students})`;

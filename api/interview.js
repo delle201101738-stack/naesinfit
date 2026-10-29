@@ -1,6 +1,6 @@
 // 꼼꼼한 인터뷰 리포트 — 조교 입력시트(구글 시트) 동기화 · 코멘트 다듬기 · 학부모 열람
 import { createHash } from "node:crypto";
-import { sql, ensure, readBody, checkPin, pinError, tokenFor, nameFromText } from "./_db.js";
+import { sql, ensure, readBody, checkPin, pinError, tokenFor, nameFromText, bump, stampOf } from "./_db.js";
 import { listSheets, readTab, saEmail } from "./_google.js";
 import { parseSheet, normGrade } from "./_ivparse.js";
 
@@ -115,6 +115,20 @@ async function historyOf(student, day) {
   return { last, next: last + 1, byRound: by, missions, scope, lastDay };
 }
 const T = (v, n) => String(v ?? "").trim().slice(0, n);
+// 입력값 정리: 지난미션 결과는 mr0~mr2 칸으로 따로 저장(동시에 다른 칸을 고쳐도 안 덮이게) → 화면에는 mr 배열로
+const normInput = v => { if (!v) return null; const o = { ...v }; const old = Array.isArray(v.mr) ? v.mr : [];
+  o.mr = [0, 1, 2].map(i => String(v["mr" + i] ?? old[i] ?? "")); delete o.mr0; delete o.mr1; delete o.mr2; return o; };
+const IVKEYS = new Set(["round", "scope", "teacher", "g0", "g1", "g2", "g3", "title", "body", "special", "a1", "c1", "a2", "c2", "a3", "c3", "mr0", "mr1", "mr2", "change", "f1", "f2", "f3", "m1", "m2", "m3", "home"]);
+async function patchInput(cid, day, student, patch) {
+  const p = {}; for (const [k, v] of Object.entries(patch || {})) if (IVKEYS.has(k)) p[k] = String(v ?? "").slice(0, 3000);
+  const sid = "app:" + cid;
+  await sql`insert into iv_input (cid, day, student, input)
+            select ${cid}, ${day}, ${student}, coalesce((select data->'input' from interview_reports where sheet_id = ${sid} and sheet_student = ${student} and day = ${day} limit 1), '{}'::jsonb)
+            on conflict do nothing`;
+  const [r] = await sql`update iv_input set input = input || ${JSON.stringify(p)}::jsonb, updated_at = now()
+                        where cid = ${cid} and day = ${day} and student = ${student} returning input`;
+  return r.input;
+}
 async function saveGridRow(cid, day, student, row) {
   const [c] = await sql`select name from hw_classes where id = ${cid}`;
   const sid = "app:" + cid;
@@ -137,17 +151,16 @@ async function saveGridRow(cid, day, student, row) {
   };
   const mh = hash({ t: data.title, b: data.body, cur });
   await sql`delete from interview_reports where sheet_id = ${sid} and sheet_student = ${student} and day = ${day} and round <> ${round}`;
-  const [old] = await sql`select id, c_src from interview_reports where sheet_id = ${sid} and sheet_student = ${student} and day = ${day} and round = ${round}`;
-  if (!old) {
-    const [r] = await sql`insert into interview_reports (sheet_id, sheet_name, day, round, sheet_student, student, cls, data, memo_hash, c_title, c_body, c_src)
-      values (${sid}, ${data.cls}, ${day}, ${round}, ${student}, ${student}, ${data.cls}, ${JSON.stringify(data)}::jsonb, ${mh}, ${data.title}, ${data.body}, 'memo') returning id`;
-    return r.id;
-  }
-  if (old.c_src === "edit" || old.c_src === "ai")
-    await sql`update interview_reports set data = ${JSON.stringify(data)}::jsonb, memo_hash = ${mh}, memo_changed = (memo_hash <> ${mh}) or memo_changed, synced_at = now() where id = ${old.id}`;
-  else
-    await sql`update interview_reports set data = ${JSON.stringify(data)}::jsonb, memo_hash = ${mh}, c_title = ${data.title}, c_body = ${data.body}, synced_at = now() where id = ${old.id}`;
-  return old.id;
+  // 한 번에 넣거나 고치기 (두 선생님이 동시에 저장해도 충돌 없음). 직접 고친(edit)·AI 코멘트는 그대로 두고 '메모 바뀜'만 표시
+  const [r] = await sql`insert into interview_reports (sheet_id, sheet_name, day, round, sheet_student, student, cls, data, memo_hash, c_title, c_body, c_src)
+      values (${sid}, ${data.cls}, ${day}, ${round}, ${student}, ${student}, ${data.cls}, ${JSON.stringify(data)}::jsonb, ${mh}, ${data.title}, ${data.body}, 'memo')
+    on conflict (sheet_id, sheet_student, day, round) do update set
+      data = excluded.data, memo_hash = excluded.memo_hash, synced_at = now(),
+      memo_changed = case when interview_reports.c_src in ('edit', 'ai') then (interview_reports.memo_hash <> excluded.memo_hash) or interview_reports.memo_changed else interview_reports.memo_changed end,
+      c_title = case when interview_reports.c_src in ('edit', 'ai') then interview_reports.c_title else excluded.c_title end,
+      c_body = case when interview_reports.c_src in ('edit', 'ai') then interview_reports.c_body else excluded.c_body end
+    returning id`;
+  return r.id;
 }
 
 const pub = r => ({ id: r.id, day: r.day, round: r.round, student: r.student, sheet_student: r.sheet_student, cls: r.cls, sheet_name: r.sheet_name,
@@ -168,14 +181,19 @@ export default async function handler(req, res) {
     }
     const gate = await checkPin(req).catch(() => ({ ok: false, why: "ERR" }));
     if (!gate.ok) return res.status(401).json({ error: pinError(gate) });
+    if (req.method === "GET" && u.searchParams.get("ivstamp")) {   // 입력표가 몇 초마다 확인: 다른 조교가 고쳤는지
+      const cid = Number(u.searchParams.get("class_id")) || 0, day = DAY(u.searchParams.get("day")) || kday();
+      return res.status(200).json({ ok: true, stamp: await stampOf("iv:" + cid + ":" + day) });
+    }
     if (req.method === "GET" && u.searchParams.get("grid")) {   // 입력표: 반 명단 + 누적(회차·지난 등급·지난 미션) + 그날 입력한 줄
       const cid = Number(u.searchParams.get("class_id")) || 0, day = DAY(u.searchParams.get("day")) || kday();
       const mem = (await sql`select student from hw_members where class_id = ${cid}`).map(m => m.student).sort((a, b) => a.localeCompare(b, "ko"));
-      const rows = await sql`select id, sheet_student, data from interview_reports where sheet_id = ${"app:" + cid} and day = ${day}`;
+      const [rows, ins, stamp] = await Promise.all([sql`select id, sheet_student, data from interview_reports where sheet_id = ${"app:" + cid} and day = ${day}`,
+        sql`select student, input from iv_input where cid = ${cid} and day = ${day}`, stampOf("iv:" + cid + ":" + day)]);
       const out = [];
-      for (const s of mem) { const h = await historyOf(s, day), r = rows.find(x => x.sheet_student === s);
-        out.push({ student: s, name: baseName(s), hist: h, id: r ? r.id : null, input: r ? (r.data.input || null) : null }); }
-      return res.status(200).json({ ok: true, day, class_id: cid, members: out });
+      for (const s of mem) { const h = await historyOf(s, day), r = rows.find(x => x.sheet_student === s), ii = ins.find(x => x.student === s);
+        out.push({ student: s, name: baseName(s), hist: h, id: r ? r.id : null, input: normInput(ii ? ii.input : r ? r.data.input : null) }); }
+      return res.status(200).json({ ok: true, day, class_id: cid, stamp, members: out });
     }
     if (req.method === "GET") {
       const day = DAY(u.searchParams.get("day")) || kday();
@@ -230,8 +248,16 @@ export default async function handler(req, res) {
       case "iv.save": {        // 입력표 한 줄 저장 (칸을 바꿀 때마다)
         const cid = Number(b.class_id) || 0, day = DAY(b.day), st = T(b.student, 20);
         if (!cid || !day || !st) return res.status(400).json({ error: "반·날짜·학생이 없습니다" });
-        const id = await saveGridRow(cid, day, st, b.row || {});
-        return res.status(200).json({ ok: true, id, hist: await historyOf(st, day) });
+        let id, input;
+        if (b.patch && typeof b.patch === "object") {      // 바뀐 칸만 합치기 (여러 조교가 같은 줄을 고쳐도 서로 안 지움)
+          let raw = await patchInput(cid, day, st, b.patch);
+          id = await saveGridRow(cid, day, st, normInput(raw));
+          const [now] = await sql`select input from iv_input where cid = ${cid} and day = ${day} and student = ${st}`;
+          if (now && JSON.stringify(now.input) !== JSON.stringify(raw)) { raw = now.input; id = await saveGridRow(cid, day, st, normInput(raw)); }   // 그 사이 다른 조교가 고쳤으면 최신으로 한 번 더
+          input = normInput(raw);
+        } else { input = normInput(b.row || {}); id = await saveGridRow(cid, day, st, input); }
+        const stamp = await bump("iv:" + cid + ":" + day);
+        return res.status(200).json({ ok: true, id, input, stamp, hist: await historyOf(st, day) });
       }
       case "iv.seed": {        // 예전 구글 시트 기록을 누적 시작값으로
         const rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 400); let n = 0;

@@ -1,5 +1,5 @@
 // 반 · 숙제 관리 (선생님 비밀번호 필요) — 시험 기록과 별개
-import { sql, ensure, readBody, checkPin, pinError, tokenFor } from "./_db.js";
+import { sql, ensure, readBody, checkPin, pinError, tokenFor, bump, stampOf } from "./_db.js";
 
 const S = (v, n) => String(v ?? "").trim().slice(0, n);
 const DAY = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null);
@@ -24,16 +24,18 @@ export default async function handler(req, res) {
   try {
     await ensure();
     res.setHeader("Cache-Control", "no-store");
-    if (req.method === "GET") return res.status(200).json(await snapshot());
+    if (req.method === "GET" && new URL(req.url, "http://x").searchParams.get("stamp")) return res.status(200).json({ ok: true, stamp: await stampOf("hw") });
+    if (req.method === "GET") { const [st, snap] = await Promise.all([stampOf("hw"), snapshot()]); return res.status(200).json({ ...snap, stamp: st }); }
     if (req.method !== "POST") return res.status(405).json({ error: "GET·POST만 받습니다" });
 
     const b = await readBody(req);
     const id = Number(b.id) || 0;
+    let out = { ok: true };
     switch (b.action) {
       case "class.create": {
         const name = S(b.name, 40); if (!name) return res.status(400).json({ error: "반 이름이 없습니다" });
         const [r] = await sql`insert into hw_classes (name) values (${name}) returning id`;
-        return res.status(200).json({ ok: true, id: r.id });
+        out = { ok: true, id: r.id }; break;
       }
       case "class.rename": {
         const name = S(b.name, 40); if (!id || !name) return res.status(400).json({ error: "반 이름이 없습니다" });
@@ -57,7 +59,7 @@ export default async function handler(req, res) {
         const cid = Number(b.class_id) || 0, day = DAY(b.day), title = S(b.title, 120);
         if (!cid || !day || !title) return res.status(400).json({ error: "반·날짜·숙제 내용을 모두 넣어 주세요" });
         const [r] = await sql`insert into hw_items (class_id, day, title, memo) values (${cid}, ${day}, ${title}, ${S(b.memo, 600)}) returning id`;
-        return res.status(200).json({ ok: true, id: r.id });
+        out = { ok: true, id: r.id }; break;
       }
       case "item.update": {
         const day = DAY(b.day), title = S(b.title, 120);
@@ -130,7 +132,7 @@ export default async function handler(req, res) {
         await sql`delete from report_tokens where student = ${from}`;
         await sql`delete from hw_members m where m.student = ${from} and exists (select 1 from hw_members m2 where m2.class_id = m.class_id and m2.student = ${to})`;
         await sql`update hw_members set student = ${to} where student = ${from}`;
-        return res.status(200).json({ ok: true, moved: a.length });
+        out = { ok: true, moved: a.length }; break;
       }
       case "export": {          // 엑셀 백업용 전체 자료
         const [cl, mem, it, ck, at, nt, vw, at2] = await Promise.all([
@@ -148,7 +150,8 @@ export default async function handler(req, res) {
       }
       default: return res.status(400).json({ error: "알 수 없는 요청입니다" });
     }
-    return res.status(200).json({ ok: true });
+    out.stamp = await bump("hw");
+    return res.status(200).json(out);
   } catch (e) {
     console.error("[hw]", e);
     res.status(500).json({ error: "숙제 정보를 저장하지 못했습니다" });
