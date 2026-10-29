@@ -645,7 +645,7 @@ let WASN=NARROW(); window.addEventListener("resize",()=>{ const n=NARROW(); if(n
 $("#pin-go").onclick=async()=>{ PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
   try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ $("#pin-err").textContent=e.message; } };
 $("#pin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pin-go").click(); });
-(async()=>{ if(PIN){ try{ await load(); $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ PIN=""; } } })();
+(async()=>{ if(PIN){ try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ PIN=""; } } })();
 </script>
 </body>
 </html>

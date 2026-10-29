@@ -631,7 +631,7 @@ const PNAME={wmean:"단어 뜻 쓰기",wsyn:"유의어 고르기",wsynw:"유의�
 const QS=new URL(location.href).searchParams;
 let TOKEN=QS.get("t")||((location.pathname.match(/^\/r\/([^/?#]+)/)||[])[1]||"");
 let VIEW=QS.get("range")||"day";
-const TPIN=()=>{ try{ return localStorage.getItem("naesinfit.pin")||""; }catch(e){ return ""; } };
+const TPIN=()=>{ try{ return localStorage.getItem("naesinfit.pin")||sessionStorage.getItem("naesinfit.pin")||""; }catch(e){ return ""; } };
 const HDR=()=>TOKEN?{}:{"x-pin":TPIN()};
 const AUTHQ=s=>TOKEN?`t=${encodeURIComponent(TOKEN)}`:`student=${encodeURIComponent(s)}`;
 function urlFor(o){ const d=o.day?`day=${o.day}`:"", b=o.book?`&book=${encodeURIComponent(o.book)}`:"", r=VIEW!=="day"?`&range=${VIEW}`:"";
