@@ -192,6 +192,28 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 .area .arow b{color:var(--no);font-family:'Archivo',sans-serif} .area .arow small{color:var(--ink-3);font-family:'Archivo',sans-serif}
 .area .atip{margin-top:8px;background:var(--surface-2);border-radius:10px;padding:8px 11px;font-size:12px;line-height:1.65;color:var(--ink-2)}
 .hwc{padding:14px 16px}
+.head1{margin-top:12px;background:var(--surface);border-radius:16px;box-shadow:var(--sh);padding:14px 16px;border-left:5px solid var(--pri)}
+.head1 span{display:block;font-size:11.5px;font-weight:800;color:var(--pri)} .head1 span small{font-weight:600;color:var(--ink-3)}
+.head1 b{display:block;margin-top:4px;font-size:16.5px;font-weight:800;line-height:1.5;letter-spacing:-.01em;outline:none}
+.head1 b[contenteditable]{border-bottom:1.5px dashed var(--line)}
+.vsel{display:flex;background:var(--surface);border-radius:11px;box-shadow:var(--sh);padding:3px;gap:2px}
+.vsel button{padding:7px 11px;border-radius:9px;border:0;background:none;font:inherit;font-size:12.5px;font-weight:800;color:var(--ink-3);cursor:pointer}
+.vsel button.on{background:var(--pri);color:#fff}
+.todo{padding:6px 16px}
+.todo .td{padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.7}
+.todo .td:last-child{border-bottom:0}
+.todo .td b{display:block;font-size:13.5px;font-weight:800;margin-bottom:2px}
+.todo .td span{display:block;color:var(--ink-2)} .todo .td small{color:var(--ink-3)}
+.todo .td.redo b{color:var(--warn)}
+.nsave{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.nsave button{padding:10px 14px;border-radius:11px;border:0;background:var(--pri);color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.nsave span{font-size:11.5px;color:var(--ink-3)}
+#note-p[contenteditable]{border:1.5px dashed var(--line);border-radius:10px;padding:8px 10px}
+details.more{margin-top:22px;background:var(--surface);border-radius:16px;box-shadow:var(--sh);padding:4px 14px 14px}
+details.more>summary{cursor:pointer;padding:12px 2px;font-size:14px;font-weight:800;color:var(--pri);list-style:none}
+details.more>summary::-webkit-details-marker{display:none}
+details.more[open]>summary{border-bottom:1px solid var(--line);margin-bottom:6px}
+@media print{details.more{display:block}.nsave,.vsel{display:none}}
 .cum{padding:14px 16px}
 .cum svg{width:100%;height:140px;display:block;overflow:visible;margin:4px 0 10px}
 .lgd2{display:flex;gap:14px;font-size:11.5px;font-weight:700;color:var(--ink-3)}
@@ -262,9 +284,10 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 
 <div id="gate" class="gate">
   <div class="eb">숙제 · 테스트 리포트</div>
-  <h1>학습 리포트</h1>
-  <p>이름을 입력하면 오늘과 누적 성취를 한 장으로 보여드려요.</p>
-  <input id="nm" placeholder="이름 (예: 김지민)" autocomplete="name">
+  <h1>학습 리포트 (선생님용)</h1>
+  <p>학부모님은 선생님이 보내 준 링크로 열어 주세요.<br>선생님은 학생 이름과 비밀번호로 열 수 있어요.</p>
+  <input id="nm" placeholder="학생 이름 (예: 김강민j)" autocomplete="off">
+  <div id="pin-row"><input id="pin" type="password" placeholder="선생님 비밀번호" style="margin-top:8px" autocomplete="current-password"></div>
   <button id="go">리포트 보기</button>
   <div class="err" id="err"></div>
 </div>
@@ -330,8 +353,8 @@ const fmtDate=v=>dkey(v).replace(/-/g,".");
 
 async function load(name){
   const [mr,cr]=await Promise.all([
-    fetch(`api/report?student=${encodeURIComponent(name)}`,{cache:"no-store"}),
-    fetch("content/index.json",{cache:"no-store"})
+    fetch(`/api/report?${AUTHQ(name)}${/^\d{4}-\d{2}-\d{2}$/.test(QS.get("day")||"")?`&vd=${QS.get("day")}`:""}`,{cache:"no-store",headers:HDR()}),
+    fetch("/content/index.json",{cache:"no-store"})
   ]);
   if(!mr.ok){ const j=await mr.json().catch(()=>({})); throw new Error(j.error||"불러오지 못했습니다"); }
   MF=cr.ok?await cr.json():{books:[]};
@@ -492,11 +515,11 @@ function hwBlock(HW, day, TD){
   <div class="card hwc">
     ${todays.length?`<div class="hbig ${lv}">
       <div class="hbn"><b>${chk.length?td:"—"}</b><span>/ ${tot}</span></div>
-      <div class="hbt"><b>${chk.length?(pct>=100?"숙제 다 해 왔어요 👏":pct>=50?"숙제 일부를 못 해 왔어요":"숙제를 대부분 못 해 왔어요"):"아직 검사 전이에요"}</b>
+      <div class="hbt"><b>${chk.length?(pct>=100?"숙제 다 해 왔어요 👏":pct>=50?"숙제가 조금 남았어요":"숙제가 많이 남았어요"):"아직 검사 전이에요"}</b>
         <div class="hbar"><i style="width:${pct||0}%"></i></div>
         <small>${TD} 숙제 완료율 ${pct!==null?pct+"%":"—"}${rp!==null?` · 최근 숙제 ${rec.length}개 완료율 <b>${rp}%</b>`:""}</small></div>
     </div>`:`<div class="hsum">${TD} 검사한 숙제 없음${rp!==null?` · 최근 숙제 완료율 <b>${rp}%</b> <small>(${rd}/${rec.length})</small>`:""}</div>`}
-    ${miss.length?`<div class="hredo"><b>❗ 다시 해 올 숙제 ${miss.length}개</b>${miss.map(h=>`<div>${h.status==="part"?"🟡":"❌"} ${esc(h.title)}${h.cmemo?` <span>— ${esc(h.cmemo)}</span>`:""}</div>`).join("")}</div>`:""}
+    ${miss.length?`<div class="hredo"><b>📌 다음 수업 전까지 마무리할 숙제 ${miss.length}개</b>${miss.map(h=>`<div>${h.status==="part"?"🟡":"❌"} ${esc(h.title)}${h.cmemo?` <span>— ${esc(h.cmemo)}</span>`:""}</div>`).join("")}</div>`:""}
     ${todays.map(item).join("")}
     ${prev.length?`<div class="hh">지난 숙제</div>${prev.map(h=>{const st=HWS[h.status]||["⏺","미검사"];
       return `<div class="hp"><span>${h.day.slice(5).replace("-",".")}</span><b>${esc(h.title)}</b><em>${st[0]} ${st[1]}${h.score!=null?` · ${h.score}점`:""}</em></div>`;}).join("")}`:""}
@@ -506,12 +529,12 @@ function hwBlock(HW, day, TD){
     if(!chk.length) c=`📚 <b>숙제</b> — ${TD} 숙제 ${todays.length}개는 아직 검사 전이에요.`;
     else {
       c=`📚 <b>숙제 ${td}/${chk.length} 완료 (${pct}%)</b> — `;
-      if(miss.length) c+=miss.map(h=>`<b>${esc(h.title)}</b>${josa(h.title,"은","는")} ${h.status==="part"?"일부만 해 왔어요":"해 오지 않았어요"}${h.cmemo?` (${esc(h.cmemo)})`:""}.`).join(" ")
-        +` <b>다음 수업 전까지 ${miss.length}개를 다시 해 오도록</b> 하겠습니다.`;
-      else c+="숙제를 빠짐없이 해 왔어요 👏 이 성실함이 점수로 이어집니다.";
+      if(miss.length) c+=miss.map(h=>`<b>${esc(h.title)}</b>${josa(h.title,"은","는")} ${h.status==="part"?"일부만 했어요":"아직 못 했어요"}${h.cmemo?` (${esc(h.cmemo)})`:""}.`).join(" ")
+        +` 다음 수업 전까지 <b>${miss.length}개를 마무리</b>할 수 있게 집에서도 한 번 챙겨 주세요.`;
+      else c+="숙제를 빠짐없이 해 왔어요 👏 이 성실함이 점수로 이어져요.";
     }
   }
-  if(rp!==null&&rec.length>=3) c+=(c?" ":"📚 <b>숙제</b> — ")+(rp>=90?`최근 숙제 완료율 <b>${rp}%</b>로 아주 성실해요.`:rp>=70?`최근 숙제 완료율은 <b>${rp}%</b>예요.`:`최근 숙제 완료율이 <b>${rp}%</b>로 낮아요 — 숙제 습관부터 잡아야 해요.`);
+  if(rp!==null&&rec.length>=3) c+=(c?" ":"📚 <b>숙제</b> — ")+(rp>=90?`최근 숙제 완료율 <b>${rp}%</b>로 아주 성실해요.`:rp>=70?`최근 숙제 완료율은 <b>${rp}%</b>예요.`:`최근 숙제 완료율은 <b>${rp}%</b>예요 — 숙제 습관을 함께 잡아 갈게요.`);
   return {html, cmt:c, chip:todays.length?`${td}/${chk.length||todays.length}`:null, td, tot, pct, chk:chk.length, miss, rp};
 }
 /* ── 누적 기록: 학습일마다 숙제 완료율 + 시험 정답률 (모든 과) ── */
@@ -533,7 +556,7 @@ function cumDelta(CUM, day){
   const pt=CUM.slice(0,i).reverse().find(x=>x.tp!==null), ph=CUM.slice(0,i).reverse().find(x=>x.hp!==null);
   return {cur, pt, ph, dt:(cur.tp!==null&&pt)?cur.tp-pt.tp:null, dh:(cur.hp!==null&&ph)?cur.hp-ph.hp:null};
 }
-const arrow=(v,u="%p")=>v===null||v===undefined?"":v>0?`<span class="up">▲ ${v}${u}</span>`:v<0?`<span class="down">▼ ${-v}${u}</span>`:`<span style="color:var(--ink-3)">– 그대로</span>`;
+const arrow=(v,u="점")=>v===null||v===undefined?"":v>0?`<span class="up">▲ ${v}${u}</span>`:v<0?`<span class="down">▼ ${-v}${u}</span>`:`<span style="color:var(--ink-3)">– 그대로</span>`;
 function cumHTML(CUM, day, name){
   const L=CUM.slice(-8); if(L.length<2) return "";
   const W=320,H=140, xs=i=>L.length===1?W/2:22+i*((W-44)/(L.length-1)), ys=v=>H-18-(v/100)*(H-44);
@@ -568,38 +591,150 @@ function daySel(D, allDays, day, extra){
 function renderHwOnly(D, HW, day, allDays){
   const TD=day===dkey(new Date())?"오늘":"이날";
   const H0=hwBlock(HW,day,TD);
+  const dayChange=()=>{ const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELDAY=s2.value; SELBOOK=""; history.replaceState(null,"",urlFor({day:SELDAY})); render(LASTD); }; };
   if(!H0 || !HW.some(h=>h.day===day)){   // 그날은 시험도 숙제도 없음 — 예전 기록을 대신 보여주지 않음
-    CURURL=`report?student=${encodeURIComponent(D.student)}&day=${day}`;
+    CURURL=urlFor({day});
     $("#app").innerHTML=`
-    <div class="act">${allDays.length?daySel(D,allDays,day,"flex:1;min-width:0"):""}<button onclick="location.href='report'">다른 학생</button></div>
-    <div class="top"><div><div class="eb">숙제 · 테스트 리포트</div><div class="sb">hazel_studylog</div></div>
+    <div class="act">${viewSel("day")}${allDays.length?daySel(D,allDays,day,"flex:1;min-width:0"):""}</div>
+    <div class="top"><div><div class="eb">숙제 · 테스트 리포트</div><div class="sb">hazel_studylog${cnameOf(D)?" · "+esc(cnameOf(D)):""}</div></div>
       <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(day)}</span></div></div>
     <div class="card empty" style="margin-top:16px"><h3>${fmtDate(day)} (${TD})에는 시험·숙제 기록이 없어요</h3>
-      <p>예전 기록은 섞어서 보여 주지 않아요. 다른 날 리포트는 위 날짜 칸에서 골라 주세요.</p></div>`;
-    $("#app").hidden=false;
-    const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELDAY=s2.value; SELBOOK=""; history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}&day=${SELDAY}`); render(LASTD); };
-    return;
+      <p>다른 날 리포트는 위 날짜 칸에서, 이번 주 전체는 '주간'에서 볼 수 있어요.</p></div>
+    ${todoHTML(D,day,null)}`;
+    $("#app").hidden=false; dayChange(); return;
   }
   const days=allDays, CUMo=cumulative(D, day), CDo=cumDelta(CUMo, day);
-  CURURL=`report?student=${encodeURIComponent(D.student)}&day=${day}`;
+  CURURL=urlFor({day});
   const H=hwBlock(HW,day,TD)||{html:"",cmt:""};
-  const selS="padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:13px";
+  const NOTE=(D.notes||[]).find(n=>n.day===day&&n.kind==="day");
+  const autoHead=H.chk?(H.miss.length?`숙제 ${H.miss.length}개 마무리 필요`:"숙제 모두 완료 👏"):"숙제 검사 전이에요";
+  const autoNote=`${H.cmt||""}${CDo.dh!=null?`<br><br>📈 지난 학습일(${CDo.ph.d.slice(5).replace("-",".")})보다 숙제 완료율 ${arrow(CDo.dh,"점")}.`:""}<br><br>${TD}은 앱 시험 기록이 없어요.`;
   $("#app").innerHTML=`
-  <div class="act">${days.length>1?daySel(D,days,day,"flex:1;min-width:0"):""}
-    <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button><button onclick="location.href='report'">다른 학생</button></div>
-  <div class="top"><div><div class="eb">숙제 · 테스트 리포트</div><div class="sb">hazel_studylog · 숙제 리포트</div></div>
+  <div class="act">${viewSel("day")}${days.length>1?daySel(D,days,day,"flex:1;min-width:0"):""}
+    <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button></div>
+  <div class="top"><div><div class="eb">숙제 · 테스트 리포트</div><div class="sb">hazel_studylog${cnameOf(D)?" · "+esc(cnameOf(D)):""}</div></div>
     <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(day)}</span></div></div>
+  ${headHTML(NOTE&&NOTE.headline||autoHead, !!D.teacher, !!(NOTE&&NOTE.headline))}
   ${H.html}
-  ${cumHTML(CUMo, day, D.student)}
-  <h2 class="s">💬 선생님 코멘트 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(자동 초안 · 수정해서 쓰세요)</span></h2>
-  <div class="card cmt"><div class="av">🧑‍🏫</div><div><div class="who">헤이즐쌤 · 담당 선생님</div>
-    <p contenteditable="true" style="outline:none">${H.cmt||""}${CDo.dh!=null?`<br><br>📈 지난 학습일(${CDo.ph.d.slice(5).replace("-",".")})보다 숙제 완료율 ${arrow(CDo.dh)}.`:""}<br><br>${TD}은 앱 시험 기록이 없어요.</p></div></div>`;
-  $("#app").hidden=false;
-  const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELDAY=s2.value; SELBOOK=""; history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}&day=${SELDAY}`); render(LASTD); };
+  ${todoHTML(D,day,H)}
+  ${noteHTML("day", day, NOTE, autoNote, !!D.teacher)}
+  ${cumHTML(CUMo, day, D.student)}`;
+  $("#app").hidden=false; dayChange();
 }
+/* ── 학부모용 공통 조각 ── */
+const PNAME={wmean:"단어 뜻 쓰기",wsyn:"유의어 고르기",wsynw:"유의어 쓰기",wdef:"영영풀이 보고 단어 쓰기",
+  word:"어법·어휘 틀린 곳 고치기 (기본)",word2:"어법·어휘 틀린 곳 고치기 (심화)",fix:"어법 틀린 곳 고치기",
+  fixg:"어법 틀린 곳 고치기 (집중)",fixv:"어휘 틀린 곳 고치기 (집중)",gbbw:"어법 고치기 (실전)",vbbw:"어휘 고치기 (실전)",
+  gbb:"어법 객관식 (실전)",vbb:"어휘 객관식 (실전)",sjt:"지문 독해 객관식 (영어 보기)",cloze:"빈칸 채우기",
+  tf:"내용 맞는지 판단 (T/F)",choice:"독해 객관식",order:"글 순서 맞추기",insert:"문장 넣을 자리 찾기",arrange:"문장 배열",
+  vocab:"알맞은 단어 고르기",gram:"알맞은 어법 고르기",twrite:"주제문 영작",mwrite:"중요 문장 영작",write:"영작"};
+const QS=new URL(location.href).searchParams;
+let TOKEN=QS.get("t")||((location.pathname.match(/^\/r\/([^/?#]+)/)||[])[1]||"");
+let VIEW=QS.get("range")||"day";
+const TPIN=()=>{ try{ return localStorage.getItem("naesinfit.pin")||""; }catch(e){ return ""; } };
+const HDR=()=>TOKEN?{}:{"x-pin":TPIN()};
+const AUTHQ=s=>TOKEN?`t=${encodeURIComponent(TOKEN)}`:`student=${encodeURIComponent(s)}`;
+function urlFor(o){ const d=o.day?`day=${o.day}`:"", b=o.book?`&book=${encodeURIComponent(o.book)}`:"", r=VIEW!=="day"?`&range=${VIEW}`:"";
+  return TOKEN?`/r/${TOKEN}?${d}${b}${r}`:`/report?student=${encodeURIComponent(LASTD?LASTD.student:"")}&${d}${b}${r}`; }
+const cnameOf=D=>((D.klass||[])[0]||{}).name||"";
+function viewSel(v){ return `<div class="vsel">${[["day","하루"],["week","주간"],["month","월간"]].map(([k,n])=>`<button data-view="${k}" class="${v===k?"on":""}">${n}</button>`).join("")}</div>`; }
+function examChip(D,day){ const ex=(D.klass||[]).find(k=>k.exam_date&&k.exam_date>=day); if(!ex) return "";
+  const n=Math.round((new Date(ex.exam_date+"T00:00:00")-new Date(day+"T00:00:00"))/864e5);
+  return `<div class="chip"><i>🗓 ${esc(ex.exam_name||"내신 시험")}</i><b>D-${n}</b></div>`; }
+function headHTML(text, teach, saved){
+  return `<div class="head1"><span>👩‍🏫 선생님 한마디${teach?` <small>${saved?"· 저장됨":"· 자동 문구 (눌러서 고치고 아래 '저장')"}</small>`:""}</span>
+    <b id="head-t"${teach?' contenteditable="true"':""}>${esc(text)}</b></div>`; }
+function noteHTML(kind, day, NOTE, autoHTML, teach){
+  const html=NOTE&&NOTE.note?esc(NOTE.note).replace(/\n/g,"<br>"):autoHTML;
+  return `<h2 class="s">💬 선생님 코멘트${teach?` <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(학부모 링크에 그대로 나가요 · 고쳐서 저장하세요)</span>`:""}</h2>
+  <div class="card cmt"><div class="av">🧑‍🏫</div><div>
+    <div class="who">헤이즐쌤 · 담당 선생님</div>
+    <p id="note-p"${teach?' contenteditable="true"':""} style="outline:none">${html}</p>
+    ${teach?`<div class="nsave"><button data-savenote="${kind}" data-day="${day}">💾 학부모용으로 저장</button><span id="nstat">${NOTE&&(NOTE.note||NOTE.headline)?"저장된 내용이 링크에 나가요":"아직 저장 안 함 — 지금은 자동 초안이 나가요"}</span></div>`:""}
+  </div></div>`; }
+function todoHTML(D, day, HB){
+  const HW=D.hw||[], T=[];
+  const redo=HW.filter(h=>h.day<=day&&(h.status==="part"||h.status==="none")).slice(0,6);
+  const nd=HW.filter(h=>h.day>day).map(h=>h.day).sort()[0], next=nd?HW.filter(h=>h.day===nd):[];
+  if(redo.length) T.push(`<div class="td redo"><b>📌 마무리할 숙제</b>${redo.map(h=>`<span>${h.status==="part"?"🟡":"❌"} ${esc(h.title)}${h.cmemo?` <small>— ${esc(h.cmemo)}</small>`:""}</span>`).join("")}</div>`);
+  if(next.length) T.push(`<div class="td"><b>📚 다음 숙제 · ${fmtDate(nd)} 검사</b>${next.map(h=>`<span>${esc(h.title)}${h.memo?` <small>— ${esc(h.memo)}</small>`:""}</span>`).join("")}</div>`);
+  const ex=(D.klass||[]).find(k=>k.exam_date&&k.exam_date>=day);
+  if(ex){ const n=Math.round((new Date(ex.exam_date+"T00:00:00")-new Date(day+"T00:00:00"))/864e5);
+    T.push(`<div class="td"><b>🗓 ${esc(ex.exam_name||"내신 시험")} · D-${n}</b><span>${fmtDate(ex.exam_date)}</span></div>`); }
+  return T.length?`<h2 class="s">✅ 다음에 할 일 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(집에서 이것만 챙겨 주세요)</span></h2><div class="card todo">${T.join("")}</div>`:"";
+}
+/* 주간 · 월간 리포트 */
+function renderRange(D){
+  const n=VIEW==="week"?7:30, TODAY=dkey(new Date()), end=/^\d{4}-\d{2}-\d{2}$/.test(SELDAY)?SELDAY:TODAY;
+  const from=(()=>{ const t=new Date(end+"T00:00:00"); t.setDate(t.getDate()-(n-1)); return dkey(t); })();
+  const CUMa=cumulative(D,end).filter(x=>x.d>=from);
+  const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
+  const isRe=x=>x.scope==="재시험"||/^오답노트/.test(x.part_name||"");
+  const inR=x=>{ const d=dkey(x.created_at); return d>=from&&d<=end; };
+  const hc=CUMa.reduce((a,x)=>a+x.hc,0), hd=CUMa.reduce((a,x)=>a+x.hd,0);
+  const tv=CUMa.filter(x=>x.tp!==null), tp=tv.length?Math.round(tv.reduce((a,x)=>a+x.tp,0)/tv.length):null;
+  const re=RA.filter(x=>isRe(x)&&inR(x)).length;
+  // 시험 종류별 평균
+  const byP={}; RA.filter(x=>!isRe(x)&&inR(x)).forEach(x=>{ const o=byP[x.part]=byP[x.part]||{t:0,c:0,n:0,name:PNAME[x.part]||x.part_name}; o.t+=x.total; o.c+=x.correct; o.n++; });
+  const parts=Object.values(byP).map(o=>({...o,p:Math.round(o.c/Math.max(1,o.t)*100)})).sort((a,b)=>b.p-a.p);
+  const KIND=VIEW, NOTE=(D.notes||[]).find(x=>x.day===end&&x.kind===KIND);
+  const autoHead=[hc?`숙제 완료율 ${Math.round(hd/hc*100)}%`:null, tp!==null?`시험 평균 ${tp}%`:null, parts[0]?`${parts[0].name} 가장 잘함`:null].filter(Boolean).join(" · ")||"이번 기간 기록이에요";
+  const autoNote=[`${esc(D.student)} 이번 ${VIEW==="week"?"주":"달"} ${CUMa.length}일 공부했어요.`,
+    hc?`📚 숙제 ${hc}개 중 <b>${hd}개</b>를 해 왔어요 (${Math.round(hd/hc*100)}%).`:"",
+    tp!==null?`📝 시험 평균 정답률은 <b>${tp}%</b>예요.${parts.length>1?` 가장 잘한 건 <b>${esc(parts[0].name)}</b>(${parts[0].p}%), 더 연습할 건 <b>${esc(parts[parts.length-1].name)}</b>(${parts[parts.length-1].p}%)예요.`:""}`:"",
+    re?`🔁 틀린 문제 다시 풀기를 ${re}번 했어요.`:"🔁 틀린 문제 다시 풀기를 아직 안 했어요 — 오답노트로 한 번씩 꼭 다시 풀게 해 주세요."].filter(Boolean).join("<br><br>");
+  CURURL=urlFor({day:end});
+  const TODAYS=[...new Set(RA.map(x=>dkey(x.created_at)).concat((D.hw||[]).map(h=>h.day)))].filter(d=>d<=TODAY).sort();
+  $("#app").innerHTML=`
+  <div class="act">${viewSel(VIEW)}${TODAYS.length?daySel(D,TODAYS,end,"flex:0 1 auto;max-width:48%"):""}
+    <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button></div>
+  <div class="top"><div><div class="eb">${VIEW==="week"?"주간":"월간"} 학습 리포트</div><div class="sb">hazel_studylog${cnameOf(D)?" · "+esc(cnameOf(D)):""}</div></div>
+    <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(from)} ~ ${fmtDate(end)}</span></div></div>
+  ${headHTML(NOTE&&NOTE.headline||autoHead, !!D.teacher, !!(NOTE&&NOTE.headline))}
+  <div class="hero"><div class="chips" style="margin-top:0">
+    <div class="chip"><i>📅 공부한 날</i><b>${CUMa.length}일</b></div>
+    <div class="chip"><i>📚 숙제 완료</i><b>${hc?`${hd}/${hc}`:"—"}</b></div>
+    <div class="chip"><i>📝 시험 평균</i><b>${tp!==null?tp+"%":"—"}</b></div>
+    <div class="chip"><i>🔁 다시 풀기</i><b>${re}회</b></div>
+    ${examChip(D,end)}
+  </div></div>
+  ${parts.length?`<h2 class="s">📝 시험 종류별 평균</h2><div class="card bars">${parts.map(p=>`
+    <div class="bar" style="grid-template-columns:minmax(110px,170px) 1fr 52px"><span class="lb">${esc(p.name)}<br><span style="font-weight:600;color:var(--ink-3);font-size:11px">${p.n}회</span></span>
+      <span class="tr"><i class="${p.p>=85?"":p.p>=75?"warn":"bad"}" style="width:${Math.max(p.p,7)}%"><u>${p.p}</u></i></span><span class="dt"></span></div>`).join("")}</div>`:""}
+  ${todoHTML(D,end,null)}
+  ${noteHTML(KIND, end, NOTE, autoNote, !!D.teacher)}
+  ${cumHTML(cumulative(D,end).filter(x=>x.d>=from).concat([]), end, D.student)}
+  <div class="foot">헤이즐쌤 학습리포트 · ${fmtDate(from)} ~ ${fmtDate(end)} 기록</div>`;
+  $("#app").hidden=false;
+  const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELDAY=s2.value; history.replaceState(null,"",urlFor({day:SELDAY})); render(LASTD); };
+}
+/* 보기 바꾸기 · 코멘트 저장 · 링크 복사 */
+document.addEventListener("click",async e=>{
+  const v=e.target.closest("[data-view]"); if(v){ VIEW=v.dataset.view; history.replaceState(null,"",urlFor({day:SELDAY||""})); render(LASTD); window.scrollTo(0,0); return; }
+  const sv=e.target.closest("[data-savenote]"); if(sv){
+    const head=($("#head-t")||{}).innerText||"", note=($("#note-p")||{}).innerText||"";
+    sv.disabled=true;
+    try{ const r=await fetch("/api/hw",{method:"POST",headers:{"content-type":"application/json","x-pin":TPIN()},
+        body:JSON.stringify({action:"note.set",student:LASTD.student,day:sv.dataset.day,kind:sv.dataset.savenote,headline:head.trim(),note:note.trim()})});
+      const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"저장 실패");
+      const ns=(LASTD.notes ||= []), k=ns.find(n=>n.day===sv.dataset.day&&n.kind===sv.dataset.savenote);
+      if(k){ k.headline=head.trim(); k.note=note.trim(); } else ns.push({day:sv.dataset.day,kind:sv.dataset.savenote,headline:head.trim(),note:note.trim()});
+      flash("저장했어요 · 이제 학부모 링크에 이 내용이 나가요"); const st=$("#nstat"); if(st) st.textContent="저장된 내용이 링크에 나가요";
+    }catch(err){ flash(err.message); } sv.disabled=false; return; }
+});
+async function shareUrl(){
+  if(TOKEN) return location.href;
+  const r=await fetch("/api/hw",{method:"POST",headers:{"content-type":"application/json","x-pin":TPIN()},body:JSON.stringify({action:"tokens.get",students:[LASTD.student]})});
+  const j=await r.json(); if(!r.ok) throw new Error(j.error||"링크를 만들지 못했어요");
+  TOKEN_OF=j.tokens[LASTD.student];
+  const q=new URL(location.origin+CURURL).searchParams;
+  return `${location.origin}/r/${TOKEN_OF}?day=${q.get("day")||""}${q.get("book")?`&book=${encodeURIComponent(q.get("book"))}`:""}${VIEW!=="day"?`&range=${VIEW}`:""}`;
+}
+let TOKEN_OF="";
 const DAYI={}, CONT={};
 async function render(D){
   const HW=(D.hw||[]);
+  if(VIEW==="week"||VIEW==="month") return renderRange(D);
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
   if(!RA.length && !HW.length){
     $("#app").innerHTML=`<div class="empty"><h3>${esc(D.student||"")}님의 기록이 없어요</h3>
@@ -623,8 +758,8 @@ async function render(D){
   const round=days.indexOf(day)+1;
   const cur=R.filter(x=>dkey(x.created_at)===day);
   const curT=cur.filter(x=>!isRe(x)), curRe=cur.filter(isRe);
-  const name=(id,fb)=>partLabel(mu&&mu.u,id,fb);
-  CURURL=`report?student=${encodeURIComponent(D.student)}&book=${encodeURIComponent(mainBook)}&day=${day}`;
+  const name=(id,fb)=>PNAME[id]||partLabel(mu&&mu.u,id,fb);
+  CURURL=urlFor({book:mainBook, day});
   const TD=day===dkey(new Date())?"오늘":"이날";
 
   /* 그날 완료한 시험: 파트마다 그날 최고 기록 */
@@ -637,7 +772,7 @@ async function render(D){
     o.t+=x.t;o.c+=x.c;o.s+=x.s||0;o.ps+=(x.p!=null?x.p:Math.round(x.c/x.t*100))*(x.s||1);});
   const tests=PARTORDER.concat(Object.keys(best).filter(k=>!PARTORDER.includes(k))).filter(k=>best[k]).map(k=>{
     const b=best[k], me=Math.round(b.r*100), cl=clsP[k];
-    const cls=(cl&&cl.t&&cl.s>=2)?Math.round(cl.ps/cl.s):null;
+    const cls=(cl&&cl.t&&cl.s>=3)?Math.round(cl.ps/cl.s):null;   // 반평균은 3명 이상일 때만
     return {...b, me, cls, cn:cl?cl.s:0, d:cls===null?null:me-cls};
   });
   const T={t:tests.reduce((s,x)=>s+x.t,0), c:tests.reduce((s,x)=>s+x.c,0)};
@@ -646,9 +781,9 @@ async function render(D){
 
   /* 그날 채점한 칸 전부 → 영역(어휘·어법·독해·서술형)별 분석 */
   const ck=D.student+"|"+day;
-  if(!DAYI[ck]){ try{ DAYI[ck]=(await (await fetch(`api/report?student=${encodeURIComponent(D.student)}&day=${day}`,{cache:"no-store"})).json()).items||[]; }catch(e){ DAYI[ck]=[]; } }
+  if(!DAYI[ck]){ try{ DAYI[ck]=(await (await fetch(`/api/report?${AUTHQ(D.student)}&day=${day}`,{cache:"no-store",headers:HDR()})).json()).items||[]; }catch(e){ DAYI[ck]=[]; } }
   const uf=mu&&mu.u&&mu.u.file;
-  if(uf && !(uf in CONT)){ try{ CONT[uf]=await (await fetch(uf,{cache:"no-store"})).json(); }catch(e){ CONT[uf]=null; } }
+  if(uf && !(uf in CONT)){ try{ CONT[uf]=await (await fetch("/"+uf.replace(/^\//,""),{cache:"no-store"})).json(); }catch(e){ CONT[uf]=null; } }
   const bestIds=new Set(Object.values(best).map(b=>String(b.aid)));
   const SI=segIndex(uf?CONT[uf]:null);
   const DI=DAYI[ck].filter(x=>bestIds.has(String(x.id)));
@@ -694,9 +829,9 @@ async function render(D){
   const HB=hwBlock(HW,day,TD);
   const CUM=cumulative(D, day), CD=cumDelta(CUM, day);
   cmt.push(`${nm} ${TD} ${HB&&HB.chk?`숙제 <b>${HB.chk}개 중 ${HB.td}개</b>를 해 왔고, `:""}시험 <b>${tests.length}개</b>의 정답률은 <b>${score}%</b>예요.`
-    +(CD.dt!=null?(CD.dt>0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 <b>${CD.dt}%p 올랐어요.</b>`:CD.dt<0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 ${-CD.dt}%p 내려갔어요.`:` 지난 학습일과 시험 정답률이 같아요.`):"")
-    +(CD.dh!=null?(CD.dh>0?` 숙제 완료율은 <b>${CD.dh}%p 올랐어요.</b>`:CD.dh<0?` 숙제 완료율은 ${-CD.dh}%p 떨어졌어요.`:` 숙제 완료율은 지난번과 같아요.`):"")
-    +(CMP?` 반평균은 <b>${CMP.cl}%</b>로, ${CMP.me>=CMP.cl?`<b>${CMP.me-CMP.cl}%p 높아요.</b>`:`${CMP.cl-CMP.me}%p 낮아요.`}`:""));
+    +(CD.dt!=null?(CD.dt>0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 <b>${CD.dt}점 올랐어요.</b>`:CD.dt<0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 ${-CD.dt}점 내려갔어요.`:` 지난 학습일과 시험 정답률이 같아요.`):"")
+    +(CD.dh!=null?(CD.dh>0?` 숙제 완료율은 <b>${CD.dh}점 올랐어요.</b>`:CD.dh<0?` 숙제 완료율은 ${-CD.dh}점 떨어졌어요.`:` 숙제 완료율은 지난번과 같아요.`):"")
+    +(CMP?` 반평균은 <b>${CMP.cl}%</b>로, ${CMP.me>=CMP.cl?`<b>${CMP.me-CMP.cl}점 높아요.</b>`:`${CMP.cl-CMP.me}점 낮아요.`}`:""));
   if(AR.length){
     if(sA.length) cmt.push(`💪 <b>강점</b> — `+sA.map(a=>`<b>${a.a} ${a.pct}%</b>${a.goodSubs.length?` (${subTxt(a.goodSubs,x=>`${esc(x.k)} ${x.c}/${x.t}`,3)})`:""}`).join(", ")+`. ${AREA_STRONG[sA[0].a]||""}`);
     else { const hi=AR.slice().sort((a,b)=>b.pct-a.pct)[0];
@@ -709,7 +844,7 @@ async function render(D){
   } else {
   if(strong.length) cmt.push(`💪 <b>강점</b> — ${strong.map(x=>`<b>${esc(x.name)}</b> ${x.me}%`).join(", ")}.`
     +(kindStrong.length?` ${STRONG_MSG[kindStrong[0]]||""}`:"")
-    +(strong[0].d!==null&&strong[0].d>0?` 반평균보다 ${strong[0].d}%p 높아요.`:""));
+    +(strong[0].d!==null&&strong[0].d>0?` 반평균보다 ${strong[0].d}점 높아요.`:""));
   else if(byMe.length) cmt.push(`💪 <b>강점</b> — ${TD} 가장 잘 본 시험은 <b>${esc(byMe[0].name)}</b>(${byMe[0].me}%)예요. 이 감을 유지하면 됩니다.`);
   if(weak.length||mainCat){
     let w=`⚠️ <b>약점</b> — `;
@@ -721,34 +856,43 @@ async function render(D){
   }
   if(rep.length) cmt.push(`🔁 같은 실수가 반복되는 자리가 ${rep.length}군데 있어요 (예: <b>${esc(rep[0].mine)}</b> → <b>${esc(rep[0].right_)}</b>, ${rep[0].cnt}회).`);
   if(HB&&HB.cmt) cmt.splice(1,0,HB.cmt);   // 숙제를 시험 강점·약점보다 먼저
-  if(RE.n) cmt.push(`📝 오답노트 재시험도 ${RE.n}회 했어요 (${RE.t?Math.round(RE.c/RE.t*100):0}%).`);
+  if(RE.n) cmt.push(`🔁 틀린 문제 다시 풀기도 ${RE.n}회 했어요 (${RE.t?Math.round(RE.c/RE.t*100):0}%).`);
   if(AR.length) cmt.push(fixA.length&&topSub
-    ? `다음 시간에는 <b>${fixA[0].a}</b> 중 <b>${esc(topSub)}</b>부터 다시 짚고, 오답노트로 틀린 문항을 다시 풀겠습니다.`
+    ? `다음 시간에는 <b>${fixA[0].a}</b> 중 <b>${esc(topSub)}</b>부터 다시 짚고, 틀린 문제를 한 번 더 풀게 할게요.`
     : `다음 시간에는 아직 안 본 시험으로 넘어가겠습니다.`);
   else cmt.push(weak.length||mainCat
     ? `다음 시간에는 <b>${esc(weak[0]?weak[0].name:mainCat)}</b> 오답노트부터 다시 풀고${mainCat?`, <b>${esc(mainCat)}</b>만 따로 짚겠습니다`:" 넘어가겠습니다"}.`
     : `다음 시간에는 아직 안 본 시험으로 넘어가겠습니다.`);
 
-  const dt=v=>v===null?"":`<div class="dt ${v>=0?"up":"down"}">${v>=0?"▲ +":"▼ "}${v}%p ${v>=0?"상회":"하회"}</div>`;
+  const dt=v=>v===null?"":`<div class="dt ${v>=0?"up":"down"}">${v>=0?"▲ +":"▼ "}${v}점 ${v>=0?"상회":"하회"}</div>`;
   const W2=320,H2=132;
   const xs=i=>series.length===1?W2/2:20+i*((W2-40)/(series.length-1));
   const ys=v=>H2-14-(v/100)*(H2-42);
   const path=series.map((s,i)=>`${i?"L":"M"}${xs(i).toFixed(1)} ${ys(s.pct).toFixed(1)}`).join(" ");
   const selS="flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:13px";
 
+  /* ── 학부모용: 선생님 한마디 · 저장된 코멘트 · 다음 할 일 ── */
+  const TEACH=!!D.teacher;
+  const NOTE=(D.notes||[]).find(n=>n.day===day&&n.kind==="day");
+  const autoHead=[sA&&sA[0]?`${sA[0].a} 탄탄`:(tests.length&&score>=85?"시험 안정적":null),
+    (fixA&&fixA[0]&&topSub)?`${fixA[0].a}(${topSub}) 보완 필요`:null,
+    HB&&HB.chk?(HB.miss.length?`숙제 ${HB.miss.length}개 마무리 필요`:"숙제 모두 완료 👏"):null].filter(Boolean).join(" · ")||`${TD} 학습 기록이에요`;
+  const RET=RA.filter(x=>isRe(x)&&dkey(x.created_at)>=day);
   $("#app").innerHTML=`
   <div class="act">
+    ${viewSel("day")}
     ${books.length>1?`<select id="bksel" style="${selS}">${books.map(b=>`<option value="${esc(b)}"${b===mainBook?" selected":""}>${esc(b)}</option>`).join("")}</select>`:""}
     ${allDays.length>1?daySel(D,allDays,day,"flex:0 1 auto;max-width:48%"):""}
     <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button>
-    <button onclick="location.href='report'">다른 학생</button>
   </div>
 
   <div class="top">
     <div><div class="eb">숙제 · 테스트 리포트</div>
-      <div class="sb">hazel_studylog · ${esc(mainBook)} · ${round}회차</div></div>
+      <div class="sb">hazel_studylog · ${esc(cnameOf(D))}${cnameOf(D)?" · ":""}${esc(mainBook.split(" · ").pop())}</div></div>
     <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(day)}</span></div>
   </div>
+
+  ${headHTML(NOTE&&NOTE.headline||autoHead, TEACH, !!(NOTE&&NOTE.headline))}
 
   <div class="hero">
     <div class="hero-in">
@@ -757,79 +901,63 @@ async function render(D){
         <div class="grade"><i>📝 시험</i><b>${tests.length?grade:"—"}</b><span>정답률 ${tests.length?score+"%":"—"}</span></div>
       </div>
       <div>
-        <h1>${HB&&HB.tot?`숙제 <mark>${HB.chk?`${HB.td}/${HB.chk}`:"검사 전"}</mark> · `:""}${tests.length?`시험 <mark>${tests.length}개</mark> 정답률 ${score}%`:(RE.n?`${TD}은 오답노트 재시험만 했어요`:`${TD}은 앱 시험 기록이 없어요`)}</h1>
-        <p>📅 <b>${fmtDate(day)} · ${esc(mainBook.split(" · ").pop())}</b> 기록만 담았어요${books.length>1?` (이날 다른 과 ${books.length-1}개는 위 칸에서 따로 봐요)`:""}.<br>${tests.length?`<b>${esc(tests.map(x=>x.name).join(" · "))}</b> — 같은 시험을 여러 번 봤으면 최고 기록.`:""}</p>
+        <h1>${HB&&HB.tot?`숙제 <mark>${HB.chk?`${HB.td}/${HB.chk}`:"검사 전"}</mark> · `:""}${tests.length?`시험 <mark>${tests.length}개</mark> 정답률 ${score}%`:(RE.n?`${TD}은 틀린 문제 다시 풀기만 했어요`:`${TD}은 앱 시험 기록이 없어요`)}</h1>
+        <p>📅 <b>${fmtDate(day)} · ${esc(mainBook.split(" · ").pop())}</b> 기록만 담았어요${books.length>1?` (이날 다른 과 ${books.length-1}개는 위 칸에서 따로 봐요)`:""}.</p>
       </div>
     </div>
     <div class="chips">
-      <div class="chip"><i>📊 ${TD} 정답률</i><b>${tests.length?score+"%":"—"}</b></div>
-      ${HB&&HB.tot?`<div class="chip"><i>📚 ${TD} 숙제 완료</i><b>${HB.chip}</b></div><div class="chip"><i>❗ 다시 해 올 숙제</i><b>${HB.miss.length}개</b></div>`
-        :`<div class="chip"><i>✏️ 완료한 시험</i><b>${tests.length}개</b></div><div class="chip"><i>✅ 맞힌 문항</i><b>${T.c}<span style="font-size:12px;opacity:.8">/${T.t}</span></b></div>`}
-      <div class="chip"><i>📈 지난 학습일 대비</i><b style="font-size:14px;line-height:1.5">시험 ${CD.dt==null?"—":(CD.dt>=0?"+":"")+CD.dt+"%p"}<br>숙제 ${CD.dh==null?"—":(CD.dh>=0?"+":"")+CD.dh+"%p"}</b></div>
+      <div class="chip"><i>📈 지난 학습일보다</i><b style="font-size:14px;line-height:1.5">시험 ${CD.dt==null?"—":(CD.dt>0?"▲ ":CD.dt<0?"▼ ":"")+Math.abs(CD.dt)+"점"}<br>숙제 ${CD.dh==null?"—":(CD.dh>0?"▲ ":CD.dh<0?"▼ ":"")+Math.abs(CD.dh)+"점"}</b></div>
+      <div class="chip"><i>🔁 틀린 문제 다시 풀기</i><b style="font-size:15px">${RET.length?`${RET.length}회 ✅`:"아직 안 함"}</b></div>
+      ${HB&&HB.tot?`<div class="chip"><i>📌 남은 숙제</i><b>${HB.miss.length}개</b></div>`:`<div class="chip"><i>✅ 맞힌 문항</i><b>${T.c}<span style="font-size:12px;opacity:.8">/${T.t}</span></b></div>`}
+      ${examChip(D,day)}
     </div>
   </div>
 
   ${HB?HB.html:""}
 
-  ${tests.length?`<h2 class="s">📋 ${TD} 완료한 시험 · 반평균 비교</h2>
+  ${tests.length?`<h2 class="s">📋 ${TD} 본 시험 · 반평균 비교</h2>
   <div class="card cmpb">
     <div class="lg"><span class="me">${esc(D.student)}</span><span class="cl">반평균</span></div>
-    ${CMP?`<div class="sum">${TD} 시험 합계 — <b>나 ${CMP.me}%</b> vs <b>반평균 ${CMP.cl}%</b> <span class="dt ${CMP.me>=CMP.cl?"up":"down"}">${CMP.me>=CMP.cl?"▲+":"▼"}${CMP.me-CMP.cl}%p</span></div>`:""}
+    ${CMP?`<div class="sum">${TD} 시험 합계 — <b>${esc(D.student)} ${CMP.me}%</b> · 반평균 ${CMP.cl}% <span class="dt ${CMP.me>=CMP.cl?"up":"down"}">${CMP.me>=CMP.cl?"▲ ":"▼ "}${Math.abs(CMP.me-CMP.cl)}점</span></div>`:""}
     ${tests.map(p=>`
     <div class="cg">
-      <div class="cn"><b>${esc(p.name)}</b><small>${p.c}/${p.t}${p.n>1?` · ${p.n}회 응시`:""}</small>
-        ${p.d===null?"":`<span class="dt ${p.d>=0?"up":"down"}">${p.d>=0?"▲ +":"▼ "}${p.d}%p</span>`}</div>
-      <div class="cr"><span class="who">나</span><span class="tr"><i class="me ${p.me>=85?"":p.me>=75?"warn":"bad"}" style="width:${Math.max(p.me,3)}%"></i></span><em>${p.me}%</em></div>
-      ${p.cls===null?`<div class="cr none"><span class="who">반평균</span><span class="na">같이 본 학생이 2명 이상이면 표시돼요</span></div>`
-        :`<div class="cr"><span class="who">반평균</span><span class="tr"><i class="cl" style="width:${Math.max(p.cls,3)}%"></i></span><em class="c">${p.cls}%</em></div>
-      <div class="cnote">반평균 · ${p.cn}명</div>`}
+      <div class="cn"><b>${esc(p.name)}</b><small>${p.c}/${p.t}개 맞힘</small>
+        ${p.d===null?"":`<span class="dt ${p.d>=0?"up":"down"}">반평균보다 ${p.d>=0?"▲ ":"▼ "}${Math.abs(p.d)}점</span>`}</div>
+      <div class="cr"><span class="who">${esc(D.student.replace(/[A-Za-z0-9]+$/,""))}</span><span class="tr"><i class="me ${p.me>=85?"":p.me>=75?"warn":"bad"}" style="width:${Math.max(p.me,3)}%"></i></span><em>${p.me}%</em></div>
+      ${p.cls===null?""
+        :`<div class="cr"><span class="who">반평균</span><span class="tr"><i class="cl" style="width:${Math.max(p.cls,3)}%"></i></span><em class="c">${p.cls}%</em></div>`}
     </div>`).join("")}
+    <div style="font-size:11px;color:var(--ink-3);margin-top:6px">반평균은 같은 날 같은 시험을 본 학생이 3명 이상일 때만 보여요.</div>
   </div>`:""}
 
+  ${todoHTML(D,day,HB)}
+
+  ${noteHTML("day", day, NOTE, cmt.join("<br><br>"), TEACH)}
+
+  ${cumHTML(CUM, day, D.student)}
+
+  <details class="more"><summary>🔍 자세히 보기 — 영역별 분석 · 틀린 문항 · 과별 추이</summary>
   ${AR.length?`<h2 class="s">🔍 영역별 분석 — 어휘 · 어법 · 독해</h2>
   <div class="areas">${AR.map(a=>`
     <div class="area ${a.lv}">
-      <div class="ah"><b>${a.a}</b><span class="lvb">${a.lv==="strong"?"💪 강점":a.lv==="weak"?"⚠️ 약점":"보통"}</span>
+      <div class="ah"><b>${a.a}</b><span class="lvb">${a.lv==="strong"?"💪 강점":a.lv==="weak"?"⚠️ 보완":"보통"}</span>
         <em>${a.pct}<small>%</small></em><span class="cnt">${a.c}/${a.t}</span></div>
       <div class="abar"><i style="width:${Math.max(a.pct,4)}%"></i></div>
       ${a.wrongSubs.length?`<div class="arow"><span class="k no">틀린 곳</span><span>${a.wrongSubs.slice(0,6).map(x=>`${esc(x.k)} <b>${x.w}</b><small>/${x.t}</small>`).join(" · ")}</span></div>`:`<div class="arow"><span class="k ok">틀린 곳</span><span>없음 👏</span></div>`}
       ${a.goodSubs.length?`<div class="arow"><span class="k ok">잘한 곳</span><span>${a.goodSubs.slice(0,4).map(x=>`${esc(x.k)} ${x.c}/${x.t}`).join(" · ")}</span></div>`:""}
       ${a.lv!=="strong"&&a.wrongSubs[0]&&SUBTIP[a.wrongSubs[0].k]?`<div class="atip">💡 ${SUBTIP[a.wrongSubs[0].k]}</div>`:""}
     </div>`).join("")}
-  </div>
-  <div style="font-size:11px;color:var(--ink-3);margin-top:6px">틀린 곳 숫자 = 틀린 개수/그 유형 전체 · 85%↑ 강점 · 75% 미만 약점</div>`:`
-  <h2 class="s">💪 강점 · ⚠️ 약점</h2>
-  <div class="good3">
-    <div class="g" data-no="강점"><span class="ic">💪</span><b>${strong.length?esc(strong.map(x=>x.name).join(" · ")):byMe.length?esc(byMe[0].name):"—"}</b>
-      <p>${strong.length?strong.map(x=>`${esc(x.name)} ${x.me}%`).join(" · ")+(kindStrong.length?`<br>${STRONG_MSG[kindStrong[0]]||""}`:""):byMe.length?`${TD} 가장 잘 본 시험 ${byMe[0].me}%`:""}</p></div>
-    <div class="g" data-no="약점"><span class="ic">⚠️</span><b>${weak.length?esc(weak.map(x=>x.name).join(" · ")):mainCat?esc(mainCat):"뚜렷한 약점 없음"}</b>
-      <p>${weak.length?weak.map(x=>`${esc(x.name)} ${x.me}%`).join(" · ")+"<br>":""}${mainCat?`틀린 자리 최다 유형: <b>${esc(mainCat)}</b> ${catCount[mainCat]}개`:""}</p></div>
-  </div>
-
-`}
+  </div>`:""}
   ${AR.length&&DI.some(x=>x.ok!=="1"&&x.m&&x.r)?`<h2 class="s">✏️ ${TD} 틀린 문항 예시</h2>
   <div class="fix"><div class="miss" style="margin-top:0">${DI.filter(x=>x.ok!=="1"&&x.m&&x.r&&!/^[TF]$/i.test(x.r)&&!/^[\d①-⑤]/.test(String(x.r))&&!/^[A-E](\s*-\s*[A-E])+$/.test(x.r)).slice(0,8).map(x=>{ const [a,sub]=areaOf(x,SI);
       return `<div><s>${esc(String(x.m).slice(0,40))}</s> → <u>${esc(String(x.r).slice(0,48))}</u><span>${a} · ${esc(sub)}</span></div>`; }).join("")}</div></div>`:""}
-  ${!AR.length&&DW.length?`<div class="fix" style="margin-top:12px">
-    <b>${TD} 틀린 ${DW.length}개 — 유형별</b>
-    ${topCats.length?`<div class="home">📌 ${topCats.map(([c,n])=>`<b>${esc(c)}</b> ${n}개`).join(" · ")}</div>`:""}
-    ${mainCat?`<p style="margin-top:10px">${TIPS[mainCat]||""}</p>`:""}
-    <div class="miss">${DW.filter(w=>w.mine&&w.right_&&!/^[TF]$/i.test(w.right_)&&!/^[\d①-⑤]/.test(String(w.right_))&&!/^[A-E](\s*-\s*[A-E])+$/.test(w.right_)).slice(0,6).map(w=>
-      `<div><s>${esc(String(w.mine).slice(0,40))}</s> → <u>${esc(String(w.right_).slice(0,40))}</u><span>${esc(name(w.part,w.part_name))} ${esc(w.no||"")}</span></div>`).join("")}</div>
-  </div>`:""}
-
   ${rep.length?`<h2 class="s">🔁 ${esc(mainBook.split(" · ").pop())}에서 여러 번 틀린 자리 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(같은 과 지난 기록 포함)</span></h2>
   <div class="fix"><div class="miss" style="margin-top:0">${rep.map(w=>
       `<div><s>${esc(w.mine)}</s> → <u>${esc(w.right_)}</u><span>${w.cnt}회 · ${esc(w.sec||"")} ${esc(w.no||"")}</span></div>`).join("")}</div></div>`:""}
-
-  ${RE.n?`<h2 class="s">📝 오답노트 재시험</h2>
-  <div class="card" style="padding:15px 18px;font-size:13px;line-height:1.7">${TD} ${RE.n}회 · ${RE.c}/${RE.t} 정답 (${RE.t?Math.round(RE.c/RE.t*100):0}%) — 정답률 계산에는 넣지 않았어요.</div>`:""}
-
-  ${cumHTML(CUM, day, D.student)}
-
+  ${RE.n?`<h2 class="s">🔁 틀린 문제 다시 풀기</h2>
+  <div class="card" style="padding:15px 18px;font-size:13px;line-height:1.7">${TD} ${RE.n}회 · ${RE.c}/${RE.t} 정답 (${RE.t?Math.round(RE.c/RE.t*100):0}%) — 시험 정답률 계산에는 넣지 않았어요.</div>`:""}
   ${series.length>1?`<h2 class="s">📉 ${esc(mainBook.split(" · ").pop())} 학습일별 정답률 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(같은 과만)</span></h2>
   <div class="card ch">
-    <h3>${esc(D.student)} · ${esc(mainBook)}</h3><p>그날 완료한 시험 기준 · 최근 ${series.length}일</p>
     <svg viewBox="0 0 ${W2} ${H2}" preserveAspectRatio="none" role="img" aria-label="학습일별 정답률 ${series.map(s=>s.pct).join(", ")}">
       ${[100,50,0].map(v=>`<line x1="18" x2="${W2-10}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--grid)"/><text x="${v===100?0:v===50?2:8}" y="${ys(v)+3}" font-size="8" fill="var(--ink-3)" font-family="Archivo">${v}</text>`).join("")}
       <path d="${path}" fill="none" stroke="var(--pri)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
@@ -838,24 +966,13 @@ async function render(D){
         <text x="${xs(i).toFixed(1)}" y="${H2-2}" font-size="8.5" fill="${i===series.length-1?"var(--pri)":"var(--ink-3)"}" text-anchor="middle" font-family="Archivo">${s.d.slice(5).replace("-",".")}</text>`).join("")}
     </svg>
   </div>`:""}
-
-  <h2 class="s">💬 선생님 코멘트 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(자동 초안 · 수정해서 쓰세요)</span></h2>
-  <div class="card cmt">
-    <div class="av">🧑‍🏫</div>
-    <div>
-      <div class="who">헤이즐쌤 · 담당 선생님</div>
-      <p contenteditable="true" style="outline:none">${cmt.join("<br><br>")}</p>
-      ${AR.length?`<div class="tags">${AR.map(a=>`<em>${a.a} ${a.pct}%</em>`).join("")}${allWrongSubs.slice(0,3).map(x=>`<em>${esc(x.k)}</em>`).join("")}</div>`
-        :topCats.length?`<div class="tags">${topCats.map(([c])=>`<em>${esc(c)}</em>`).join("")}</div>`:""}
-    </div>
-  </div>
+  </details>
 
   <div class="foot">
-    hazel_studylog · 앱에 쌓인 실제 채점 기록으로 자동 생성됩니다.<br>
-    정답률 = <b>그날 완료한 시험</b>의 맞힌 문항 ÷ 전체 문항 (같은 시험을 여러 번 봤으면 최고 기록 · 오답노트 재시험은 제외)<br>
-    등급 95↑ A+ · 90↑ A · 85↑ A- · 80↑ B+ · 75↑ B … (절대평가) · 반평균 = 같은 날 같은 시험을 본 학생들의 평균 (학생마다 그날 최고 기록).</div>`;
+    헤이즐쌤 학습리포트 · 앱에 쌓인 실제 채점 기록으로 만들어집니다.<br>
+    정답률 = 그날 본 시험의 맞힌 문항 ÷ 전체 문항 (같은 시험을 여러 번 봤으면 최고 기록) · 반평균 = 같은 날 같은 시험을 본 학생 3명 이상의 평균</div>`;
   $("#app").hidden=false;
-  const go_=()=>{ history.replaceState(null,"",`report?student=${encodeURIComponent(D.student)}${SELBOOK?`&book=${encodeURIComponent(SELBOOK)}`:""}&day=${SELDAY||day}`); render(LASTD); window.scrollTo(0,0); };
+  const go_=()=>{ history.replaceState(null,"",urlFor({book:SELBOOK, day:SELDAY||day})); render(LASTD); window.scrollTo(0,0); };
   const s1=$("#bksel"); if(s1) s1.onchange=()=>{ SELBOOK=s1.value; SELDAY=day; go_(); };
   const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELBOOK=""; SELDAY=s2.value; go_(); };
 }
@@ -870,19 +987,21 @@ function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
   e.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#16151F;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:99";
   document.body.appendChild(e); setTimeout(()=>e.remove(),1800); }
 document.addEventListener("click",async e=>{ if(!e.target.closest("[data-cplink]")) return;
-  const ok=await copyText(CURURL?location.origin+"/"+CURURL.replace(/^report\?/,"r?"):location.href); /* /r = 서버에서 글로 채운 리포트 (어디 붙여도 바로 읽힘) */ flash(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요 · 주소창 링크를 복사해 주세요"); });
+  let url=""; try{ url=await shareUrl(); }catch(err){ flash(err.message); return; } const ok=await copyText(url); /* /r/토큰 = 학부모용 비공개 링크 (어디 붙여도 바로 읽힘) */ flash(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요 · 주소창 링크를 복사해 주세요"); });
 
 async function start(name){
   $("#err").textContent="";
   try{
     const D=await load(name);
     $("#gate").hidden=true; LASTD=D; await render(D);
-    history.replaceState(null,"",`report?student=${encodeURIComponent(name)}${SELBOOK?`&book=${encodeURIComponent(SELBOOK)}`:""}`);
-  }catch(e){ $("#err").textContent=e.message||"불러오지 못했습니다"; }
+  }catch(e){ $("#gate").hidden=false; $("#err").textContent=e.message||"불러오지 못했습니다"; }
 }
-$("#go").onclick=()=>{ const v=$("#nm").value.trim(); if(v.length<2) return $("#err").textContent="이름을 입력해 주세요"; start(v); };
+$("#go").onclick=()=>{ const v=$("#nm").value.trim(), pin=$("#pin").value.trim();
+  if(pin){ try{ localStorage.setItem("naesinfit.pin",pin); }catch(e){} }
+  if(v.length<2) return $("#err").textContent="학생 이름을 입력해 주세요"; start(v); };
 $("#nm").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#go").click(); });
-(()=>{ const q=new URL(location.href).searchParams.get("student"); if(q) start(q); })();
+(()=>{ if(TOKEN){ $("#gate").hidden=true; start(""); return; }
+  const q=QS.get("student"); if(TPIN()) $("#pin-row").hidden=true; if(q){ $("#nm").value=q; start(q); } })();
 </script>
 </body>
 </html>

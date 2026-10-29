@@ -142,6 +142,7 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .rr,.cc{font-family:'Archivo',sans-serif;font-size:12.5px;text-align:center;white-space:nowrap;color:var(--ink-3)}
 .rr b,.cc b{color:var(--ink);font-size:14px} .rr.all b{color:var(--ok)}
 .cc small{display:block;font-size:10.5px;color:var(--accent)}
+.warn{display:inline-block;margin-left:4px;font-size:10px;font-weight:800;color:#B45309;background:#FEF3C7;border-radius:6px;padding:1px 5px}
 .cpy{display:block;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:6px;padding:2px 6px}
 .cpy:hover{color:var(--accent)}
 .ck .cpy{display:inline-block;margin:0 0 0 4px}
@@ -160,6 +161,28 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .btn.sm{padding:7px 11px;font-size:12px}
 .dlt{font-size:12.5px} .dlt small{color:var(--ink-3);font-size:11px}
 .up{color:var(--ok);font-weight:800;font-family:'Archivo',sans-serif} .dn{color:var(--no);font-weight:800;font-family:'Archivo',sans-serif}
+.bell{display:inline-block;margin-left:4px;font-size:10px;font-weight:800;color:#B91C1C;background:#FEE2E2;border-radius:6px;padding:1px 5px;white-space:nowrap}
+.alerts{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:14px;padding:11px 14px;font-size:13px;line-height:1.7;margin:0 0 12px}
+.alerts b{color:#7C2D12}
+.seen{font-size:12px;font-weight:700;color:var(--ok)} .seen small{display:block;font-weight:600;color:var(--ink-3);font-size:10.5px}
+.mcards{display:grid;gap:10px}
+.mcard{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px}
+.mcard .mh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mcard .mh b{flex:1;font-size:15px}
+.mcard .mi{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.mcard .mi>span{flex:1;min-width:0;font-size:13px;color:var(--ink-2);line-height:1.45}
+.mcard .mi .gc{flex:none;width:104px}
+@media (max-width:700px){
+  .bar-in{flex-wrap:wrap;gap:8px;padding:12px 16px}
+  .bar-in>div:first-child{flex:1 0 100%}
+  .bar-in .btn{padding:7px 10px;font-size:12px}
+  .hw-h{flex-wrap:wrap;gap:8px;padding:13px 14px}
+  .hw-h .t{flex:1 1 60%}
+  .hw-h .stat{flex:1 0 100%;order:5;font-size:12px}
+}
+.nmrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.nmrow .who{flex:1;min-width:180px} .nmrow .who small{display:block;color:var(--ink-3);font-size:11.5px}
+@media (prefers-color-scheme: dark){ .alerts{background:#3B2410;border-color:#7C2D12;color:#FED7AA} .alerts b{color:#FFEDD5} .bell{background:#4C1D1D;color:#FCA5A5} }
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
 </style>
 </head>
@@ -174,6 +197,8 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 <div id="app" hidden>
   <header class="bar"><div class="bar-in">
     <div style="flex:1"><h1>반별 관리</h1><div class="sub" id="bar-sub">숙제 검사 · 테스트 현황 · 리포트 보내기를 반별로</div></div>
+    <button class="btn" id="names-btn" title="갈라진 이름 기록 합치기 · 동명이인 정리">🧹 이름 정리</button>
+    <button class="btn" id="backup-btn" title="반·숙제·시험 기록 전체를 엑셀로">💾 엑셀 백업</button>
     <a class="btn" href="teacher">← 대시보드</a>
     <a class="btn" href="report" target="_blank" rel="noopener">리포트</a>
   </div></header>
@@ -204,7 +229,7 @@ async function api(body){
 async function load(){ DB=await api(); }
 async function act(body,msg){ try{ const j=await api(body); await load(); render(); if(msg) toast(msg); return j; }catch(e){ alert(e.message); } }
 
-function render(){ render0(); gridStats(); }
+function render(){ render0(); gridStats(); paintAlerts(); }
 function render0(){
   const C=DB.classes;
   if(!C.find(c=>+c.id===CUR)) CUR=C[0]?+C[0].id:0;
@@ -219,9 +244,11 @@ function render0(){
   const stat=it=>{const o={done:0,part:0,none:0,skip:0,no:0}; mem.forEach(s=>{const k=chk[it.id+"|"+s]; o[k?k.status:"no"]++;}); return o;};
   const HEAD=`
   <div class="sec"><h2>${esc(cls.name)} · 학생 ${mem.length}명</h2>
-    <span class="note"><button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>`;
-  if(TAB!=="hw"){ if(!RES) loadRes().then(render); $("#cls").innerHTML=HEAD+tabsHTML()+(TAB==="test"?testHTML(cls,mem,items):sendHTML(cls,mem,items,chk)); return; }
-  $("#cls").innerHTML=HEAD+tabsHTML()+`
+    <span class="note"><button class="btn" id="cls-exam">📅 시험 ${cls.exam_date?`${esc(cls.exam_name||"내신")} ${fmtD(cls.exam_date)} (D-${Math.max(0,Math.round((new Date(cls.exam_date)-new Date(today()))/864e5))})`:"날짜 넣기"}</button> <button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>`;
+  if(VIEW==="names"){ $("#cls").innerHTML=namesHTML(); return; }
+  if(!RES){ loadRes().then(()=>{ if(TAB==="hw") paintAlerts(); else render(); }); }
+  if(TAB!=="hw"){ $("#cls").innerHTML=HEAD+`<div id="alerts"></div>`+tabsHTML()+(TAB==="test"?testHTML(cls,mem,items):sendHTML(cls,mem,items,chk)); return; }
+  $("#cls").innerHTML=HEAD+`<div id="alerts"></div>`+tabsHTML()+`
   <div class="card" style="padding:16px 18px">
     <div>${mem.map(s=>`<span class="mem">${esc(s)}<button data-rm="${esc(s)}" title="반에서 빼기">✕</button></span>`).join("")||`<span style="color:var(--ink-3);font-size:13px">아직 학생이 없어요</span>`}</div>
     <div class="row" style="margin-top:10px"><input class="fld" id="mem-in" placeholder="학생 이름 (여러 명은 쉼표·줄바꿈으로)" style="flex:1;min-width:200px"><button class="btn pri" id="mem-add">추가</button></div>
@@ -282,10 +309,16 @@ function gridHTML(mem, items, chk){
   const cell=(it,s)=>{ const k=chk[it.id+"|"+s]||{}, st=k.status||"";
     return `<td class="gcell"><button class="gc ${st}" data-gc="${it.id}" data-gs="${esc(s)}" title="${ST[st]||"미검사"}">${ICON[st]}<span>${ST[st]||""}</span></button>
       <input class="gm" data-gm="${it.id}" data-gs="${esc(s)}" placeholder="메모" value="${esc(k.memo||"")}"></td>`; };
+  if(NARROW()) return head+`<div class="mcards">${mem.map(s=>`<div class="mcard"><div class="mh"><b>${esc(s)}</b><span data-bell="${esc(s)}"></span><span class="rr" data-rr="${esc(s)}"></span></div>
+      ${cols.map(it=>{ const k=chk[it.id+"|"+s]||{}, st=k.status||"";
+        return `<div class="mi"><span>${fmtD(it.day).replace(/ \(.\)/,"")} · ${esc(it.title)}</span><button class="gc ${st}" data-gc="${it.id}" data-gs="${esc(s)}">${ICON[st]}<span>${ST[st]||"미검사"}</span></button></div>`; }).join("")}
+      <div class="row" style="margin-top:8px;gap:6px"><a class="btn sm" href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="btn sm" data-tcopy="${esc(s)}" data-tday="${GR.mode==="day"?GR.day:""}">학부모 링크 복사</button></div></div>`).join("")}
+    </div><div hidden>${cols.map(it=>`<span data-cc="${it.id}"></span>`).join("")}</div>
+    <div class="row" style="margin-top:10px">${cols.map(it=>`<button class="btn sm" data-gall="${it.id}">${esc(it.title.slice(0,12))} · 미검사 → 완료</button>`).join("")}</div>`;
   return head+`<div class="card scroll"><table class="grid">
     <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b title="${esc(it.memo||"")}">${esc(it.title)}</b>
       <button class="gall" data-gall="${it.id}">미검사 → 완료</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
-    <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="cpy" data-copy="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}">링크 복사</button></td>
+    <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><span data-bell="${esc(s)}"></span><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="cpy" data-tcopy="${esc(s)}" data-tday="${GR.mode==="day"?GR.day:""}">학부모 링크 복사</button></td>
       ${cols.map(it=>cell(it,s)).join("")}<td class="rr" data-rr="${esc(s)}"></td></tr>`).join("")}</tbody>
     <tfoot><tr><td class="stk">완료</td>${cols.map(it=>`<td class="cc" data-cc="${it.id}"></td>`).join("")}<td></td></tr></tfoot>
   </table></div>`;
@@ -348,17 +381,21 @@ function testHTML(cls, mem, items){
   const per={}; mem.forEach(s=>{ per[s]=dayTests(s); });
   const cols=[]; mem.forEach(s=>per[s].forEach(x=>{ if(!cols.find(c=>c.k===x.k)) cols.push({k:x.k,book:x.book,name:x.name}); }));
   cols.sort((a,b)=>a.book<b.book?-1:a.book>b.book?1:0);
-  const head=`<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 테스트 현황</h2><span class="note">학생마다 그날 최고 기록 · 재시험 제외</span></div>`+dayChips(mem, items);
+  const head=`<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 테스트 현황</h2><span class="note">학생마다 그날 최고 기록 · 재시험 제외 · 반평균은 3명 이상 응시했을 때만</span></div>`+dayChips(mem, items);
   if(!cols.length) return head+`<div class="card empty" style="padding:24px">${fmtD(VD)}에 이 반 학생이 본 시험이 없어요</div>`;
   const pc=v=>v>=85?"hi":v>=75?"mid":"lo";
-  const colAvg=c=>{ const v=mem.map(s=>per[s].find(x=>x.k===c.k)).filter(Boolean); return v.length?{p:Math.round(v.reduce((a,x)=>a+x.r,0)/v.length*100),n:v.length}:null; };
+  const colAvg=c=>{ const v=mem.map(s=>per[s].find(x=>x.k===c.k)).filter(Boolean); return v.length>=3?{p:Math.round(v.reduce((a,x)=>a+x.r,0)/v.length*100),n:v.length}:v.length?{n:v.length}:null; };
+  const bc={}; mem.forEach(s=>new Set(per[s].map(x=>x.book)).forEach(b=>{bc[b]=(bc[b]||0)+1;}));
+  const major=Object.keys(bc).sort((a,b)=>bc[b]-bc[a])[0];
+  const odd=s=>major&&Object.keys(bc).length>1&&per[s].length&&per[s].some(x=>x.book!==major)?per[s].filter(x=>x.book!==major).map(x=>x.book):null;
   return head+`<div class="card scroll"><table class="grid">
     <thead><tr><th class="stk">학생</th>${cols.map(c=>`<th class="gh"><span class="gd">${esc(c.book.split(" · ").pop())}</span><b>${esc(c.name)}</b></th>`).join("")}<th class="gh">합계</th></tr></thead>
     <tbody>${mem.map(s=>{ const v=per[s], t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
-      return `<tr><td class="stk"><b>${esc(s)}</b></td>${cols.map(col=>{ const x=v.find(y=>y.k===col.k);
+      const ob=odd(s);
+      return `<tr><td class="stk"><b>${esc(s)}</b>${ob?`<span class="warn" title="반 대부분과 다른 교재: ${esc([...new Set(ob)].join(", "))}">⚠ 다른 교재</span>`:""}</td>${cols.map(col=>{ const x=v.find(y=>y.k===col.k);
         return `<td class="tc">${x?`<span class="tp ${pc(Math.round(x.r*100))}">${Math.round(x.r*100)}%</span><small>${x.c}/${x.t}</small>`:`<span class="na">미응시</span>`}</td>`; }).join("")}
         <td class="tc">${t?`<span class="tp ${pc(Math.round(c/t*100))}">${Math.round(c/t*100)}%</span><small>${v.length}개</small>`:`<span class="na">—</span>`}</td></tr>`; }).join("")}</tbody>
-    <tfoot><tr><td class="stk">반평균</td>${cols.map(c=>{ const a=colAvg(c); return `<td class="tc">${a?`<b>${a.p}%</b><small>${a.n}명</small>`:""}</td>`; }).join("")}<td></td></tr></tfoot>
+    <tfoot><tr><td class="stk">반평균</td>${cols.map(c=>{ const a=colAvg(c); return `<td class="tc">${a?(a.p!=null?`<b>${a.p}%</b><small>${a.n}명</small>`:`<small>${a.n}명뿐 · 평균 생략</small>`):""}</td>`; }).join("")}<td></td></tr></tfoot>
   </table></div>`;
 }
 /* 학생 한 명의 하루 요약 + 바로 전 학습일 */
@@ -382,19 +419,20 @@ function sendHTML(cls, mem, items, chk){
   const rows=mem.map(s=>{ const ks=its.map(i=>chk[i.id+"|"+s]), cc=ks.filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
     const v=dayTests(s), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
     return {s, hw:its.length?{d,n:cc.length,icons:ks.map(k=>k?ICN[k.status]:"⏺").join("")}:null, ts:v.length?{n:v.length,p:Math.round(c/t*100)}:null,
-      url:`${location.origin}/r?student=${encodeURIComponent(s)}&day=${VD}`, cur:dayStat(s,VD,items,chk), prev:prevStat(s,items,chk)}; });
+      url:`report?student=${encodeURIComponent(s)}&day=${VD}`, cur:dayStat(s,VD,items,chk), prev:prevStat(s,items,chk)}; });
   const has=rows.filter(r=>r.hw||r.ts);
-  return `<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 숙제+테스트 리포트 보내기</h2><span class="note">링크를 눌러 복사해서 카톡·문자에 바로 붙여넣으세요</span></div>`+dayChips(mem, items)+`
+  return `<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 숙제+테스트 리포트 보내기</h2><span class="note">학생마다 비밀 링크(이름으로는 못 열어요) · 복사해서 카톡에 바로 붙여넣으세요</span></div>`+dayChips(mem, items)+`
   <div class="card" style="padding:14px 16px;margin-bottom:10px">
     <div class="row" style="justify-content:space-between"><span style="font-size:13px;color:var(--ink-2)">숙제 ${its.length}개 · 기록 있는 학생 <b>${has.length}</b>/${mem.length}명</span>
-      <button class="btn pri" data-copyall="1">📋 반 전체 링크 한 번에 복사</button></div></div>
+      <span class="row" style="gap:6px"><button class="btn" data-copyall="unseen" title="이 날짜 리포트를 아직 안 연 학생만">👀 안 연 학생만 복사</button><button class="btn pri" data-copyall="1">📋 반 전체 요약+링크 한 번에 복사</button></span></div></div>
   <div class="card scroll"><table class="snd">
-    <thead><tr><th>학생</th><th>📚 숙제</th><th>📝 테스트</th><th>📈 지난 학습일 대비</th><th></th></tr></thead>
-    <tbody>${rows.map(r=>`<tr${r.hw||r.ts?"":` class="dim"`}><td><b>${esc(r.s)}</b></td>
+    <thead><tr><th>학생</th><th>📚 숙제</th><th>📝 테스트</th><th>📈 지난 학습일 대비</th><th>👀 학부모 열람</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr${r.hw||r.ts?"":` class="dim"`}><td><b>${esc(r.s)}</b><span data-bell="${esc(r.s)}"></span></td>
       <td>${r.hw?`<span class="ic">${r.hw.icons}</span> ${r.hw.n?`<b>${r.hw.d}/${r.hw.n}</b>`:`<span class="na">미검사</span>`}`:`<span class="na">숙제 없음</span>`}</td>
       <td>${r.ts?`${r.ts.n}개 · <b class="tp ${r.ts.p>=85?"hi":r.ts.p>=75?"mid":"lo"}">${r.ts.p}%</b>`:`<span class="na">미응시</span>`}</td>
-      <td class="dlt">${r.prev.ph&&r.cur.hp!==null?`숙제 ${arr(r.cur.hp-r.prev.ph.v)}%p`:""}${r.prev.pt&&r.cur.tp!==null?` 시험 ${arr(r.cur.tp-r.prev.pt.v)}%p <small>(${fmtD(r.prev.pt.d)} ${r.prev.pt.v}%)</small>`:""}${!(r.prev.ph&&r.cur.hp!==null)&&!(r.prev.pt&&r.cur.tp!==null)?`<span class="na">—</span>`:""}</td>
-      <td class="act"><button class="btn pri sm" data-copy1="${esc(r.url)}">🔗 링크 복사</button><a class="btn sm" href="${esc(r.url)}" target="_blank" rel="noopener">열기</a></td></tr>`).join("")}</tbody>
+      <td class="dlt">${r.prev.ph&&r.cur.hp!==null?`숙제 ${arr(r.cur.hp-r.prev.ph.v)}점`:""}${r.prev.pt&&r.cur.tp!==null?` 시험 ${arr(r.cur.tp-r.prev.pt.v)}점 <small>(${fmtD(r.prev.pt.d)} ${r.prev.pt.v}%)</small>`:""}${!(r.prev.ph&&r.cur.hp!==null)&&!(r.prev.pt&&r.cur.tp!==null)?`<span class="na">—</span>`:""}</td>
+      <td>${seenHTML(r.s)}</td>
+      <td class="act"><button class="btn pri sm" data-tcopy="${esc(r.s)}" data-tday="${VD}">🔗 학부모 링크 복사</button><a class="btn sm" href="${esc(r.url)}" target="_blank" rel="noopener" title="선생님 화면 · 한마디 저장">열기</a></td></tr>`).join("")}</tbody>
   </table></div>`;
 }
 async function saveCheck(row, status){
@@ -409,6 +447,128 @@ async function saveCheck(row, status){
     render(); toast("저장했어요");
   }catch(e){ alert(e.message); }
 }
+/* ── 폰에서는 학생 카드로 검사 ── */
+const NARROW=()=>window.matchMedia("(max-width: 700px)").matches;
+/* ── 👀 학부모 열람 ── */
+const viewOf=(s,d)=>(DB.views||[]).find(v=>v.student===s&&v.day===d);
+function seenHTML(s){
+  const v=viewOf(s,VD);
+  if(!v) return `<span class="na">아직 안 봄</span>`;
+  const t=new Date(v.last_at), hm=`${t.getMonth()+1}.${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+  return `<span class="seen">👀 봤어요<small>${hm}${v.n>1?` · ${v.n}번`:""}</small></span>`;
+}
+/* ── 🔔 살펴볼 학생: 숙제 2번 연속 못 함 / 시험 점수 2번 연속 하락 ── */
+function alertsOf(s, items, chk){
+  const out=[];
+  const ks=items.slice().sort((a,b)=>a.day<b.day?1:a.day>b.day?-1:b.id-a.id).map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip");
+  if(ks.length>=2 && ks.slice(0,2).every(k=>k.status==="none"||k.status==="part")) out.push("숙제 2번 연속 못 함");
+  if(RES&&RES.length){
+    const ds=[...new Set(rowsOfMem(s).map(x=>x.day))].filter(d=>d<=VD).sort().reverse();
+    const tp=[]; for(const d of ds){ const v=dayTests(s,d); if(v.length){ const t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0); if(t) tp.push(Math.round(c/t*100)); } if(tp.length>=3) break; }
+    if(tp.length>=3 && tp[0]<tp[1] && tp[1]<tp[2]) out.push(`시험 2번 연속 하락 (${tp[2]}→${tp[1]}→${tp[0]}%)`);
+  }
+  return out;
+}
+function paintAlerts(){
+  if(!DB||!CUR||VIEW==="names") return;
+  const mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student), items=DB.items.filter(i=>+i.class_id===CUR);
+  const chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
+  const A=mem.map(s=>({s,a:alertsOf(s,items,chk)})).filter(x=>x.a.length);
+  document.querySelectorAll("[data-bell]").forEach(e=>{ const x=A.find(y=>y.s===e.dataset.bell); e.innerHTML=x?`<span class="bell" title="${esc(x.a.join(" · "))}">🔔 ${esc(x.a[0].split(" (")[0])}</span>`:""; });
+  const box=$("#alerts"); if(box) box.innerHTML=A.length?`<div class="alerts">🔔 <b>살펴볼 학생 ${A.length}명</b> · ${A.map(x=>`<b>${esc(x.s)}</b> ${esc(x.a.join(", "))}`).join(" / ")}<br><span style="font-size:11.5px;opacity:.8">상담·연락이 필요한지 한 번 확인해 주세요</span></div>`:"";
+}
+/* ── 동명이인: 다른 반에 같은 이름이 있으면 확인 ── */
+function dupCheck(names){
+  const out=[];
+  for(const n0 of names){ let n=n0;
+    const other=DB.members.filter(m=>m.student===n&&+m.class_id!==CUR).map(m=>(DB.classes.find(c=>+c.id===+m.class_id)||{}).name).filter(Boolean);
+    if(other.length){
+      const v=prompt(`'${n}' 이름이 ${other.join(", ")}에도 있어요.\n\n· 같은 학생(반을 옮기거나 두 반 수강)이면 그대로 확인\n· 동명이인이면 이름 뒤에 구분 글자를 붙여 주세요 (예: ${n}2)\n  → 학생은 앱에서 '${n}'만 써도 들어와요`, n);
+      if(v===null) continue; n=v.trim().replace(/\s+/g,""); if(!n) continue; }
+    out.push(n); }
+  return out;
+}
+/* ── 🧹 이름 정리: 명단에 없는 이름으로 남은 시험 기록 → 명단 학생에게 합치기 ── */
+let VIEW="";
+function namesHTML(){
+  const memAll=[...new Set(DB.members.map(m=>m.student))];
+  const clsOf=s=>DB.members.filter(m=>m.student===s).map(m=>(DB.classes.find(c=>+c.id===+m.class_id)||{}).name).filter(Boolean);
+  const orph=(DB.stu||[]).filter(r=>!memAll.includes(r.student));
+  const dups=memAll.filter(s=>clsOf(s).length>1);
+  const homo={}; memAll.forEach(s=>{ const b=baseNm(s)||s; (homo[b] ||= []).push(s); });
+  const homoL=Object.entries(homo).filter(([b,v])=>v.length>1);
+  const fmt=d=>{ const t=new Date(d); return `${t.getMonth()+1}.${t.getDate()}`; };
+  return `<div class="sec"><h2>🧹 이름 정리</h2><span class="note"><button class="btn" id="names-close">← 반 화면으로</button></span></div>
+  <div class="card" style="padding:14px 16px;font-size:13px;line-height:1.75;color:var(--ink-2)">
+    기록은 <b>이름</b>으로 묶여요. 학생이 이름을 다르게 쓰면 기록이 갈라지고, 동명이인은 이름 뒤 <b>구분 글자</b>(김민준<b>2</b>, 김강민<b>j</b>)로 나눠요.<br>
+    아래에서 <b>같은 학생일 때만</b> 합치세요. 합치면 시험·숙제·한마디·열람 기록이 모두 옮겨지고 되돌릴 수 없어요.</div>
+  <div class="sec"><h2>명단에 없는 이름 ${orph.length}개</h2><span class="note">시험은 봤지만 어느 반 명단에도 없는 이름</span></div>
+  <div class="card" style="padding:4px 16px">${orph.length?orph.map(r=>{
+    const b=baseNm(r.student)||r.student, cand=memAll.filter(m=>baseNm(m)===b||m===b||baseNm(m)===r.student);
+    const many=cand.length>1;
+    return `<div class="nmrow"><span class="who"><b>${esc(r.student)}</b><small>시험 ${r.n}번 · 최근 ${fmt(r.last)}${r.cls?` · 앱에서 고른 반: ${esc(r.cls)}`:""}${many?` · <b style="color:var(--no)">⚠ 동명이인 ${cand.length}명 — 반을 보고 고르세요</b>`:""}</small></span>
+      ${cand.map(m=>`<button class="btn sm${!many||clsOf(m).includes(r.cls)?" pri":""}" data-merge="${esc(r.student)}" data-into="${esc(m)}">→ ${esc(m)} <small>(${esc(clsOf(m).join(", "))})</small>에 합치기</button>`).join("")}
+      ${!cand.length?`<span class="na">비슷한 명단 이름 없음 · 아래 '직접 합치기'나 반 화면에서 추가</span>`:""}</div>`; }).join(""):`<div class="empty" style="padding:18px">없어요 👏 모든 기록이 명단 이름과 맞아요</div>`}</div>
+  <div class="sec"><h2>직접 합치기</h2><span class="note">예: 오타로 들어간 '김강빈' → '김강민j'</span></div>
+  <div class="card" style="padding:14px 16px"><div class="row">
+    <input class="fld" id="mg-from" list="mg-all" placeholder="옮길 이름 (없앨 이름)" style="flex:1;min-width:150px">
+    <span>→</span><input class="fld" id="mg-to" list="mg-all" placeholder="남길 이름 (명단 이름)" style="flex:1;min-width:150px">
+    <button class="btn pri" id="mg-go">합치기</button></div>
+    <datalist id="mg-all">${[...new Set([...memAll,...(DB.stu||[]).map(r=>r.student)])].sort().map(n=>`<option value="${esc(n)}">`).join("")}</datalist></div>
+  <div class="sec"><h2>동명이인 · 여러 반 학생</h2><span class="note">확인만 하세요 · 합치지 마세요</span></div>
+  <div class="card" style="padding:12px 16px;font-size:13px;line-height:1.8">
+    ${homoL.length?homoL.map(([b,v])=>`<div>👥 <b>${esc(b)}</b>: ${v.map(n=>`${esc(n)} <small style="color:var(--ink-3)">(${esc(clsOf(n).join(", "))})</small>`).join(" · ")}</div>`).join(""):`<div class="na">구분 글자로 나뉜 동명이인은 아직 없어요</div>`}
+    ${dups.length?`<div style="margin-top:6px">📚 두 반 이상에 있는 이름: ${dups.map(n=>`<b>${esc(n)}</b> <small style="color:var(--ink-3)">(${esc(clsOf(n).join(", "))})</small>`).join(" · ")} — 같은 학생이 아니라면 한쪽 이름에 구분 글자를 붙여 주세요</div>`:""}
+    <div style="margin-top:8px;font-size:12px;color:var(--ink-3)">학생이 새로 들어올 때 다른 반에 같은 이름이 있으면 앱이 자동으로 뒤에 번호를 붙여요 (김민준 → 김민준2). 같은 반 동명이인은 학생이 목록에서 자기 이름을 골라요.</div></div>`;
+}
+async function namesClick(t){
+  if(t.closest("#names-btn")){ VIEW="names"; render(); scrollTo({top:0}); return true; }
+  if(t.closest("#names-close")){ VIEW=""; render(); return true; }
+  const mg=t.closest("[data-merge]"), go=t.closest("#mg-go");
+  if(mg||go){
+    const from=mg?mg.dataset.merge:$("#mg-from").value.trim(), to=mg?mg.dataset.into:$("#mg-to").value.trim();
+    if(!from||!to||from===to){ toast("두 이름을 골라 주세요"); return true; }
+    if(!confirm(`'${from}'의 기록을 모두 '${to}'(으)로 합칠까요?\n같은 학생일 때만 합치세요. 되돌릴 수 없어요.`)) return true;
+    try{ const j=await api({action:"student.merge",from,to}); delete TOK[from]; await load(); RES=null; render(); toast(`합쳤어요 · 시험 기록 ${j.moved}건 옮김`); }catch(err){ alert(err.message); }
+    return true; }
+  if(t.closest("#backup-btn")){ await backup(); return true; }
+  return false;
+}
+/* ── 💾 엑셀 백업 ── */
+async function backup(){
+  toast("백업 파일을 만드는 중…");
+  try{
+    const j=await api({action:"export"});
+    if(!window.XLSX) await new Promise((ok,no)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; sc.onload=ok; sc.onerror=()=>no(new Error("엑셀 도구를 불러오지 못했어요")); document.head.appendChild(sc); });
+    const KS={done:"완료",part:"일부",none:"안 함",skip:"면제"}, dt=v=>v?new Date(v).toLocaleString("ko-KR"):"";
+    const sh=(rows,map)=>XLSX.utils.json_to_sheet(rows.map(map));
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, sh(j.classes,r=>({반:r.name,시험이름:r.exam_name,시험날짜:r.exam_date})),"반");
+    XLSX.utils.book_append_sheet(wb, sh(j.members,r=>({반:r.class_name,학생:r.student})),"명단");
+    XLSX.utils.book_append_sheet(wb, sh(j.items,r=>({날짜:r.day,반:r.class_name,숙제:r.title,메모:r.memo})),"숙제");
+    XLSX.utils.book_append_sheet(wb, sh(j.checks,r=>({날짜:r.day,반:r.class_name,숙제:r.title,학생:r.student,결과:KS[r.status]||r.status,점수:r.score??"",메모:r.memo,검사시각:dt(r.checked_at)})),"숙제검사");
+    XLSX.utils.book_append_sheet(wb, sh(j.attempts,r=>({시각:dt(r.created_at),학생:r.student,반:r.class_name,교재:r.book,시험:r.part_name,범위:r.scope,문항:r.total,정답:r.correct,"정답률(%)":r.pct,"걸린시간(초)":r.secs})),"시험기록");
+    XLSX.utils.book_append_sheet(wb, sh(j.notes,r=>({날짜:r.day,학생:r.student,종류:{day:"하루",week:"주간",month:"월간"}[r.kind]||r.kind,요약:r.headline,한마디:r.note})),"선생님한마디");
+    XLSX.utils.book_append_sheet(wb, sh(j.views,r=>({리포트날짜:r.day,학생:r.student,처음열람:dt(r.first_at),마지막열람:dt(r.last_at),횟수:r.n})),"학부모열람");
+    XLSX.writeFile(wb, `스터디로그_백업_${today()}.xlsx`);
+    toast(`백업 완료 · 시험 ${j.attempts.length}건 · 숙제검사 ${j.checks.length}건`);
+  }catch(err){ alert(err.message); }
+}
+/* 학부모용 비밀 링크 (토큰) */
+const TOK={};
+async function tokensFor(names){
+  const need=names.filter(n=>!TOK[n]);
+  if(need.length){ const j=await api({action:"tokens.get",students:need}); Object.assign(TOK,j.tokens||{}); }
+  const o={}; names.forEach(n=>{ if(!TOK[n]) throw new Error("링크를 만들지 못했어요"); o[n]=TOK[n]; }); return o;
+}
+const parentUrl=(tok,d)=>`${location.origin}/r/${tok}${d?`?day=${d}`:""}`;
+function oneLine(s, items, chk){
+  const its=items.filter(i=>i.day===VD), cc=its.map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
+  const st=dayStat(s,VD,items,chk), pv=prevStat(s,items,chk), out=[];
+  if(cc.length) out.push(`숙제 ${d}/${cc.length}`);
+  if(st.tp!==null){ const dv=pv.pt?st.tp-pv.pt.v:null; out.push(`시험 ${st.tp}%${dv===null?"":dv>0?` ▲${dv}점`:dv<0?` ▼${-dv}점`:" (지난번과 같음)"}`); }
+  return out.length?out.join(" · "):"오늘 기록 없음";
+}
 /* 링크 복사 — 카톡·문자에 바로 붙여넣기 */
 async function copyText(t){
   try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
@@ -420,18 +580,29 @@ function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
   document.body.appendChild(e); setTimeout(()=>e.remove(),1800); }
 document.addEventListener("click",async e=>{
   const t=e.target;
+  if(await namesClick(t)) return;
   const cp=t.closest("[data-copy]"); if(cp){ const ok=await copyText(location.origin+"/"+cp.dataset.copy.replace(/^report\?/,"r?")); toast(ok?"리포트 링크를 복사했어요":"복사가 안 돼요"); return; }
   const tb=t.closest("[data-tab]"); if(tb){ TAB=tb.dataset.tab; localStorage.setItem("hw.tab",TAB); if(TAB!=="hw") RES=null; render(); return; }
   const vd=t.closest("[data-vday]"); if(vd){ VD=vd.dataset.vday; render(); return; }
+  const tc=t.closest("[data-tcopy]"); if(tc){ try{ const tk=await tokensFor([tc.dataset.tcopy]); const d=tc.dataset.tday;
+      const ok=await copyText(parentUrl(tk[tc.dataset.tcopy], d)); toast(ok?"학부모 링크를 복사했어요 · 카톡에 바로 붙여넣으세요":"복사가 안 돼요"); }catch(err){ alert(err.message); } return; }
+  if(t.closest("#cls-exam")){ const cl=DB.classes.find(x=>+x.id===CUR);
+    const d=prompt("내신 시험 날짜 (예: 2026-11-20 · 지우려면 비워 두기)", cl.exam_date||""); if(d===null) return;
+    if(d.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(d.trim())){ toast("날짜는 2026-11-20 처럼 넣어 주세요"); return; }
+    const n=d.trim()?prompt("시험 이름 (예: 2학기 기말)", cl.exam_name||"2학기 기말"):""; if(n===null) return;
+    await act({action:"class.exam",id:CUR,exam_date:d.trim(),exam_name:(n||"").trim()}, d.trim()?"시험 날짜를 넣었어요 · 리포트에 D-day가 나와요":"시험 날짜를 지웠어요"); return; }
   const c1=t.closest("[data-copy1]"); if(c1){ const ok=await copyText(c1.dataset.copy1); toast(ok?"리포트 링크를 복사했어요 · 바로 붙여넣으세요":"복사가 안 돼요"); return; }
-  if(t.closest("[data-copyall]")){ const cls=DB.classes.find(c=>+c.id===CUR), mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
-    const txt=`[${cls.name} · ${fmtD(VD)} 숙제·테스트 리포트]\n`+mem.map(s=>`${s} ${location.origin}/r?student=${encodeURIComponent(s)}&day=${VD}`).join("\n");
-    const ok=await copyText(txt); toast(ok?`${mem.length}명 링크를 한 번에 복사했어요`:"복사가 안 돼요"); return; }
+  const cpa=t.closest("[data-copyall]"); if(cpa){ const cls=DB.classes.find(c=>+c.id===CUR); let mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
+    if(cpa.dataset.copyall==="unseen"){ mem=mem.filter(s=>!viewOf(s,VD)); if(!mem.length){ toast("모두 열어 봤어요 👏"); return; } }
+    let tk; try{ tk=await tokensFor(mem); }catch(err){ alert(err.message); return; }
+    const items=DB.items.filter(i=>+i.class_id===CUR), chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
+    const txt=`[${cls.name} · ${fmtD(VD)} 학습 리포트]\n`+mem.map(s=>`${s} — ${oneLine(s,items,chk)}\n${parentUrl(tk[s],VD)}`).join("\n\n");
+    const ok=await copyText(txt); toast(ok?`${mem.length}명 요약+링크를 한 번에 복사했어요`:"복사가 안 돼요"); return; }
   const gm=t.closest("[data-gmode]"); if(gm){ GR.mode=gm.dataset.gmode; localStorage.setItem("hw.gmode",GR.mode); render(); return; }
   const gc=t.closest("[data-gc]"); if(gc){
     const it=gc.dataset.gc, st=gc.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
     const nx=CYCLE[(CYCLE.indexOf(cur?cur.status:"")+1)%CYCLE.length];
-    gc.className="gc "+nx; gc.innerHTML=`${ICON[nx]}<span>${ST[nx]||""}</span>`;
+    gc.className="gc "+nx; gc.innerHTML=`${ICON[nx]}<span>${ST[nx]||(gc.closest(".mcard")?"미검사":"")}</span>`;
     try{ await setCheck(it,st,nx); gridStats(); }catch(err){ alert(err.message); render(); }
     return; }
   const ga=t.closest("[data-gall]"); if(ga){ const it=+ga.dataset.gall, mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
@@ -444,8 +615,8 @@ document.addEventListener("click",async e=>{
   if(t.closest("#cls-del")){ if(confirm("이 반과 반의 숙제·검사 기록을 모두 지울까요? 되돌릴 수 없어요.")) await act({action:"class.delete",id:CUR},"반을 지웠어요"); return; }
   const mem=()=>DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
   const rm=t.closest("[data-rm]"); if(rm){ await act({action:"members.set",class_id:CUR,students:mem().filter(s=>s!==rm.dataset.rm)}); return; }
-  const ad=t.closest("[data-add]"); if(ad){ await act({action:"members.set",class_id:CUR,students:mem().concat(ad.dataset.add)}); return; }
-  if(t.closest("#mem-add")){ const v=$("#mem-in").value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean); if(v.length) await act({action:"members.set",class_id:CUR,students:mem().concat(v)},`${v.length}명 추가했어요`); return; }
+  const ad=t.closest("[data-add]"); if(ad){ const v=dupCheck([ad.dataset.add]); if(v.length) await act({action:"members.set",class_id:CUR,students:mem().concat(v)}); return; }
+  if(t.closest("#mem-add")){ const v=dupCheck($("#mem-in").value.split(/[,\n]/).map(x=>x.trim()).filter(Boolean)); if(v.length) await act({action:"members.set",class_id:CUR,students:mem().concat(v)},`${v.length}명 추가했어요`); return; }
   if(t.closest("#hw-add")||t.closest("#hw-save")){
     const body={day:$("#hw-day").value,title:$("#hw-title").value,memo:$("#hw-memo").value};
     if(!body.day||!body.title.trim()){ toast("날짜와 숙제 내용을 넣어 주세요"); return; }
@@ -470,6 +641,7 @@ document.addEventListener("change",async e=>{
   const gmi=e.target.closest("[data-gm]"); if(gmi){ const it=gmi.dataset.gm, st=gmi.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
     if(!cur){ if(!gmi.value.trim()) return; try{ await setCheck(it,st,"part",gmi.value); toast("메모 저장 · 상태는 🟡일부로 표시했어요 (칸을 눌러 바꾸세요)"); render(); }catch(err){ alert(err.message); } return; }
     try{ await setCheck(it,st,cur.status,gmi.value); toast("메모 저장"); }catch(err){ alert(err.message); } return; } const row=e.target.closest(".ck"); if(row && (e.target.classList.contains("sc")||e.target.classList.contains("mm"))) saveCheck(row); });
+let WASN=NARROW(); window.addEventListener("resize",()=>{ const n=NARROW(); if(n!==WASN&&DB&&TAB==="hw"&&VIEW!=="names") render(); WASN=n; });
 $("#pin-go").onclick=async()=>{ PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
   try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){ $("#pin-err").textContent=e.message; } };
 $("#pin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pin-go").click(); });

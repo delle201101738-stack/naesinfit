@@ -14,6 +14,10 @@
   ],
   "rewrites": [
     {
+      "source": "/r/:t",
+      "destination": "/api/rpage?t=:t"
+    },
+    {
       "source": "/r",
       "destination": "/api/rpage"
     }

@@ -579,6 +579,8 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
       <div class="card" style="padding:14px 16px" id="scope-card"></div>
     </div>
 
+    <div class="pad" style="margin-top:22px" id="todo-slot"></div>
+
     <div class="pad" style="margin-top:22px" id="wrong-slot"></div>
 
     <div class="pad" style="margin-top:22px">
@@ -1057,7 +1059,60 @@ function renderHome(){
       <span style="flex:1"><span class="t">${secLab(x.sec)} ${x.no}</span>
       <span class="s">${esc(x.en.slice(0,42))}…</span></span>${svg("chev","go")}
     </button>`).join("");
+  renderTodo(); loadTodo().then(renderTodo);
 }
+/* ───── 내 할 일: 선생님이 낸 숙제 · 시험 D-day · 시험 전 약점 모아 풀기 ───── */
+let TODO=null, TODO_AT=0, TODO_KEY="";
+async function loadTodo(){
+  if(!S.name||!S.cls){ TODO=null; return; }
+  const key=S.name+"|"+S.cls.id;
+  if(TODO && key===TODO_KEY && Date.now()-TODO_AT<60000) return;
+  try{ const r=await fetch(`/api/join?student=${encodeURIComponent(S.name)}&class_id=${encodeURIComponent(S.cls.id)}`,{cache:"no-store"});
+    if(r.ok){ TODO=await r.json(); TODO_AT=Date.now(); TODO_KEY=key; } }catch(e){}
+}
+const ptCount=st=>{ let n=0; for(const p in st||{}) for(const k in st[p]||{}) n+=(st[p][k]||[]).length; return n; };
+function renderTodo(){
+  const el=$("#todo-slot"); if(!el) return;
+  if(!TODO||!TODO.ok||!S.cls||TODO_KEY!==S.name+"|"+S.cls.id){ el.innerHTML=""; return; }
+  const t=TODO.today, c=TODO.class||{}, its=TODO.items||[];
+  const md=d=>`${+d.slice(5,7)}.${+d.slice(8,10)}`;
+  const left=its.filter(i=>i.day<=t && i.status!=="done" && i.status!=="skip");
+  const next=its.filter(i=>i.day>t);
+  const dd=c.exam_date?Math.round((new Date(c.exam_date+"T00:00:00")-new Date(t+"T00:00:00"))/864e5):null;
+  const near=dd!==null&&dd>=0&&dd<=14;
+  const units=Object.keys(S.ever||{}).map(uid=>({uid, n:ptCount(S.ever[uid]), now:ptCount((S.wrong||{})[uid]), u:allUnits(true).find(x=>x.id===uid)}))
+    .filter(x=>x.n&&x.u).sort((a,b)=>b.now-a.now||b.n-a.n);
+  if(!left.length && !next.length && dd===null){
+    el.innerHTML = its.length ? `<div class="sec"><h2>내 할 일</h2><span class="more">${esc(c.name||"")}</span></div>
+      <div class="card" style="padding:15px 16px;font-size:14px;font-weight:700">숙제를 다 했어요 👏 이대로 쭉 가자!</div>` : ""; return; }
+  const ST={none:["❌","안 해 왔어요 · 꼭 해 오기"],part:["🟡","조금 남았어요"],"":["📌","아직 검사 전"]};
+  const row=(i,up)=>{ const [ic,tx]=up?["🗓","다음 숙제"]:(ST[i.status||""]||ST[""]);
+    return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)">
+      <span style="flex:none;font-size:16px">${ic}</span><span style="flex:1;min-width:0"><b style="font-size:14px">${esc(i.title)}</b>
+      <span style="display:block;font-size:12px;color:var(--ink-3);margin-top:2px">${md(i.day)} · ${tx}</span></span></div>`; };
+  const dchip=dd===null?"":`<span style="flex:none;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:800;${dd<=7?"background:var(--no-soft);color:var(--no)":"background:var(--surface-2);color:var(--accent)"}">${esc(c.exam_name||"내신")} ${dd===0?"D-DAY":dd>0?"D-"+dd:"끝"}</span>`;
+  el.innerHTML=`<div class="sec"><h2>내 할 일</h2><span class="more">${esc(c.name||"")}</span></div>
+    <div class="card" style="padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${left.length||next.length?6:0}px">
+        <span style="flex:1;font-size:14.5px;font-weight:800">${left.length?`남은 숙제 ${left.length}개`:next.length?"다음 숙제":"숙제 다 했어요 👏"}</span>${dchip}</div>
+      ${left.slice(0,6).map(i=>row(i,false)).join("")}${left.length>6?`<div style="font-size:12px;color:var(--ink-3);padding-top:6px">외 ${left.length-6}개</div>`:""}
+      ${next.slice(0,3).map(i=>row(i,true)).join("")}
+    </div>
+    ${near&&units.length?`<div class="card" style="padding:14px 16px;margin-top:10px;border:1.5px solid var(--accent)">
+      <div style="font-size:14.5px;font-weight:800">🎯 시험 전 약점 모아 풀기</div>
+      <div style="font-size:12.5px;color:var(--ink-3);margin:3px 0 8px;line-height:1.6">시험까지 ${dd===0?"오늘!":dd+"일"} · 지금까지 틀렸던 문제만 과별로 다시 풀어요. 맞혀도 지워지지 않아요.</div>
+      ${units.map(x=>`<button class="part-card" data-wunit="${esc(x.uid)}" style="width:100%;padding:11px 0;border-top:1px solid var(--line)">
+        <span class="ci" style="background:var(--no-soft);color:var(--no)">${x.now||x.n}</span>
+        <span style="flex:1;text-align:left"><span class="t">${esc(x.u.book.subject)} · ${esc(x.u.no)}</span>
+        <span class="s">${x.now?`아직 틀린 ${x.now}개 · `:""}틀렸던 문제 ${x.n}개</span></span>${svg("chev","go")}</button>`).join("")}
+    </div>`:""}`;
+}
+document.addEventListener("click",async e=>{
+  const w=e.target.closest("[data-wunit]"); if(!w) return;
+  const u=allUnits(true).find(x=>x.id===w.dataset.wunit); if(!u) return;
+  try{ if(!UNIT||UNIT.id!==u.id){ toast("불러오는 중…"); await loadUnit(u); } startQuiz({review:true, ever:!ptCount((S.wrong||{})[u.id])}); }
+  catch(err){ toast(err.message); }
+});
 
 /* ───── 파트 설정 ───── */
 let sel={part:null, scope:"all"};
@@ -1113,6 +1168,16 @@ function renderSetup(){
         ? `우리말만 보고 직접 씁니다 · 관사(a·the)와 사소한 철자 실수는 봐주고 <b>${ARR_PASS}점 이상이면 정답</b>`
         : "흩어진 토막을 끌어서 순서대로 맞춥니다 · 순서가 정확히 맞아야 정답"}</p>` : ""}
 
+    <div class="sec" style="margin:24px 0 10px"><h2>문항 순서</h2>
+      <span class="note" style="font-size:12.5px;color:var(--ink-3)">언제든 바꿀 수 있어요</span></div>
+    <div class="seg-btn" id="shuf-btn">
+      <button data-sh="0"${S.shuffle?"":' class="on"'}>원래 순서</button>
+      <button data-sh="1"${S.shuffle?' class="on"':""}>🔀 섞어서 응시</button>
+    </div>
+    <p style="margin:9px 2px 0;font-size:12.5px;color:var(--ink-3);line-height:1.6">${S.shuffle
+      ? "풀 때마다 순서가 바뀌어요. 같은 지문 문항(영문선지·독해)은 <b>지문 단위로 묶어서</b> 섞고, 단어 뜻·유의어 쓰기는 단어 순서도 섞여요. 채점·오답노트는 그대로예요."
+      : "교재에 나온 순서대로 풀어요."}</p>
+
     <div class="sec" style="margin:24px 0 10px"><h2>안내</h2></div>
     <div class="card" style="padding:15px 16px;font-size:13.5px;line-height:1.75;color:var(--ink-2)">${howtoOf(sel.part)}</div>`;
   const n=scopeCounts(sel.part)[sel.scope];
@@ -1148,6 +1213,8 @@ const HOWTO={
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
 };
 $("#setup-body").addEventListener("click",e=>{
+  const sh=e.target.closest("[data-sh]");
+  if(sh){ S.shuffle=sh.dataset.sh==="1"; save(); renderSetup(); toast(S.shuffle?"🔀 문항 순서를 섞어서 풀어요":"원래 순서대로 풀어요"); return; }
   const am=e.target.closest("[data-am]");
   if(am){ S.arrMode=am.dataset.am; save(); renderSetup();
           toast(S.arrMode==="type"?"직접 타이핑으로 풉니다":"토막 배열로 풉니다"); return; }
@@ -1159,6 +1226,19 @@ $("#setup-wrong").onclick=()=>startQuiz({review:true, part:sel.part, ever:!!$("#
 
 /* ───── 응시 ───── */
 let Q=null;
+function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+/* 같은 지문을 쓰는 문항(영문선지·독해 등)은 한 묶음으로 — 지문 단위로 섞고, 묶음 안 순서는 그대로 */
+function psgKey(x){ const it=x.it; const t=String(it.src||it.psg||it.body||it.passage||it.shared||"").replace(/\[\[|\]\]|[⁽⁾⁰¹²³⁴⁵⁶⁷⁸⁹]/g,"").replace(/\s+/g," ").trim().slice(0,40);
+  return t ? x.part+"|"+t : null; }
+function shuffleGroups(list){
+  const groups=[]; let last=null;
+  list.forEach(x=>{ const k=psgKey(x); if(k && last && last.k===k) last.items.push(x); else { last={k, items:[x]}; groups.push(last); } });
+  return shuffleArr(groups).flatMap(g=>g.items);
+}
+function shuffleRows(it){   // 단어 줄 섞기 — _map으로 원래 번호를 기억해서 오답노트가 맞는 단어를 가리킴
+  const base=it._map||it.rows.map((_,i)=>i), idx=shuffleArr(it.rows.map((_,i)=>i));
+  return Object.assign({}, it, {rows:idx.map(i=>it.rows[i]), _map:idx.map(i=>base[i])});
+}
 function startQuiz(opts){
   opts=opts||{};
   let list=[];
@@ -1169,6 +1249,10 @@ function startQuiz(opts){
     list=itemsOf(sel.part, sel.scope).map(it=>({part:sel.part, it}));
   }
   if(!list.length){toast("문항이 없어요"); return;}
+  if(S.shuffle){   // 🔀 섞어서 응시: 문항(단락) 순서 + 단어 뜻·유의어 쓰기는 단어 순서까지
+    list=shuffleGroups(list);
+    list=list.map(x=>(x.part==="wmean"||x.part==="wsynw")&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
+  }
   const items=list.map(x=>x.it);
   Q={review:!!opts.review, part: opts.review ? (opts.part||"review") : sel.part,
      items, pl:list.map(x=>x.part), i:0, t0:Date.now()};
@@ -2503,9 +2587,10 @@ nameCta.onclick=async()=>{
         body:JSON.stringify({student:nm,class_id:cid,prev_name:S.name||"",confirm_new:!!LOGIN_NEW&&LOGIN_NEW===nameIn.value.trim()})});
       const j=await r.json().catch(()=>({}));
       if(!r.ok){ toast(j.error||"들어가지 못했어요"); loginSync(); return; }
-      if(j.choose){ hint.innerHTML=`${esc(c?c.name:"")}에 같은 이름이 여러 명 있어요. <b>내 이름</b>을 눌러 주세요.<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${j.choose.map(n=>`<button class="btn-sm" data-pick="${esc(n)}" style="padding:9px 14px">${esc(n)}</button>`).join("")}</div>`; loginSync(); return; }
+      if(j.choose){ hint.innerHTML=`${esc(c?c.name:"")}에 같은 이름이 여러 명 있어요. 선생님이 알려 준 <b>이름 뒤 글자</b>를 보고 <b>내 이름</b>을 눌러 주세요.<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${j.choose.map(n=>`<button class="btn-sm" data-pick="${esc(n)}" style="padding:9px 14px">${esc(n)}</button>`).join("")}</div>`; loginSync(); return; }
       if(j.notfound){ hint.innerHTML=`<b>${esc(c?c.name:"")}</b> 명단에 <b>${esc(nm)}</b>이(가) 없어요. 학교·학년과 이름을 다시 확인해 주세요.<div style="margin-top:10px"><button class="btn-sm" data-newname="1" style="padding:9px 14px">처음 왔어요 · 이 이름으로 시작하기</button></div>`; loginSync(); return; }
       nm=j.name;
+      if(j.renamed) setTimeout(()=>toast(`다른 반에 같은 이름이 있어서 ${nm}(으)로 기록돼요`),1200);
       if(j.moved) setTimeout(()=>toast(`예전 기록 ${j.moved}건을 ${nm} 이름으로 옮겼어요`),1800);
     }catch(e){ toast("인터넷 연결을 확인해 주세요"); loginSync(); return; }
     S.cls={id:cid,name:c?c.name:""};
