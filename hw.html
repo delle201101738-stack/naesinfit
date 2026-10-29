@@ -260,7 +260,7 @@ function render0(){
   <div class="card" style="padding:16px 18px">
     <div class="row"><input class="fld" type="date" id="hw-day" value="${EDIT?EDIT.day:today()}" style="width:170px">
       ${EDIT?`<input class="fld" id="hw-title" value="${esc(EDIT.title)}" style="flex:1;min-width:200px">`
-        :`<textarea class="fld" id="hw-title" rows="3" placeholder="숙제를 한 줄에 하나씩 (여러 개 한 번에)&#10;워크북 3과 p.12–15&#10;단어 3과 30개 뜻 쓰기&#10;통변형 2과 오답 정리" style="flex:1;min-width:200px;min-height:84px"></textarea>`}</div>
+        :`<textarea class="fld" id="hw-title" rows="3" placeholder="숙제를 한 줄에 하나씩 (여러 개 한 번에)&#10;1) 워크북 3과 p.12–15&#10;   대충하면 다시 시킵니다  ← 번호 없는 줄은 위 숙제의 메모로&#10;2) 단어 3과 30개 뜻 쓰기" style="flex:1;min-width:200px;min-height:84px"></textarea>`}</div>
     <textarea class="fld" id="hw-memo" placeholder="(선택) 공통 메모 · 자세한 범위 (예: 다음 수업 시작 전 검사)" style="margin-top:8px">${EDIT?esc(EDIT.memo):""}</textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end">${EDIT?`<button class="btn" id="hw-cancel">취소</button><button class="btn pri" id="hw-save">수정 저장</button>`:`<button class="btn pri" id="hw-add">숙제 추가</button>`}</div>
   </div>
@@ -268,11 +268,13 @@ function render0(){
   ${gridHTML(mem, items, chk)}
 
   <div class="sec"><h2>숙제별로 검사 · 점수</h2><span class="note">숙제를 누르면 학생별로 점수·메모까지 자세히 넣어요</span></div>
-  ${items.length?items.map(it=>{ const o=stat(it), open=!!OPEN[it.id];
-    return `<div class="card hw">
+  ${items.length?items.map((it,ix)=>{ const o=stat(it), open=!!OPEN[it.id];
+    const grp=ix===0||items[ix-1].day!==it.day ? `<div class="row" style="justify-content:space-between;margin:${ix?16:4}px 2px 6px"><b style="font-size:13.5px">${fmtD(it.day)} 숙제 ${items.filter(x=>x.day===it.day).length}개</b><button class="btn sm" data-delday="${it.day}" style="color:var(--no)">🗑 이 날짜 숙제 모두 삭제</button></div>` : "";
+    return grp+`<div class="card hw">
       <div class="hw-h" data-open="${it.id}"><span class="d">${fmtD(it.day)}</span>
         <span class="t"><b>${esc(it.title)}</b>${it.memo?`<span>${esc(it.memo)}</span>`:""}</span>
         <span class="stat"><b>완료 ${o.done}</b> · 일부 ${o.part} · 안 함 ${o.none}${o.no?` · <span style="color:var(--accent)">미검사 ${o.no}</span>`:""}</span>
+        <button class="btn sm" data-del="${it.id}" title="이 숙제 삭제" style="color:var(--no);flex:none">🗑</button>
         <span style="color:var(--ink-3)">${open?"▲":"▼"}</span></div>
       ${open?`<div class="hw-b">
         <div class="row" style="justify-content:space-between;padding:8px 0">
@@ -316,7 +318,7 @@ function gridHTML(mem, items, chk){
     <div class="row" style="margin-top:10px">${cols.map(it=>`<button class="btn sm" data-gall="${it.id}">${esc(it.title.slice(0,12))} · 미검사 → 완료</button>`).join("")}</div>`;
   return head+`<div class="card scroll"><table class="grid">
     <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b title="${esc(it.memo||"")}">${esc(it.title)}</b>
-      <button class="gall" data-gall="${it.id}">미검사 → 완료</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
+      <button class="gall" data-gall="${it.id}">미검사 → 완료</button><button class="gall" data-del="${it.id}" style="color:var(--no)">🗑 삭제</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
     <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><span data-bell="${esc(s)}"></span><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="cpy" data-tcopy="${esc(s)}" data-tday="${GR.mode==="day"?GR.day:""}">학부모 링크 복사</button></td>
       ${cols.map(it=>cell(it,s)).join("")}<td class="rr" data-rr="${esc(s)}"></td></tr>`).join("")}</tbody>
     <tfoot><tr><td class="stk">완료</td>${cols.map(it=>`<td class="cc" data-cc="${it.id}"></td>`).join("")}<td></td></tr></tfoot>
@@ -629,14 +631,26 @@ document.addEventListener("click",async e=>{
     const body={day:$("#hw-day").value,title:$("#hw-title").value,memo:$("#hw-memo").value};
     if(!body.day||!body.title.trim()){ toast("날짜와 숙제 내용을 넣어 주세요"); return; }
     if(EDIT){ await act({action:"item.update",id:EDIT.id,...body},"숙제를 고쳤어요"); EDIT=null; render(); }
-    else { const titles=body.title.split(/\n/).map(x=>x.trim()).filter(Boolean);
-      try{ for(const tt of titles) await api({action:"item.create",class_id:CUR,day:body.day,title:tt,memo:body.memo}); }catch(err){ alert(err.message); }
+    else { const lines=body.title.split(/\n/).map(x=>x.trim()).filter(Boolean);
+      // 번호(1) 2. ① - •)로 시작하는 줄이 있으면: 번호 줄 = 숙제 하나, 번호 없는 줄 = 바로 위 숙제의 메모
+      const NUM=/^(\d+[).]|[①-⑳]|[-•·▶])/;
+      let list=[];
+      if(lines.some(l=>NUM.test(l))){ lines.forEach(l=>{ if(NUM.test(l)||!list.length) list.push({title:l,memo:[]}); else list[list.length-1].memo.push(l); }); }
+      else list=lines.map(l=>({title:l,memo:[]}));
+      const titles=list;
+      try{ for(const x of list) await api({action:"item.create",class_id:CUR,day:body.day,title:x.title,memo:[...x.memo,body.memo].filter(Boolean).join(" · ")}); }catch(err){ alert(err.message); }
       GR.mode="day"; GR.day=body.day; localStorage.setItem("hw.gmode","day");
       await load(); render(); toast(`숙제 ${titles.length}개를 냈어요 · 아래 표에서 바로 검사하세요`); }
     return; }
   if(t.closest("#hw-cancel")){ EDIT=null; render(); return; }
   const ed=t.closest("[data-edit]"); if(ed){ EDIT=DB.items.find(i=>+i.id===+ed.dataset.edit); render(); window.scrollTo({top:$("#hw-day").getBoundingClientRect().top+scrollY-90,behavior:"smooth"}); return; }
-  const dl=t.closest("[data-del]"); if(dl){ if(confirm("이 숙제와 검사 기록을 지울까요?")) await act({action:"item.delete",id:+dl.dataset.del},"숙제를 지웠어요"); return; }
+  const dl=t.closest("[data-del]"); if(dl){ const it=DB.items.find(i=>+i.id===+dl.dataset.del);
+    if(confirm(`이 숙제를 지울까요? 검사 기록도 같이 지워져요.\n\n${it?fmtD(it.day)+" · "+it.title:""}`)) await act({action:"item.delete",id:+dl.dataset.del},"숙제를 지웠어요"); return; }
+  const dd=t.closest("[data-delday]"); if(dd){ const d=dd.dataset.delday, its=DB.items.filter(i=>+i.class_id===CUR&&i.day===d);
+    if(!its.length) return;
+    if(!confirm(`${fmtD(d)} 숙제 ${its.length}개를 모두 지울까요? 검사 기록도 같이 지워져요.\n\n${its.map(i=>"· "+i.title).join("\n")}`)) return;
+    try{ for(const i of its) await api({action:"item.delete",id:+i.id}); }catch(err){ alert(err.message); }
+    await load(); render(); toast(`${fmtD(d)} 숙제 ${its.length}개를 지웠어요`); return; }
   const al=t.closest("[data-all]"); if(al){ const it=+al.dataset.all; const todo=mem().filter(s=>!DB.checks.find(k=>+k.item_id===it&&k.student===s));
     for(const s of todo) await api({action:"check.set",item_id:it,student:s,status:"done",score:"",memo:""}).catch(()=>{});
     await load(); render(); toast(`${todo.length}명 완료로 표시했어요`); return; }
