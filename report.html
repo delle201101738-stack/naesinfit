@@ -347,8 +347,8 @@ const TIPS={
 
 /* ── 데이터 ── */
 let MF=null;
-const dkey=v=>{const d=new Date(v);const p=x=>String(x).padStart(2,"0");
-  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+/* 날짜 = 항상 한국 시간 기준 (해외·시간대 다른 기기에서 열어도 날짜가 안 밀리게) */
+const dkey=v=>new Date(new Date(v).getTime()+9*3600e3).toISOString().slice(0,10);
 const fmtDate=v=>dkey(v).replace(/-/g,".");
 
 async function load(name){
@@ -666,7 +666,7 @@ function todoHTML(D, day, HB){
 /* 주간 · 월간 리포트 */
 function renderRange(D){
   const n=VIEW==="week"?7:30, TODAY=dkey(new Date()), end=/^\d{4}-\d{2}-\d{2}$/.test(SELDAY)?SELDAY:TODAY;
-  const from=(()=>{ const t=new Date(end+"T00:00:00"); t.setDate(t.getDate()-(n-1)); return dkey(t); })();
+  const from=dkey(new Date(end+"T00:00:00+09:00").getTime()-(n-1)*864e5);
   const CUMa=cumulative(D,end).filter(x=>x.d>=from);
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
   const isRe=x=>x.scope==="재시험"||/^오답노트/.test(x.part_name||"");

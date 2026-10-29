@@ -212,7 +212,7 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const today=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+const today=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);   // 한국 날짜
 const fmtD=d=>{const [y,m,dd]=d.split("-");const w="일월화수목금토"[new Date(+y,+m-1,+dd).getDay()];return `${+m}.${+dd} (${w})`;};
 const ST={done:"완료",part:"일부",none:"안 함",skip:"면제"};
 let PIN=(()=>{try{return localStorage.getItem("naesinfit.pin")||sessionStorage.getItem("naesinfit.pin")||""}catch(e){return ""}})(), DB=null, CUR=+(localStorage.getItem("hw.class")||0), OPEN={}, EDIT=null;
@@ -291,8 +291,7 @@ function render0(){
 function gridItems(items){
   const its=items.slice().sort((a,b)=>a.day<b.day?-1:a.day>b.day?1:a.id-b.id);
   if(GR.mode==="day") return its.filter(i=>i.day===GR.day);
-  if(GR.mode==="7"){ const d=new Date(); d.setDate(d.getDate()-6); const p=n=>String(n).padStart(2,"0");
-    const from=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; return its.filter(i=>i.day>=from); }
+  if(GR.mode==="7"){ const from=new Date(Date.now()+9*3600e3-6*864e5).toISOString().slice(0,10); return its.filter(i=>i.day>=from); }
   return its.slice(-12);
 }
 function gridHTML(mem, items, chk){
@@ -344,7 +343,7 @@ async function setCheck(it, st, status, memo){
 /* ── 반별 탭: 숙제 검사 / 테스트 현황 / 리포트 보내기 ── */
 let TAB=localStorage.getItem("hw.tab")||"hw", RES=null, RESERR="", VD=today();
 const baseNm=n=>String(n||"").replace(/[A-Za-z0-9]+$/,"");
-const dkeyL=v=>{const d=new Date(v),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+const dkeyL=v=>new Date(new Date(v).getTime()+9*3600e3).toISOString().slice(0,10);
 async function loadRes(){
   try{ const r=await fetch("/api/results",{headers:{"x-pin":PIN},cache:"no-store"}); const j=await r.json();
     if(!r.ok) throw new Error(j.error||"불러오지 못했어요");
@@ -490,6 +489,9 @@ function dupCheck(names){
 }
 /* ── 🧹 이름 정리: 명단에 없는 이름으로 남은 시험 기록 → 명단 학생에게 합치기 ── */
 let VIEW="";
+/* 이름 칸에 학교까지 쓴 옛 기록(김지연_ 경인1)에서 명단 이름 찾기 — 앞뒤에 다른 한글이 없을 때만 (이준 ⊄ 이준희) */
+function inText(str,b){ str=String(str).replace(/학년/g," "); if(!b||b.length<2) return false; const H=/[가-힣]/; let i=str.indexOf(b);
+  while(i>=0){ if(!H.test(str[i-1]||"")&&!H.test(str[i+b.length]||"")) return true; i=str.indexOf(b,i+1); } return false; }
 function namesHTML(){
   const memAll=[...new Set(DB.members.map(m=>m.student))];
   const clsOf=s=>DB.members.filter(m=>m.student===s).map(m=>(DB.classes.find(c=>+c.id===+m.class_id)||{}).name).filter(Boolean);
@@ -504,7 +506,8 @@ function namesHTML(){
     아래에서 <b>같은 학생일 때만</b> 합치세요. 합치면 시험·숙제·한마디·열람 기록이 모두 옮겨지고 되돌릴 수 없어요.</div>
   <div class="sec"><h2>명단에 없는 이름 ${orph.length}개</h2><span class="note">시험은 봤지만 어느 반 명단에도 없는 이름</span></div>
   <div class="card" style="padding:4px 16px">${orph.length?orph.map(r=>{
-    const b=baseNm(r.student)||r.student, cand=memAll.filter(m=>baseNm(m)===b||m===b||baseNm(m)===r.student);
+    const b=baseNm(r.student)||r.student; let cand=memAll.filter(m=>baseNm(m)===b||m===b||baseNm(m)===r.student||inText(r.student,baseNm(m)||m));
+    if(cand.length>1){ const h=cand.filter(m=>clsOf(m).some(cn=>r.student.includes(cn.replace(/[0-9]/g,"").replace(/고$/,"")))); if(h.length) cand=h; }
     const many=cand.length>1;
     return `<div class="nmrow"><span class="who"><b>${esc(r.student)}</b><small>시험 ${r.n}번 · 최근 ${fmt(r.last)}${r.cls?` · 앱에서 고른 반: ${esc(r.cls)}`:""}${many?` · <b style="color:var(--no)">⚠ 동명이인 ${cand.length}명 — 반을 보고 고르세요</b>`:""}</small></span>
       ${cand.map(m=>`<button class="btn sm${!many||clsOf(m).includes(r.cls)?" pri":""}" data-merge="${esc(r.student)}" data-into="${esc(m)}">→ ${esc(m)} <small>(${esc(clsOf(m).join(", "))})</small>에 합치기</button>`).join("")}
