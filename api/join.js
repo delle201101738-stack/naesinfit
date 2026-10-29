@@ -1,6 +1,6 @@
 // 학생 앱: 학교+학년(반) 목록 + 이름 확인·등록 (비밀번호 없음)
 // 이름 뒤 알파벳·숫자 구분자(김승현4, 김재희n)는 빼고 써도 명단 이름으로 찾아 줌
-import { sql, ensure, readBody } from "./_db.js";
+import { sql, ensure, readBody, nameFromText } from "./_db.js";
 
 const clean = s => String(s || "").replace(/\s+/g, "").slice(0, 20);
 const base = s => clean(s).replace(/[A-Za-z0-9]+$/, "");
@@ -38,6 +38,10 @@ export default async function handler(req, res) {
       const cand = mem.filter(m => base(m) === base(typed) && (base(typed) === typed || m.toLowerCase() === typed.toLowerCase()));
       if (cand.length === 1) name = cand[0];
       else if (cand.length > 1) return res.status(200).json({ ok: false, choose: cand, class: c });
+    }
+    if (!name && !b.confirm_new) {   // 이름 칸에 학교·학년까지 쓴 경우 (김지연_경인1)
+      const hit = nameFromText(b.student, mem.map(m => ({ student: m, class_name: c.name })), c.name);
+      if (hit) name = hit;
     }
     if (!name) {
       if (!b.confirm_new) return res.status(200).json({ ok: false, notfound: true, class: c });

@@ -1,4 +1,4 @@
-import { sql, ensure, readBody } from "./_db.js";
+import { sql, ensure, readBody, nameFromText } from "./_db.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST만 받습니다" });
@@ -19,6 +19,11 @@ export default async function handler(req, res) {
                                    where c.name = ${cn} and regexp_replace(m.student, '[A-Za-z0-9]+$', '') = ${stu}` : [];
       const hit = inCls.length ? inCls : await sql`select distinct student from hw_members where regexp_replace(student, '[A-Za-z0-9]+$', '') = ${stu}`;
       if (hit.length === 1) stu = hit[0].student;
+    }
+    if (!exact.length && stu === student) {   // 예전 앱: 이름 칸에 학교·학년까지 씀 (김지연_ 경인1) → 명단 이름으로
+      const all = await sql`select m.student, c.name as class_name from hw_members m join hw_classes c on c.id = m.class_id`;
+      const hit = nameFromText(student, all, String(b.className || ""));
+      if (hit) stu = hit;
     }
     const [row] = await sql`
       insert into attempts (student, class_name, book, unit_id, part, part_name, scope, total, correct, pct, secs, detail)

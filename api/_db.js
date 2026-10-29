@@ -103,6 +103,21 @@ export async function tokenFor(students) {
   return out;
 }
 
+// 이름 칸에 학교·학년을 같이 쓴 경우(김지연_경인1, 경인고 1_ 김지연, 이서준(경인1)) → 명단 이름 찾기
+// 명단 이름(구분 글자 뺀 한글)이 앞뒤에 다른 한글 없이 들어 있을 때만, 딱 한 명일 때만 인정 (이준 ⊄ 이준희)
+export function nameFromText(text, members, hintClass) {
+  const str = String(text || "").replace(/학년/g, " ");
+  const H = /[가-힣]/;
+  const base = s => s.replace(/[A-Za-z0-9]+$/, "");
+  const has = b => { let i = str.indexOf(b); while (i >= 0) { if (!H.test(str[i - 1] || "") && !H.test(str[i + b.length] || "")) return true; i = str.indexOf(b, i + 1); } return false; };
+  let cand = members.filter(m => { const b = base(m.student || m); return b.length >= 2 && has(b); });
+  const uniq = [...new Set(cand.map(m => m.student || m))];
+  if (uniq.length <= 1) return uniq[0] || null;
+  if (hintClass) { const h = [...new Set(cand.filter(m => m.class_name === hintClass).map(m => m.student))]; if (h.length === 1) return h[0]; }
+  const hinted = [...new Set(cand.filter(m => m.class_name && str.includes(m.class_name.replace(/[0-9]/g, "").replace(/고$/, ""))).map(m => m.student))];
+  return hinted.length === 1 ? hinted[0] : null;
+}
+
 export function readBody(req) {
   if (req.body && typeof req.body === "object") return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
