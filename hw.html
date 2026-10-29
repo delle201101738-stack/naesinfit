@@ -298,7 +298,7 @@ function gridItems(items){
 }
 function gridHTML(mem, items, chk){
   const cols=gridItems(items);
-  const head=`<div class="sec"><h2>한 번에 검사 (표)</h2><span class="note">칸을 누를 때마다 ✅완료 → 🟡일부 → ❌안 함 → ➖면제 → 미검사 · 바로 저장</span></div>
+  const head=`<div class="sec"><h2>한 번에 검사 (표)</h2><span class="note">칸을 누를 때마다 ✅완료 → 🟡일부 → ❌안 함 → ➖면제 → 미검사 · 바로 저장</span></div>${sheetBar()}
   <div class="row" style="margin-bottom:10px">
     <button class="chip${GR.mode==="day"?" on":""}" data-gmode="day">하루</button>
     ${GR.mode==="day"?`<input class="fld" type="date" id="g-day" value="${GR.day}" style="width:170px">`:""}
@@ -541,6 +541,7 @@ async function namesClick(t){
     try{ const r=await fetch("/api/delete",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({student:s})}); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"지우지 못했어요");
       await load(); RES=null; render(); toast("지웠어요"); }catch(err){ alert(err.message); }
     return true; }
+  if(t.closest("#sheet-pdf")||t.closest("#sheet-print")){ const d=$("#sheet-day")&&$("#sheet-day").value; if(d) await sheetPDF(d, !!t.closest("#sheet-print")); return true; }
   if(t.closest("#backup-btn")){ await backup(); return true; }
   return false;
 }
@@ -562,6 +563,60 @@ async function backup(){
     XLSX.utils.book_append_sheet(wb, sh(j.views,r=>({리포트날짜:r.day,학생:r.student,처음열람:dt(r.first_at),마지막열람:dt(r.last_at),횟수:r.n})),"학부모열람");
     XLSX.writeFile(wb, `스터디로그_백업_${today()}.xlsx`);
     toast(`백업 완료 · 시험 ${j.attempts.length}건 · 숙제검사 ${j.checks.length}건`);
+  }catch(err){ alert(err.message); }
+}
+/* ── 📄 숙제 검사표 (조교 출력용 · A4 가로 한 장) ── */
+function sheetDays(){ return [...new Set(DB.items.filter(i=>+i.class_id===CUR).map(i=>i.day))].sort().reverse(); }
+function sheetBar(){
+  const ds=sheetDays(); if(!ds.length) return "";
+  const def=ds.includes(today())?today():(ds.find(d=>d<=today())||ds[0]);
+  return `<div class="card" style="padding:12px 16px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <b style="font-size:13.5px">📄 조교용 숙제 검사표</b><span class="na" style="flex:1;min-width:150px">명단 + 그날 숙제 · A4 가로 한 장 · 출력해서 손으로 체크</span>
+    <select class="fld" id="sheet-day" style="width:auto">${ds.map(d=>`<option value="${d}"${d===def?" selected":""}>${fmtD(d)} 숙제 ${DB.items.filter(i=>+i.class_id===CUR&&i.day===d).length}개</option>`).join("")}</select>
+    <button class="btn pri" id="sheet-pdf">📄 PDF 받기</button><button class="btn" id="sheet-print">🖨 바로 인쇄</button></div>`;
+}
+function sheetHTML(day){
+  const cls=DB.classes.find(c=>+c.id===CUR), mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student).sort((a,b)=>a.localeCompare(b,"ko"));
+  const its=DB.items.filter(i=>+i.class_id===CUR&&i.day===day).sort((a,b)=>a.id-b.id);
+  const n=Math.max(mem.length,1), W=1122, H=792, PAD=30;
+  const headH=78, theadH=its.some(i=>i.memo)?(its.length>5?92:76):48, footH=26;
+  const rowH=Math.max(17,Math.min(40,Math.floor((H-PAD*2-headH-theadH-footH)/n)));
+  const fs=rowH>=28?14:rowH>=22?12.5:11;
+  const tf=its.length>6?11:its.length>4?12:13.5, mf=its.length>6?9:its.length>4?10:11;
+  const nb=n=>esc(n.replace(/[A-Za-z0-9]+$/,"")), sx=n=>{ const m=n.match(/[A-Za-z0-9]+$/); return m?`<small>${esc(m[0])}</small>`:""; };
+  return `<div id="sheet" style="width:${W}px;height:${H}px;box-sizing:border-box;padding:${PAD}px;background:#fff;color:#111;font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;overflow:hidden">
+  <style>#sheet table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0}
+   #sheet th,#sheet td{border:1px solid #333!important;padding:2px 5px!important;vertical-align:middle;white-space:normal!important;color:#111!important;letter-spacing:0!important;text-transform:none!important;position:static!important;background:#fff;min-width:0!important}
+   #sheet thead th{background:#EEEDF5!important;font-weight:800;text-align:center;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+   #sheet thead th .m{display:block;font-weight:500;color:#444!important;margin-top:3px;line-height:1.3}
+   #sheet td.nm{font-weight:700;white-space:nowrap;overflow:hidden}#sheet td.nm small{color:#888!important;font-weight:600;margin-left:2px;font-size:.78em}
+   #sheet td.no{text-align:center;color:#666!important}#sheet tbody tr:nth-child(even) td{background:#F7F7FA}</style>
+  <div style="display:flex;align-items:flex-end;gap:16px;height:${headH-10}px;margin-bottom:10px;border-bottom:3px solid #111;padding-bottom:6px">
+    <div style="flex:1"><div style="font-size:13px;color:#555;font-weight:700">헤이즐쌤 · 숙제 검사표</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-.02em">${esc(cls.name)} · ${fmtD(day)} 숙제</div></div>
+    <div style="font-size:12.5px;line-height:1.7;text-align:right;color:#333">표시: <b>○</b> 완료 &nbsp; <b>△</b> 일부 &nbsp; <b>✕</b> 안 함 &nbsp; <b>—</b> 면제<br>
+      검사 조교 ____________ &nbsp; 검사 날짜 ____ / ____</div></div>
+  <table><colgroup><col style="width:34px"><col style="width:${its.length>6?96:112}px">${its.map(()=>`<col>`).join("")}<col style="width:${its.length>5?120:170}px"></colgroup>
+   <thead><tr style="height:${theadH}px"><th style="font-size:11px">번호</th><th style="font-size:13px">이름</th>
+    ${its.map(i=>`<th style="font-size:${tf}px">${esc(i.title)}${i.memo?`<span class="m" style="font-size:${mf}px">${esc(i.memo.length>70?i.memo.slice(0,68)+"…":i.memo)}</span>`:""}</th>`).join("")}<th style="font-size:13px">메모</th></tr></thead>
+   <tbody>${mem.map((s,k)=>`<tr style="height:${rowH}px"><td class="no" style="font-size:${fs-2}px">${k+1}</td><td class="nm" style="font-size:${fs}px">${nb(s)}${sx(s)}</td>${its.map(()=>"<td></td>").join("")}<td></td></tr>`).join("")}</tbody></table>
+  <div style="margin-top:6px;font-size:10.5px;color:#777;display:flex;justify-content:space-between"><span>학생 ${mem.length}명 · 숙제 ${its.length}개 · 체크 후 반 관리 화면 표에 입력해 주세요</span><span>hazel_studylog</span></div></div>`;
+}
+let H2P=null;
+async function sheetPDF(day, printOnly){
+  const cls=DB.classes.find(c=>+c.id===CUR), html=sheetHTML(day), name=`숙제검사표_${cls.name}_${day}.pdf`;
+  if(printOnly){
+    const w=window.open("","_blank"); if(!w){ toast("팝업이 막혔어요 · PDF 받기를 써 주세요"); return; }
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(name.replace(".pdf",""))}</title><style>@page{size:A4 landscape;margin:0}html,body{margin:0}#sheet{zoom:1}@media print{#sheet{width:297mm!important;height:210mm!important}}</style></head><body>${html}<script>setTimeout(()=>print(),400)<\/script></body></html>`);
+    w.document.close(); return; }
+  toast("PDF 만드는 중…");
+  try{
+    if(!window.html2pdf) await new Promise((ok,no)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"; sc.onload=ok; sc.onerror=()=>no(new Error("PDF 도구를 불러오지 못했어요 · '바로 인쇄'에서 PDF로 저장해 주세요")); document.head.appendChild(sc); });
+    const box=document.createElement("div"); box.style.cssText="position:fixed;left:-10000px;top:0;z-index:-1"; box.innerHTML=html; document.body.appendChild(box);
+    await document.fonts.ready;
+    await html2pdf().set({margin:0, filename:name, image:{type:"jpeg",quality:0.97}, html2canvas:{scale:2.5,useCORS:true,backgroundColor:"#ffffff",scrollX:0,scrollY:0},
+      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"}, pagebreak:{mode:"css"}}).from(box.firstElementChild).save();
+    box.remove(); toast("검사표 PDF를 받았어요");
   }catch(err){ alert(err.message); }
 }
 /* 학부모용 비밀 링크 (토큰) */
