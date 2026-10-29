@@ -208,11 +208,11 @@ async function moPage(req, res, u) {
       else {
         const [, mm, dd] = R.exam.day.split("-");
         title = `헤이즐 쌤 동형모의고사 성적표 · ${R.name} (${+mm}.${+dd})`;
-        desc = `${R.exam.title} · ${R.score}/${R.total}점${R.grade ? " · " + R.grade.label : ""} · 반 ${R.rank}등/${R.n}명 · 반 평균 ${R.avg}점`;
+        desc = `${R.exam.title} · ${R.score}/${R.total}점${R.grade ? " · " + R.grade.label : ""} · ${R.allN}명 중 ${R.allRank}위(상위 ${R.topPct}%) · 반 평균 ${R.avg}점`;
         const L2 = [`<h1>${esc(title)}</h1><p>${esc(R.exam.title)} · ${esc(R.exam.cls)} · ${+mm}월 ${+dd}일</p>`,
           `<h2>결과</h2><p>${esc(desc)}</p>`];
-        if (R.comment && R.comment.body) L2.push(`<h2>헤이즐 쌤 코멘트</h2><p><b>${esc(R.comment.title)}</b></p><p>${esc(String(R.comment.body).replace(/\*\*/g, "")).replace(/\n/g, "<br>")}</p>`);
-        L2.push(`<h2>유형별 정답률</h2><ul>${R.kinds.map(k => `<li>${esc(k.k)}: ${k.ok}/${k.n} (${k.pct}%${k.cls != null ? `, 반 평균 ${k.cls}%` : ""})</li>`).join("")}</ul>`);
+        L2.push(`<h2>담당 선생님 총평</h2><p>${esc(String((R.comment && R.comment.body) || R.template).replace(/\*\*/g, "")).replace(/\n/g, "<br>")}</p>`);
+        L2.push(`<h2>영역별 성취도</h2><ul>${R.areas.map(k => `<li>${esc(k.a)}: ${k.ok}/${k.n} (${k.pct}%${k.cls != null ? `, 반 평균 ${k.cls}%` : ""})</li>`).join("")}</ul>`);
         const W = R.items.filter(i => !i.ok);
         if (W.length) L2.push(`<h2>틀린 문항</h2><ul>${W.map(i => `<li>${esc(i.n)}번 ${esc(i.k)} — ${i.t === "s" ? `${i.got}/${i.p}점` : `내 답 ${esc(i.mark || "빈칸")} → 정답 ${esc(i.a)}`}${i.e ? ` · ${esc(i.e)}` : ""}</li>`).join("")}</ul>`);
         ssr = L2.join("\n");

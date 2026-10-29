@@ -10,83 +10,97 @@
 <style>
 .js #ssr{display:none}
 :root{
-  --navy:#1E2A4A; --ink:#1F2433; --ink2:#454B5C; --ink3:#7A7F8E; --line:#D9DCE5; --paper:#FFFFFF; --bg:#EEF0F4;
-  --gold:#9A7B2F; --gold-soft:#F6F1E4; --cream:#FBF7EC; --cream-line:#EADFC2;
-  --ok:#2E7D4F; --ok-soft:#E6F2EA; --no:#C0392B; --no-soft:#FBEAE8; --mid:#D08A1A; --cls:#A3A8B4; --hl:#FFE36E; --pink:#E0457B;
+  --blue:#2a78d6; --good:#0ca30c; --bad:#d03b3b; --ink:#0b0b0b; --ink2:#52514e; --ink3:#898781; --line:#e1e0d9; --bg1:#fcfcfb; --bg2:#f4f3ee;
+  --screen:#EEF0F4;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+html,body{margin:0;background:var(--screen);color:var(--ink);font-family:'Noto Sans KR','Noto Sans CJK KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .bar{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .bar b{font-size:15px} .bar .sp{flex:1}
 .btn{font:inherit;font-size:13px;font-weight:700;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none}
-.btn.pri{background:var(--navy);color:#fff;border-color:var(--navy)} .btn:disabled{opacity:.5}
+.btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)} .btn:disabled{opacity:.5}
 .list{max-width:900px;margin:12px auto;padding:0 16px}
 .warn{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.7;margin:10px 0}
 .rep{margin:18px auto 28px;width:fit-content}
 .rep-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px;font-size:13px;color:var(--ink2)}
-.rep-h b{font-size:14px;color:var(--ink)}
+.rep-h b{font-size:14px;color:var(--ink)} .rep-h .k{font-size:12px;padding:3px 8px;border-radius:99px;background:#e8f1fb;color:var(--blue);font-weight:700}
+.rep-h .k.s{background:#fdf2f2;color:var(--bad)}
 .pages{display:flex;flex-direction:column;gap:14px}
 .scaler{transform-origin:top left}
 .msg{max-width:560px;margin:80px auto;text-align:center;color:var(--ink2);font-size:15px;line-height:1.7;padding:0 20px}
-.n{font-family:'Archivo','Noto Sans KR',sans-serif;font-variant-numeric:tabular-nums}
 
-/* ── A4 ── */
-.page{word-break:keep-all;overflow-wrap:break-word;width:210mm;height:297mm;background:var(--paper);position:relative;overflow:hidden;box-shadow:0 2px 14px rgba(20,30,60,.12)}
-.page .in{position:absolute;left:0;top:0;width:210mm;padding:13mm 14mm 0 14mm}
-.page .ft{position:absolute;left:14mm;right:14mm;bottom:8mm;border-top:1px solid var(--line);padding-top:2.2mm;display:flex;justify-content:space-between;gap:10px;font-size:10.5pt;color:var(--ink3)}
-.blk{margin-top:5mm} .blk:first-child{margin-top:0}
-.eb{font-size:10.5pt;font-weight:900;letter-spacing:.3em;color:var(--gold)}
-.h1{font-size:22pt;font-weight:900;color:var(--navy);letter-spacing:-.02em;margin:1.2mm 0 0;line-height:1.25}
-.h1 .nm{font-size:30pt;background:linear-gradient(transparent 66%, #F3E3B0 66%);padding:0 .6mm}
-.meta{font-size:12pt;color:var(--ink2);font-weight:700;margin-top:1.6mm}
-.slim{display:flex;align-items:baseline;gap:3mm;border-bottom:2.4px solid var(--navy);padding-bottom:2.4mm}
-.slim .t{font-size:20pt;font-weight:900;color:var(--navy)} .slim .m{font-size:11.5pt;color:var(--ink2);font-weight:700} .slim .eb{margin-left:auto;font-size:10pt}
-.st{font-size:10.5pt;font-weight:900;letter-spacing:.38em;color:var(--gold);border-bottom:1.4px solid var(--ink);padding-bottom:1.6mm;margin-bottom:2.8mm;display:flex;justify-content:space-between;align-items:baseline}
-.st small{letter-spacing:0;font-weight:700;color:var(--ink3);font-size:10pt}
-.tiles{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;border:1.6px solid var(--navy);border-radius:3mm;overflow:hidden}
-.tiles div{padding:3.2mm 3.4mm;border-left:1px solid var(--line)} .tiles div:first-child{border-left:0;background:var(--cream)}
-.tiles small{display:block;font-size:10.5pt;color:var(--ink3);font-weight:700;letter-spacing:.06em}
-.tiles b{display:block;font-size:24pt;font-weight:800;color:var(--navy);line-height:1.15;margin-top:1mm}
-.tiles b em{font-style:normal;font-size:12pt;color:var(--ink3);font-weight:700;margin-left:1mm}
-.tiles div:first-child b{font-size:32pt;color:var(--pink)}
-.tiles span{display:block;font-size:10.5pt;color:var(--ink2);margin-top:.6mm}
-.line{position:relative;height:16mm;margin:2mm 2mm 0}
-.line .tr{position:absolute;left:0;right:0;top:8mm;height:2.4mm;border-radius:99px;background:#EEF0F4}
-.line .pt{position:absolute;top:0;transform:translateX(-50%);text-align:center;font-size:9.5pt;font-weight:700;color:var(--ink2);white-space:nowrap}
-.line .pt i{display:block;width:3.4mm;height:3.4mm;border-radius:50%;margin:1.2mm auto 0;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
-.line .ax{position:absolute;top:12mm;font-size:9pt;color:var(--ink3)}
-.cmt{background:var(--cream);border:1px solid var(--cream-line);border-radius:3mm;padding:4mm 5mm}
-.cmt h3{margin:0 0 2.2mm;font-size:16.5pt;font-weight:900;color:var(--navy);line-height:1.35}
-.cmt p{margin:0;font-size:12.6pt;line-height:1.72} .cmt p+p{margin-top:1.4mm}
-mark.hl{background:linear-gradient(transparent 58%, var(--hl) 58%);color:inherit;font-weight:700;padding:0 .3mm}
-.kd{display:grid;grid-template-columns:31mm 1fr 37mm 12mm;align-items:center;gap:2.4mm;padding:.75mm 0;border-bottom:1px dashed #E6E8EE;font-size:11pt}
-.kd .v{white-space:nowrap}
-.kd:last-child{border-bottom:0}
-.kd .k{font-weight:900;color:var(--ink)}
-.kd .tr{position:relative;height:4mm;border-radius:99px;background:#F1F2F6}
-.kd .tr>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
-.kd .tr>s{position:absolute;top:-1.2mm;bottom:-1.2mm;width:0;border-left:2px dashed var(--ink2)}
-.kd .v{text-align:right;font-weight:700;color:var(--ink2)} .kd .v b{color:var(--ink);font-weight:800}
-.tg{display:inline-block;font-size:9.5pt;font-weight:900;padding:.6mm 2mm;border-radius:99px;text-align:center}
-.tg.s{background:var(--ok-soft);color:var(--ok)} .tg.w{background:var(--no-soft);color:var(--no)} .tg.m{background:#F1F2F6;color:var(--ink3)}
-.leg{display:flex;gap:4mm;font-size:9.5pt;color:var(--ink3);font-weight:700;margin-top:1.6mm}
-.leg i{display:inline-block;width:6mm;height:2.6mm;border-radius:99px;vertical-align:middle;margin-right:1mm}
-.qg{display:grid;grid-template-columns:repeat(3,1fr);gap:0 4mm}
-.qr{display:grid;grid-template-columns:8mm 1fr 9mm 9mm 7mm 11mm;align-items:center;gap:1mm;font-size:10.5pt;padding:.9mm 1mm;border-bottom:1px solid #EEF0F4}
-.qr.h{font-size:9pt;color:var(--ink3);font-weight:700;border-bottom:1.2px solid var(--ink3)}
-.qr .k{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9.5pt}
-.qr .o{font-weight:900;text-align:center} .qr.x{background:var(--no-soft)} .qr.p{background:#FDF3E1}
-.qr .o.y{color:var(--ok)} .qr .o.n{color:var(--no)} .qr .r{text-align:right;color:var(--ink3);font-size:9.5pt}
-.wq{border:1px solid var(--line);border-radius:2.6mm;padding:2.4mm 3.2mm;break-inside:avoid}
-.wpair{display:grid;grid-template-columns:1fr 1fr;gap:2.4mm;margin-top:2.4mm;align-items:start}
-.wq .hd{display:flex;gap:1.8mm;align-items:baseline;flex-wrap:wrap;font-size:10.8pt}
-.wq .hd b{font-size:13pt;color:var(--navy);font-weight:900}
-.wq .hd .k{font-weight:700;color:var(--gold)}
-.wq .hd .r{margin-left:auto;font-size:10pt;color:var(--ink3)}
-.wq .mk{font-weight:800} .wq .mk .me{color:var(--no)} .wq .mk .an{color:var(--ok)}
-.wq p{margin:1.2mm 0 0;font-size:10.6pt;line-height:1.58;color:var(--ink2)}
-.wq p b{color:var(--ink)}
-.trend svg{display:block;width:100%;height:auto}
+/* ───── A4 (여백 12mm → 내용 186×273mm) ───── */
+.page{width:210mm;height:297mm;background:#fff;position:relative;overflow:hidden;box-shadow:0 2px 14px rgba(20,30,60,.12);word-break:keep-all;overflow-wrap:break-word;font-size:9pt;line-height:1.5}
+.page .in{position:absolute;left:12mm;top:12mm;width:186mm;height:273mm;overflow:hidden}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2.5px solid var(--ink);padding-bottom:2.2mm}
+.hd .ac{font-size:10.5pt;color:var(--ink3);font-weight:500}
+.hd .ex{font-size:16pt;font-weight:900;letter-spacing:-.01em;line-height:1.25}
+.hd .r{text-align:right;font-size:9pt;color:var(--ink2);line-height:1.6}
+.hd .r b{color:var(--ink)}
+.who{display:flex;align-items:baseline;gap:2.4mm;margin-top:3.4mm}
+.who .nm{font-size:20pt;font-weight:900;letter-spacing:-.01em}
+.who .cl{font-size:10pt;color:var(--ink2);font-weight:700}
+.who .tg{margin-left:auto;font-size:9pt;color:var(--ink2);font-weight:700;background:var(--bg2);border-radius:99px;padding:1mm 3mm}
+.sh{font-size:10.5pt;font-weight:900;margin:5mm 0 2.2mm;display:flex;align-items:baseline;gap:2mm}
+.sh small{font-weight:500;color:var(--ink3);font-size:8.5pt}
+.cmt{border:1.5px solid var(--blue);border-left-width:5px;background:#f5f9fe;border-radius:2mm;padding:3mm 4mm;margin-top:4mm}
+.cmt .t{font-size:10pt;font-weight:900;color:var(--blue);margin-bottom:1.2mm}
+.cmt p{margin:0;font-size:9pt;line-height:1.72}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:2.4mm}
+.tile{border:1px solid var(--line);border-radius:2mm;padding:2.6mm 3mm;background:var(--bg1)}
+.tile small{display:block;font-size:8.5pt;color:var(--ink2);font-weight:700}
+.tile b{display:block;font-size:19pt;font-weight:900;line-height:1.2;margin-top:.6mm;font-family:'Archivo','Noto Sans KR',sans-serif;font-variant-numeric:tabular-nums}
+.tile b em{font-style:normal;font-size:10pt;color:var(--ink2);font-weight:700;margin-left:.8mm}
+.tile span{display:block;font-size:8pt;color:var(--ink3);margin-top:.4mm}
+.tile.main{background:var(--blue);border-color:var(--blue);color:#fff} .tile.main small,.tile.main span,.tile.main b em{color:rgba(255,255,255,.85)}
+.band{position:relative;margin-top:7.4mm;display:grid;grid-template-columns:repeat(7,1fr);gap:1mm}
+.band div{background:var(--bg2);border-radius:1.2mm;text-align:center;font-size:8.5pt;font-weight:700;color:var(--ink3);padding:1.4mm 0}
+.band div.on{background:var(--blue);color:#fff}
+.band .ptr{position:absolute;top:-6.2mm;transform:translateX(-50%);font-size:8.5pt;font-weight:900;color:var(--blue);text-align:center;white-space:nowrap;line-height:1}
+.band .ptr i{display:block;width:0;height:0;margin:.6mm auto 0;border-left:1.6mm solid transparent;border-right:1.6mm solid transparent;border-top:2mm solid var(--blue)}
+.ar{display:grid;grid-template-columns:22mm 1fr 41mm;align-items:center;gap:2.6mm;padding:1.1mm 0}
+.ar .a{font-weight:900;font-size:9.5pt}
+.ar .tr{position:relative;height:4.6mm;background:var(--bg2);border-radius:0 1mm 1mm 0}
+.ar .tr .g{position:absolute;top:0;bottom:0;width:0;border-left:.5px solid #d3d1c8}
+.ar .tr .bar{position:absolute;left:0;top:0;bottom:0;background:var(--blue);border-radius:0 4px 4px 0}
+.ar .tr .avg{position:absolute;top:-1mm;bottom:-1mm;width:2px;background:var(--ink);box-shadow:0 0 0 2px #fff;transform:translateX(-1px)}
+.ar .v{font-size:9pt;color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ar .v b{color:var(--ink);font-size:10pt;font-weight:900;margin-right:1mm}
+.up{color:var(--good);font-weight:700} .dn{color:var(--bad);font-weight:700} .eq{color:var(--ink3)}
+.leg{display:flex;gap:5mm;font-size:8pt;color:var(--ink3);margin-top:1.4mm;flex-wrap:wrap}
+.leg i{display:inline-block;vertical-align:middle;margin-right:1mm}
+.sw{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
+.sw .c{border:1px solid var(--line);border-radius:2mm;padding:2.6mm 3.4mm;background:var(--bg1)}
+.sw .c h4{margin:0 0 1.4mm;font-size:9.5pt;font-weight:900}
+.sw .c.s h4{color:var(--good)} .sw .c.w h4{color:var(--bad)}
+.sw .c div{display:flex;justify-content:space-between;font-size:9pt;padding:.7mm 0;border-top:1px dashed var(--line)}
+.sw .c div:first-of-type{border-top:0}
+.fn{font-size:7.6pt;color:var(--ink3);line-height:1.6;margin-top:4mm;border-top:1px solid var(--line);padding-top:1.6mm}
+table.wt{width:100%;border-collapse:collapse;font-size:8.6pt}
+table.wt th{font-size:7.8pt;color:var(--ink2);font-weight:700;text-align:center;padding:1.1mm .8mm;border-bottom:1.2px solid var(--ink);white-space:nowrap}
+table.wt td{text-align:center;padding:1mm .8mm;border-bottom:1px solid var(--line)}
+table.wt td.l{text-align:left}
+table.wt tr.p td{background:#fdf2f2}
+table.wt .me{color:var(--bad);font-weight:900}
+.bd{display:inline-block;font-size:7.4pt;font-weight:900;border-radius:99px;padding:.3mm 1.8mm;white-space:nowrap}
+.bd.p{background:var(--bad);color:#fff} .bd.r{background:var(--bg2);color:var(--ink3)}
+.wt2{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
+.wt2 table.wt{font-size:7.8pt} .wt2 table.wt td,.wt2 table.wt th{padding:.75mm .5mm}
+.rx{border-left:3px solid var(--blue);padding:.6mm 0 .6mm 3.4mm;margin-top:3mm}
+.rx h5{margin:0;font-size:10pt;font-weight:900;display:flex;gap:2mm;align-items:baseline}
+.rx h5 small{font-weight:500;color:var(--ink2);font-size:8.5pt}
+.rx .hd2{font-size:9pt;color:var(--ink2);margin:.6mm 0 .8mm}
+.rx ol{margin:0;padding-left:4.6mm;font-size:9pt;line-height:1.7}
+.sign{text-align:right;margin-top:5mm;font-size:10pt;font-weight:900}
+.sign small{display:block;font-size:8pt;color:var(--ink3);font-weight:500}
+.xq{border:1px solid var(--line);border-radius:2mm;padding:2mm 3mm;margin-top:2mm}
+.xq .h{display:flex;gap:2mm;align-items:baseline;flex-wrap:wrap;font-size:9pt}
+.xq .h b{font-size:10pt;font-weight:900}
+.xq p{margin:.8mm 0 0;font-size:8.8pt;line-height:1.6;color:var(--ink2)}
+.xq2{display:grid;grid-template-columns:1fr 1fr;gap:2mm}
+/* 밀도 단계 (넘치면 1 → 2) */
+.d1 .cmt p{line-height:1.6} .d1 .ar{padding:.7mm 0} .d1 table.wt td{padding:.7mm .6mm} .d1 .rx ol{line-height:1.55} .d1 .sh{margin-top:4mm} .d1 .band{margin-top:6.6mm}
+.d2 .cmt p{line-height:1.5;font-size:8.6pt} .d2 table.wt{font-size:7.6pt} .d2 .wt2 table.wt{font-size:7.2pt} .d2 table.wt td{padding:.45mm .4mm} .d2 .rx{margin-top:2mm} .d2 .rx ol{line-height:1.45;font-size:8.5pt} .d2 .sh{margin-top:3mm} .d2 .tile b{font-size:17pt}
 </style>
 </head>
 <body>
@@ -105,82 +119,84 @@ const md=d=>{ const [,m,dd]=String(d||"").split("-"); return `${+m}.${+dd}`; };
 const circ=v=>String(v||"").split(",").map(x=>"①②③④⑤"[+x-1]||x).join(" ")||"빈칸";
 const firstName=n=>{ const b=String(n||"").replace(/[A-Za-z0-9]+$/,""); return b.length>=3?b.slice(1):b; };
 const hl=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<mark class="hl">$1</mark>');
-const fname=R=>`${R.name}_${R.exam.title}_동형모고성적표`.replace(/[\\/:*?"<>|]/g,"");
+const fname=R=>`${R.exam.cls}_${R.name}_리포트`.replace(/[\\/:*?"<>|]/g,"");
 
-/* ── 블록 만들기 ── */
-function headBig(R){ return `<div class="blk"><div class="eb">HAZEL'S MOCK EXAM REPORT</div>
-  <div class="h1">헤이즐 쌤 동형모의고사 성적표 · <span class="nm">${esc(R.name)}</span></div>
-  <div class="meta">${esc(R.exam.title)} · ${mdText(R.exam.day)}${R.exam.cls?` · ${esc(R.exam.cls)}`:""}</div></div>`; }
-function headSlim(R){ return `<div class="blk"><div class="slim"><span class="t">${esc(R.name)}</span><span class="m">${esc(R.exam.title)} · ${md(R.exam.day)}</span><span class="eb">MOCK EXAM REPORT</span></div></div>`; }
-function tiles(R){
-  const pos=v=>Math.max(0,Math.min(100,R.total?v/R.total*100:0));
-  return `<div class="blk"><div class="tiles">
-    <div><small>내 점수</small><b class="n">${R.score}<em>/ ${R.total}점</em></b><span>정답률 ${R.pct}%</span></div>
-    <div><small>${R.grade?"등급":"정답률"}</small><b class="n">${R.grade?esc(R.grade.label):R.pct+"%"}</b><span>${R.grade?esc(R.grade.note):"&nbsp;"}</span></div>
-    <div><small>반 석차</small><b class="n">${R.rank}<em>등 / ${R.n}명</em></b><span>${R.rank===1?"반 1등":`상위 ${Math.max(1,Math.round(R.rank/R.n*100))}%`}</span></div>
-    <div><small>반 평균</small><b class="n">${R.avg}<em>점</em></b><span>최고 ${R.max} · 최저 ${R.min}</span></div></div>
-    <div class="line"><div class="tr"></div>
-      <div class="pt" style="left:${pos(R.avg)}%;top:${Math.abs(pos(R.avg)-pos(R.score))<9?9.4:0}mm"><span>반 평균 ${R.avg}</span><i style="background:var(--cls)"></i></div>
-      <div class="pt" style="left:${pos(R.max)}%;${Math.abs(pos(R.max)-pos(R.score))<9?"display:none":""}"><span>최고 ${R.max}</span><i style="background:var(--navy)"></i></div>
-      <div class="pt" style="left:${pos(R.score)}%"><span style="color:var(--pink)">나 ${R.score}</span><i style="background:var(--pink);width:4.4mm;height:4.4mm"></i></div>
-      <span class="ax" style="left:0">0</span><span class="ax" style="right:0">${R.total}</span></div></div>`; }
-function comment(R){ const c=R.comment||{}; if(!c.body) return "";
-  return `<div class="blk"><div class="st">헤이즐 쌤 코멘트</div><div class="cmt">${c.title?`<h3>${hl(c.title)}</h3>`:""}${String(c.body).split(/\n+/).filter(Boolean).map(p=>`<p>${hl(p)}</p>`).join("")}</div></div>`; }
-function kinds(R){ if(!R.kinds.length) return "";
-  const col=p=>p>=80?"var(--ok)":p>=60?"var(--mid)":"var(--no)";
-  const tag=k=>k.cls==null?"":k.pct-k.cls>=12&&k.pct>=70?`<span class="tg s">강점</span>`:(k.pct-k.cls<=-12||k.pct<50)?`<span class="tg w">보완</span>`:`<span class="tg m">보통</span>`;
-  return `<div class="blk"><div class="st">유형별 강약점 <small>막대 = ${esc(firstName(R.name))} · 점선 = 반 평균</small></div>
-    ${R.kinds.map(k=>`<div class="kd"><span class="k">${esc(k.k)}</span><span class="tr"><i style="width:${k.pct}%;background:${col(k.pct)}"></i>${k.cls!=null?`<s style="left:${k.cls}%"></s>`:""}</span>
-      <span class="v n"><b>${k.ok}/${k.n}</b> · ${k.pct}%${k.cls!=null?` <small style="color:var(--ink3)">(반 ${k.cls}%)</small>`:""}</span>${tag(k)}</div>`).join("")}</div>`; }
-function trend(R){ const T=R.trend||[]; if(T.length<2) return "";
-  const W=640,H=150,px=40,py=26, x=i=>px+(T.length===1?0:i*(W-2*px)/(T.length-1)), y=v=>py+(100-v)*(H-2*py)/100;
-  const pts=T.map((t,i)=>`${x(i)},${y(t.pct)}`).join(" ");
-  return `<div class="blk trend"><div class="st">동형모고 누적 추이 <small>정답률(%) · 반 석차</small></div>
-    <svg viewBox="0 0 ${W} ${H+24}" role="img" aria-label="회차별 정답률">
-      ${[0,50,100].map(v=>`<line x1="${px}" x2="${W-px}" y1="${y(v)}" y2="${y(v)}" stroke="#E6E8EE"/><text x="${px-8}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="#7A7F8E">${v}</text>`).join("")}
-      <polyline points="${pts}" fill="none" stroke="#1E2A4A" stroke-width="2.4"/>
-      ${T.map((t,i)=>`<circle cx="${x(i)}" cy="${y(t.pct)}" r="${t.cur?6:4.5}" fill="${t.cur?"#E0457B":"#1E2A4A"}" stroke="#fff" stroke-width="2"/>
-        <text x="${x(i)}" y="${y(t.pct)-11}" font-size="12.5" font-weight="800" text-anchor="middle" fill="${t.cur?"#E0457B":"#1F2433"}">${t.pct}%</text>
-        <text x="${x(i)}" y="${H+4}" font-size="11.5" text-anchor="middle" fill="#454B5C">${md(t.day)}</text>
-        <text x="${x(i)}" y="${H+19}" font-size="10.5" text-anchor="middle" fill="#7A7F8E">${t.rank}등/${t.n}명</text>`).join("")}
-    </svg></div>`; }
-function qgrid(R){
-  const it=R.items, per=Math.ceil(it.length/3), cols=[0,1,2].map(c=>it.slice(c*per,(c+1)*per));
-  const row=i=>`<div class="qr ${i.ok?"":i.part?"p":"x"}"><b class="n">${esc(i.n)}</b><span class="k">${esc(i.k||"")}</span>
-    <span class="n" style="text-align:center">${i.t==="s"?`<b>${i.got}</b>`:esc(circ(i.mark).replace("빈칸","-"))}</span><span class="n" style="text-align:center">${i.t==="s"?`/${i.p}`:esc(circ(i.a))}</span>
-    <span class="o ${i.ok?"y":"n"}">${i.ok?"O":i.part?"△":"X"}</span><span class="r n">${i.rate??"-"}%</span></div>`;
-  const hd=`<div class="qr h"><span>번호</span><span>유형</span><span style="text-align:center">내 답</span><span style="text-align:center">정답</span><span></span><span class="r">반 정답</span></div>`;
-  return `<div class="blk"><div class="st">문항별 결과 <small>O 맞음 · X 틀림 · △ 부분점수 · 반 정답 = 우리 반 정답률</small></div>
-    <div class="qg">${cols.map(c=>`<div>${hd}${c.map(row).join("")}</div>`).join("")}</div></div>`; }
-function wrongBlocks(R){
-  const W=R.items.filter(i=>!i.ok); if(!W.length) return [`<div class="blk"><div class="st">틀린 문항 다시 보기</div><div class="cmt"><p>틀린 문항이 없어요. 🎉 만점입니다!</p></div></div>`];
-  const card=i=>`<div class="wq">${i.t==="s"
-      ?`<div class="hd"><b>서술형 ${esc(i.n)}</b><span class="k">${esc(i.k||"")}</span><span class="mk n">${i.got} / ${i.p}점</span><span class="r">반 ${i.rate??"-"}%</span></div>
-        ${i.mark?`<p><b>내 답</b> ${esc(i.mark)}</p>`:""}${i.m?`<p><b>모범답안</b> ${esc(i.m)}</p>`:""}${i.why?`<p><b>감점 이유</b> ${esc(i.why)}</p>`:""}${i.e?`<p><b>해설</b> ${esc(i.e)}</p>`:""}`
-      :`<div class="hd"><b>${esc(i.n)}번</b><span class="k">${esc(i.k||"")}</span><span class="mk">내 답 <span class="me">${esc(circ(i.mark))}</span> → 정답 <span class="an">${esc(circ(i.a))}</span></span><span class="r">반 ${i.rate??"-"}%</span></div>
-        ${i.e?`<p>${esc(i.e)}</p>`:""}`}</div>`;
-  const out=[];
-  for(let k=0;k<W.length;k+=2){
-    const head=k===0?`<div class="st">틀린 문항 다시 보기 <small>${W.length}문항 · '반 %'가 높은데 틀린 문항부터 꼭 다시 보세요</small></div>`:"";
-    out.push(`<div class="blk" style="margin-top:${k?0:5}mm">${head}<div class="wpair">${card(W[k])}${W[k+1]?card(W[k+1]):""}</div></div>`); }
-  return out; }
-
-/* ── 쪽 나누기: 블록을 차례로 담다가 넘치면 다음 쪽 ── */
-function buildReport(R,host){
-  host.innerHTML="";
-  const blocks=[headBig(R),tiles(R),comment(R),kinds(R),trend(R),qgrid(R),...wrongBlocks(R)].filter(Boolean);
-  const mk=(first)=>{ const pg=document.createElement("div"); pg.className="page"; pg.innerHTML=`<div class="in">${first?"":headSlim(R)}</div><div class="ft"><span>헤이즐's 스터디로그 · ${esc(R.exam.title)}</span><span class="pn"></span></div>`; host.appendChild(pg); return pg; };
-  let pg=mk(true), inn=pg.querySelector(".in");
-  const limit=()=>pg.querySelector(".ft").offsetTop-6;
-  for(const b of blocks){
-    const tmp=document.createElement("div"); tmp.innerHTML=b; const el=tmp.firstElementChild; inn.appendChild(el);
-    if(inn.offsetTop+inn.offsetHeight>limit() && inn.children.length>(pg===host.firstElementChild?1:1)){
-      el.remove(); pg=mk(false); inn=pg.querySelector(".in");
-      const t2=document.createElement("div"); t2.innerHTML=b.replace(/margin-top:0mm/,"margin-top:5mm"); inn.appendChild(t2.firstElementChild);
-    }
-  }
-  const P=[...host.querySelectorAll(".page")]; P.forEach((p,i)=>p.querySelector(".pn").textContent=`${i+1} / ${P.length}`);
-  return P;
+/* ── 리포트 (선생님 규칙: A4 2쪽 · 1쪽 총평 맨 위 · 2쪽 오답 분석·학습 처방) ── */
+const fmtDay=d=>{ const [y,m,dd]=String(d||"").split("-"); return `${y}.${m}.${dd}`; };
+const dl=v=>v==null?"":Math.abs(v)<0.5?`<span class="eq">＝0</span>`:v>0?`<span class="up">▲${Math.round(v)}</span>`:`<span class="dn">▼${Math.round(-v)}</span>`;
+const pp=v=>v==null?"-":`${v>0?"+":v<0?"−":"±"}${Math.abs(Math.round(v*10)/10)}%p`;
+const ansTxt=v=>String(v||"").split(",").filter(Boolean).join(",")||"무응답";
+function header(R,pg,tag){
+  return `<div class="hd"><div><div class="ac">${esc(R.exam.academy)}</div><div class="ex">${esc(R.exam.title)}</div></div>
+    <div class="r">응시일 <b>${fmtDay(R.exam.day)}</b><br>학부모 보고서 · ${pg}</div></div>
+    <div class="who"><span class="nm">${esc(R.name)}</span><span class="cl">${esc(R.exam.cls)}</span><span class="tg">${tag}</span></div>`; }
+function page1(R){
+  const g=R.grade, cmt=(R.comment&&R.comment.body)||R.template;
+  const band=g&&g.n?(()=>{ const k=Math.min(7,g.n); return `<div class="band">${[1,2,3,4,5,6,7].map(i=>`<div class="${i===k?"on":""}">${i<7?i+"등급":"7등급 이하"}</div>`).join("")}
+      <span class="ptr" style="left:${(k-0.5)/7*100}%">${R.score}점<i></i></span></div>`; })():"";
+  return `${header(R,"1/2",`영어 · ${R.exam.nQ}문항 / ${R.total}점 만점`)}
+  <div class="cmt"><div class="t">⚑ 담당 선생님 총평</div><p>${esc(cmt).replace(/\*\*/g,"")}</p></div>
+  <div class="sh">성적 요약</div>
+  <div class="tiles">
+    <div class="tile main"><small>원점수</small><b>${R.score}<em>점</em></b><span>반평균 ${R.avg}점 · 전체평균 ${R.allAvg}점</span></div>
+    <div class="tile"><small>${g?"절대평가 등급":"정답률"}</small><b>${g?`${g.n}<em>등급</em>`:`${R.pct}<em>%</em>`}</b><span>${g?(g.n===1?"1등급입니다":`1등급까지 ${g.toTop}점`):"&nbsp;"}</span></div>
+    <div class="tile"><small>전체 석차</small><b>${R.allRank}<em>/ ${R.allN}명</em></b><span>반 석차 ${R.rank} / ${R.n}명</span></div>
+    <div class="tile"><small>상위 백분율</small><b>${R.topPct}<em>%</em></b><span>응시자 ${R.allN}명 기준 상위</span></div></div>
+  ${band?`<div class="sh">등급 위치</div>${band}`:""}
+  <div class="sh">영역별 성취도 <small>${R.trend.length>1?"▲▼ = 지난 모의고사 대비 정답률 변화(%p)":""}</small></div>
+  ${R.areas.map(a=>`<div class="ar"><span class="a">${esc(a.a)}</span><span class="tr">${[25,50,75].map(x=>`<i class="g" style="left:${x}%"></i>`).join("")}<i class="bar" style="width:${a.pct}%"></i>${a.cls!=null?`<i class="avg" style="left:${a.cls}%"></i>`:""}</span>
+    <span class="v"><b>${Math.round(a.pct)}%</b>${a.delta!=null?dl(a.delta)+" ":""}<span>${a.ok}/${a.n}</span></span></div>`).join("")}
+  <div class="leg"><span><i style="width:7mm;height:2.6mm;background:var(--blue);border-radius:0 3px 3px 0"></i>본인 정답률</span><span><i style="width:2px;height:3.4mm;background:var(--ink)"></i>반 평균</span><span>오른쪽 숫자 = 정답률 ${R.trend.length>1?"· 변화 ":""}· 맞힌 문항/전체 문항</span></div>
+  <div class="sh">강점과 약점 <small>영역 정답률 기준</small></div>
+  <div class="sw"><div class="c s"><h4>강점 영역</h4>${R.strong.length?R.strong.map(a=>`<div><span>${esc(a.a)}</span><span>${Math.round(a.pct)}% <small style="color:var(--ink3)">(반 ${a.cls??"-"}%)</small></span></div>`).join(""):`<div><span style="color:var(--ink3)">반평균을 넘은 영역이 아직 없어요</span></div>`}</div>
+    <div class="c w"><h4>보완할 영역</h4>${R.weak.map(a=>`<div><span>${esc(a.a)}</span><span>${Math.round(a.pct)}% <small style="color:var(--ink3)">(반 ${a.cls??"-"}%)</small></span></div>`).join("")}</div></div>
+  <div class="fn">· 등급: ${!g?"이 시험은 등급 없이 점수만 표시합니다.":/커트라인/.test(g.note)?"선생님이 정한 커트라인 기준입니다.":`절대평가 — 90점 이상 1등급, 80점 이상 2등급 … 20점 미만 9등급${R.total!==100?" (100점 만점으로 환산)":""}`}<br>· 상위 백분율 = 전체 석차 ÷ 응시 인원. 값이 작을수록 상위입니다. · 반 평균은 같은 반 응시자 ${R.n}명 기준입니다.</div>`;
+}
+function page2(R,withRx){
+  const W=R.wrong, two=W.length>=15;
+  const tb=L=>`<table class="wt"><thead><tr><th>문항</th><th>세부유형</th><th>영역</th><th>배점</th><th>정답</th><th>학생답</th><th>반 정답률</th><th>우선</th></tr></thead><tbody>
+    ${L.map(w=>`<tr class="${w.pri?"p":""}"><td><b>${esc(w.n)}</b></td><td class="l">${esc(w.k||"-")}</td><td>${esc(w.d)}</td><td>${w.p}</td>
+      <td>${w.t==="s"?`${w.got}/${w.p}점`:esc(w.a)}</td><td class="me">${w.t==="s"?(w.got?"부분":"0점"):esc(ansTxt(w.mark))}</td><td>${w.rate??"-"}%</td><td>${w.pri?`<span class="bd p">최우선</span>`:`<span class="bd r">복습</span>`}</td></tr>`).join("")}</tbody></table>`;
+  const half=Math.ceil(W.length/2);
+  const wrongHTML=W.length?(two?`<div class="wt2">${tb(W.slice(0,half))}${tb(W.slice(half))}</div>`:tb(W)):`<div class="cmt" style="margin-top:0"><p>틀린 문항이 없습니다. 만점입니다.</p></div>`;
+  const rx=R.rx.map(x=>`<div class="rx"><h5>${esc(x.a)} <small>정답률 ${Math.round(x.pct)}% · 반평균 대비 ${pp(x.gap)}</small></h5><div class="hd2">${esc(x.head)}</div><ol>${x.list.map(t=>`<li>${esc(t)}</li>`).join("")}</ol></div>`).join("");
+  return { top:`${header(R,"2/2","오답 분석 및 학습 처방")}
+    <div class="sh">틀린 문항 ${W.length}개 <small>반 정답률 70% 이상인데 틀린 문항 = <span class="bd p">최우선</span></small></div>${wrongHTML}`,
+    rx:`<div class="sh">앞으로 2주 학습 처방 <small>정답률이 낮은 ${R.rx.length}개 영역</small></div>${rx}`,
+    end:`<div class="sign">${esc(R.exam.academy)} 담당 강사<small>${fmtDay(R.exam.day)} 시행 · ${esc(R.exam.title)}</small></div>
+    <div class="fn">· 최우선 = 반 학생 70% 이상이 맞혔는데 놓친 문항입니다. 실력보다 풀이 절차·시간 배분 문제일 가능성이 높아 먼저 점검합니다.<br>· 학습 처방은 정답률이 가장 낮은 영역부터 정했습니다.</div>` };
+}
+function extraPage(R){   // 별지: 오답 해설 + 누적 추이
+  const W=R.wrong.filter(w=>w.e||w.m||w.why||w.t==="s"); const T=R.trend||[];
+  if(!W.length) return "";   // 해설이 있을 때만 별지 (본문은 항상 2쪽)
+  const card=w=>`<div class="xq"><div class="h"><b>${esc(w.n)}${w.t==="s"?"":"번"}</b><span style="color:var(--blue);font-weight:700">${esc(w.k||w.d)}</span>${w.t==="s"?`<span>${w.got}/${w.p}점</span>`:`<span>학생답 <span class="me" style="color:var(--bad);font-weight:900">${esc(ansTxt(w.mark))}</span> → 정답 <b style="color:var(--good)">${esc(w.a)}</b></span>`}<span style="margin-left:auto;color:var(--ink3)">반 ${w.rate??"-"}%</span></div>
+    ${w.t==="s"&&w.mark?`<p><b>학생 답</b> ${esc(w.mark)}</p>`:""}${w.m?`<p><b>모범답안</b> ${esc(w.m)}</p>`:""}${w.why?`<p><b>감점 이유</b> ${esc(w.why)}</p>`:""}${w.e?`<p>${esc(w.e)}</p>`:""}</div>`;
+  let tr="";
+  if(T.length>=2){ const Wd=640,H=120,px=36,py=22,x=i=>px+i*(Wd-2*px)/(T.length-1),y=v=>py+(100-v)*(H-2*py)/100;
+    tr=`<div class="sh">모의고사 누적 추이 <small>점수 비율(%) · 반 석차</small></div><svg viewBox="0 0 ${Wd} ${H+26}" style="width:100%;display:block">
+      ${[0,50,100].map(v=>`<line x1="${px}" x2="${Wd-px}" y1="${y(v)}" y2="${y(v)}" stroke="#e1e0d9"/><text x="${px-6}" y="${y(v)+4}" font-size="10" text-anchor="end" fill="#898781">${v}</text>`).join("")}
+      <polyline points="${T.map((t,i)=>`${x(i)},${y(t.pct)}`).join(" ")}" fill="none" stroke="#2a78d6" stroke-width="2.2"/>
+      ${T.map((t,i)=>`<circle cx="${x(i)}" cy="${y(t.pct)}" r="${t.cur?5.5:4}" fill="#2a78d6" stroke="#fff" stroke-width="2"/><text x="${x(i)}" y="${y(t.pct)-9}" font-size="11" font-weight="800" text-anchor="middle" fill="#0b0b0b">${t.pct}%</text>
+        <text x="${x(i)}" y="${H+6}" font-size="10" text-anchor="middle" fill="#52514e">${md(t.day)}</text><text x="${x(i)}" y="${H+20}" font-size="9.5" text-anchor="middle" fill="#898781">${t.rank}등/${t.n}명</text>`).join("")}</svg>`; }
+  return `${header(R,"별지","오답 해설")}${tr}${W.length?`<div class="sh">틀린 문항 해설</div><div class="xq2">${W.map(card).join("")}</div>`:""}`;
+}
+function mkPage(host,html,dens){ const pg=document.createElement("div"); pg.className="page"+(dens?" d"+dens:""); pg.innerHTML=`<div class="in">${html}</div>`; host.appendChild(pg); return pg; }
+const over=pg=>{ const inn=pg.querySelector(".in"); return inn.scrollHeight>inn.clientHeight+1; };
+function buildReport(R,host,opt){
+  opt=opt||{}; host.innerHTML=""; const info={dens:0,pages:2,over:false};
+  // 1쪽
+  let p1; for(const d of [0,1,2]){ host.innerHTML=""; p1=mkPage(host,page1(R),d); if(!over(p1)){ info.d1=d; break; } info.d1=d; }
+  if(over(p1)) info.over=true;
+  // 2쪽: 밀도 0→1→2, 그래도 넘치면 처방을 3쪽으로
+  const P=page2(R); let p2=null;
+  for(const d of [0,1,2]){ if(p2) p2.remove(); p2=mkPage(host,P.top+P.rx+P.end,d); info.d2=d; if(!over(p2)) break; }
+  if(over(p2)){ p2.remove(); p2=mkPage(host,P.top,2); mkPage(host,`${header(R,"3/3","학습 처방")}${P.rx}${P.end}`,1); info.pages=3; if(over(p2)) info.over=true; }
+  if(opt.extra!==false){ const ex=extraPage(R); if(ex){ const pe=mkPage(host,ex,0); if(over(pe)){ // 해설이 길면 별지를 여러 장으로
+        const cards=[...pe.querySelectorAll(".xq")].map(x=>x.outerHTML); pe.remove(); let cur=mkPage(host,ex.replace(/<div class="xq2">[\s\S]*$/,'<div class="xq2"></div>'),0);
+        for(const c of cards){ const box=cur.querySelector(".xq2"); box.insertAdjacentHTML("beforeend",c); if(over(cur)){ box.lastElementChild.remove(); cur=mkPage(host,`${header(R,"별지","오답 해설 (이어서)")}<div class="xq2" style="margin-top:3mm">${c}</div>`,0); } } }
+      info.extra=true; } }
+  host.dataset.info=JSON.stringify(info);
+  return [...host.querySelectorAll(".page")];
 }
 
 /* ── 내보내기 ── */
@@ -201,21 +217,27 @@ function save(blob,name){ const a=document.createElement("a"); a.href=URL.create
 let LIST=[];
 function fitScreen(){ document.querySelectorAll(".scaler").forEach(s=>{ const w=s.firstElementChild?s.firstElementChild.offsetWidth:794, avail=Math.min(window.innerWidth-24,820);
   const k=Math.min(1,avail/w); s.style.transform=k<1?`scale(${k})`:""; s.parentElement.style.height=k<1?(s.offsetHeight*k)+"px":""; s.parentElement.style.width=k<1?(w*k)+"px":""; }); }
+let EXTRA=(()=>{ try{ return localStorage.getItem("mockr.extra")!=="0"; }catch(e){ return true; } })();
 function render(teacher){
   const app=$("#app"), noC=LIST.filter(R=>!(R.comment&&R.comment.body)).map(R=>R.name);
-  app.innerHTML=(teacher?`<div class="bar"><b>📝 동형모고 성적표 · ${esc(LIST[0].exam.title)} ${LIST.length}명</b><span class="sp"></span><button class="btn" id="b-links">🔗 학부모 링크 모두 복사</button>
-      <button class="btn" id="b-all-pdf">📚 전체 합본 PDF</button><button class="btn pri" id="b-zip">📦 전부 받기 (개별 PDF · PNG · 합본)</button></div>
-    <div class="list">${noC.length?`<div class="warn">코멘트가 없어 코멘트 칸을 뺀 학생: <b>${esc(noC.join(", "))}</b></div>`:""}</div>`
-    :`<div class="bar"><b>${esc(LIST[0].name)} 동형모의고사 성적표</b><span class="sp"></span>${LIST.length>1?`<select class="btn" id="b-pick">${LIST.map((R,i)=>`<option value="${i}">${md(R.exam.day)} · ${esc(R.exam.title)}</option>`).join("")}</select>`:""}<button class="btn pri" id="b-one">📄 PDF 저장</button></div>`)
-    +LIST.map((R,i)=>`<div class="rep" data-i="${i}"${!teacher&&i?" hidden":""}>${teacher?`<div class="rep-h"><b>${esc(R.name)}</b> ${R.score}/${R.total}점 · ${R.rank}등
+  app.innerHTML=(teacher?`<div class="bar"><b>📝 모의고사 리포트 · ${esc(LIST[0].exam.title)} ${LIST.length}명</b><span class="sp"></span>
+      <label class="btn" style="font-weight:600"><input type="checkbox" id="b-extra"${EXTRA?" checked":""}> 별지(오답 해설·누적 추이) 붙이기</label>
+      <button class="btn" id="b-links">🔗 학부모 링크 모두 복사</button><button class="btn" id="b-all-pdf">📚 전체 병합 PDF</button><button class="btn pri" id="b-zip">📦 전부 받기 (개별 PDF · PNG · 병합본)</button></div>
+    <div class="list">${noC.length?`<div class="warn">AI로 다듬지 않아 규칙 템플릿 총평이 들어간 학생: <b>${esc(noC.join(", "))}</b></div>`:""}<div class="warn" id="fitinfo" style="background:#f4f3ee;border-color:#e1e0d9;color:#52514e"></div></div>`
+    :`<div class="bar"><b>${esc(LIST[0].name)} 모의고사 리포트</b><span class="sp"></span>${LIST.length>1?`<select class="btn" id="b-pick">${LIST.map((R,i)=>`<option value="${i}">${md(R.exam.day)} · ${esc(R.exam.title)}</option>`).join("")}</select>`:""}<button class="btn pri" id="b-one">📄 PDF 저장</button></div>`)
+    +LIST.map((R,i)=>`<div class="rep" data-i="${i}"${!teacher&&i?" hidden":""}>${teacher?`<div class="rep-h"><b>${esc(R.name)}</b> ${R.score}/${R.total}점 · ${R.allRank}위 · 오답 ${R.wrong.length} <span class="k" data-k="${i}"></span>
       <button class="btn" data-pdf="${i}">PDF</button><button class="btn" data-png="${i}">PNG</button><button class="btn" data-link="${i}">🔗 학부모 링크 복사</button></div>`:""}<div><div class="scaler"><div class="pages" id="pg${i}"></div></div></div></div>`).join("");
   app.hidden=false; $("#gate").hidden=true;
-  LIST.forEach((R,i)=>buildReport(R,$("#pg"+i)));
+  const bad=[];
+  LIST.forEach((R,i)=>{ buildReport(R,$("#pg"+i),{extra:teacher?EXTRA:true}); const f=JSON.parse($("#pg"+i).dataset.info||"{}");
+    const el=document.querySelector(`[data-k="${i}"]`); if(el){ el.textContent=f.over?"⚠ 넘침":f.pages===3?"3쪽(처방 분리)":`2쪽 ✓${f.d1||f.d2?` · 밀도 ${Math.max(f.d1,f.d2)}`:""}`; el.classList.toggle("s",!!(f.over||f.pages===3)); }
+    if(f.over||f.pages===3) bad.push(R.name); });
+  const fi=$("#fitinfo"); if(fi) fi.innerHTML=bad.length?`📏 2쪽에 안 들어간 학생: <b>${esc(bad.join(", "))}</b> (처방을 3쪽으로 나눴어요)`:`📏 ${LIST.length}명 모두 본문 2쪽 안에 들어갔어요 (A4 · 여백 12mm)`;
   fitScreen();
 }
 const pagesOf=i=>[...document.querySelectorAll(`#pg${i} .page`)];
 const linkOf=R=>`${location.origin}/mo/${R.token}?e=${R.exam.id}`;
-const linkTxt=R=>`헤이즐 쌤 동형모의고사 성적표 · ${R.name} (${md(R.exam.day)})\n${linkOf(R)}`;
+const linkTxt=R=>`${R.exam.academy} 모의고사 리포트 · ${R.name} (${md(R.exam.day)})\n${linkOf(R)}`;
 document.addEventListener("click",async e=>{
   const t=e.target, busy=async(btn,fn)=>{ const tx=btn.textContent; btn.disabled=true; btn.textContent="만드는 중…"; try{ await libs(); await fn(); }catch(err){ alert(err.message); } btn.disabled=false; btn.textContent=tx; };
   const p=t.closest("[data-pdf]"); if(p){ const i=+p.dataset.pdf; return busy(p,async()=>save((await reportPDF(pagesOf(i))).output("blob"),fname(LIST[i])+".pdf")); }
@@ -223,7 +245,7 @@ document.addEventListener("click",async e=>{
   const l=t.closest("[data-link]"); if(l){ const R=LIST[+l.dataset.link]; try{ await navigator.clipboard.writeText(linkTxt(R)); l.textContent="복사했어요 ✓"; }catch(err){ prompt("링크",linkOf(R)); } return; }
   if(t.closest("#b-one")){ const i=+(($("#b-pick")||{}).value||0); return busy(t.closest("#b-one"),async()=>save((await reportPDF(pagesOf(i))).output("blob"),fname(LIST[i])+".pdf")); }
   if(t.closest("#b-links")){ const txt=LIST.map(linkTxt).join("\n\n"); try{ await navigator.clipboard.writeText(txt); t.closest("#b-links").textContent="복사했어요 ✓"; }catch(err){ prompt("링크",txt); } return; }
-  if(t.closest("#b-all-pdf")) return busy(t.closest("#b-all-pdf"),async()=>{ let pdf=null; for(let i=0;i<LIST.length;i++) pdf=await reportPDF(pagesOf(i),pdf); save(pdf.output("blob"),`동형모고성적표_합본_${LIST[0].exam.title}.pdf`); });
+  if(t.closest("#b-all-pdf")) return busy(t.closest("#b-all-pdf"),async()=>{ let pdf=null; for(let i=0;i<LIST.length;i++) pdf=await reportPDF(pagesOf(i),pdf); save(pdf.output("blob"),`학생리포트_전체_${LIST.length}명.pdf`); });
   if(t.closest("#b-zip")) return busy(t.closest("#b-zip"),async()=>{
     await loadJS("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",()=>window.JSZip);
     const z=new JSZip(); let all=null;
@@ -231,11 +253,12 @@ document.addEventListener("click",async e=>{
       const one=await reportPDF(pg); z.file(`개별PDF/${nm}.pdf`,one.output("arraybuffer"));
       const pn=await reportPNGs(pg); pn.forEach((b,k)=>z.file(`PNG/${nm}${pn.length>1?`_${k+1}`:""}.png`,b));
       all=await reportPDF(pg,all); }
-    z.file(`동형모고성적표_합본_${LIST[0].exam.title}.pdf`,all.output("arraybuffer"));
+    z.file(`학생리포트_전체_${LIST.length}명.pdf`,all.output("arraybuffer"));
     z.file(`학부모링크.txt`,LIST.map(linkTxt).join("\n\n"));
     save(await z.generateAsync({type:"blob"}),`동형모고성적표_${LIST[0].exam.title}.zip`.replace(/[\\/:*?"<>|]/g,"")); });
 });
-document.addEventListener("change",e=>{ if(e.target.id==="b-pick"){ document.querySelectorAll(".rep").forEach(r=>r.hidden=r.dataset.i!==e.target.value); fitScreen(); } });
+document.addEventListener("change",e=>{ if(e.target.id==="b-extra"){ EXTRA=e.target.checked; try{ localStorage.setItem("mockr.extra",EXTRA?"1":"0"); }catch(x){} render(true); return; }
+  if(e.target.id==="b-pick"){ document.querySelectorAll(".rep").forEach(r=>r.hidden=r.dataset.i!==e.target.value); fitScreen(); } });
 window.addEventListener("resize",fitScreen);
 
 (async function start(){
