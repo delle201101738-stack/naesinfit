@@ -66,7 +66,9 @@ export default async function handler(req, res) {
 
     const notes = await sql`select day, kind, headline, note, updated_at from report_notes where student = ${student}`;
     const klass = await sql`select c.id, c.name, c.exam_date, c.exam_name from hw_members m join hw_classes c on c.id = m.class_id where m.student = ${student}`;
-    const extra = { notes, klass, teacher };
+    const att = await sql`select a.day, a.status, a.memo, c.name as class_name from hw_attend a join hw_classes c on c.id = a.class_id
+                          where a.student = ${student} order by a.day desc limit 200`;
+    const extra = { notes, klass, teacher, att };
 
     if (!rows.length) return res.status(200).json({ ok: true, student, rows: [], cls: [], wrong: [], hw, days: 0, ...extra });
 

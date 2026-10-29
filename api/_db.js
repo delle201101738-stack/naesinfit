@@ -59,6 +59,10 @@ export async function ensure() {
   await sql`alter table hw_members add column if not exists focus text not null default ''`;   // ★ 집중관리 사유
   await sql`alter table hw_classes add column if not exists exam_date text not null default ''`;
   await sql`alter table hw_classes add column if not exists exam_name text not null default ''`;
+  // 출결: 정시(on) · 지각(late) · 결석(absent) · 기타(etc)
+  await sql`create table if not exists hw_attend (
+      class_id bigint not null, day text not null, student text not null, status text not null,
+      memo text not null default '', updated_at timestamptz not null default now(), primary key (class_id, day, student))`;
   // 학부모 링크 열람 기록 · 비밀번호 틀림 잠금
   await sql`create table if not exists report_views (
       student text not null, day text not null, first_at timestamptz not null default now(),

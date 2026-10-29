@@ -40,6 +40,9 @@ async function build(student, dayQ, range) {
     where m.student = ${student} order by i.day desc, i.id asc limit 300`;
   const klass = await sql`select c.name, c.exam_date, c.exam_name from hw_members m join hw_classes c on c.id = m.class_id where m.student = ${student}`;
   const notes = await sql`select day, kind, headline, note from report_notes where student = ${student}`;
+  const att = await sql`select day, status, memo from hw_attend where student = ${student} order by day desc limit 200`;
+  const ATT = { on: "✅ 정시 출석", late: "⏰ 지각", absent: "❌ 결석", etc: "📝 기타" };
+  const attTxt = d => { const a = att.find(x => x.day === d); return a ? ATT[a.status] + (a.memo ? ` (${esc(a.memo)})` : "") : ""; };
   const today = kday(Date.now());
   const day = /^\d{4}-\d{2}-\d{2}$/.test(dayQ || "") ? dayQ : today;
   const cls = klass[0] ? klass[0].name : (hw[0] ? hw[0].class_name : "");
@@ -61,7 +64,7 @@ async function build(student, dayQ, range) {
 
   if (range === "week" || range === "month") {
     const n = range === "week" ? 7 : 30, from = dPlus(day, -(n - 1));
-    const ds = [...new Set(rows.map(r => kday(r.created_at)).concat(hw.map(h => h.day)))].filter(d => d >= from && d <= day).sort();
+    const ds = [...new Set(rows.map(r => kday(r.created_at)).concat(hw.map(h => h.day), att.map(a => a.day)))].filter(d => d >= from && d <= day).sort();
     const H = ds.map(d => daySummary(rows, hw, d));
     const hc = H.reduce((a, x) => a + x.hc, 0), hd = H.reduce((a, x) => a + x.hd, 0), t = H.reduce((a, x) => a + x.t, 0), c = H.reduce((a, x) => a + x.c, 0);
     const re = rows.filter(r => isRe(r) && kday(r.created_at) >= from && kday(r.created_at) <= day).length;
@@ -70,9 +73,11 @@ async function build(student, dayQ, range) {
     L.push(`<p>hazel_studylog · ${esc(cls)}</p>`);
     if (nt && nt.headline) L.push(`<p><b>선생님 한마디:</b> ${esc(nt.headline)}</p>`);
     L.push(`<h2>요약</h2><ul><li>학습한 날: ${ds.length}일</li><li>숙제 완료: ${hc ? `${hd}/${hc} (${Math.round(hd / hc * 100)}%)` : "검사한 숙제 없음"}</li>`
-      + `<li>시험 평균 정답률: ${t ? `${Math.round(c / t * 100)}% (${c}/${t})` : "시험 없음"}</li><li>틀린 문제 다시 풀기: ${re}회</li></ul>`);
-    L.push(`<h2>날짜별 기록</h2><table border="1" cellpadding="4"><tr><th>날짜</th><th>숙제 완료</th><th>시험 정답률</th></tr>`
-      + H.slice().reverse().map(x => `<tr><td>${fmt(x.d)}</td><td>${x.hc ? `${x.hd}/${x.hc}` : x.hw.length ? "검사 전" : "—"}</td><td>${x.tp !== null ? `${x.tp}% (${x.tests.length}개)` : "—"}</td></tr>`).join("") + `</table>`);
+      + `<li>시험 평균 정답률: ${t ? `${Math.round(c / t * 100)}% (${c}/${t})` : "시험 없음"}</li><li>틀린 문제 다시 풀기: ${re}회</li>`
+      + (() => { const A = att.filter(x => x.day >= from && x.day <= day); if (!A.length) return "";
+          const k = s => A.filter(x => x.status === s).length; return `<li>출결: 정시 ${k("on")} · 지각 ${k("late")} · 결석 ${k("absent")}${k("etc") ? ` · 기타 ${k("etc")}` : ""}</li>`; })() + `</ul>`);
+    L.push(`<h2>날짜별 기록</h2><table border="1" cellpadding="4"><tr><th>날짜</th><th>출결</th><th>숙제 완료</th><th>시험 정답률</th></tr>`
+      + H.slice().reverse().map(x => `<tr><td>${fmt(x.d)}</td><td>${attTxt(x.d) || "—"}</td><td>${x.hc ? `${x.hd}/${x.hc}` : x.hw.length ? "검사 전" : "—"}</td><td>${x.tp !== null ? `${x.tp}% (${x.tests.length}개)` : "—"}</td></tr>`).join("") + `</table>`);
     if (nt && nt.note) L.push(`<h2>선생님 코멘트</h2><p>${esc(nt.note).replace(/\n/g, "<br>")}</p>`);
     L.push(todo());
     const title = `${student} · ${range === "week" ? "주간" : "월간"} 학습리포트 (~${mm}.${dd})`;
@@ -80,7 +85,7 @@ async function build(student, dayQ, range) {
   }
 
   const S = daySummary(rows, hw, day);
-  const days = [...new Set(rows.map(r => kday(r.created_at)).concat(hw.map(h => h.day)))].filter(d => d <= day).sort();
+  const days = [...new Set(rows.map(r => kday(r.created_at)).concat(hw.map(h => h.day), att.map(a => a.day)))].filter(d => d <= day).sort();
   const hist = days.map(d => daySummary(rows, hw, d));
   const before = hist.filter(x => x.d < day).reverse();
   const pt = before.find(x => x.tp !== null), ph = before.find(x => x.hp !== null);
@@ -103,9 +108,10 @@ async function build(student, dayQ, range) {
   L.push(`<p>hazel_studylog · ${cls ? esc(cls) + " · " : ""}${fmt(day)} 기록만 담았습니다.</p>`);
   if (nt && nt.headline) L.push(`<p><b>선생님 한마디:</b> ${esc(nt.headline)}</p>`);
   if (!S.tests.length && !S.hw.length) {
-    L.push(`<p><b>${fmt(day)}에는 시험·숙제 기록이 없습니다.</b></p>`);
+    L.push(`<p><b>${fmt(day)}에는 시험·숙제 기록이 없습니다.</b>${attTxt(day) ? ` 출결: ${attTxt(day)}` : ""}</p>`);
   } else {
     L.push(`<h2>요약</h2><ul>`);
+    if (attTxt(day)) L.push(`<li>출결: ${attTxt(day)}</li>`);
     L.push(`<li>숙제: ${S.hw.length ? (S.hc ? `${S.hd}/${S.hc} 완료` : `${S.hw.length}개 · 아직 검사 전`) : "없음"}${ph && S.hp !== null ? ` (지난번 ${ph.hp}% → 이번 ${S.hp}%)` : ""}</li>`);
     L.push(`<li>시험: ${S.tests.length ? `${S.tests.length}개 · 정답률 ${S.tp}%` : "없음"}${pt && S.tp !== null ? ` · 지난 학습일(${fmt(pt.d)})보다 ${pt2(S.tp - pt.tp)}` : ""}</li>`);
     L.push(`<li>틀린 문제 다시 풀기: ${retake.length ? `${retake.length}회 (마지막 ${Math.round(retake[0].correct / Math.max(1, retake[0].total) * 100)}%)` : "아직 안 함"}</li></ul>`);
@@ -129,7 +135,7 @@ async function build(student, dayQ, range) {
     H8.forEach(x => L.push(`<tr><td>${fmt(x.d)}</td><td>${x.hc ? `${x.hd}/${x.hc}` : x.hw.length ? "검사 전" : "—"}</td><td>${x.tp !== null ? `${x.tp}% (${x.tests.length}개)` : "—"}</td></tr>`));
     L.push(`</table>`);
   }
-  const desc = [S.hw.length ? (S.hc ? `숙제 ${S.hd}/${S.hc} 완료` : `숙제 ${S.hw.length}개`) : "",
+  const desc = [attTxt(day).replace(/ \(.*\)$/, "").replace("✅ ", ""), S.hw.length ? (S.hc ? `숙제 ${S.hd}/${S.hc} 완료` : `숙제 ${S.hw.length}개`) : "",
                 S.tests.length ? `시험 정답률 ${S.tp}%` : "",
                 (pt && S.tp !== null) ? `지난번보다 ${pt2(S.tp - pt.tp)}` : "",
                 dday !== null ? `시험 D-${dday}` : ""].filter(Boolean).join(" · ") || "숙제·테스트 결과";

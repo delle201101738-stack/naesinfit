@@ -6,15 +6,16 @@ const DAY = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null
 const STATUS = new Set(["done", "part", "none", "skip"]);
 
 async function snapshot() {
-  const [classes, members, items, checks, students, views] = await Promise.all([
+  const [classes, members, items, checks, students, views, attend] = await Promise.all([
     sql`select id, name, created_at, exam_date, exam_name from hw_classes order by right(name, 1), name`,
     sql`select class_id, student, focus from hw_members order by student`,
     sql`select id, class_id, day, title, memo, created_at from hw_items order by day desc, id desc limit 1500`,
     sql`select item_id, student, status, score, memo, checked_at from hw_checks`,
     sql`select student, count(*)::int as n, max(created_at) as last, max(class_name) as cls from attempts group by student order by student`,
-    sql`select student, day, first_at, last_at, n from report_views where last_at > now() - interval '60 days'`
+    sql`select student, day, first_at, last_at, n from report_views where last_at > now() - interval '60 days'`,
+    sql`select class_id, day, student, status, memo from hw_attend where day >= to_char(now() - interval '120 days', 'YYYY-MM-DD')`
   ]);
-  return { ok: true, classes, members, items, checks, students: students.map(r => r.student), stu: students, views };
+  return { ok: true, classes, members, items, checks, students: students.map(r => r.student), stu: students, views, attend };
 }
 
 export default async function handler(req, res) {
@@ -79,6 +80,22 @@ export default async function handler(req, res) {
                   set status = excluded.status, score = excluded.score, memo = excluded.memo, checked_at = now()`;
         break;
       }
+      case "attend.set": {      // 출결 한 명 (status 비우면 지움)
+        const cid = Number(b.class_id) || 0, day = DAY(b.day), st = S(b.student, 20), status = S(b.status, 8);
+        if (!cid || !day || !st) return res.status(400).json({ error: "반·날짜·학생이 없습니다" });
+        if (!["on", "late", "absent", "etc"].includes(status)) { await sql`delete from hw_attend where class_id = ${cid} and day = ${day} and student = ${st}`; break; }
+        await sql`insert into hw_attend (class_id, day, student, status, memo, updated_at) values (${cid}, ${day}, ${st}, ${status}, ${S(b.memo, 100)}, now())
+                  on conflict (class_id, day, student) do update set status = excluded.status, memo = excluded.memo, updated_at = now()`;
+        break;
+      }
+      case "attend.rest": {     // 아직 안 체크한 학생 모두 정시
+        const cid = Number(b.class_id) || 0, day = DAY(b.day);
+        if (!cid || !day) return res.status(400).json({ error: "반·날짜가 없습니다" });
+        await sql`insert into hw_attend (class_id, day, student, status)
+                  select m.class_id, ${day}, m.student, 'on' from hw_members m where m.class_id = ${cid}
+                  on conflict (class_id, day, student) do nothing`;
+        break;
+      }
       case "member.focus": {    // ★ 집중관리 학생 · 사유 (비우면 해제)
         const cid = Number(b.class_id) || 0, st = S(b.student, 20);
         if (!cid || !st) return res.status(400).json({ error: "반·학생이 없습니다" });
@@ -116,7 +133,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, moved: a.length });
       }
       case "export": {          // 엑셀 백업용 전체 자료
-        const [cl, mem, it, ck, at, nt, vw] = await Promise.all([
+        const [cl, mem, it, ck, at, nt, vw, at2] = await Promise.all([
           sql`select id, name, exam_date, exam_name, created_at from hw_classes order by id`,
           sql`select c.name as class_name, m.student from hw_members m join hw_classes c on c.id = m.class_id order by c.name, m.student`,
           sql`select i.id, c.name as class_name, i.day, i.title, i.memo from hw_items i join hw_classes c on c.id = i.class_id order by i.day, i.id`,
@@ -124,9 +141,10 @@ export default async function handler(req, res) {
               from hw_checks k join hw_items i on i.id = k.item_id join hw_classes c on c.id = i.class_id order by i.day, c.name, k.student`,
           sql`select id, student, class_name, book, unit_id, part, part_name, scope, total, correct, pct, secs, created_at from attempts order by created_at limit 50000`,
           sql`select student, day, kind, headline, note, updated_at from report_notes order by day, student`,
-          sql`select student, day, first_at, last_at, n from report_views order by day, student`
+          sql`select student, day, first_at, last_at, n from report_views order by day, student`,
+          sql`select c.name as class_name, a.day, a.student, a.status, a.memo from hw_attend a join hw_classes c on c.id = a.class_id order by a.day, c.name, a.student`
         ]);
-        return res.status(200).json({ ok: true, classes: cl, members: mem, items: it, checks: ck, attempts: at, notes: nt, views: vw });
+        return res.status(200).json({ ok: true, classes: cl, members: mem, items: it, checks: ck, attempts: at, notes: nt, views: vw, attend: at2 });
       }
       default: return res.status(400).json({ error: "알 수 없는 요청입니다" });
     }
