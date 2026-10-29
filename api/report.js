@@ -1,13 +1,24 @@
 // 리포트용 집계 — 학생 본인 기록 + 전체 반평균 + 반복 오답
-import { sql, ensure } from "./_db.js";
+import { sql, ensure, checkPin } from "./_db.js";
 
 export default async function handler(req, res) {
   try {
     const u = new URL(req.url, "http://x");
-    const student = (u.searchParams.get("student") || "").trim().slice(0, 20);
-    if (!student) return res.status(400).json({ error: "이름이 없습니다" });
     await ensure();
     res.setHeader("Cache-Control", "no-store");
+    // 학부모 = 비공개 링크 토큰(t)으로만, 선생님 = 비밀번호(x-pin)로 이름 조회
+    const tok = (u.searchParams.get("t") || "").trim().slice(0, 40);
+    let student = "", teacher = false;
+    if (tok) {
+      const [r] = await sql`select student from report_tokens where token = ${tok}`;
+      if (!r) return res.status(404).json({ error: "리포트 링크가 올바르지 않아요. 선생님께 새 링크를 받아 주세요." });
+      student = r.student;
+    } else {
+      const g = await checkPin(req);
+      if (!g.ok) return res.status(401).json({ error: g.why === "LOCKED" ? pinError(g) : "선생님 비밀번호가 필요해요 (학부모님은 선생님이 보내 준 링크로 열어 주세요)" });
+      student = (u.searchParams.get("student") || "").trim().slice(0, 20); teacher = true;
+      if (!student) return res.status(400).json({ error: "이름이 없습니다" });
+    }
 
     // ?day=YYYY-MM-DD → 그날 채점한 모든 칸(맞음·틀림) — 영역별(어법·어휘·독해) 분석용
     const day = (u.searchParams.get("day") || "").trim();
@@ -23,6 +34,14 @@ export default async function handler(req, res) {
           and to_char(a.created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') = ${day}
         limit 8000`;
       return res.status(200).json({ ok: true, day, items });
+    }
+
+    // 학부모가 링크를 열었는지 (선생님 화면에 👀 표시) — 브라우저에서 실제로 연 경우만 (카톡 미리보기 봇은 JS를 안 돌림)
+    if (tok && u.searchParams.get("nv") !== "1") {
+      const vd = /^\d{4}-\d{2}-\d{2}$/.test(u.searchParams.get("vd") || "") ? u.searchParams.get("vd")
+        : new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+      await sql`insert into report_views (student, day) values (${student}, ${vd})
+                on conflict (student, day) do update set last_at = now(), n = report_views.n + 1`.catch(() => {});
     }
 
     const rows = (await sql`
@@ -45,7 +64,11 @@ export default async function handler(req, res) {
       order by i.day desc, i.id asc
       limit 120`;
 
-    if (!rows.length) return res.status(200).json({ ok: true, student, rows: [], cls: [], wrong: [], hw, days: 0 });
+    const notes = await sql`select day, kind, headline, note, updated_at from report_notes where student = ${student}`;
+    const klass = await sql`select c.id, c.name, c.exam_date, c.exam_name from hw_members m join hw_classes c on c.id = m.class_id where m.student = ${student}`;
+    const extra = { notes, klass, teacher };
+
+    if (!rows.length) return res.status(200).json({ ok: true, student, rows: [], cls: [], wrong: [], hw, days: 0, ...extra });
 
     // 전체 학생 평균(반평균) — 교재·파트별
     // 반평균 — 같은 교재(과)·같은 시험(파트)·같은 날(한국 시간) 본 학생들, 학생마다 그날 최고 기록 1개씩 (재시험 제외)
@@ -93,7 +116,7 @@ export default async function handler(req, res) {
       limit 1500`;
 
     const days = new Set(rows.map(r => new Date(r.created_at).toISOString().slice(0, 10))).size;
-    res.status(200).json({ ok: true, student, rows, cls, wrong, dwrong, hw, days });
+    res.status(200).json({ ok: true, student, rows, cls, wrong, dwrong, hw, days, ...extra });
   } catch (e) {
     console.error("[report]", e);
     res.status(500).json({ error: "리포트를 만들지 못했습니다" });

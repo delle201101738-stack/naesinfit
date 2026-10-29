@@ -10,7 +10,19 @@ export default async function handler(req, res) {
     await ensure();
     res.setHeader("Cache-Control", "no-store");
     if (req.method === "GET") {
-      const classes = await sql`select id, name from hw_classes order by right(name, 1), name`;
+      const q = new URL(req.url, "http://x").searchParams;
+      const who = clean(q.get("student")), wc = Number(q.get("class_id")) || 0;
+      if (who && wc) {   // 학생 앱 '내 할 일': 내 반 숙제(최근 2주 ~ 다음 1주) + 내 검사 결과 + 시험 날짜
+        const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+        const from = new Date(Date.now() + 9 * 3600e3 - 14 * 864e5).toISOString().slice(0, 10);
+        const to = new Date(Date.now() + 9 * 3600e3 + 7 * 864e5).toISOString().slice(0, 10);
+        const [c] = await sql`select id, name, exam_date, exam_name from hw_classes where id = ${wc}`;
+        const items = await sql`select i.id, i.day, i.title, k.status from hw_items i
+                                left join hw_checks k on k.item_id = i.id and k.student = ${who}
+                                where i.class_id = ${wc} and i.day >= ${from} and i.day <= ${to} order by i.day desc, i.id`;
+        return res.status(200).json({ ok: true, today, class: c || null, items });
+      }
+      const classes = await sql`select id, name, exam_date, exam_name from hw_classes order by right(name, 1), name`;
       return res.status(200).json({ ok: true, classes });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "GET·POST만 받습니다" });
@@ -21,7 +33,7 @@ export default async function handler(req, res) {
     if (!c) return res.status(404).json({ error: "없는 학교·학년입니다. 새로고침 후 다시 골라 주세요" });
 
     const mem = (await sql`select student from hw_members where class_id = ${cid}`).map(r => r.student);
-    let name = mem.find(m => m === typed) || null;
+    let name = mem.find(m => m === typed) || null, renamed = false;
     if (!name) {
       const cand = mem.filter(m => base(m) === base(typed) && (base(typed) === typed || m.toLowerCase() === typed.toLowerCase()));
       if (cand.length === 1) name = cand[0];
@@ -30,6 +42,9 @@ export default async function handler(req, res) {
     if (!name) {
       if (!b.confirm_new) return res.status(200).json({ ok: false, notfound: true, class: c });
       name = typed;                                   // 명단에 없는 새 학생 — 선생님 확인용으로 반에 넣어 둠
+      // 동명이인: 다른 반에 같은 이름이 이미 있으면 기록이 섞이지 않게 뒤에 번호를 붙임 (김민준 → 김민준2)
+      const taken = async n => (await sql`select 1 from hw_members where student = ${n} union all select 1 from attempts where student = ${n} limit 1`).length > 0;
+      if (await taken(name)) { let k = 2; while (k < 100 && await taken(typed + k)) k++; name = typed + k; renamed = true; }
       await sql`insert into hw_members (class_id, student) values (${cid}, ${name}) on conflict do nothing`;
     }
 
@@ -42,7 +57,7 @@ export default async function handler(req, res) {
         moved = r1.length;
       }
     }
-    res.status(200).json({ ok: true, name, class: c, moved });
+    res.status(200).json({ ok: true, name, class: c, moved, renamed });
   } catch (e) {
     console.error("[join]", e);
     res.status(500).json({ error: "들어가지 못했습니다. 잠시 후 다시 해 주세요" });

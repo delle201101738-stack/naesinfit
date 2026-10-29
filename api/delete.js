@@ -1,9 +1,9 @@
-import { sql, ensure, checkPin, readBody } from "./_db.js";
+import { sql, ensure, checkPin, pinError, readBody } from "./_db.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST만 받습니다" });
-  const gate = checkPin(req);
-  if (!gate.ok) return res.status(401).json({ error: "비밀번호가 맞지 않습니다" });
+  const gate = await checkPin(req);
+  if (!gate.ok) return res.status(401).json({ error: pinError(gate) });
   try {
     const b = await readBody(req);
     await ensure();

@@ -49,6 +49,21 @@ export async function ensure() {
       item_id bigint not null, student text not null, status text not null,
       score int, memo text not null default '', checked_at timestamptz not null default now(),
       primary key (item_id, student))`;
+  // 학부모용: 선생님 코멘트 저장 · 학생별 비공개 링크 · 반 시험(D-day)
+  await sql`create table if not exists report_notes (
+      student text not null, day text not null, kind text not null default 'day',
+      headline text not null default '', note text not null default '', updated_at timestamptz not null default now(),
+      primary key (student, day, kind))`;
+  await sql`create table if not exists report_tokens (
+      token text primary key, student text not null unique, created_at timestamptz not null default now())`;
+  await sql`alter table hw_classes add column if not exists exam_date text not null default ''`;
+  await sql`alter table hw_classes add column if not exists exam_name text not null default ''`;
+  // 학부모 링크 열람 기록 · 비밀번호 틀림 잠금
+  await sql`create table if not exists report_views (
+      student text not null, day text not null, first_at timestamptz not null default now(),
+      last_at timestamptz not null default now(), n int not null default 1, primary key (student, day))`;
+  await sql`create table if not exists pin_fails (
+      ip text primary key, n int not null default 0, until timestamptz, updated_at timestamptz not null default now())`;
   // 학원 명단(학교+학년 = 반) 한 번만 넣기 — 버전이 바뀌면 다시 맞춤 (있는 학생·반은 그대로 둠)
   await sql`create table if not exists hw_meta (k text primary key, v text not null)`;
   const [mv] = await sql`select v from hw_meta where k = 'roster'`;
@@ -71,6 +86,23 @@ export async function ensure() {
   ready = true;
 }
 
+// 학부모 링크용 비공개 토큰 (추측 불가 10자)
+export async function tokenFor(students) {
+  const out = {};
+  const have = await sql`select token, student from report_tokens where student = any(${students})`;
+  have.forEach(r => { out[r.student] = r.token; });
+  const A = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  for (const s of students) {
+    if (out[s]) continue;
+    const { randomBytes } = await import("node:crypto");
+    const t = [...randomBytes(10)].map(b => A[b % A.length]).join("");
+    await sql`insert into report_tokens (token, student) values (${t}, ${s}) on conflict (student) do nothing`;
+    const [r] = await sql`select token from report_tokens where student = ${s}`;
+    out[s] = r.token;
+  }
+  return out;
+}
+
 export function readBody(req) {
   if (req.body && typeof req.body === "object") return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
@@ -81,10 +113,30 @@ export function readBody(req) {
   });
 }
 
-export function checkPin(req) {
-  // Vercel 환경변수가 있으면 그것을, 없으면 api/_config.js 의 값을 씁니다.
+// 선생님 비밀번호 확인 — 같은 곳에서 8번 틀리면 15분 잠금
+const ipOf = req => String(req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "?").split(",")[0].trim().slice(0, 60);
+export async function checkPin(req) {
+  // Vercel 환경변수 TEACHER_PIN 이 있으면 그것을, 없으면 api/_config.js 의 값을 씁니다.
   const pin = process.env.TEACHER_PIN || TEACHER_PIN;
   if (!pin) return { ok: false, why: "NO_PIN" };
-  const got = req.headers["x-pin"] || new URL(req.url, "http://x").searchParams.get("pin");
-  return got === pin ? { ok: true } : { ok: false, why: "BAD_PIN" };
+  const got = String(req.headers["x-pin"] || new URL(req.url, "http://x").searchParams.get("pin") || "");
+  if (!got) return { ok: false, why: "BAD_PIN" };
+  await ensure();
+  const ip = ipOf(req);
+  const [f] = await sql`select n, until from pin_fails where ip = ${ip}`;
+  if (f && f.until && new Date(f.until) > new Date()) {
+    const min = Math.ceil((new Date(f.until) - new Date()) / 60000);
+    return { ok: false, why: "LOCKED", min };
+  }
+  if (got === pin) { if (f) await sql`delete from pin_fails where ip = ${ip}`; return { ok: true }; }
+  const n = f && (!f.until || new Date(f.until) <= new Date()) && f.n < 8 ? f.n + 1 : 1;
+  const until = n >= 8 ? new Date(Date.now() + 15 * 60000).toISOString() : null;
+  await sql`insert into pin_fails (ip, n, until, updated_at) values (${ip}, ${n}, ${until}, now())
+            on conflict (ip) do update set n = excluded.n, until = excluded.until, updated_at = now()`;
+  return { ok: false, why: until ? "LOCKED" : "BAD_PIN", min: until ? 15 : 0, left: 8 - n };
+}
+export function pinError(g) {
+  if (g.why === "NO_PIN") return "선생님 비밀번호가 아직 설정되지 않았습니다";
+  if (g.why === "LOCKED") return `비밀번호를 여러 번 틀려서 잠겼어요. ${g.min || 15}분 뒤에 다시 해 주세요`;
+  return g.left != null && g.left <= 3 ? `비밀번호가 맞지 않습니다 (${g.left}번 더 틀리면 15분 잠겨요)` : "비밀번호가 맞지 않습니다";
 }

@@ -1,14 +1,8 @@
-import { sql, ensure, checkPin } from "./_db.js";
+import { sql, ensure, checkPin, pinError } from "./_db.js";
 
 export default async function handler(req, res) {
-  const gate = checkPin(req);
-  if (!gate.ok) {
-    return res.status(401).json({
-      error: gate.why === "NO_PIN"
-        ? "선생님 비밀번호(TEACHER_PIN)가 아직 설정되지 않았습니다"
-        : "비밀번호가 맞지 않습니다"
-    });
-  }
+  const gate = await checkPin(req).catch(() => ({ ok: false, why: "ERR" }));
+  if (!gate.ok) return res.status(gate.why === "ERR" ? 500 : 401).json({ error: gate.why === "ERR" ? "잠시 후 다시 해 주세요" : pinError(gate) });
   try {
     await ensure();
     const rows = await sql`
