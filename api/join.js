@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     if (!c) return res.status(404).json({ error: "없는 학교·학년입니다. 새로고침 후 다시 골라 주세요" });
 
     const mem = (await sql`select student from hw_members where class_id = ${cid}`).map(r => r.student);
-    let name = mem.find(m => m === typed) || null, renamed = false;
+    let name = mem.find(m => m === typed) || null, renamed = false, added = false;
     if (!name) {
       const cand = mem.filter(m => base(m) === base(typed) && (base(typed) === typed || m.toLowerCase() === typed.toLowerCase()));
       if (cand.length === 1) name = cand[0];
@@ -43,13 +43,20 @@ export default async function handler(req, res) {
       const hit = nameFromText(b.student, mem.map(m => ({ student: m, class_name: c.name })), c.name);
       if (hit) name = hit;
     }
+    if (!name && !b.confirm_new) {   // 오타 같으면(한 글자만 다름) 먼저 물어봄: 김강빈 → 혹시 김강민j?
+      const ed1 = (x, y) => { if (x.length !== y.length) return false; let d = 0; for (let i = 0; i < x.length; i++) if (x[i] !== y[i] && ++d > 1) return false; return d === 1; };
+      const sim = mem.filter(m => ed1(base(m), base(typed)));
+      if (sim.length) return res.status(200).json({ ok: false, similar: sim, class: c });
+    }
     if (!name) {
-      if (!b.confirm_new) return res.status(200).json({ ok: false, notfound: true, class: c });
+      // 명단에 없으면 고른 학교·학년(반)에 자동 등록
       name = typed;                                   // 명단에 없는 새 학생 — 선생님 확인용으로 반에 넣어 둠
       // 동명이인: 다른 반에 같은 이름이 이미 있으면 기록이 섞이지 않게 뒤에 번호를 붙임 (김민준 → 김민준2)
-      const taken = async n => (await sql`select 1 from hw_members where student = ${n} union all select 1 from attempts where student = ${n} limit 1`).length > 0;
+      if (!/^[가-힣]{2,5}[A-Za-z0-9]*$/.test(typed)) return res.status(400).json({ error: "이름은 한글로 정확히 써 주세요 (학교·학년은 위에서 골라요)" });
+      const taken = async n => (await sql`select 1 from hw_members where student = ${n} limit 1`).length > 0;
       if (await taken(name)) { let k = 2; while (k < 100 && await taken(typed + k)) k++; name = typed + k; renamed = true; }
       await sql`insert into hw_members (class_id, student) values (${cid}, ${name}) on conflict do nothing`;
+      added = true;
     }
 
     // 예전에 구분자 없이 쓰던 이름(예: 김승현)의 시험 기록을 명단 이름(김승현4)으로 옮김 — 같은 이름이 명단에 하나뿐일 때만
@@ -61,7 +68,7 @@ export default async function handler(req, res) {
         moved = r1.length;
       }
     }
-    res.status(200).json({ ok: true, name, class: c, moved, renamed });
+    res.status(200).json({ ok: true, name, class: c, moved, renamed, added });
   } catch (e) {
     console.error("[join]", e);
     res.status(500).json({ error: "들어가지 못했습니다. 잠시 후 다시 해 주세요" });
