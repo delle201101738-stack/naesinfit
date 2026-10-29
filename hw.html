@@ -511,7 +511,7 @@ function namesHTML(){
     const many=cand.length>1;
     return `<div class="nmrow"><span class="who"><b>${esc(r.student)}</b><small>시험 ${r.n}번 · 최근 ${fmt(r.last)}${r.cls?` · 앱에서 고른 반: ${esc(r.cls)}`:""}${many?` · <b style="color:var(--no)">⚠ 동명이인 ${cand.length}명 — 반을 보고 고르세요</b>`:""}</small></span>
       ${cand.map(m=>`<button class="btn sm${!many||clsOf(m).includes(r.cls)?" pri":""}" data-merge="${esc(r.student)}" data-into="${esc(m)}">→ ${esc(m)} <small>(${esc(clsOf(m).join(", "))})</small>에 합치기</button>`).join("")}
-      ${!cand.length?`<span class="na">비슷한 명단 이름 없음 · 아래 '직접 합치기'나 반 화면에서 추가</span>`:""}</div>`; }).join(""):`<div class="empty" style="padding:18px">없어요 👏 모든 기록이 명단 이름과 맞아요</div>`}</div>
+      ${!cand.length?`<span class="na">반 명단에 없는 이름</span><button class="btn sm" data-delname="${esc(r.student)}" style="color:var(--no)">🗑 기록 삭제</button>`:""}</div>`; }).join(""):`<div class="empty" style="padding:18px">없어요 👏 모든 기록이 명단 이름과 맞아요</div>`}</div>
   <div class="sec"><h2>직접 합치기</h2><span class="note">예: 오타로 들어간 '김강빈' → '김강민j'</span></div>
   <div class="card" style="padding:14px 16px"><div class="row">
     <input class="fld" id="mg-from" list="mg-all" placeholder="옮길 이름 (없앨 이름)" style="flex:1;min-width:150px">
@@ -533,6 +533,11 @@ async function namesClick(t){
     if(!from||!to||from===to){ toast("두 이름을 골라 주세요"); return true; }
     if(!confirm(`'${from}'의 기록을 모두 '${to}'(으)로 합칠까요?\n같은 학생일 때만 합치세요. 되돌릴 수 없어요.`)) return true;
     try{ const j=await api({action:"student.merge",from,to}); delete TOK[from]; await load(); RES=null; render(); toast(`합쳤어요 · 시험 기록 ${j.moved}건 옮김`); }catch(err){ alert(err.message); }
+    return true; }
+  const dn=t.closest("[data-delname]"); if(dn){ const s=dn.dataset.delname;
+    if(!confirm(`'${s}' 이름의 시험 기록을 모두 지울까요? 되돌릴 수 없어요.`)) return true;
+    try{ const r=await fetch("/api/delete",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({student:s})}); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"지우지 못했어요");
+      await load(); RES=null; render(); toast("지웠어요"); }catch(err){ alert(err.message); }
     return true; }
   if(t.closest("#backup-btn")){ await backup(); return true; }
   return false;

@@ -2588,8 +2588,10 @@ nameCta.onclick=async()=>{
       const j=await r.json().catch(()=>({}));
       if(!r.ok){ toast(j.error||"들어가지 못했어요"); loginSync(); return; }
       if(j.choose){ hint.innerHTML=`${esc(c?c.name:"")}에 같은 이름이 여러 명 있어요. 선생님이 알려 준 <b>이름 뒤 글자</b>를 보고 <b>내 이름</b>을 눌러 주세요.<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${j.choose.map(n=>`<button class="btn-sm" data-pick="${esc(n)}" style="padding:9px 14px">${esc(n)}</button>`).join("")}</div>`; loginSync(); return; }
+      if(j.similar){ hint.innerHTML=`<b>${esc(c?c.name:"")}</b> 명단에 <b>${esc(nm)}</b>은(는) 없어요. 혹시 이 이름이에요?<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${j.similar.map(n=>`<button class="btn-sm" data-pick="${esc(n)}" style="padding:9px 14px">${esc(n)}</button>`).join("")}</div><div style="margin-top:10px"><button class="btn-sm" data-newname="1" style="padding:9px 14px">아니요, 제 이름은 ${esc(nm)}이에요 · 이 반에 등록</button></div>`; loginSync(); return; }
       if(j.notfound){ hint.innerHTML=`<b>${esc(c?c.name:"")}</b> 명단에 <b>${esc(nm)}</b>이(가) 없어요. 학교·학년과 이름을 다시 확인해 주세요.<div style="margin-top:10px"><button class="btn-sm" data-newname="1" style="padding:9px 14px">처음 왔어요 · 이 이름으로 시작하기</button></div>`; loginSync(); return; }
       nm=j.name;
+      if(j.added) setTimeout(()=>toast(`${c?c.name:""} 반에 ${nm}(으)로 등록했어요`),1200);
       if(j.renamed) setTimeout(()=>toast(`다른 반에 같은 이름이 있어서 ${nm}(으)로 기록돼요`),1200);
       if(j.moved) setTimeout(()=>toast(`예전 기록 ${j.moved}건을 ${nm} 이름으로 옮겼어요`),1800);
     }catch(e){ toast("인터넷 연결을 확인해 주세요"); loginSync(); return; }
