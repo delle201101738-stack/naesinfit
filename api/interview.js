@@ -179,9 +179,10 @@ export default async function handler(req, res) {
     }
     if (req.method === "GET") {
       const day = DAY(u.searchParams.get("day")) || kday();
-      const ids = (u.searchParams.get("ids") || "").split(",").map(Number).filter(Boolean);
-      const list = ids.length ? await sql`select * from interview_reports where id = any(${ids}) order by cls, student`
-                              : await sql`select * from interview_reports where day = ${day} order by cls, student`;
+      const ids = (u.searchParams.get("ids") || "").split(",").map(Number).filter(Boolean), cls = (u.searchParams.get("cls") || "").trim();
+      let list = ids.length ? await sql`select * from interview_reports where id = any(${ids}) order by cls, student`
+                            : await sql`select * from interview_reports where day = ${day} order by cls, student`;
+      if (cls) list = list.filter(r => r.cls === cls || r.sheet_name === cls);
       const days = await sql`select day, count(*)::int as n from interview_reports group by day order by day desc limit 30`;
       const ok = list.filter(r => (r.data.cur || []).some(Boolean)), noGrade = list.filter(r => !(r.data.cur || []).some(Boolean)).map(r => r.data.name + (r.cls ? ` (${r.cls})` : ""));
       return res.status(200).json({ ok: true, day, list: ok.map(pub), noGrade, days, sa: saEmail(), ai: !!process.env.ANTHROPIC_API_KEY });

@@ -160,7 +160,7 @@ async function ivPage(req, res, u) {
       else {
         const D = R.data, A = ["독해", "어휘", "어법", "오답·교재"], g = D.cur.map((x, i) => `${A[i]} ${x || "—"}`).join(" · ");
         const [, mm, dd] = R.day.split("-");
-        title = `${D.name} · ${D.round}차 인터뷰 리포트`;
+        title = `헤이즐 쌤과 ${D.name}의 1:1 밀착인터뷰 결과(${+mm}.${+dd})`;
         desc = `${D.cls ? D.cls + " · " : ""}${+mm}월 ${+dd}일 · ${D.scope ? D.scope + " · " : ""}${g}`;
         const L2 = [`<h1>${esc(title)}</h1><p>헤이즐쌤의 꼼꼼한 인터뷰 · ${esc(D.cls)} · ${+mm}월 ${+dd}일 · 범위 ${esc(D.scope)} · 담당 ${esc(D.teacher || "헤이즐 쌤")}</p>`];
         if (R.c_title || R.c_body) L2.push(`<h2>헤이즐 쌤 코멘트</h2><p><b>${esc(R.c_title)}</b></p><p>${esc(String(R.c_body || "").replace(/\*\*/g, "")).replace(/\n/g, "<br>")}</p>`);
@@ -174,9 +174,9 @@ async function ivPage(req, res, u) {
       }
     }
   } catch (e) { console.error("[ivpage]", e); ssr = "<p>리포트를 불러오지 못했습니다.</p>"; }
-  const og = `https://${host}/og.jpg`;
+  const og = `https://${host}/og-iv.jpg`;
   if (title) page = page.replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title><meta name="description" content="${esc(desc)}">`
-    + `<meta property="og:type" content="website"><meta property="og:site_name" content="헤이즐쌤의 꼼꼼한 인터뷰">`
+    + `<meta property="og:type" content="website"><meta property="og:site_name" content="헤이즐쌤의 1:1 밀착인터뷰">`
     + `<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">`
     + `<meta property="og:image" content="${og}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">`
     + `<meta name="twitter:card" content="summary_large_image">`);
