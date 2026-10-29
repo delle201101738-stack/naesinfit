@@ -56,6 +56,7 @@ export async function ensure() {
       primary key (student, day, kind))`;
   await sql`create table if not exists report_tokens (
       token text primary key, student text not null unique, created_at timestamptz not null default now())`;
+  await sql`alter table hw_members add column if not exists focus text not null default ''`;   // ★ 집중관리 사유
   await sql`alter table hw_classes add column if not exists exam_date text not null default ''`;
   await sql`alter table hw_classes add column if not exists exam_name text not null default ''`;
   // 학부모 링크 열람 기록 · 비밀번호 틀림 잠금

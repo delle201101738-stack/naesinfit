@@ -8,7 +8,7 @@ const STATUS = new Set(["done", "part", "none", "skip"]);
 async function snapshot() {
   const [classes, members, items, checks, students, views] = await Promise.all([
     sql`select id, name, created_at, exam_date, exam_name from hw_classes order by right(name, 1), name`,
-    sql`select class_id, student from hw_members order by student`,
+    sql`select class_id, student, focus from hw_members order by student`,
     sql`select id, class_id, day, title, memo, created_at from hw_items order by day desc, id desc limit 1500`,
     sql`select item_id, student, status, score, memo, checked_at from hw_checks`,
     sql`select student, count(*)::int as n, max(created_at) as last, max(class_name) as cls from attempts group by student order by student`,
@@ -78,6 +78,11 @@ export default async function handler(req, res) {
                   on conflict (item_id, student) do update
                   set status = excluded.status, score = excluded.score, memo = excluded.memo, checked_at = now()`;
         break;
+      }
+      case "member.focus": {    // ★ 집중관리 학생 · 사유 (비우면 해제)
+        const cid = Number(b.class_id) || 0, st = S(b.student, 20);
+        if (!cid || !st) return res.status(400).json({ error: "반·학생이 없습니다" });
+        await sql`update hw_members set focus = ${S(b.focus, 80)} where class_id = ${cid} and student = ${st}`; break;
       }
       case "class.exam": {   // 반 내신 시험 날짜 (리포트 D-day)
         if (!id) return res.status(400).json({ error: "반이 없습니다" });
