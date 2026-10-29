@@ -467,7 +467,7 @@ function alertsOf(s, items, chk, upto){
   if(RES&&RES.length){
     const ds=[...new Set(rowsOfMem(s).map(x=>x.day))].filter(d=>d<=upto).sort().reverse();
     const tp=[]; for(const d of ds){ const v=dayTests(s,d); if(v.length){ const t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0); if(t) tp.push(Math.round(c/t*100)); } if(tp.length>=3) break; }
-    if(tp.length>=3 && tp[0]<tp[1] && tp[1]<tp[2]) out.push(`시험 2번 연속 하락 (${tp[2]}→${tp[1]}→${tp[0]}%)`);
+    if(tp.length>=3 && tp[0]<tp[1] && tp[1]<tp[2] && tp[2]-tp[0]>=5) out.push(`시험 2번 연속 하락 (${tp[2]}→${tp[1]}→${tp[0]}%)`);
   }
   return out;
 }
