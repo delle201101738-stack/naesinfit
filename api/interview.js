@@ -76,11 +76,16 @@ const SYS = `너는 영어 학원 '헤이즐쌤'의 1:1 인터뷰 리포트 코�
 - 오답·교재가 '미완'이면 '숙제를 다 해 오지 않아 교재 검사를 하지 못했다'는 뜻이다. '검사해 보니 부족했다'로 쓰지 않는다.
 - 가장 중요한 한두 구절을 **별표 두 개**로 감싼다. 한 문단에 최대 2군데.
 - 제목은 한 문장, 존댓말 또는 명사형, 25자 안팎. 메모 제목의 뜻을 그대로 살린다.
+- 특이사항이 있으면 그 장면(아이가 한 행동·말·태도)을 코멘트에 구체적으로 살려서 더 풍성하게 쓴다. 특이사항에도 없는 내용은 쓰지 않는다. 특이사항이 있으면 6~7문장까지 써도 된다.
+- 학생 이름은 성을 빼고 부른다 (김강민 → 강민이는 / 김지유 → 지유는).
 - 출력은 JSON 한 개만: {"title":"...","body":"..."}`;
 async function aiComment(d) {
   const key = process.env.ANTHROPIC_API_KEY; if (!key) throw new Error("NO_KEY");
   const g = d.cur.map((x, i) => `${["독해", "어휘", "어법", "오답·교재"][i]} ${x || "기록 없음"}${GL[x] ? `(${GL[x]})` : x === "미완" ? "(숙제 미완 · 미검사)" : ""}`).join(", ");
-  const msg = `학생: ${d.name} / 범위: ${d.scope} / ${d.round}차 인터뷰\n이번 회차 등급: ${g}\n조교 메모 제목: ${d.title || "(없음)"}\n조교 메모 본문: ${d.body || "(없음)"}`;
+  const sp = [d.special, d.xSpecial].filter(Boolean).join("\n");
+  const msg = `학생: ${d.name} / 범위: ${d.scope} / ${d.round}차 인터뷰\n이번 회차 등급: ${g}\n조교 메모 제목: ${d.title || "(없음)"}\n조교 메모 본문: ${d.body || "(없음)"}`
+    + `\n특이사항(인터뷰에서 실제로 본 장면·태도·말): ${sp || "(없음)"}`
+    + (d.answers && d.answers.length ? `\n학생이 실제로 한 말: ${d.answers.map(a => `"${a.q}"${a.ctx ? ` (${a.ctx})` : ""}`).join(" / ")}` : "");
   const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5", max_tokens: 900, system: SYS, messages: [{ role: "user", content: msg }] }) });
@@ -92,7 +97,7 @@ async function aiComment(d) {
 }
 
 const pub = r => ({ id: r.id, day: r.day, round: r.round, student: r.student, sheet_student: r.sheet_student, cls: r.cls, sheet_name: r.sheet_name,
-  data: r.data, c_title: r.c_title, c_body: r.c_body, c_src: r.c_src, memo_changed: r.memo_changed, synced_at: r.synced_at, warn: warnOf(r.data) });
+  data: r.data, x_special: r.x_special || "", c_title: r.c_title, c_body: r.c_body, c_src: r.c_src, memo_changed: r.memo_changed, synced_at: r.synced_at, warn: warnOf(r.data) });
 
 export default async function handler(req, res) {
   try {
@@ -131,7 +136,11 @@ export default async function handler(req, res) {
       case "comment.set": {
         const id = Number(b.id) || 0; if (!id) return res.status(400).json({ error: "리포트가 없습니다" });
         if (b.reset) await sql`update interview_reports set c_title = data->>'title', c_body = data->>'body', c_src = 'memo', memo_changed = false where id = ${id}`;
-        else await sql`update interview_reports set c_title = ${String(b.title || "").slice(0, 200)}, c_body = ${String(b.body || "").slice(0, 4000)}, c_src = 'edit', memo_changed = false where id = ${id}`;
+        else if (b.special !== undefined && b.title === undefined) await sql`update interview_reports set x_special = ${String(b.special || "").slice(0, 2000)} where id = ${id}`;
+        else {
+          await sql`update interview_reports set c_title = ${String(b.title || "").slice(0, 200)}, c_body = ${String(b.body || "").slice(0, 4000)}, c_src = 'edit', memo_changed = false where id = ${id}`;
+          if (b.special !== undefined) await sql`update interview_reports set x_special = ${String(b.special || "").slice(0, 2000)} where id = ${id}`;
+        }
         return res.status(200).json({ ok: true });
       }
       case "comment.ai": {
@@ -139,7 +148,8 @@ export default async function handler(req, res) {
         const rows = await sql`select * from interview_reports where id = any(${ids})`;
         const done = [], fail = [];
         for (const r of rows) {
-          if (!r.data.title && !r.data.body) { fail.push(`${r.student}: 메모가 비어 있어 코멘트를 생략해요`); continue; }
+          r.data.xSpecial = r.x_special || "";
+          if (!r.data.title && !r.data.body && !r.data.special && !r.x_special) { fail.push(`${r.student}: 메모가 비어 있어 코멘트를 생략해요`); continue; }
           try { const o = await aiComment(r.data);
             await sql`update interview_reports set c_title = ${o.title}, c_body = ${o.body}, c_src = 'ai', memo_changed = false where id = ${r.id}`; done.push(r.id); }
           catch (e) { if (e.message === "NO_KEY") return res.status(400).json({ error: "AI 키가 없어요 (Vercel 환경변수 ANTHROPIC_API_KEY)" }); fail.push(`${r.student}: ${e.message}`); }

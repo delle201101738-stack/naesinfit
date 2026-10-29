@@ -45,7 +45,9 @@ export function parseSheet(values, today) {
       cur, past,
       title: S(get(r, "코멘트제목")), body: String(get(r, "코멘트본문") ?? "").trim(),
       answers, missionsPrev, change: S(get(r, "변화메모")), fills,
-      missions: list("이번미션", 3), home: S(get(r, "가정요청"))
+      missions: list("이번미션", 3), home: S(get(r, "가정요청")),
+      // 특이사항: 머리줄에 '특이사항'(또는 특이점·관찰메모) 칸을 아무 데나 만들면 읽음 — 리포트 '인터뷰에서 본 장면' + AI 코멘트 재료
+      special: String(get(r, "특이사항") || get(r, "특이점") || get(r, "관찰메모") || "").trim()
     });
   }
   return { rows: out };
