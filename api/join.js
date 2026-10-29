@@ -48,8 +48,6 @@ export default async function handler(req, res) {
       const sim = mem.filter(m => ed1(base(m), base(typed)));
       if (sim.length) return res.status(200).json({ ok: false, similar: sim, class: c });
     }
-    // 선생님 테스트 이름(헤이즐·해이즐·테스트)은 반 명단에 넣지 않음
-    if (!name && /^(헤이즐|해이즐|헤이들|테스트|선생님|쌤)/.test(typed)) return res.status(200).json({ ok: true, name: typed, class: c, moved: 0, test: true });
     if (!name) {
       // 명단에 없으면 고른 학교·학년(반)에 자동 등록
       name = typed;                                   // 명단에 없는 새 학생 — 선생님 확인용으로 반에 넣어 둠
