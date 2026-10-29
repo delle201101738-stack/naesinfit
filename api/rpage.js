@@ -142,8 +142,53 @@ async function build(student, dayQ, range) {
   return { html: L.join("\n"), title: `${student} · ${mm}.${dd}일자 학습리포트`, desc: `${cls ? cls + " · " : ""}${desc}` };
 }
 
+// 인터뷰 리포트 링크(/iv/토큰) — 카톡 미리보기 + 글로 읽히는 내용
+async function ivPage(req, res, u) {
+  const tok = (u.searchParams.get("t") || "").trim().slice(0, 40), d = u.searchParams.get("d") || "";
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  let page = "";
+  try { page = await (await fetch(`https://${host}/interview`, { cache: "no-store" })).text(); } catch (e) {}
+  if (!page) page = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>인터뷰 리포트</title></head><body><div id="gate"></div></body></html>`;
+  let ssr = "<p>리포트 링크가 올바르지 않아요. 선생님께 새 링크를 받아 주세요.</p>", title = "", desc = "";
+  try {
+    await ensure();
+    const [m] = await sql`select student from report_tokens where token = ${tok}`;
+    if (m) {
+      const L = await sql`select * from interview_reports where student = ${m.student} order by day desc, round desc limit 30`;
+      const R = L.find(x => x.day === d) || L[0];
+      if (!R) ssr = "<p>아직 인터뷰 리포트가 없어요.</p>";
+      else {
+        const D = R.data, A = ["독해", "어휘", "어법", "오답·교재"], g = D.cur.map((x, i) => `${A[i]} ${x || "—"}`).join(" · ");
+        const [, mm, dd] = R.day.split("-");
+        title = `${D.name} · ${D.round}차 인터뷰 리포트`;
+        desc = `${D.cls ? D.cls + " · " : ""}${+mm}월 ${+dd}일 · ${D.scope ? D.scope + " · " : ""}${g}`;
+        const L2 = [`<h1>${esc(title)}</h1><p>헤이즐쌤의 꼼꼼한 인터뷰 · ${esc(D.cls)} · ${+mm}월 ${+dd}일 · 범위 ${esc(D.scope)} · 담당 ${esc(D.teacher || "헤이즐 쌤")}</p>`];
+        if (R.c_title || R.c_body) L2.push(`<h2>헤이즐 쌤 코멘트</h2><p><b>${esc(R.c_title)}</b></p><p>${esc(String(R.c_body || "").replace(/\*\*/g, "")).replace(/\n/g, "<br>")}</p>`);
+        L2.push(`<h2>이번 회차 결과</h2><p>${esc(g)}</p>`);
+        if ((D.answers || []).length) L2.push(`<h2>학생이 실제로 한 답변</h2><ul>${D.answers.map(a => `<li>“${esc(a.q)}”${a.ctx ? ` — ${esc(a.ctx)}` : ""}</li>`).join("")}</ul>`);
+        if ((D.missionsPrev || []).length) L2.push(`<h2>지난 미션 수행 확인</h2><ul>${D.missionsPrev.map(x => `<li>${/^O/.test(x.r) ? "✓" : /^X/.test(x.r) ? "✗" : "·"} ${esc(x.t)}</li>`).join("")}</ul>`);
+        if ((D.fills || []).length) L2.push(`<h2>지금 채워야 할 것</h2><ul>${D.fills.map(f => `<li>${f.area ? `<b>${esc(f.area)}</b> — ` : ""}${esc(f.text)}</li>`).join("")}</ul>`);
+        if ((D.missions || []).length) L2.push(`<h2>이번 미션</h2><ol>${D.missions.map(x => `<li>${esc(x)}</li>`).join("")}</ol>`);
+        if (D.home) L2.push(`<h2>가정에서 한 가지만</h2><p>${esc(D.home)}</p>`);
+        ssr = L2.join("\n");
+      }
+    }
+  } catch (e) { console.error("[ivpage]", e); ssr = "<p>리포트를 불러오지 못했습니다.</p>"; }
+  const og = `https://${host}/og.jpg`;
+  if (title) page = page.replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title><meta name="description" content="${esc(desc)}">`
+    + `<meta property="og:type" content="website"><meta property="og:site_name" content="헤이즐쌤의 꼼꼼한 인터뷰">`
+    + `<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">`
+    + `<meta property="og:image" content="${og}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">`
+    + `<meta name="twitter:card" content="summary_large_image">`);
+  page = page.replace(/<div id="gate"/, () => `<article id="ssr" style="max-width:720px;margin:24px auto;padding:0 18px;font-size:14px;line-height:1.7">${ssr}</article><div id="gate"`);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.status(200).send(page);
+}
+
 export default async function handler(req, res) {
   const u = new URL(req.url, "http://x");
+  if (u.searchParams.get("iv")) return ivPage(req, res, u);
   const tok = (u.searchParams.get("t") || "").trim().slice(0, 40);
   const host = req.headers["x-forwarded-host"] || req.headers.host;
   let page = "";

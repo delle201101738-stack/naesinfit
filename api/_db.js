@@ -63,6 +63,14 @@ export async function ensure() {
   await sql`create table if not exists hw_attend (
       class_id bigint not null, day text not null, student text not null, status text not null,
       memo text not null default '', updated_at timestamptz not null default now(), primary key (class_id, day, student))`;
+  // 꼼꼼한 인터뷰 리포트 (조교 입력시트에서 동기화)
+  await sql`create table if not exists interview_reports (
+      id bigserial primary key, sheet_id text not null, sheet_name text not null default '', row_no int not null default 0,
+      day text not null, round int not null default 1, sheet_student text not null, student text not null, cls text not null default '',
+      data jsonb not null default '{}'::jsonb, memo_hash text not null default '',
+      c_title text not null default '', c_body text not null default '', c_src text not null default 'memo',
+      memo_changed boolean not null default false, synced_at timestamptz not null default now(),
+      unique (sheet_id, sheet_student, day, round))`;
   // 학부모 링크 열람 기록 · 비밀번호 틀림 잠금
   await sql`create table if not exists report_views (
       student text not null, day text not null, first_at timestamptz not null default now(),
