@@ -250,7 +250,7 @@ function render0(){
   if(TAB!=="hw"){ $("#cls").innerHTML=HEAD+`<div id="alerts"></div>`+tabsHTML()+(TAB==="test"?testHTML(cls,mem,items):sendHTML(cls,mem,items,chk)); return; }
   $("#cls").innerHTML=HEAD+`<div id="alerts"></div>`+tabsHTML()+`
   <div class="card" style="padding:16px 18px">
-    <div>${mem.map(s=>`<span class="mem">${esc(s)}<button data-rm="${esc(s)}" title="반에서 빼기">✕</button></span>`).join("")||`<span style="color:var(--ink-3);font-size:13px">아직 학생이 없어요</span>`}</div>
+    <div>${mem.map(s=>{ const f=focusOf(s); return `<span class="mem"${f?` style="background:#FEF3C7;color:#92400E" title="집중관리: ${esc(f)}"`:""}><button data-focus="${esc(s)}" title="★ 집중관리 표시·사유" style="margin:0 3px 0 0;opacity:${f?1:.35}">★</button>${esc(s)}<button data-rm="${esc(s)}" title="반에서 빼기">✕</button></span>`; }).join("")||`<span style="color:var(--ink-3);font-size:13px">아직 학생이 없어요</span>`}</div>
     <div class="row" style="margin-top:10px"><input class="fld" id="mem-in" placeholder="학생 이름 (여러 명은 쉼표·줄바꿈으로)" style="flex:1;min-width:200px"><button class="btn pri" id="mem-add">추가</button></div>
     ${others.length?`<div style="margin-top:10px;font-size:11.5px;color:var(--ink-3);font-weight:700">앱에서 시험 본 학생 · 눌러서 추가</div><div style="margin-top:6px">${others.map(s=>`<button class="sug" data-add="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>`:""}
     <div style="margin-top:8px;font-size:11.5px;color:var(--ink-3)">학생이 앱 첫 화면에서 이름과 <b>이 반</b>을 고르면 자동으로 들어와요. 직접 넣을 때는 앱 이름과 똑같이 써야 리포트에 연결돼요.</div>
@@ -459,12 +459,13 @@ function seenHTML(s){
   return `<span class="seen">👀 봤어요<small>${hm}${v.n>1?` · ${v.n}번`:""}</small></span>`;
 }
 /* ── 🔔 살펴볼 학생: 숙제 2번 연속 못 함 / 시험 점수 2번 연속 하락 ── */
-function alertsOf(s, items, chk){
-  const out=[];
+const focusOf=s=>((DB.members.find(m=>+m.class_id===CUR&&m.student===s)||{}).focus||"");
+function alertsOf(s, items, chk, upto){
+  const out=[]; upto=upto||VD;
   const ks=items.slice().sort((a,b)=>a.day<b.day?1:a.day>b.day?-1:b.id-a.id).map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip");
   if(ks.length>=2 && ks.slice(0,2).every(k=>k.status==="none"||k.status==="part")) out.push("숙제 2번 연속 못 함");
   if(RES&&RES.length){
-    const ds=[...new Set(rowsOfMem(s).map(x=>x.day))].filter(d=>d<=VD).sort().reverse();
+    const ds=[...new Set(rowsOfMem(s).map(x=>x.day))].filter(d=>d<=upto).sort().reverse();
     const tp=[]; for(const d of ds){ const v=dayTests(s,d); if(v.length){ const t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0); if(t) tp.push(Math.round(c/t*100)); } if(tp.length>=3) break; }
     if(tp.length>=3 && tp[0]<tp[1] && tp[1]<tp[2]) out.push(`시험 2번 연속 하락 (${tp[2]}→${tp[1]}→${tp[0]}%)`);
   }
@@ -474,7 +475,7 @@ function paintAlerts(){
   if(!DB||!CUR||VIEW==="names") return;
   const mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student), items=DB.items.filter(i=>+i.class_id===CUR);
   const chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
-  const A=mem.map(s=>({s,a:alertsOf(s,items,chk)})).filter(x=>x.a.length);
+  const A=mem.map(s=>({s,a:[...(focusOf(s)?["★ "+focusOf(s)]:[]),...alertsOf(s,items,chk)]})).filter(x=>x.a.length);
   document.querySelectorAll("[data-bell]").forEach(e=>{ const x=A.find(y=>y.s===e.dataset.bell); e.innerHTML=x?`<span class="bell" title="${esc(x.a.join(" · "))}">🔔 ${esc(x.a[0].split(" (")[0])}</span>`:""; });
   const box=$("#alerts"); if(box) box.innerHTML=A.length?`<div class="alerts">🔔 <b>살펴볼 학생 ${A.length}명</b> · ${A.map(x=>`<b>${esc(x.s)}</b> ${esc(x.a.join(", "))}`).join(" / ")}<br><span style="font-size:11.5px;opacity:.8">상담·연락이 필요한지 한 번 확인해 주세요</span></div>`:"";
 }
@@ -541,6 +542,10 @@ async function namesClick(t){
     try{ const r=await fetch("/api/delete",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({student:s})}); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"지우지 못했어요");
       await load(); RES=null; render(); toast("지웠어요"); }catch(err){ alert(err.message); }
     return true; }
+  const fo=t.closest("[data-focus]"); if(fo){ const s=fo.dataset.focus, cur=focusOf(s);
+    const v=prompt(`${s} — ★ 집중관리 사유 (검사표·반 화면에 표시돼요)\n비우고 확인하면 해제돼요.`, cur||""); if(v===null) return true;
+    try{ await api({action:"member.focus",class_id:CUR,student:s,focus:v.trim()}); await load(); render(); toast(v.trim()?`${s} ★ 집중관리로 표시했어요`:`${s} 집중관리 해제`); }catch(err){ alert(err.message); }
+    return true; }
   if(t.closest("#sheet-pdf")||t.closest("#sheet-print")){ const d=$("#sheet-day")&&$("#sheet-day").value; if(d) await sheetPDF(d, !!t.closest("#sheet-print")); return true; }
   if(t.closest("#backup-btn")){ await backup(); return true; }
   return false;
@@ -578,6 +583,9 @@ function sheetBar(){
 function sheetHTML(day){
   const cls=DB.classes.find(c=>+c.id===CUR), mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student).sort((a,b)=>a.localeCompare(b,"ko"));
   const its=DB.items.filter(i=>+i.class_id===CUR&&i.day===day).sort((a,b)=>a.id-b.id);
+  const allIt=DB.items.filter(i=>+i.class_id===CUR&&i.day<day), chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
+  const why=s=>[...(focusOf(s)?[focusOf(s)]:[]),...alertsOf(s,allIt,chk,day)];
+  const nStar=mem.filter(s=>why(s).length).length;
   const n=Math.max(mem.length,1), W=1122, H=792, PAD=30;
   const headH=78, theadH=its.some(i=>i.memo)?(its.length>5?92:76):48, footH=26;
   const rowH=Math.max(17,Math.min(40,Math.floor((H-PAD*2-headH-theadH-footH)/n)));
@@ -587,23 +595,24 @@ function sheetHTML(day){
   return `<div id="sheet" style="width:${W}px;height:${H}px;box-sizing:border-box;padding:${PAD}px;background:#fff;color:#111;font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;overflow:hidden">
   <style>#sheet table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0}
    #sheet th,#sheet td{border:1px solid #333!important;padding:2px 5px!important;vertical-align:middle;white-space:normal!important;color:#111!important;letter-spacing:0!important;text-transform:none!important;position:static!important;background:#fff;min-width:0!important}
-   #sheet thead th{background:#EEEDF5!important;font-weight:800;text-align:center;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+   #sheet thead th{background:#EEEDF5!important;font-weight:800;text-align:center;line-height:1.25;word-break:keep-all;overflow-wrap:break-word}
    #sheet thead th .m{display:block;font-weight:500;color:#444!important;margin-top:3px;line-height:1.3}
    #sheet td.nm{font-weight:700;white-space:nowrap;overflow:hidden}#sheet td.nm small{color:#888!important;font-weight:600;margin-left:2px;font-size:.78em}
    #sheet td.no{text-align:center;color:#666!important}#sheet tbody tr:nth-child(even) td{background:#F7F7FA}</style>
   <div style="display:flex;align-items:flex-end;gap:16px;height:${headH-10}px;margin-bottom:10px;border-bottom:3px solid #111;padding-bottom:6px">
     <div style="flex:1"><div style="font-size:13px;color:#555;font-weight:700">헤이즐쌤 · 숙제 검사표</div>
       <div style="font-size:26px;font-weight:900;letter-spacing:-.02em">${esc(cls.name)} · ${fmtD(day)} 숙제</div></div>
-    <div style="font-size:12.5px;line-height:1.7;text-align:right;color:#333">표시: <b>○</b> 완료 &nbsp; <b>△</b> 일부 &nbsp; <b>✕</b> 안 함 &nbsp; <b>—</b> 면제<br>
+    <div style="font-size:12.5px;line-height:1.7;text-align:right;color:#333">표시: <b>○</b> 완료 &nbsp; <b>△</b> 일부 &nbsp; <b>✕</b> 안 함 &nbsp; <b>—</b> 면제 &nbsp; <b style="color:#C2410C">★</b> 집중관리<br>
       검사 조교 ____________ &nbsp; 검사 날짜 ____ / ____</div></div>
   <table><colgroup><col style="width:34px"><col style="width:${its.length>6?96:112}px">${its.map(()=>`<col>`).join("")}<col style="width:${its.length>5?120:170}px"></colgroup>
    <thead><tr style="height:${theadH}px"><th style="font-size:11px">번호</th><th style="font-size:13px">이름</th>
     ${its.map(i=>`<th style="font-size:${tf}px">${esc(i.title)}${i.memo?`<span class="m" style="font-size:${mf}px">${esc(i.memo.length>70?i.memo.slice(0,68)+"…":i.memo)}</span>`:""}</th>`).join("")}<th style="font-size:13px">메모</th></tr></thead>
-   <tbody>${mem.map((s,k)=>`<tr style="height:${rowH}px"><td class="no" style="font-size:${fs-2}px">${k+1}</td><td class="nm" style="font-size:${fs}px">${nb(s)}${sx(s)}</td>${its.map(()=>"<td></td>").join("")}<td></td></tr>`).join("")}</tbody></table>
-  <div style="margin-top:6px;font-size:10.5px;color:#777;display:flex;justify-content:space-between"><span>학생 ${mem.length}명 · 숙제 ${its.length}개 · 체크 후 반 관리 화면 표에 입력해 주세요</span><span>hazel_studylog</span></div></div>`;
+   <tbody>${mem.map((s,k)=>`<tr style="height:${rowH}px"><td class="no" style="font-size:${fs-2}px">${k+1}</td><td class="nm" style="font-size:${fs}px">${why(s).length?`<b style="color:#C2410C!important">★</b>`:""}${nb(s)}${sx(s)}</td>${its.map(()=>"<td></td>").join("")}<td style="vertical-align:top;padding-top:1px!important">${why(s).length?`<span style="display:block;font-size:${Math.max(9,fs-3.5)}px;line-height:1.2;color:#C2410C!important;font-weight:700">★ ${esc(why(s).join(" · "))}</span>`:""}</td></tr>`).join("")}</tbody></table>
+  <div style="margin-top:6px;font-size:10.5px;color:#777;display:flex;justify-content:space-between"><span>학생 ${mem.length}명 · 숙제 ${its.length}개${nStar?` · <b style="color:#C2410C">★ 집중관리 ${nStar}명</b> (사유는 메모 칸)`:""} · 체크 후 반 관리 화면 표에 입력해 주세요</span><span>hazel_studylog</span></div></div>`;
 }
 let H2P=null;
 async function sheetPDF(day, printOnly){
+  if(!RES) await loadRes();
   const cls=DB.classes.find(c=>+c.id===CUR), html=sheetHTML(day), name=`숙제검사표_${cls.name}_${day}.pdf`;
   if(printOnly){
     const w=window.open("","_blank"); if(!w){ toast("팝업이 막혔어요 · PDF 받기를 써 주세요"); return; }
