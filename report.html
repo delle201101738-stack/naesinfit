@@ -541,14 +541,14 @@ function hwBlock(HW, day, TD){
 function cumulative(D, upto){
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)})), HW=D.hw||[];
   const isRe=x=>x.scope==="재시험"||/^오답노트/.test(x.part_name||"");
-  const ds=[...new Set(RA.map(x=>dkey(x.created_at)).concat(HW.map(h=>h.day)))].filter(d=>d<=upto).sort();
+  const ds=[...new Set(RA.map(x=>dkey(x.created_at)).concat(HW.map(h=>h.day),attDays(D)))].filter(d=>d<=upto).sort();
   return ds.map(d=>{
     const best={}; RA.filter(x=>dkey(x.created_at)===d&&!isRe(x)).forEach(x=>{ const k=x.book+"|"+x.part, r=x.total?x.correct/x.total:0;
       if(!best[k]||r>best[k].r) best[k]={t:x.total,c:x.correct,r,book:x.book}; });
     const v=Object.values(best), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
     const hs=HW.filter(h=>h.day===d&&h.status&&h.status!=="skip"), hd=hs.filter(h=>h.status==="done").length;
     return {d, tp:t?Math.round(c/t*100):null, tn:v.length, books:[...new Set(v.map(x=>x.book.split(" · ").pop()))],
-      hp:hs.length?Math.round(hd/hs.length*100):null, hd, hc:hs.length, hn:HW.filter(h=>h.day===d).length};
+      hp:hs.length?Math.round(hd/hs.length*100):null, hd, hc:hs.length, hn:HW.filter(h=>h.day===d).length, at:(attOf(D,d)||{}).status||""};
   });
 }
 function cumDelta(CUM, day){
@@ -565,7 +565,7 @@ function cumHTML(CUM, day, name){
       +L.map((x,i)=>x[k]===null?"":`<circle cx="${xs(i).toFixed(1)}" cy="${ys(x[k]).toFixed(1)}" r="${x.d===day?5:3.4}" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`).join(""):""; };
   const rows=L.slice().reverse().map((x,i,arr)=>{ const pv=arr.slice(i+1);
     const pt=pv.find(y=>y.tp!==null), ph=pv.find(y=>y.hp!==null);
-    return `<tr${x.d===day?` class="cur"`:""}><td><b>${x.d.slice(5).replace("-",".")}</b>${x.d===day?` <em>이날</em>`:""}</td>
+    return `<tr${x.d===day?` class="cur"`:""}><td><b>${x.d.slice(5).replace("-",".")}</b>${x.at&&ATT[x.at]?` <span title="${ATT[x.at][1]}">${ATT[x.at][0]}</span>`:""}${x.d===day?` <em>이날</em>`:""}</td>
       <td>${x.hc?`<b>${x.hd}/${x.hc}</b> <small>${x.hp}%</small> ${arrow(ph&&x.hp!==null?x.hp-ph.hp:null)}`:x.hn?`<small>미검사</small>`:`<small>—</small>`}</td>
       <td>${x.tp!==null?`<b>${x.tp}%</b> <small>${x.tn}개 · ${esc(x.books.join(", "))}</small> ${arrow(pt?x.tp-pt.tp:null)}`:`<small>—</small>`}</td></tr>`; }).join("");
   return `<h2 class="s">📈 ${esc(name)} 누적 기록 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(최근 ${L.length}번 학습일 · 날짜별로 따로 계산)</span></h2>
@@ -584,7 +584,7 @@ function cumHTML(CUM, day, name){
 function daySel(D, allDays, day, extra){
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)})), HW=D.hw||[];
   const lab=d=>{ const bs=[...new Set(RA.filter(x=>dkey(x.created_at)===d).map(x=>x.book.split(" · ").pop()))];
-    const h=HW.some(x=>x.day===d); return fmtDate(d)+(bs.length?" · "+bs.join(", "):"")+(h?" · 숙제":""); };
+    const h=HW.some(x=>x.day===d), a=attOf(D,d); return fmtDate(d)+(bs.length?" · "+bs.join(", "):"")+(h?" · 숙제":"")+(a&&a.status!=="on"&&ATT[a.status]?" · "+ATT[a.status][1]:""); };
   const list=allDays.includes(day)?allDays:allDays.concat(day).sort();
   return `<select id="daysel" style="padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:13px;${extra||""}">${list.slice().reverse().map(d=>`<option value="${d}"${d===day?" selected":""}>${lab(d)}${d===dkey(new Date())&&!allDays.includes(d)?" · 기록 없음":""}</option>`).join("")}</select>`;
 }
@@ -592,7 +592,7 @@ function renderHwOnly(D, HW, day, allDays){
   const TD=day===dkey(new Date())?"오늘":"이날";
   const H0=hwBlock(HW,day,TD);
   const dayChange=()=>{ const s2=$("#daysel"); if(s2) s2.onchange=()=>{ SELDAY=s2.value; SELBOOK=""; history.replaceState(null,"",urlFor({day:SELDAY})); render(LASTD); }; };
-  if(!H0 || !HW.some(h=>h.day===day)){   // 그날은 시험도 숙제도 없음 — 예전 기록을 대신 보여주지 않음
+  if((!H0 || !HW.some(h=>h.day===day)) && !attOf(D,day)){   // 그날은 시험도 숙제도 출결도 없음 — 예전 기록을 대신 보여주지 않음
     CURURL=urlFor({day});
     $("#app").innerHTML=`
     <div class="act">${viewSel("day")}${allDays.length?daySel(D,allDays,day,"flex:1;min-width:0"):""}</div>
@@ -607,14 +607,16 @@ function renderHwOnly(D, HW, day, allDays){
   CURURL=urlFor({day});
   const H=hwBlock(HW,day,TD)||{html:"",cmt:""};
   const NOTE=(D.notes||[]).find(n=>n.day===day&&n.kind==="day");
-  const autoHead=H.chk?(H.miss.length?`숙제 ${H.miss.length}개 마무리 필요`:"숙제 모두 완료 👏"):"숙제 검사 전이에요";
-  const autoNote=`${H.cmt||""}${CDo.dh!=null?`<br><br>📈 지난 학습일(${CDo.ph.d.slice(5).replace("-",".")})보다 숙제 완료율 ${arrow(CDo.dh,"점")}.`:""}<br><br>${TD}은 앱 시험 기록이 없어요.`;
+  const A1=attOf(D,day);
+  const autoHead=(A1&&A1.status!=="on"&&ATT[A1.status]?ATT[A1.status][1]+(A1.memo?` (${A1.memo})`:"")+" · ":"")+(H.chk?(H.miss.length?`숙제 ${H.miss.length}개 마무리 필요`:"숙제 모두 완료 👏"):HW.some(h=>h.day===day)?"숙제 검사 전이에요":"이날은 숙제가 없어요");
+  const autoNote=`${attLine(D,day,TD)?attLine(D,day,TD)+"<br><br>":""}${H.cmt||""}${CDo.dh!=null?`<br><br>📈 지난 학습일(${CDo.ph.d.slice(5).replace("-",".")})보다 숙제 완료율 ${arrow(CDo.dh,"점")}.`:""}<br><br>${TD}은 앱 시험 기록이 없어요.`;
   $("#app").innerHTML=`
   <div class="act">${viewSel("day")}${days.length>1?daySel(D,days,day,"flex:1;min-width:0"):""}
     <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button></div>
   <div class="top"><div><div class="eb">숙제 · 테스트 리포트</div><div class="sb">hazel_studylog${cnameOf(D)?" · "+esc(cnameOf(D)):""}</div></div>
     <div class="rt"><b>${esc(D.student)}</b><span>${fmtDate(day)}</span></div></div>
   ${headHTML(NOTE&&NOTE.headline||autoHead, !!D.teacher, !!(NOTE&&NOTE.headline))}
+  ${attOf(D,day)?`<div class="hero"><div class="chips" style="margin-top:0">${attChip(D,day)}${examChip(D,day)}</div></div>`:""}
   ${H.html}
   ${todoHTML(D,day,H)}
   ${noteHTML("day", day, NOTE, autoNote, !!D.teacher)}
@@ -638,6 +640,16 @@ function urlFor(o){ const d=o.day?`day=${o.day}`:"", b=o.book?`&book=${encodeURI
   return TOKEN?`/r/${TOKEN}?${d}${b}${r}`:`/report?student=${encodeURIComponent(LASTD?LASTD.student:"")}&${d}${b}${r}`; }
 const cnameOf=D=>((D.klass||[])[0]||{}).name||"";
 function viewSel(v){ return `<div class="vsel">${[["day","하루"],["week","주간"],["month","월간"]].map(([k,n])=>`<button data-view="${k}" class="${v===k?"on":""}">${n}</button>`).join("")}</div>`; }
+/* 출결 */
+const ATT={on:["✅","정시 출석"],late:["⏰","지각"],absent:["❌","결석"],etc:["📝","기타"]};
+const attOf=(D,day)=>(D.att||[]).find(a=>a.day===day)||null;
+const attDays=D=>(D.att||[]).map(a=>a.day);
+function attChip(D,day){ const a=attOf(D,day); if(!a||!ATT[a.status]) return "";
+  return `<div class="chip"><i>🕘 출결</i><b style="font-size:15px">${ATT[a.status][0]} ${ATT[a.status][1]}</b>${a.memo?`<span style="display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px">${esc(a.memo)}</span>`:""}</div>`; }
+function attLine(D,day,TD){ const a=attOf(D,day); if(!a||a.status==="on") return "";
+  return a.status==="late"?`⏰ ${TD} <b>지각</b>했어요${a.memo?` (${esc(a.memo)})`:""}. 수업 시작 시간을 함께 챙겨 주세요.`
+    :a.status==="absent"?`❌ ${TD} <b>결석</b>했어요${a.memo?` (${esc(a.memo)})`:""}. 빠진 내용은 다음 수업 때 보충할게요.`
+    :`📝 출결 — ${a.memo?esc(a.memo):"기타"}`; }
 function examChip(D,day){ const ex=(D.klass||[]).find(k=>k.exam_date&&k.exam_date>=day); if(!ex) return "";
   const n=Math.round((new Date(ex.exam_date+"T00:00:00")-new Date(day+"T00:00:00"))/864e5);
   return `<div class="chip"><i>🗓 ${esc(ex.exam_name||"내신 시험")}</i><b>D-${n}</b></div>`; }
@@ -674,17 +686,18 @@ function renderRange(D){
   const hc=CUMa.reduce((a,x)=>a+x.hc,0), hd=CUMa.reduce((a,x)=>a+x.hd,0);
   const tv=CUMa.filter(x=>x.tp!==null), tp=tv.length?Math.round(tv.reduce((a,x)=>a+x.tp,0)/tv.length):null;
   const re=RA.filter(x=>isRe(x)&&inR(x)).length;
+  const AR=(D.att||[]).filter(a=>a.day>=from&&a.day<=end), ak=s=>AR.filter(a=>a.status===s).length;
   // 시험 종류별 평균
   const byP={}; RA.filter(x=>!isRe(x)&&inR(x)).forEach(x=>{ const o=byP[x.part]=byP[x.part]||{t:0,c:0,n:0,name:PNAME[x.part]||x.part_name}; o.t+=x.total; o.c+=x.correct; o.n++; });
   const parts=Object.values(byP).map(o=>({...o,p:Math.round(o.c/Math.max(1,o.t)*100)})).sort((a,b)=>b.p-a.p);
   const KIND=VIEW, NOTE=(D.notes||[]).find(x=>x.day===end&&x.kind===KIND);
   const autoHead=[hc?`숙제 완료율 ${Math.round(hd/hc*100)}%`:null, tp!==null?`시험 평균 ${tp}%`:null, parts[0]?`${parts[0].name} 가장 잘함`:null].filter(Boolean).join(" · ")||"이번 기간 기록이에요";
-  const autoNote=[`${esc(D.student)} 이번 ${VIEW==="week"?"주":"달"} ${CUMa.length}일 공부했어요.`,
+  const autoNote=[`${esc(D.student)} 이번 ${VIEW==="week"?"주":"달"} ${CUMa.length}일 공부했어요.`+(AR.length?` 출결은 정시 ${AR.filter(a=>a.status==="on").length}번${AR.filter(a=>a.status==="late").length?` · 지각 ${AR.filter(a=>a.status==="late").length}번`:""}${AR.filter(a=>a.status==="absent").length?` · 결석 ${AR.filter(a=>a.status==="absent").length}번`:""}이에요.`:""),
     hc?`📚 숙제 ${hc}개 중 <b>${hd}개</b>를 해 왔어요 (${Math.round(hd/hc*100)}%).`:"",
     tp!==null?`📝 시험 평균 정답률은 <b>${tp}%</b>예요.${parts.length>1?` 가장 잘한 건 <b>${esc(parts[0].name)}</b>(${parts[0].p}%), 더 연습할 건 <b>${esc(parts[parts.length-1].name)}</b>(${parts[parts.length-1].p}%)예요.`:""}`:"",
     re?`🔁 틀린 문제 다시 풀기를 ${re}번 했어요.`:"🔁 틀린 문제 다시 풀기를 아직 안 했어요 — 오답노트로 한 번씩 꼭 다시 풀게 해 주세요."].filter(Boolean).join("<br><br>");
   CURURL=urlFor({day:end});
-  const TODAYS=[...new Set(RA.map(x=>dkey(x.created_at)).concat((D.hw||[]).map(h=>h.day)))].filter(d=>d<=TODAY).sort();
+  const TODAYS=[...new Set(RA.map(x=>dkey(x.created_at)).concat((D.hw||[]).map(h=>h.day),attDays(D)))].filter(d=>d<=TODAY).sort();
   $("#app").innerHTML=`
   <div class="act">${viewSel(VIEW)}${TODAYS.length?daySel(D,TODAYS,end,"flex:0 1 auto;max-width:48%"):""}
     <button class="cpl" data-cplink="1">🔗 링크 복사</button><button onclick="window.print()">인쇄 · PDF</button></div>
@@ -696,6 +709,7 @@ function renderRange(D){
     <div class="chip"><i>📚 숙제 완료</i><b>${hc?`${hd}/${hc}`:"—"}</b></div>
     <div class="chip"><i>📝 시험 평균</i><b>${tp!==null?tp+"%":"—"}</b></div>
     <div class="chip"><i>🔁 다시 풀기</i><b>${re}회</b></div>
+    ${AR.length?`<div class="chip"><i>🕘 출결</i><b style="font-size:14px;line-height:1.5">정시 ${ak("on")} · 지각 ${ak("late")}<br>결석 ${ak("absent")}${ak("etc")?` · 기타 ${ak("etc")}`:""}</b></div>`:""}
     ${examChip(D,end)}
   </div></div>
   ${parts.length?`<h2 class="s">📝 시험 종류별 평균</h2><div class="card bars">${parts.map(p=>`
@@ -736,14 +750,14 @@ async function render(D){
   const HW=(D.hw||[]);
   if(VIEW==="week"||VIEW==="month") return renderRange(D);
   const RA=(D.rows||[]).map(x=>({...x, book:bk(x.book)}));
-  if(!RA.length && !HW.length){
+  if(!RA.length && !HW.length && !(D.att||[]).length){
     $("#app").innerHTML=`<div class="empty"><h3>${esc(D.student||"")}님의 기록이 없어요</h3>
       <p>앱에서 한 파트라도 응시하면 리포트가 만들어집니다.</p></div>`;
     $("#app").hidden=false; return;
   }
   /* ① 날짜 먼저 — 기본은 '오늘'. 오늘 기록이 없으면 예전 날 기록을 대신 보여주지 않음 */
   const TODAY=dkey(new Date());
-  const allDays=[...new Set(RA.map(x=>dkey(x.created_at)).concat(HW.map(h=>h.day)))].filter(d=>d<=TODAY).sort();
+  const allDays=[...new Set(RA.map(x=>dkey(x.created_at)).concat(HW.map(h=>h.day),attDays(D)))].filter(d=>d<=TODAY).sort();
   const day=allDays.includes(SELDAY)?SELDAY:TODAY;
   const RD=RA.filter(x=>dkey(x.created_at)===day);
   if(!RD.length) return renderHwOnly(D, HW, day, allDays);
@@ -826,6 +840,7 @@ async function render(D){
   /* 코멘트 초안 — 강점·약점을 앞세움 */
   const nm=esc(D.student);
   const cmt=[];
+  if(attLine(D,day,TD)) cmt.push(attLine(D,day,TD));
   const HB=hwBlock(HW,day,TD);
   const CUM=cumulative(D, day), CD=cumDelta(CUM, day);
   cmt.push(`${nm} ${TD} ${HB&&HB.chk?`숙제 <b>${HB.chk}개 중 ${HB.td}개</b>를 해 왔고, `:""}시험 <b>${tests.length}개</b>의 정답률은 <b>${score}%</b>예요.`
@@ -909,6 +924,7 @@ async function render(D){
       <div class="chip"><i>📈 지난 학습일보다</i><b style="font-size:14px;line-height:1.5">시험 ${CD.dt==null?"—":(CD.dt>0?"▲ ":CD.dt<0?"▼ ":"")+Math.abs(CD.dt)+"점"}<br>숙제 ${CD.dh==null?"—":(CD.dh>0?"▲ ":CD.dh<0?"▼ ":"")+Math.abs(CD.dh)+"점"}</b></div>
       <div class="chip"><i>🔁 틀린 문제 다시 풀기</i><b style="font-size:15px">${RET.length?`${RET.length}회 ✅`:"아직 안 함"}</b></div>
       ${HB&&HB.tot?`<div class="chip"><i>📌 남은 숙제</i><b>${HB.miss.length}개</b></div>`:`<div class="chip"><i>✅ 맞힌 문항</i><b>${T.c}<span style="font-size:12px;opacity:.8">/${T.t}</span></b></div>`}
+      ${attChip(D,day)}
       ${examChip(D,day)}
     </div>
   </div>

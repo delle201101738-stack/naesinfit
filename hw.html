@@ -183,6 +183,16 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .nmrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .nmrow .who{flex:1;min-width:180px} .nmrow .who small{display:block;color:var(--ink-3);font-size:11.5px}
 @media (prefers-color-scheme: dark){ .alerts{background:#3B2410;border-color:#7C2D12;color:#FED7AA} .alerts b{color:#FFEDD5} .bell{background:#4C1D1D;color:#FCA5A5} }
+.att{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.att .an{width:96px;font-size:14px}
+.aseg{display:flex;gap:4px;flex-wrap:wrap}
+.aseg button{padding:7px 10px;border-radius:10px;background:var(--surface-2);font-size:12.5px;font-weight:700;color:var(--ink-2);border:1.5px solid transparent}
+.aseg button.a-on.sel{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.aseg button.a-late.sel{background:#FEF3C7;color:#B45309;border-color:#F59E0B}
+.aseg button.a-absent.sel{background:var(--no-soft);color:var(--no);border-color:var(--no)}
+.aseg button.a-etc.sel{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.att .am{flex:1;min-width:150px;padding:7px 10px;font-size:12.5px}
+@media (max-width:700px){ .att .an{width:100%} .att .am{min-width:100%} }
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:50}
 </style>
 </head>
@@ -255,6 +265,8 @@ function render0(){
     ${others.length?`<div style="margin-top:10px;font-size:11.5px;color:var(--ink-3);font-weight:700">앱에서 시험 본 학생 · 눌러서 추가</div><div style="margin-top:6px">${others.map(s=>`<button class="sug" data-add="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>`:""}
     <div style="margin-top:8px;font-size:11.5px;color:var(--ink-3)">학생이 앱 첫 화면에서 이름과 <b>이 반</b>을 고르면 자동으로 들어와요. 직접 넣을 때는 앱 이름과 똑같이 써야 리포트에 연결돼요.</div>
   </div>
+
+  ${attendHTML(mem)}
 
   <div class="sec"><h2>숙제 내기</h2><span class="note">시험과 별개 · 검사 날짜 기준으로 리포트에 들어가요</span></div>
   <div class="card" style="padding:16px 18px">
@@ -462,6 +474,8 @@ function seenHTML(s){
 const focusOf=s=>((DB.members.find(m=>+m.class_id===CUR&&m.student===s)||{}).focus||"");
 function alertsOf(s, items, chk, upto){
   const out=[]; upto=upto||VD;
+  const ar=(DB.attend||[]).filter(a=>+a.class_id===CUR&&a.student===s&&a.day<=upto).sort((a,b)=>a.day<b.day?1:-1);
+  if(ar.length>=2&&ar.slice(0,2).every(a=>a.status==="late"||a.status==="absent")) out.push("지각·결석 2번 연속");
   const ks=items.slice().sort((a,b)=>a.day<b.day?1:a.day>b.day?-1:b.id-a.id).map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip");
   if(ks.length>=2 && ks.slice(0,2).every(k=>k.status==="none"||k.status==="part")) out.push("숙제 2번 연속 못 함");
   if(RES&&RES.length){
@@ -542,6 +556,10 @@ async function namesClick(t){
     try{ const r=await fetch("/api/delete",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({student:s})}); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"지우지 못했어요");
       await load(); RES=null; render(); toast("지웠어요"); }catch(err){ alert(err.message); }
     return true; }
+  const ab=t.closest("[data-att]"); if(ab){ const s=ab.dataset.as, k=ab.dataset.att, cur=attRec(s,AD);
+    try{ await setAtt(s, cur&&cur.status===k?"":k); render(); if((k==="late"||k==="absent"||k==="etc")&&!(cur&&cur.status===k)){ const m=document.querySelector(`[data-am="${CSS.escape(s)}"]`); if(m) m.focus(); } }catch(err){ alert(err.message); }
+    return true; }
+  if(t.closest("[data-attrest]")){ try{ await api({action:"attend.rest",class_id:CUR,day:AD}); await load(); render(); toast("미체크 학생을 정시로 표시했어요"); }catch(err){ alert(err.message); } return true; }
   const fo=t.closest("[data-focus]"); if(fo){ const s=fo.dataset.focus, cur=focusOf(s);
     const v=prompt(`${s} — ★ 집중관리 사유 (검사표·반 화면에 표시돼요)\n비우고 확인하면 해제돼요.`, cur||""); if(v===null) return true;
     try{ await api({action:"member.focus",class_id:CUR,student:s,focus:v.trim()}); await load(); render(); toast(v.trim()?`${s} ★ 집중관리로 표시했어요`:`${s} 집중관리 해제`); }catch(err){ alert(err.message); }
@@ -569,6 +587,28 @@ async function backup(){
     XLSX.writeFile(wb, `스터디로그_백업_${today()}.xlsx`);
     toast(`백업 완료 · 시험 ${j.attempts.length}건 · 숙제검사 ${j.checks.length}건`);
   }catch(err){ alert(err.message); }
+}
+/* ── 🕘 출결: 정시 · 지각 · 결석 · 기타 ── */
+const ATTN={on:"정시",late:"지각",absent:"결석",etc:"기타"}, ATTI={on:"✅",late:"⏰",absent:"❌",etc:"📝"};
+let AD=today();
+const attRec=(s,d,cid)=>(DB.attend||[]).find(a=>+a.class_id===+(cid||CUR)&&a.day===d&&a.student===s)||null;
+function attendHTML(mem){
+  const n=k=>mem.filter(s=>(attRec(s,AD)||{}).status===k).length, none=mem.filter(s=>!attRec(s,AD)).length;
+  return `<div class="sec"><h2>🕘 출결</h2><span class="note">누르면 바로 저장 · 다시 누르면 지워져요 · 리포트에 들어가요</span></div>
+  <div class="card" style="padding:14px 16px">
+    <div class="row" style="margin-bottom:10px;gap:8px"><input class="fld" type="date" id="att-day" value="${AD}" style="width:170px">
+      <span style="font-size:13px;color:var(--ink-2);flex:1;min-width:180px">✅ 정시 <b>${n("on")}</b> · ⏰ 지각 <b>${n("late")}</b> · ❌ 결석 <b>${n("absent")}</b> · 📝 기타 <b>${n("etc")}</b>${none?` · <span style="color:var(--accent)">미체크 ${none}</span>`:""}</span>
+      ${none?`<button class="btn" data-attrest="1">미체크 ${none}명 → 정시</button>`:""}</div>
+    ${mem.map(s=>{ const a=attRec(s,AD)||{};
+      return `<div class="att"><b class="an">${esc(s)}</b><span class="aseg">${Object.keys(ATTN).map(k=>`<button class="a-${k}${a.status===k?" sel":""}" data-att="${k}" data-as="${esc(s)}">${ATTI[k]} ${ATTN[k]}</button>`).join("")}</span>
+        <input class="fld am" data-am="${esc(s)}" placeholder="${a.status==="late"?"몇 분 지각 · 사유":a.status==="absent"?"결석 사유":a.status==="etc"?"기타 내용 (조퇴·보강 등)":"메모 (선택)"}" value="${esc(a.memo||"")}"></div>`; }).join("")||`<div class="empty">반에 학생이 없어요</div>`}
+  </div>`;
+}
+async function setAtt(s, status, memo){
+  const cur=attRec(s,AD);
+  await api({action:"attend.set",class_id:CUR,day:AD,student:s,status,memo:memo!==undefined?memo:(cur?cur.memo:"")});
+  DB.attend=(DB.attend||[]).filter(a=>!(+a.class_id===CUR&&a.day===AD&&a.student===s));
+  if(status) DB.attend.push({class_id:CUR,day:AD,student:s,status,memo:memo!==undefined?memo:(cur?cur.memo:"")});
 }
 /* ── 📄 숙제 검사표 (조교 출력용 · A4 가로 한 장) ── */
 function sheetDays(){ return [...new Set(DB.items.filter(i=>+i.class_id===CUR).map(i=>i.day))].sort().reverse(); }
@@ -604,10 +644,10 @@ function sheetHTML(day){
       <div style="font-size:26px;font-weight:900;letter-spacing:-.02em">${esc(cls.name)} · ${fmtD(day)} 숙제</div></div>
     <div style="font-size:12.5px;line-height:1.7;text-align:right;color:#333">표시: <b>○</b> 완료 &nbsp; <b>△</b> 일부 &nbsp; <b>✕</b> 안 함 &nbsp; <b>—</b> 면제 &nbsp; <b style="color:#C2410C">★</b> 집중관리<br>
       검사 조교 ____________ &nbsp; 검사 날짜 ____ / ____</div></div>
-  <table><colgroup><col style="width:34px"><col style="width:${its.length>6?96:112}px">${its.map(()=>`<col>`).join("")}<col style="width:${its.length>5?120:170}px"></colgroup>
-   <thead><tr style="height:${theadH}px"><th style="font-size:11px">번호</th><th style="font-size:13px">이름</th>
+  <table><colgroup><col style="width:34px"><col style="width:${its.length>6?96:112}px"><col style="width:60px">${its.map(()=>`<col>`).join("")}<col style="width:${its.length>5?120:170}px"></colgroup>
+   <thead><tr style="height:${theadH}px"><th style="font-size:11px">번호</th><th style="font-size:13px">이름</th><th style="font-size:12.5px">출결<span class="m" style="font-size:9.5px">정·지·결</span></th>
     ${its.map(i=>`<th style="font-size:${tf}px">${esc(i.title)}${i.memo?`<span class="m" style="font-size:${mf}px">${esc(i.memo.length>70?i.memo.slice(0,68)+"…":i.memo)}</span>`:""}</th>`).join("")}<th style="font-size:13px">메모</th></tr></thead>
-   <tbody>${mem.map((s,k)=>`<tr style="height:${rowH}px"><td class="no" style="font-size:${fs-2}px">${k+1}</td><td class="nm" style="font-size:${fs}px">${why(s).length?`<b style="color:#C2410C!important">★</b>`:""}${nb(s)}${sx(s)}</td>${its.map(()=>"<td></td>").join("")}<td style="vertical-align:top;padding-top:1px!important">${why(s).length?`<span style="display:block;font-size:${Math.max(9,fs-3.5)}px;line-height:1.2;color:#C2410C!important;font-weight:700">★ ${esc(why(s).join(" · "))}</span>`:""}</td></tr>`).join("")}</tbody></table>
+   <tbody>${mem.map((s,k)=>`<tr style="height:${rowH}px"><td class="no" style="font-size:${fs-2}px">${k+1}</td><td class="nm" style="font-size:${fs}px">${why(s).length?`<b style="color:#C2410C!important">★</b>`:""}${nb(s)}${sx(s)}</td><td style="text-align:center;font-size:${fs-1.5}px;font-weight:700">${(()=>{ const a=attRec(s,day); return a?esc(ATTN[a.status]||""):""; })()}</td>${its.map(()=>"<td></td>").join("")}<td style="vertical-align:top;padding-top:1px!important">${why(s).length?`<span style="display:block;font-size:${Math.max(9,fs-3.5)}px;line-height:1.2;color:#C2410C!important;font-weight:700">★ ${esc(why(s).join(" · "))}</span>`:""}</td></tr>`).join("")}</tbody></table>
   <div style="margin-top:6px;font-size:10.5px;color:#777;display:flex;justify-content:space-between"><span>학생 ${mem.length}명 · 숙제 ${its.length}개${nStar?` · <b style="color:#C2410C">★ 집중관리 ${nStar}명</b> (사유는 메모 칸)`:""} · 체크 후 반 관리 화면 표에 입력해 주세요</span><span>hazel_studylog</span></div></div>`;
 }
 let H2P=null;
@@ -639,6 +679,7 @@ const parentUrl=(tok,d)=>`${location.origin}/r/${tok}${d?`?day=${d}`:""}`;
 function oneLine(s, items, chk){
   const its=items.filter(i=>i.day===VD), cc=its.map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
   const st=dayStat(s,VD,items,chk), pv=prevStat(s,items,chk), out=[];
+  const at=attRec(s,VD); if(at&&at.status!=="on") out.push(ATTN[at.status]+(at.memo?`(${at.memo})`:""));
   if(cc.length) out.push(`숙제 ${d}/${cc.length}`);
   if(st.tp!==null){ const dv=pv.pt?st.tp-pv.pt.v:null; out.push(`시험 ${st.tp}%${dv===null?"":dv>0?` ▲${dv}점`:dv<0?` ▼${-dv}점`:" (지난번과 같음)"}`); }
   return out.length?out.join(" · "):"오늘 기록 없음";
@@ -722,6 +763,9 @@ document.addEventListener("click",async e=>{
   const op=t.closest("[data-open]"); if(op){ OPEN[op.dataset.open]=!OPEN[op.dataset.open]; render(); return; }
 });
 document.addEventListener("change",async e=>{
+  if(e.target.id==="att-day"){ AD=e.target.value||today(); render(); return; }
+  const amI=e.target.closest&&e.target.closest("[data-am]"); if(amI){ const s=amI.dataset.am, cur=attRec(s,AD);
+    try{ await setAtt(s, cur?cur.status:"etc", amI.value.trim()); if(!cur) render(); toast(cur?"메모 저장":"메모 저장 · 상태는 📝기타로 표시했어요"); }catch(err){ alert(err.message); } return; }
   if(e.target.id==="v-day"){ VD=e.target.value||today(); render(); return; }
   if(e.target.id==="g-day"){ GR.day=e.target.value||today(); render(); return; }
   const gmi=e.target.closest("[data-gm]"); if(gmi){ const it=gmi.dataset.gm, st=gmi.dataset.gs, cur=DB.checks.find(k=>+k.item_id===+it&&k.student===st);
