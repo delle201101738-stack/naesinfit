@@ -1,6 +1,6 @@
 // 동형모고 OMR 리포트 — 시험 만들기 · 정답(AI 추출·검수) · OMR 기록 · 서술형 AI 채점 · AI 코멘트 · 학부모 열람
 import { sql, ensure, readBody, checkPin, pinError, tokenFor } from "./_db.js";
-import { ensureMock, KINDS, AREAS_ALL, BLUEPRINT45, baseName, scoreExam, reportData, loadExam, gradeOf } from "./_mock.js";
+import { ensureMock, KINDS, AREAS_ALL, BLUEPRINT45, baseName, scoreExam, reportData, loadExam, gradeOf, syncMock, backfillMock } from "./_mock.js";
 
 const kday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const DAY = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null);
@@ -63,7 +63,7 @@ const pubExam = (e, sheets) => ({ id: +e.id, class_id: +e.class_id, cls: e.cls |
 
 export default async function handler(req, res) {
   try {
-    await ensure(); await ensureMock();
+    await ensure(); await ensureMock(); await backfillMock().catch(e => console.error("[mock backfill]", e));
     res.setHeader("Cache-Control", "no-store");
     const u = new URL(req.url, "http://x");
     // 학부모: 비공개 토큰 → 그 학생이 본 동형모고 리포트들 (선생님이 확정한 것만)
@@ -130,12 +130,12 @@ export default async function handler(req, res) {
         let id;
         if (prev) { await sql`update mock_exams set class_id = ${cid}, title = ${title}, day = ${day}, cfg = ${JSON.stringify(c)}::jsonb, updated_at = now() where id = ${prev.id}`; id = +prev.id; }
         else { const [r] = await sql`insert into mock_exams (class_id, title, day, cfg) values (${cid}, ${title}, ${day}, ${JSON.stringify(c)}::jsonb) returning id`; id = +r.id; }
-        const e = await loadExam(id);
+        const e = await loadExam(id); await syncMock(id);
         return res.status(200).json({ ok: true, exam: pubExam(e, []) });
       }
       case "exam.delete": {
         const id = Number(b.id) || 0;
-        await sql`delete from mock_sheets where exam_id = ${id}`; await sql`delete from mock_exams where id = ${id}`;
+        await sql`delete from mock_sheets where exam_id = ${id}`; await sql`delete from mock_exams where id = ${id}`; await syncMock(id);
         return res.status(200).json({ ok: true });
       }
       case "ai.key":          // 해설지 페이지 → 정답·해설
@@ -163,6 +163,7 @@ export default async function handler(req, res) {
           await sql`update mock_sheets set marks = ${JSON.stringify(b.marks || {})}::jsonb, flags = ${JSON.stringify(b.flags || {})}::jsonb,
                     img = ${String(b.img || "").slice(0, 1500000)}, confirmed = false, updated_at = now() where exam_id = ${id} and student = ${st}`;
         }
+        await syncMock(id);
         return res.status(200).json({ ok: true });
       }
       case "sheet.set": {     // 확인 화면에서 고치기 · 확정
@@ -174,17 +175,18 @@ export default async function handler(req, res) {
         if (b.confirmed !== undefined) await sql`update mock_sheets set confirmed = ${!!b.confirmed} where exam_id = ${id} and student = ${st}`;
         if (b.comment) await sql`update mock_sheets set comment = ${JSON.stringify({ title: T(b.comment.title, 200), body: T(b.comment.body, 4000), src: "edit" })}::jsonb where exam_id = ${id} and student = ${st}`;
         await sql`update mock_sheets set updated_at = now() where exam_id = ${id} and student = ${st}`;
+        if (b.marks || b.sub || b.confirmed !== undefined) await syncMock(id);
         return res.status(200).json({ ok: true });
       }
       case "sheet.move": {    // 이름을 잘못 붙였을 때 다른 학생으로 옮기기
         const id = Number(b.exam_id) || 0, from = T(b.from, 20), to = T(b.to, 20);
         const [ex] = await sql`select 1 from mock_sheets where exam_id = ${id} and student = ${to}`;
         if (ex) return res.status(400).json({ error: `${to} 학생 OMR이 이미 있어요. 먼저 지워 주세요.` });
-        await sql`update mock_sheets set student = ${to} where exam_id = ${id} and student = ${from}`;
+        await sql`update mock_sheets set student = ${to} where exam_id = ${id} and student = ${from}`; await syncMock(id);
         return res.status(200).json({ ok: true });
       }
       case "sheet.delete": {
-        await sql`delete from mock_sheets where exam_id = ${Number(b.exam_id) || 0} and student = ${T(b.student, 20)}`;
+        await sql`delete from mock_sheets where exam_id = ${Number(b.exam_id) || 0} and student = ${T(b.student, 20)}`; await syncMock(b.exam_id);
         return res.status(200).json({ ok: true });
       }
       case "sub.grade": {     // 서술형 AI 채점 (학생 한 명씩)
@@ -202,6 +204,7 @@ export default async function handler(req, res) {
             const sc = Math.max(0, Math.min(Number(it.p) || 0, Math.round((Number(x.score) || 0) * 2) / 2));
             const v = { read: T(x.read, 600), score: sc, why: T(x.why, 300), src: "ai" };
             await sql`update mock_sheets set subs = jsonb_set(subs, ${[it.n]}, subs->${it.n} || ${JSON.stringify(v)}::jsonb), updated_at = now() where exam_id = ${id} and student = ${st}`; }
+          await syncMock(id);
           return res.status(200).json({ ok: true, n: arr.length });
         } catch (e2) {
           if (e2.message === "NO_KEY") return res.status(400).json({ error: "AI 키가 없어요 (Vercel 환경변수 ANTHROPIC_API_KEY)", noKey: true });

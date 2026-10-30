@@ -149,6 +149,29 @@ export async function reportData(exam, sheets, student, cls) {
   d.template = templateComment(d);
   return d;
 }
+/* 데일리 리포트 연결 — 확정된 OMR 총점을 attempts(scope '동형')에 한 줄씩 넣음.
+   시험 하나 = part 'm_<id>'. 채점·확정·이름·날짜가 바뀔 때마다 통째로 다시 맞춤 (확정 풀리면 빠짐) */
+export async function syncMock(id) {
+  id = Number(id) || 0; if (!id) return;
+  const part = "m_" + id;
+  await sql`delete from attempts where scope = '동형' and part = ${part}`;
+  const e = await loadExam(id); if (!e) return;
+  const sh = await sql`select student, marks, subs, confirmed from mock_sheets where exam_id = ${id}`;
+  const S = scoreExam(e, sh); if (!S.total || !S.per.length) return;
+  const total = Math.max(1, Math.round(S.total)), book = "동형모의고사 · " + e.title, pname = "동형 · " + e.title, at = `${e.day}T12:00:00+09:00`;
+  for (const p of S.per) {
+    const c = Math.max(0, Math.min(total, Math.round(p.score)));
+    await sql`insert into attempts (student, book, unit_id, class_name, part, part_name, scope, total, correct, pct, secs, detail, created_at)
+      values (${p.student}, ${book}, '', ${e.cls || ""}, ${part}, ${pname}, '동형', ${total}, ${c}, ${Math.round(p.score / S.total * 100)}, 0, '[]'::jsonb, ${at}::timestamptz)`;
+  }
+}
+// 이 기능 전에 확정해 둔 동형모고도 한 번 맞춰 둠
+export async function backfillMock() {
+  const [m] = await sql`select v from hw_meta where k = 'mocksync'`; if (m && m.v === "1") return;
+  const ex = await sql`select distinct exam_id from mock_sheets where confirmed`;
+  for (const x of ex) await syncMock(x.exam_id);
+  await sql`insert into hw_meta (k, v) values ('mocksync', '1') on conflict (k) do update set v = excluded.v`;
+}
 export async function loadExam(id) {
   const [e] = await sql`select e.*, c.name as cls from mock_exams e left join hw_classes c on c.id = e.class_id where e.id = ${id}`;
   return e || null;
