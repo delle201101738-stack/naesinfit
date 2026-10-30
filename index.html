@@ -574,6 +574,8 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
       <div class="bubble" id="hero-msg">파트를 하나 골라서 시작해 보자. 어휘 선택부터 순서대로 가는 걸 추천해 📘</div>
     </div></div>
 
+    <div class="pad" id="resume-slot"></div>
+
     <div class="pad" style="margin-top:24px">
       <div class="sec"><h2>시험 범위</h2><span class="more">모든 파트에 적용돼요</span></div>
       <div class="card" style="padding:14px 16px" id="scope-card"></div>
@@ -997,7 +999,7 @@ function renderSmem(){ const el=document.getElementById("smem-slot"); if(!el) re
     <span style="flex:1;min-width:0"><b style="font-size:15px">문장암기</b><span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">${esc(sc)} 시험범위 교과서 본문 · 스크램블로 영작하기 · ⭐ 중요 문장만 따로</span></span>
     <span style="flex:none;color:var(--ink-3);font-size:18px">›</span></a>`:""; }
 function renderHome(){
-  renderSmem();
+  renderSmem(); renderResume();
   const q=qGet?qGet().length:0;
   $("#home-hi").innerHTML = (S.name?`${esc(S.name)}님`:"hazel_studylog")+(q?` · <span style="color:var(--cat-3);font-weight:700">미전송 ${q}건</span>`:"");
   $("#home-book-t").textContent = UNIT ? `${UNIT.book.subject} · ${UNIT.no}` : "교재 선택";
@@ -1251,6 +1253,11 @@ function shuffleRows(it){   // 단어 줄 섞기 — _map으로 원래 번호를
 }
 function startQuiz(opts){
   opts=opts||{};
+  { const k=rsKey(opts), sv=rsAll()[k];
+    if(sv && (opts.review || sv.scope===sel.scope)){
+      if(confirm(`풀다 만 시험이 있어요 (${sv.n}문제 중 ${sv.i+1}번째에서 멈춤).\n이어서 풀까요?\n\n[취소]를 누르면 처음부터 새로 풀어요.`)){ rsResume(k); return; }
+      rsDel(k);
+    } }
   let list=[];
   if(opts.review){
     (opts.part ? [opts.part] : livePARTS().map(p=>p.id))
@@ -1265,7 +1272,7 @@ function startQuiz(opts){
   }
   const items=list.map(x=>x.it);
   Q={review:!!opts.review, part: opts.review ? (opts.part||"review") : sel.part,
-     items, pl:list.map(x=>x.part), i:0, t0:Date.now()};
+     items, pl:list.map(x=>x.part), i:0, t0:Date.now(), rk:rsKey(opts), scope:sel.scope};
   Q.ans=list.map(x=>blankAns(x.part,x.it));
   Q.cur=list.map(()=>0);
   Q.bd=list.map(()=>[]); Q.af={};
@@ -1292,7 +1299,56 @@ function blankAns(part,it){
 function tick(){ if(!Q)return; const s=Math.floor((Date.now()-Q.t0)/1000);
   $("#q-timer").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
 $("#quiz-prev").onclick=()=>{ if(Q && Q.i>0){ Q.i--; renderQ(); window.scrollTo(0,0); } };
-$("#quiz-exit").onclick=()=>{ if(confirm("그만둘까요? 지금까지 푼 답은 저장되지 않아요.")){clearInterval(Q.timer);Q=null;renderHome();go("home");} };
+$("#quiz-exit").onclick=()=>{ if(confirm("나갈까요?\n푼 데까지 저장돼서, 다시 들어오면 이어서 풀 수 있어요.")){rsSave();clearInterval(Q.timer);Q=null;renderHome();go("home");} };
+
+/* ───── 이어 풀기: 시험 중간에 나가도(앱 닫기·새로고침·나가기) 푼 데까지 기기에 저장 ───── */
+const RSKEY="naesinfit.resume.v1";
+const RS_FIELDS=["items","pl","i","ans","cur","bd","af","notes","sk","del","dd"];
+function rsAll(){ try{ const o=JSON.parse(localStorage.getItem(RSKEY))||{}, now=Date.now(); let ch=false;
+  Object.keys(o).forEach(k=>{ if(!o[k]||now-o[k].ts>14*864e5){ delete o[k]; ch=true; } }); if(ch) rsPut(o); return o; }catch(e){ return {}; } }
+function rsPut(o){ try{ localStorage.setItem(RSKEY,JSON.stringify(o)); }catch(e){
+  try{ const ks=Object.keys(o).sort((a,b)=>o[a].ts-o[b].ts); while(ks.length>1){ delete o[ks.shift()]; try{ localStorage.setItem(RSKEY,JSON.stringify(o)); return; }catch(_){} } }catch(_){} } }
+function rsKey(opts){ opts=opts||{}; const u=UNIT?UNIT.id:"";
+  return opts.review ? `${u}|오답|${opts.part||"all"}|${opts.ever?1:0}` : `${u}|${sel.part}`; }
+function rsTouched(){ if(!Q) return false;   // 하나라도 손댄 게 있어야 저장
+  return Q.i>0 || JSON.stringify(Q.ans)!==JSON.stringify(Q.pl.map((p,i)=>blankAns(p,Q.items[i]))) || (Q.bd||[]).some(b=>b&&b.length) || Object.keys(Q.del||{}).length>0; }
+function rsSave(){ if(!Q||Q.detail||!Q.rk||!rsTouched()) return;
+  const o=rsAll(), q={}; RS_FIELDS.forEach(f=>{ if(Q[f]!==undefined) q[f]=Q[f]; });
+  o[Q.rk]={uid:UNIT?UNIT.id:"", part:Q.part, review:Q.review, scope:Q.scope, el:Date.now()-Q.t0, ts:Date.now(), i:Q.i, n:Q.items.length, q};
+  const ks=Object.keys(o); if(ks.length>12) ks.sort((a,b)=>o[a].ts-o[b].ts).slice(0,ks.length-12).forEach(k=>delete o[k]);
+  rsPut(o); }
+function rsDel(k){ const o=rsAll(); if(o[k]){ delete o[k]; rsPut(o); } }
+function rsResume(k){ const sv=rsAll()[k]; if(!sv) return false;
+  clearInterval(Q&&Q.timer);
+  Q=Object.assign({review:!!sv.review, part:sv.part, t0:Date.now()-(sv.el||0), rk:k, scope:sv.scope}, sv.q);
+  Q.cur ||= Q.items.map(()=>0); Q.bd ||= Q.items.map(()=>[]); Q.af ||= {}; Q.notes ||= Q.items.map(()=>({why:"",voc:""}));
+  if(!Q.review){ sel.part=sv.part; if(sv.scope) sel.scope=sv.scope; }
+  Q.i=Math.min(Math.max(0,Q.i|0),Q.items.length-1);
+  $("#q-total").textContent=Q.items.length;
+  Q.timer=setInterval(tick,1000); tick();
+  renderQ(); go("quiz"); toast(`${Q.i+1}번부터 이어서 풀어요`); return true; }
+let RS_T=null;
+const rsSoon=()=>{ if(!Q||Q.detail) return; clearTimeout(RS_T); RS_T=setTimeout(rsSave,500); };
+["input","change","click","pointerup","keyup"].forEach(ev=>document.addEventListener(ev,()=>{ if(Q&&!Q.detail&&$("#s-quiz").classList.contains("on")) rsSoon(); },true));
+window.addEventListener("pagehide",()=>{ clearTimeout(RS_T); rsSave(); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden"){ clearTimeout(RS_T); rsSave(); } });
+function renderResume(){ const el=document.getElementById("resume-slot"); if(!el) return;
+  const o=rsAll(), u=UNIT?UNIT.id:"", L=Object.entries(o).filter(([k,v])=>v.uid===u).sort((a,b)=>b[1].ts-a[1].ts);
+  if(!L.length){ el.innerHTML=""; return; }
+  const ago=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.round(m/1440)+"일 전"; };
+  el.innerHTML=`<div style="margin-top:22px"><div class="sec"><h2>⏸ 풀다 만 시험</h2><span class="more">누르면 그 문제부터 이어서</span></div>
+    <div class="card" style="padding:6px 0">${L.map(([k,v])=>{ const nm=v.review?("오답노트 · "+(v.part&&v.part!=="review"&&P[v.part]?labelOf(v.part):"전체")):(P[v.part]?labelOf(v.part):v.part);
+      const pct=Math.round(v.i/v.n*100);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px">
+        <button data-rs="${esc(k)}" style="flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer">
+          <b style="font-size:14.5px">${esc(nm)}</b>
+          <span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px"><span class="num">${v.i+1}/${v.n}</span>번째 문제 · ${ago(v.ts)}${!v.review&&SCOPES()[v.scope]?" · "+esc(SCOPES()[v.scope].short||SCOPES()[v.scope].label):""}</span>
+          <span style="display:block;height:4px;border-radius:4px;background:var(--surface-3);margin-top:6px;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:var(--accent)"></span></span></button>
+        <button data-rs="${esc(k)}" class="btn-sm" style="flex:none;padding:8px 13px">이어 풀기</button>
+        <button data-rsx="${esc(k)}" aria-label="버리기" style="flex:none;background:none;border:0;color:var(--ink-3);font-size:17px;padding:6px;cursor:pointer">✕</button></div>`; }).join("")}</div></div>`; }
+document.getElementById("resume-slot").addEventListener("click",e=>{
+  const x=e.target.closest("[data-rsx]"); if(x){ if(confirm("이 시험 진행 기록을 버릴까요?")){ rsDel(x.dataset.rsx); renderResume(); } return; }
+  const b=e.target.closest("[data-rs]"); if(b && !rsResume(b.dataset.rs)) renderResume(); });
 
 function renderQ(){
   const it=Q.items[Q.i], part=Q.pl[Q.i], a=Q.ans[Q.i];
@@ -2025,7 +2081,7 @@ function grade(part,it,a){
   return d;
 }
 function finish(){
-  clearInterval(Q.timer);
+  clearInterval(Q.timer); clearTimeout(RS_T); if(Q.rk) rsDel(Q.rk);
   Q.detail=Q.items.map((it,i)=>grade(Q.pl[i],it,Q.ans[i]));
   Q.items.forEach((it,i)=>{
     const mp=it._map, bad=[];

@@ -106,6 +106,24 @@ const norm=s=>String(s||"").replace(/[‘’`´]/g,"'").replace(/[“”]/g,'"')
 const words=s=>norm(s).split(" ").filter(Boolean);
 const bare=w=>norm(w).toLowerCase().replace(/[^a-z0-9'\-]/g,"");
 
+/* ───────── 이어 하기: 중간에 나가도 그 문장부터 ───────── */
+const RKEY="smem.run.v1";
+const runGet=()=>{ try{ const r=JSON.parse(localStorage.getItem(RKEY)); return r&&Date.now()-r.ts<14*864e5?r:null; }catch(e){ return null; } };
+const runDel=()=>{ try{ localStorage.removeItem(RKEY); }catch(e){} };
+function runSave(){ if(!RUN||!RUN.cur||!SCH||RUN.fin) return; const C=RUN.cur;
+  try{ localStorage.setItem(RKEY,JSON.stringify({sch:SCH.name, ids:RUN.L.map(x=>x.id), i:RUN.i, first:RUN.first, done:RUN.done, ty:RUN.ty||{}, ts:Date.now(),
+    cur:{id:C.it.id, parts:C.parts, bank:C.bank, placed:C.placed, caret:C.caret, typed:C.typed, hint:C.hint, checked:C.checked}})); }catch(e){} }
+function runResume(){ const r=runGet(); if(!r||!SCH||r.sch!==SCH.name) return false;
+  const M={}; setsOf().forEach(s=>s.items.forEach(it=>M[it.id]={...it,set:s}));
+  const L=r.ids.map(id=>M[id]).filter(Boolean); if(!L.length){ runDel(); return false; }
+  RUN={L, i:Math.min(r.i|0,L.length-1), first:r.first||{}, done:r.done||0, ty:r.ty||{}}; $("#b-home").hidden=false;
+  const it=L[RUN.i], c=r.cur;
+  if(c&&c.id===it.id) { RUN.cur={it, parts:c.parts, bank:c.bank, placed:c.placed||[], caret:c.caret||0, hist:[], checked:c.checked||null, typed:c.typed||"", hint:c.hint||0}; draw(); }
+  else load();
+  toast(`${RUN.i+1}번째 문장부터 이어서 해요`); return true; }
+window.addEventListener("pagehide",runSave);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") runSave(); });
+
 /* ───────── 설정 화면 ───────── */
 function setsOf(){ return SCH?SCH.sets:[]; }
 function pool(){
@@ -123,7 +141,11 @@ function home(){
   const all=setsOf().flatMap(s=>s.items), nFav=all.filter(it=>ST.fav[it.id]).length, nOk=all.filter(it=>ST.ok[it.id]&&!ST.miss[it.id]).length;
   const P=pool();
   $("#sub").textContent=`${SCH.name} · ${SCH.book}`;
-  $("#app").innerHTML=`
+  const RS=runGet(), rsOn=RS&&RS.sch===SCH.name;
+  $("#app").innerHTML=`${rsOn?`<div class="card" style="margin-top:16px;display:flex;align-items:center;gap:10px">
+    <div style="flex:1;min-width:0"><b>⏸ 하던 문장암기가 있어요</b><div class="hint" style="margin-top:2px">${RS.ids.length}문장 중 ${RS.i+1}번째에서 멈췄어요</div></div>
+    <button class="big" data-rsm style="flex:none;width:auto;padding:10px 16px;margin:0">이어 하기</button>
+    <button class="ib" data-rsmx aria-label="버리기" style="flex:none">✕</button></div>`:""}
   <div class="sec"><h2>시험 범위</h2><span class="note">눌러서 켜고 끄기</span></div>
   <div class="chips">${setsOf().map(s=>`<button class="chip${c.sets.includes(s.id)?" on":""}" data-set="${s.id}">${esc(s.label)}<small>${s.items.length}문장</small></button>`).join("")}</div>
   <div class="card" style="margin-top:16px">
@@ -144,7 +166,7 @@ function home(){
 /* ───────── 문제 화면 ───────── */
 function start(){
   let L=pool(); if(!L.length) return; if((CFG().ord||"seq")==="rnd") L=shuffle(L);
-  RUN={L,i:0,first:{},done:0}; $("#b-home").hidden=false; load();
+  runDel(); RUN={L,i:0,first:{},done:0}; $("#b-home").hidden=false; load();
 }
 const isType=it=>RUN.ty&&RUN.ty[it.id]!==undefined?RUN.ty[it.id]:(ST.fav[it.id]&&(CFG().favty==="type"));
 function load(){
@@ -170,6 +192,7 @@ function draw(){
   </div>
   <div class="acts" style="justify-content:space-between"><button id="b-prev"${R.i?"":" disabled"}>← 이전</button><button id="b-skip">건너뛰기 →</button></div>`;
   if(ty){ const ta=$("#ty"); ta.value=C.typed; markWB(); if(!C.checked) setTimeout(()=>ta.focus({preventScroll:true}),30); }
+  runSave();
 }
 function scrHTML(){
   const C=RUN.cur, P=C.placed, chk=C.checked;
@@ -233,6 +256,7 @@ function finish(ok,k){
   save(); draw();
 }
 function summary(){
+  runDel(); RUN.fin=true;
   const R=RUN, L=R.L, one=L.filter(it=>R.first[it.id]==="ok"), miss=L.filter(it=>R.first[it.id]==="no"), skip=L.filter(it=>!R.first[it.id]);
   $("#app").innerHTML=`<div class="card" style="margin-top:20px;text-align:center">
     <div style="font-size:40px">${miss.length?"💪":"🎉"}</div><div style="font-size:19px;font-weight:800;margin-top:4px">${L.length}문장 끝!</div>
@@ -295,7 +319,8 @@ function markWB(){ const C=RUN.cur, ta=$("#ty"); if(!ta) return; const have={}; 
   $$("#wb button").forEach(bt=>{ const b=bare(bt.dataset.w); if(have[b]>0){ have[b]--; bt.classList.add("used"); } else bt.classList.remove("used"); }); }
 
 /* ───────── 버튼 ───────── */
-document.addEventListener("input",e=>{ if(e.target.id==="ty"){ RUN.cur.typed=e.target.value; markWB(); } });
+let RT=null;
+document.addEventListener("input",e=>{ if(e.target.id==="ty"){ RUN.cur.typed=e.target.value; markWB(); clearTimeout(RT); RT=setTimeout(runSave,600); } });
 document.addEventListener("keydown",e=>{ if(e.target.id==="ty"&&e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); (RUN.cur.checked&&RUN.cur.checked.ok?$("#b-next"):$("#b-check"))?.click(); } });
 document.addEventListener("click",e=>{
   const t=e.target; if(Date.now()-SUP<400&&t.closest&&(t.closest("#zone")||t.closest("#bank"))) return;
@@ -305,6 +330,8 @@ document.addEventListener("click",e=>{
   const sg=t.closest(".seg button"); if(sg&&!RUN){ CFG()[sg.parentElement.dataset.k]=sg.dataset.v; home(); return; }
   const fv=t.closest("[data-fav]"); if(fv){ const id=fv.dataset.fav; if(ST.fav[id]) delete ST.fav[id]; else ST.fav[id]=1; save(); fv.classList.toggle("on",!!ST.fav[id]);
     toast(ST.fav[id]?"⭐ 중요 문장에 넣었어요":"즐겨찾기를 뺐어요"); if(!RUN) home(); return; }
+  if(t.closest("[data-rsm]")){ if(!runResume()) home(); return; }
+  if(t.closest("[data-rsmx]")){ if(confirm("하던 기록을 버릴까요?")){ runDel(); home(); } return; }
   if(t.closest("#go")){ start(); return; }
   if(!RUN) return;
   const wb=t.closest("#wb button"); if(wb){ const ta=$("#ty"); const s=ta.selectionStart??ta.value.length, v=ta.value, pre=v.slice(0,s), post=v.slice(s);
@@ -331,7 +358,7 @@ document.addEventListener("click",e=>{
   if(t.closest("#b-again")){ const L=RUN.miss; RUN={L,i:0,first:{},done:0}; load(); return; }
   if(t.closest("#b-back")){ home(); return; }
 });
-$("#b-home").onclick=()=>{ if(!RUN||confirm("그만하고 처음 화면으로 갈까요?")) home(); };
+$("#b-home").onclick=()=>{ if(!RUN||!RUN.cur||RUN.fin||confirm("처음 화면으로 갈까요?\n푼 데까지 저장돼서 이어서 할 수 있어요.")){ runSave(); home(); } };
 
 (async()=>{
   try{ DATA=await (await fetch("content/sentences.json",{cache:"no-store"})).json(); }catch(e){ $("#app").innerHTML=`<div class="card" style="margin-top:20px">문장을 불러오지 못했어요</div>`; return; }
