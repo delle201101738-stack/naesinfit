@@ -18,6 +18,8 @@ async function snapshot() {
   return { ok: true, classes, members, items, checks, students: students.map(r => r.student), stu: students, views, attend };
 }
 
+const paperId = s => { let h = 5381; for (const ch of String(s).replace(/\s+/g, "")) h = ((h * 33) ^ ch.codePointAt(0)) >>> 0; return h.toString(36); };
+
 export default async function handler(req, res) {
   const gate = await checkPin(req).catch(() => ({ ok: false, why: "ERR" }));
   if (!gate.ok) return res.status(gate.why === "ERR" ? 500 : 401).json({ error: gate.why === "ERR" ? "잠시 후 다시 해 주세요" : pinError(gate) });
@@ -54,6 +56,28 @@ export default async function handler(req, res) {
         await sql`delete from hw_members where class_id = ${cid} and not (student = any(${list}))`;
         for (const st of list) await sql`insert into hw_members (class_id, student) values (${cid}, ${st}) on conflict do nothing`;
         break;
+      }
+      // 지필(종이) 테스트 점수 수기 입력 → attempts에 scope '지필'로 저장 (그날 데일리 리포트·누적·반평균에 그대로 반영)
+      // 같은 학생·같은 날·같은 교재·같은 시험 이름이면 덮어씀, 맞힌 수를 비우면 지움
+      case "paper.save": {
+        const day = DAY(b.day), book = S(b.book, 120), name = S(b.name, 40), total = Math.round(Number(b.total) || 0);
+        if (!day || !book || !name || total < 1 || total > 1000) return res.status(400).json({ error: "날짜·교재·시험 이름·만점을 확인해 주세요" });
+        const part = "p_" + paperId(name), pname = "지필 · " + name, uid = S(b.unit_id, 20), cname = S(b.class_name, 40);
+        const at = `${day}T12:00:00+09:00`;
+        const rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 200);
+        let saved = 0, removed = 0;
+        for (const r of rows) {
+          const st = S(r.student, 20); if (!st) continue;
+          const del = await sql`delete from attempts where student = ${st} and scope = '지필' and part = ${part} and book = ${book}
+            and to_char(created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') = ${day} returning id`;
+          const c = r.correct === null || r.correct === "" || r.correct === undefined ? null : Math.round(Number(r.correct));
+          if (c === null || !Number.isFinite(c)) { removed += del.length; continue; }
+          const cc = Math.max(0, Math.min(total, c));
+          await sql`insert into attempts (student, book, unit_id, class_name, part, part_name, scope, total, correct, pct, secs, detail, created_at)
+            values (${st}, ${book}, ${uid}, ${cname}, ${part}, ${pname}, '지필', ${total}, ${cc}, ${Math.round(cc / total * 100)}, 0, '[]'::jsonb, ${at}::timestamptz)`;
+          saved++;
+        }
+        out = { ok: true, saved, removed }; break;
       }
       case "item.create": {
         const cid = Number(b.class_id) || 0, day = DAY(b.day), title = S(b.title, 120);
