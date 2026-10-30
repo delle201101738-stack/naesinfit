@@ -140,10 +140,11 @@
      "title": "Resilience: The Power to Overcome",
      "file": "content/ce2ybm03.json",
      "pts": {
-      "wmean": 144,
-      "wsyn": 144,
-      "wsynw": 144,
-      "wdef": 288,
+      "wmean": 72,
+      "wsyn": 20,
+      "wdef": 30,
+      "dfa": 20,
+      "dfb": 10,
       "word": 54,
       "word2": 60,
       "gbbw": 61,
@@ -151,14 +152,19 @@
       "vbbw": 22,
       "vbb": 9
      },
-     "total": 930,
+     "total": 362,
      "labels": {
       "word": "통변형 ① 기본 O·X 고치기",
       "word2": "통변형 ② 심화 O·X 고치기",
       "gbbw": "어법 비법 ① 밑줄 O·X 고치기",
       "gbb": "어법 비법 ② 네모·용법 5지선다",
       "vbbw": "어휘 비법 ① 밑줄 O·X 고치기",
-      "vbb": "어휘 비법 ② 네모·영영·빈칸 5지선다"
+      "vbb": "어휘 비법 ② 네모·영영·빈칸 5지선다",
+      "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+      "wsyn": "단어 TEST ② 유의어 매칭",
+      "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+      "dfa": "영영풀이 시험지 Part A 매칭",
+      "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
      }
     },
     {
@@ -167,17 +173,23 @@
      "title": "Science for All",
      "file": "content/ce2ybm04.json",
      "pts": {
-      "wmean": 160,
-      "wsyn": 160,
-      "wsynw": 160,
-      "wdef": 320,
+      "wmean": 93,
+      "wsyn": 20,
+      "wdef": 30,
+      "dfa": 20,
+      "dfb": 10,
       "word": 47,
       "word2": 54
      },
-     "total": 901,
+     "total": 274,
      "labels": {
       "word": "통변형 ① 기본 O·X 고치기",
-      "word2": "통변형 ② 심화 O·X 고치기"
+      "word2": "통변형 ② 심화 O·X 고치기",
+      "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+      "wsyn": "단어 TEST ② 유의어 매칭",
+      "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+      "dfa": "영영풀이 시험지 Part A 매칭",
+      "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
      }
     }
    ]
