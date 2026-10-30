@@ -364,7 +364,7 @@ function render(){
       <td>${PARTNAMES[r.part]||esc(r.part_name||r.part)}</td>
       <td style="color:var(--ink-3)">${r.scope==="all"?"전체":esc(r.scope)}</td>
       <td><span class="pill ${pctClass(r.pct)}">${r.pct}%</span> <span class="num" style="color:var(--ink-3);font-size:12px">${r.correct}/${r.total}</span></td>
-      <td>${r.scope==="지필"?`<span style="font-size:12px;color:var(--ink-3)">✍️ 수기 입력</span>`:`<button class="btn" data-att="${r.id}">오답 보기</button>`}</td></tr>`).join("")+`</tbody>`;
+      <td>${r.scope==="동형"?`<span style="font-size:12px;color:var(--ink-3)">📝 동형 OMR</span>`:r.scope==="지필"?`<span style="font-size:12px;color:var(--ink-3)">✍️ 수기 입력</span>`:`<button class="btn" data-att="${r.id}">오답 보기</button>`}</td></tr>`).join("")+`</tbody>`;
 }
 
 document.addEventListener("click",e=>{
