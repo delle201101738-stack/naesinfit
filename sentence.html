@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6B4EFF">
+<title>문장암기 · hazel_studylog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800&family=Archivo:wght@500;600;700&display=swap">
+<style>
+:root{
+  --ground:#EEEFF5; --surface:#FFFFFF; --surface-2:#F7F7FB; --surface-3:#EFEFF6; --line:#E4E4EF; --line-2:#D8D8E6;
+  --ink:#16151F; --ink-2:#55536A; --ink-3:#8A87A0; --accent:#6B4EFF; --accent-soft:#EDE9FF; --on-accent:#fff;
+  --ok:#12A150; --ok-soft:#E4F5EA; --no:#E5484D; --no-soft:#FCEBEB; --gold:#D99A00; --gold-soft:#FFF3D6;
+  --shadow:0 1px 2px rgba(22,21,31,.05), 0 10px 26px -16px rgba(22,21,31,.30);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#0E0E17; --surface:#1A1A27; --surface-2:#21212F; --surface-3:#282838; --line:#2C2C3D; --line-2:#3A3A4E;
+  --ink:#F1F0F8; --ink-2:#A7A4BB; --ink-3:#7B7894; --accent:#8E76FF; --accent-soft:#241F42; --on-accent:#12101F;
+  --ok:#3ECF7E; --ok-soft:#12301F; --no:#FF6B6F; --no-soft:#3A1B1E; --gold:#F2B73B; --gold-soft:#382A10;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -18px rgba(0,0,0,.85);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--ground);color:var(--ink);font-family:'Gothic A1','Apple SD Gothic Neo',sans-serif;font-size:15px;line-height:1.55;word-break:keep-all}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 120px}
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.hd{max-width:720px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.hd h1{margin:0;font-size:17px;font-weight:800;flex:1;letter-spacing:-.02em} .hd h1 small{display:block;font-size:12px;color:var(--ink-3);font-weight:600}
+.ib{padding:8px 12px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-2);text-decoration:none;white-space:nowrap}
+.card{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:16px}
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 10px}
+.sec h2{margin:0;font-size:15px;font-weight:800}
+.note{font-size:12.5px;color:var(--ink-3)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 13px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:13.5px;font-weight:800;color:var(--ink-2)}
+.chip.on{background:var(--accent);color:var(--on-accent)} .chip small{font-weight:600;opacity:.75;margin-left:4px}
+.seg{display:flex;background:var(--surface-2);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;padding:9px 6px;border-radius:9px;font-size:13px;font-weight:800;color:var(--ink-3)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.opt{margin-top:12px} .opt>label{display:block;font-size:12px;font-weight:800;color:var(--ink-3);margin-bottom:6px}
+.big{display:block;width:100%;padding:15px;border-radius:14px;background:var(--accent);color:var(--on-accent);font-size:15.5px;font-weight:800;text-align:center}
+.big:disabled{opacity:.45}
+.stat{display:flex;gap:8px;margin-top:10px} .stat div{flex:1;background:var(--surface-2);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-family:'Archivo',sans-serif;font-size:20px} .stat span{font-size:11.5px;color:var(--ink-3);font-weight:700}
+/* 문제 화면 */
+.top{display:flex;align-items:center;gap:8px;margin:14px 0 10px}
+.prog{flex:1;height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden} .prog i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+.cnt{font-family:'Archivo',sans-serif;font-size:13px;font-weight:700;color:var(--ink-3)}
+.qh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.qh .src{flex:1;font-size:12px;font-weight:700;color:var(--ink-3)}
+.star{font-size:22px;line-height:1;padding:4px 6px;border-radius:10px;color:var(--line-2)} .star.on{color:var(--gold)}
+.tbtn{padding:6px 10px;border-radius:9px;background:var(--surface-2);font-size:12px;font-weight:800;color:var(--ink-2)}
+.tbtn.on{background:var(--accent-soft);color:var(--accent)}
+.ko{font-size:16.5px;font-weight:700;line-height:1.6;letter-spacing:-.01em}
+.zone{min-height:96px;margin-top:14px;padding:10px;border-radius:16px;border:2px dashed var(--line-2);background:var(--surface-2);display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start;align-items:center;position:relative}
+.zone.drop{border-color:var(--accent)}
+.zone .ph{color:var(--ink-3);font-size:13px;padding:6px 4px}
+.tk{padding:9px 12px;border-radius:11px;background:var(--surface);box-shadow:0 1px 0 var(--line-2),0 2px 6px -2px rgba(0,0,0,.12);font-size:15.5px;font-weight:700;font-family:'Archivo','Gothic A1',sans-serif;touch-action:none;user-select:none;-webkit-user-select:none;line-height:1.3}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;min-height:46px}
+.bank .tk{background:var(--surface);border:1.5px solid var(--line)}
+.bank .tk.used{visibility:hidden}
+.tk.ok{background:var(--ok-soft);color:var(--ok)} .tk.bad{background:var(--no-soft);color:var(--no)}
+.tk.dragging{opacity:.25}
+.ghost{position:fixed;z-index:99;pointer-events:none;transform:translate(-50%,-60%) scale(1.06);box-shadow:0 12px 30px -8px rgba(0,0,0,.35)}
+.caret{width:3px;height:30px;border-radius:2px;background:var(--accent);animation:bl 1s steps(2) infinite;flex:none}
+@keyframes bl{50%{opacity:.15}}
+.gap{width:8px;height:34px;flex:none}
+.acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.acts button{padding:11px 13px;border-radius:12px;background:var(--surface-2);font-size:13.5px;font-weight:800;color:var(--ink-2)}
+.acts .pri{flex:1;background:var(--accent);color:var(--on-accent)}
+.res{margin-top:12px;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.6}
+.res.ok{background:var(--ok-soft);color:var(--ok)} .res.no{background:var(--no-soft);color:var(--no)}
+.res .en{color:var(--ink);font-weight:700;font-family:'Archivo','Gothic A1',sans-serif;margin-top:4px}
+.res .en del{color:var(--no);text-decoration:line-through} .res .en ins{color:var(--ok);text-decoration:none;background:var(--ok-soft);border-radius:4px;padding:0 2px}
+textarea.ty{width:100%;margin-top:14px;min-height:110px;padding:12px 14px;border-radius:14px;border:2px solid var(--line-2);background:var(--surface);color:inherit;font:600 16px/1.6 'Archivo','Gothic A1',sans-serif;resize:vertical}
+textarea.ty:focus{outline:none;border-color:var(--accent)}
+.hint{font-size:12px;color:var(--ink-3);margin-top:8px}
+.wb{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.wb button{padding:6px 9px;border-radius:9px;background:var(--surface-2);font:700 14px 'Archivo','Gothic A1',sans-serif;color:var(--ink-2);border:1px solid var(--line)}
+.wb button.used{opacity:.3;text-decoration:line-through}
+.list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.li{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:13.5px}
+.li .n{font-family:'Archivo';font-weight:700;color:var(--ink-3);min-width:24px}
+.li .t{flex:1} .li .t small{display:block;color:var(--ink-3)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:60}
+</style>
+</head>
+<body>
+<header><div class="hd"><a class="ib" href="/">← 앱</a><h1 id="ttl">문장암기<small id="sub">교과서 본문 스크램블 영작</small></h1><button class="ib" id="b-home" hidden>설정</button></div></header>
+<div class="wrap" id="app"><div class="card" style="margin-top:20px;text-align:center;color:var(--ink-3)">불러오는 중…</div></div>
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const QS=new URLSearchParams(location.search);
+const KEY="smem.v1";
+let ST=(()=>{ try{ return Object.assign({fav:{},ok:{},miss:{},cfg:{}},JSON.parse(localStorage.getItem(KEY))||{}); }catch(e){ return {fav:{},ok:{},miss:{},cfg:{}}; } })();
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){} };
+const CFG=()=>ST.cfg;
+function toast(t,ms){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),ms||1800); }
+let DATA=null, SCH=null, RUN=null;
+const shuffle=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const norm=s=>String(s||"").replace(/[‘’`´]/g,"'").replace(/[“”]/g,'"').replace(/[‐-―]/g,"-").replace(/\s+/g," ").trim();
+const words=s=>norm(s).split(" ").filter(Boolean);
+const bare=w=>norm(w).toLowerCase().replace(/[^a-z0-9'\-]/g,"");
+
+/* ───────── 설정 화면 ───────── */
+function setsOf(){ return SCH?SCH.sets:[]; }
+function pool(){
+  const c=CFG(), on=new Set(c.sets&&c.sets.length?c.sets:setsOf().filter(s=>!/rf$/.test(s.id)).map(s=>s.id));
+  let L=[]; setsOf().forEach(s=>{ if(on.has(s.id)) s.items.forEach(it=>L.push({...it,set:s})); });
+  if(c.who==="fav") L=L.filter(it=>ST.fav[it.id]);
+  if(c.who==="miss") L=L.filter(it=>!ST.ok[it.id]||ST.miss[it.id]);
+  return L;
+}
+function home(){
+  RUN=null; $("#b-home").hidden=true;
+  if(!SCH){ $("#app").innerHTML=`<div class="sec"><h2>학교 고르기</h2></div><div class="chips">${DATA.schools.map(s=>`<button class="chip" data-sch="${esc(s.name)}">${esc(s.name)}<small>${esc(s.book)}</small></button>`).join("")}</div>`; return; }
+  const c=CFG(); c.sets=c.sets&&c.sets.length?c.sets.filter(id=>setsOf().some(s=>s.id===id)):setsOf().filter(s=>!/rf$/.test(s.id)).map(s=>s.id);
+  if(!c.sets.length) c.sets=[setsOf()[0].id];
+  const all=setsOf().flatMap(s=>s.items), nFav=all.filter(it=>ST.fav[it.id]).length, nOk=all.filter(it=>ST.ok[it.id]&&!ST.miss[it.id]).length;
+  const P=pool();
+  $("#sub").textContent=`${SCH.name} · ${SCH.book}`;
+  $("#app").innerHTML=`
+  <div class="sec"><h2>시험 범위</h2><span class="note">눌러서 켜고 끄기</span></div>
+  <div class="chips">${setsOf().map(s=>`<button class="chip${c.sets.includes(s.id)?" on":""}" data-set="${s.id}">${esc(s.label)}<small>${s.items.length}문장</small></button>`).join("")}</div>
+  <div class="card" style="margin-top:16px">
+    <div class="opt"><label>문장</label><div class="seg" data-k="who">${[["all","전체"],["fav",`⭐ 즐겨찾기 ${nFav}`],["miss","못 맞힌 것"]].map(([v,t])=>`<button data-v="${v}" class="${(c.who||"all")===v?"on":""}">${t}</button>`).join("")}</div></div>
+    <div class="opt"><label>순서</label><div class="seg" data-k="ord">${[["seq","본문 순서대로"],["rnd","섞어서"]].map(([v,t])=>`<button data-v="${v}" class="${(c.ord||"seq")===v?"on":""}">${t}</button>`).join("")}</div></div>
+    <div class="opt"><label>조각</label><div class="seg" data-k="unit">${[["ch","덩어리 (기본)"],["w","단어 하나씩 (어렵게)"]].map(([v,t])=>`<button data-v="${v}" class="${(c.unit||"ch")===v?"on":""}">${t}</button>`).join("")}</div></div>
+    <div class="opt"><label>⭐ 즐겨찾기 문장 풀기</label><div class="seg" data-k="favty">${[["scr","스크램블"],["type","⌨️ 타이핑 (보기 제시)"]].map(([v,t])=>`<button data-v="${v}" class="${(c.favty||"scr")===v?"on":""}">${t}</button>`).join("")}</div>
+      <div class="hint">⭐ 문장은 중요 문장이에요. 타이핑으로 바꾸면 섞인 단어를 보면서 직접 써요. 문제 화면에서도 문장마다 바꿀 수 있어요.</div></div>
+    <div class="stat"><div><b>${P.length}</b><span>풀 문장</span></div><div><b>${nOk}</b><span>맞힌 문장</span></div><div><b>${nFav}</b><span>⭐ 즐겨찾기</span></div></div>
+    <button class="big" id="go" style="margin-top:14px"${P.length?"":" disabled"}>${P.length?`${P.length}문장 시작`:c.who==="fav"?"⭐ 즐겨찾기한 문장이 없어요":"풀 문장이 없어요"}</button>
+  </div>
+  <div class="sec"><h2>문장 목록</h2><span class="note">⭐를 눌러 중요 문장 표시</span></div>
+  <div class="list">${setsOf().filter(s=>c.sets.includes(s.id)).flatMap(s=>s.items.map(it=>`<div class="li"><span class="n">${it.n}</span><span class="t">${esc(it.ko)}<small>${ST.ok[it.id]&&!ST.miss[it.id]?"✓ 맞힘":ST.miss[it.id]?"✗ 다시 볼 문장":""}</small></span><button class="star${ST.fav[it.id]?" on":""}" data-fav="${it.id}" aria-label="즐겨찾기">★</button></div>`)).join("")}</div>
+  <div style="margin-top:18px;text-align:center"><button class="ib" id="b-sch">학교 바꾸기</button></div>`;
+  save();
+}
+
+/* ───────── 문제 화면 ───────── */
+function start(){
+  let L=pool(); if(!L.length) return; if((CFG().ord||"seq")==="rnd") L=shuffle(L);
+  RUN={L,i:0,first:{},done:0}; $("#b-home").hidden=false; load();
+}
+const isType=it=>RUN.ty&&RUN.ty[it.id]!==undefined?RUN.ty[it.id]:(ST.fav[it.id]&&(CFG().favty==="type"));
+function load(){
+  const it=RUN.L[RUN.i]; const unit=CFG().unit||"ch";
+  const parts=unit==="w"?words(it.en):it.ch.map(norm);
+  let bank=parts.map((t,k)=>({k,t}));
+  for(let tries=0;tries<6;tries++){ bank=shuffle(bank); if(bank.map(x=>x.t).join(" ")!==parts.join(" ")||bank.length<2) break; }
+  RUN.cur={it,parts,bank,placed:[],caret:0,hist:[],checked:null,typed:"",hint:0};
+  draw();
+}
+function draw(){
+  const R=RUN, C=R.cur, it=C.it, ty=isType(it);
+  const pct=Math.round(R.i/R.L.length*100);
+  $("#app").innerHTML=`
+  <div class="top"><div class="prog"><i style="width:${pct}%"></i></div><span class="cnt">${R.i+1} / ${R.L.length}</span></div>
+  <div class="card">
+    <div class="qh"><span class="src">${esc(it.set.label)} · ${it.n}번 문장</span>
+      <button class="tbtn${ty?" on":""}" id="b-ty">${ty?"⌨️ 타이핑":"🧩 스크램블"}</button>
+      <button class="star${ST.fav[it.id]?" on":""}" data-fav="${it.id}" aria-label="즐겨찾기">★</button></div>
+    <div class="ko">${esc(it.ko)}</div>
+    ${ty?typeHTML():scrHTML()}
+    ${resHTML()}
+  </div>
+  <div class="acts" style="justify-content:space-between"><button id="b-prev"${R.i?"":" disabled"}>← 이전</button><button id="b-skip">건너뛰기 →</button></div>`;
+  if(ty){ const ta=$("#ty"); ta.value=C.typed; markWB(); if(!C.checked) setTimeout(()=>ta.focus({preventScroll:true}),30); }
+}
+function scrHTML(){
+  const C=RUN.cur, P=C.placed, chk=C.checked;
+  let z="";
+  for(let i=0;i<=P.length;i++){
+    if(i===C.caret&&!chk) z+=`<span class="caret" id="caret"></span>`;
+    if(i<P.length){ const b=C.bank.find(x=>x.k===P[i].k&&x.t===P[i].t)||P[i]; const cls=chk?(chk.marks[i]?"ok":"bad"):"";
+      z+=`<span class="tk ${cls}" data-pi="${i}">${esc(P[i].t)}</span>`; }
+  }
+  if(!P.length&&!chk) z+=`<span class="ph">아래 조각을 눌러 순서대로 놓으세요 · 끌어서 옮기거나, 칸 사이를 눌러 끼워 넣을 수 있어요</span>`;
+  const used=new Set(P.map(p=>p.k));
+  return `<div class="zone" id="zone">${z}</div>
+    <div class="bank" id="bank">${C.bank.map(b=>`<span class="tk${used.has(b.k)?" used":""}" data-bk="${b.k}">${esc(b.t)}</span>`).join("")}</div>
+    ${chk&&chk.ok?"":`<div class="acts"><button id="b-undo">↩</button><button id="b-clear">비우기</button><button id="b-hint">💡 힌트</button><button class="pri" id="b-check">확인</button></div>`}`;
+}
+function typeHTML(){
+  const C=RUN.cur, W=shuffle(words(C.it.en).map((w,k)=>({w,k})));
+  C.wb=C.wb||W;
+  return `<textarea class="ty" id="ty" placeholder="영어 문장을 직접 써 보세요" autocapitalize="off" autocomplete="off" spellcheck="false"${C.checked&&C.checked.ok?" readonly":""}></textarea>
+    <div class="hint">보기 (섞인 단어) · 누르면 커서 자리에 들어가요</div>
+    <div class="wb" id="wb">${C.wb.map(x=>`<button data-w="${esc(x.w)}">${esc(x.w)}</button>`).join("")}</div>
+    ${C.checked&&C.checked.ok?"":`<div class="acts"><button id="b-hint">💡 첫 단어부터</button><button class="pri" id="b-check">확인</button></div>`}`;
+}
+function resHTML(){
+  const C=RUN.cur, k=C.checked; if(!k) return "";
+  const last=RUN.i===RUN.L.length-1;
+  if(k.ok) return `<div class="res ok">✓ 정답이에요!${RUN.first[C.it.id]==="ok"?" 한 번에 맞혔어요 👏":""}<div class="en">${esc(norm(C.it.en))}</div></div>
+    <div class="acts"><button class="pri" id="b-next">${last?"결과 보기":"다음 문장 →"}</button></div>`;
+  return `<div class="res no">${k.msg}${k.diff?`<div class="en">${k.diff}</div>`:""}</div>
+    <div class="acts"><button id="b-show">정답 보기</button><button class="pri" id="b-retry">다시 고치기</button></div>`;
+}
+/* 채점 */
+function checkScr(){
+  const C=RUN.cur, got=C.placed.map(p=>p.t), want=C.parts;
+  if(got.length<want.length){ toast(`조각 ${want.length-got.length}개가 남았어요`); return; }
+  // 앞에서부터 맞는 자리 표시 (같은 글자 조각은 어느 것이든 같음)
+  const marks=got.map((t,i)=>t===want[i]);
+  const ok=marks.every(Boolean);
+  finish(ok,{marks,msg:ok?"":`✗ ${marks.filter(m=>!m).length}개 조각의 자리가 달라요. 빨간 조각을 옮겨 보세요.`});
+}
+function lcsDiff(a,b){   // a=학생 단어, b=정답 단어 → del/ins 표시
+  const n=a.length,m=b.length,D=Array.from({length:n+1},()=>new Int16Array(m+1));
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) D[i][j]=bare(a[i])===bare(b[j])?D[i+1][j+1]+1:Math.max(D[i+1][j],D[i][j+1]);
+  const out=[]; let i=0,j=0;
+  while(i<n&&j<m){ if(bare(a[i])===bare(b[j])){ out.push(esc(b[j])); i++; j++; } else if(D[i+1][j]>=D[i][j+1]){ out.push(`<del>${esc(a[i])}</del>`); i++; } else { out.push(`<ins>${esc(b[j])}</ins>`); j++; } }
+  while(i<n) out.push(`<del>${esc(a[i++])}</del>`); while(j<m) out.push(`<ins>${esc(b[j++])}</ins>`);
+  return out.join(" ");
+}
+function checkType(){
+  const C=RUN.cur; C.typed=$("#ty").value; const a=words(C.typed), b=words(C.it.en);
+  if(!a.length){ toast("문장을 써 주세요"); return; }
+  const ok=a.length===b.length&&a.every((w,i)=>bare(w)===bare(b[i]));
+  const bad=ok?0:Math.max(0,b.length-a.filter((w,i)=>b[i]&&bare(w)===bare(b[i])).length);
+  finish(ok,{msg:ok?"":`✗ 조금 달라요 (빨강 = 지울 것, 초록 = 들어가야 할 것)`,diff:ok?"":lcsDiff(a,b),bad});
+}
+function finish(ok,k){
+  const C=RUN.cur, id=C.it.id; k.ok=ok; C.checked=k;
+  if(!(id in RUN.first)) RUN.first[id]=ok?"ok":"no";
+  if(ok){ ST.ok[id]=(ST.ok[id]||0)+1; if(RUN.first[id]==="ok") delete ST.miss[id]; RUN.done++; }
+  else ST.miss[id]=1;
+  save(); draw();
+}
+function summary(){
+  const R=RUN, L=R.L, one=L.filter(it=>R.first[it.id]==="ok"), miss=L.filter(it=>R.first[it.id]==="no"), skip=L.filter(it=>!R.first[it.id]);
+  $("#app").innerHTML=`<div class="card" style="margin-top:20px;text-align:center">
+    <div style="font-size:40px">${miss.length?"💪":"🎉"}</div><div style="font-size:19px;font-weight:800;margin-top:4px">${L.length}문장 끝!</div>
+    <div class="stat"><div><b>${one.length}</b><span>한 번에 맞힘</span></div><div><b>${miss.length}</b><span>고쳐서 맞힘·틀림</span></div><div><b>${skip.length}</b><span>건너뜀</span></div></div>
+    ${miss.length?`<button class="big" id="b-again" style="margin-top:14px">틀린 ${miss.length}문장만 다시</button>`:""}
+    <button class="big" id="b-back" style="margin-top:10px;background:var(--surface-2);color:var(--ink)">처음으로</button></div>
+    ${miss.length?`<div class="sec"><h2>다시 볼 문장</h2><span class="note">⭐ 눌러 즐겨찾기</span></div><div class="list">${miss.map(it=>`<div class="li"><span class="n">${it.n}</span><span class="t">${esc(norm(it.en))}<small>${esc(it.ko)}</small></span><button class="star${ST.fav[it.id]?" on":""}" data-fav="${it.id}">★</button></div>`).join("")}</div>`:""}`;
+  RUN.miss=miss;
+}
+
+/* ───────── 조각 놓기 · 끼워 넣기 · 끌어 옮기기 ───────── */
+function place(k){ const C=RUN.cur; if(C.checked&&C.checked.ok) return; const b=C.bank.find(x=>x.k===k); if(!b||C.placed.some(p=>p.k===k)) return;
+  C.hist.push(JSON.stringify([C.placed,C.caret])); C.checked=null; C.placed.splice(C.caret,0,{k:b.k,t:b.t}); C.caret++; draw(); }
+function unplace(i){ const C=RUN.cur; C.hist.push(JSON.stringify([C.placed,C.caret])); C.checked=null; C.placed.splice(i,1); if(C.caret>i) C.caret--; draw(); }
+function moveTo(k,idx){ const C=RUN.cur; C.hist.push(JSON.stringify([C.placed,C.caret])); C.checked=null;
+  const from=C.placed.findIndex(p=>p.k===k); let item;
+  if(from>=0){ item=C.placed.splice(from,1)[0]; if(from<idx) idx--; } else { const b=C.bank.find(x=>x.k===k); item={k:b.k,t:b.t}; }
+  C.placed.splice(idx,0,item); C.caret=idx+1; draw(); }
+/* 칸 사이 위치 계산: 화면 좌표 → 넣을 자리 */
+const visTk=()=>$$("#zone .tk:not(.dragging)");
+function slotAt(x,y){ let idx=0;
+  for(const el of visTk()){ const r=el.getBoundingClientRect(); if(y<r.top-4) break; if(y<=r.bottom+4&&x<r.left+r.width/2) break; idx++; }
+  return idx; }
+let DRAG=null, ZT=null, SUP=0;
+document.addEventListener("pointerdown",e=>{
+  if(!RUN||!RUN.cur) return;
+  const zn=e.target.closest("#zone"); if(zn&&!e.target.closest(".tk")&&!(RUN.cur.checked&&RUN.cur.checked.ok)){ ZT={id:e.pointerId,x:e.clientX,y:e.clientY}; return; }
+  const t=e.target.closest(".tk"); if(!t||t.classList.contains("used")) return;
+  if(RUN.cur.checked&&RUN.cur.checked.ok) return;
+  DRAG={el:t,x:e.clientX,y:e.clientY,moved:false,id:e.pointerId,k:t.dataset.bk!=null?+t.dataset.bk:RUN.cur.placed[+t.dataset.pi].k,fromZone:t.dataset.pi!=null};
+  t.setPointerCapture&&t.setPointerCapture(e.pointerId);
+});
+document.addEventListener("pointermove",e=>{
+  if(!DRAG||e.pointerId!==DRAG.id) return;
+  if(!DRAG.moved&&Math.hypot(e.clientX-DRAG.x,e.clientY-DRAG.y)<8) return;
+  if(!DRAG.moved){ DRAG.moved=true; DRAG.g=DRAG.el.cloneNode(true); DRAG.g.classList.add("ghost"); document.body.appendChild(DRAG.g); DRAG.el.classList.add("dragging"); }
+  DRAG.g.style.left=e.clientX+"px"; DRAG.g.style.top=e.clientY+"px";
+  const z=$("#zone"), r=z.getBoundingClientRect(), inZ=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top-20&&e.clientY<=r.bottom+20;
+  z.classList.toggle("drop",inZ);
+  $$("#zone .gap").forEach(g=>g.remove());
+  if(inZ){ const idx=slotAt(e.clientX,e.clientY), vis=visTk(); const g=document.createElement("span"); g.className="caret gap"; g.style.width="3px";
+    if(idx<vis.length) vis[idx].before(g); else z.appendChild(g); }
+  e.preventDefault();
+},{passive:false});
+document.addEventListener("pointerup",e=>{
+  if(ZT&&e.pointerId===ZT.id){ const z=ZT; ZT=null; if(Math.hypot(e.clientX-z.x,e.clientY-z.y)<10){ const C=RUN.cur; C.caret=Math.min(slotAt(e.clientX,e.clientY),C.placed.length); draw(); SUP=Date.now(); } return; }
+  if(!DRAG||e.pointerId!==DRAG.id) return; const D=DRAG; DRAG=null; SUP=Date.now();
+  if(!D.moved){ if(D.fromZone) unplace(+D.el.dataset.pi); else place(D.k); return; }
+  D.g.remove(); D.el.classList.remove("dragging");
+  const z=$("#zone"), r=z.getBoundingClientRect(), inZ=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top-20&&e.clientY<=r.bottom+20;
+  if(inZ){ const vis=visTk(), idx=slotAt(e.clientX,e.clientY);
+    const pidx=idx<vis.length?+vis[idx].dataset.pi:RUN.cur.placed.length;   // 화면 자리 → placed 번호
+    moveTo(D.k,pidx); }
+  else if(D.fromZone){ unplace(+D.el.dataset.pi); }
+  else draw();
+});
+document.addEventListener("pointercancel",()=>{ if(DRAG){ if(DRAG.g) DRAG.g.remove(); DRAG=null; draw(); } });
+/* 칸 사이 누르기 → 커서 옮기기 (끼워 넣을 자리): pointerup에서 처리 */
+function markWB(){ const C=RUN.cur, ta=$("#ty"); if(!ta) return; const have={}; words(ta.value).forEach(w=>{ const b=bare(w); have[b]=(have[b]||0)+1; });
+  $$("#wb button").forEach(bt=>{ const b=bare(bt.dataset.w); if(have[b]>0){ have[b]--; bt.classList.add("used"); } else bt.classList.remove("used"); }); }
+
+/* ───────── 버튼 ───────── */
+document.addEventListener("input",e=>{ if(e.target.id==="ty"){ RUN.cur.typed=e.target.value; markWB(); } });
+document.addEventListener("keydown",e=>{ if(e.target.id==="ty"&&e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); (RUN.cur.checked&&RUN.cur.checked.ok?$("#b-next"):$("#b-check"))?.click(); } });
+document.addEventListener("click",e=>{
+  const t=e.target; if(Date.now()-SUP<400&&t.closest&&(t.closest("#zone")||t.closest("#bank"))) return;
+  const sc=t.closest("[data-sch]"); if(sc){ ST.school=sc.dataset.sch; SCH=DATA.schools.find(s=>s.name===ST.school); ST.cfg={}; save(); home(); return; }
+  if(t.closest("#b-sch")){ SCH=null; delete ST.school; save(); home(); return; }
+  const st=t.closest("[data-set]"); if(st){ const c=CFG(), id=st.dataset.set; c.sets=c.sets.includes(id)?c.sets.filter(x=>x!==id):[...c.sets,id]; if(!c.sets.length) c.sets=[id]; home(); return; }
+  const sg=t.closest(".seg button"); if(sg&&!RUN){ CFG()[sg.parentElement.dataset.k]=sg.dataset.v; home(); return; }
+  const fv=t.closest("[data-fav]"); if(fv){ const id=fv.dataset.fav; if(ST.fav[id]) delete ST.fav[id]; else ST.fav[id]=1; save(); fv.classList.toggle("on",!!ST.fav[id]);
+    toast(ST.fav[id]?"⭐ 중요 문장에 넣었어요":"즐겨찾기를 뺐어요"); if(!RUN) home(); return; }
+  if(t.closest("#go")){ start(); return; }
+  if(!RUN) return;
+  const wb=t.closest("#wb button"); if(wb){ const ta=$("#ty"); const s=ta.selectionStart??ta.value.length, v=ta.value, pre=v.slice(0,s), post=v.slice(s);
+    const ins=(pre&&!/\s$/.test(pre)?" ":"")+wb.dataset.w+(post&&!/^\s/.test(post)?" ":" ");
+    ta.value=pre+ins+post; const p=(pre+ins).length; ta.setSelectionRange(p,p); ta.focus(); RUN.cur.typed=ta.value; markWB(); return; }
+  if(t.closest("#b-ty")){ const it=RUN.cur.it; RUN.ty=RUN.ty||{}; RUN.ty[it.id]=!isType(it); RUN.cur.checked=null; draw(); return; }
+  if(t.closest("#b-check")){ isType(RUN.cur.it)?checkType():checkScr(); return; }
+  if(t.closest("#b-undo")){ const C=RUN.cur; const h=C.hist.pop(); if(h){ [C.placed,C.caret]=JSON.parse(h); C.checked=null; draw(); } return; }
+  if(t.closest("#b-clear")){ const C=RUN.cur; C.hist.push(JSON.stringify([C.placed,C.caret])); C.placed=[]; C.caret=0; C.checked=null; draw(); return; }
+  if(t.closest("#b-hint")){ const C=RUN.cur;
+    if(isType(C.it)){ const b=words(C.it.en), a=words($("#ty").value); let i=0; while(i<a.length&&i<b.length&&bare(a[i])===bare(b[i])) i++;
+      const ta=$("#ty"); ta.value=b.slice(0,i+1).join(" ")+" "; C.typed=ta.value; RUN.first[C.it.id]=RUN.first[C.it.id]||"no"; markWB(); ta.focus(); return; }
+    // 앞에서부터 맞는 데까지 두고, 다음 정답 조각을 그 자리에
+    let i=0; while(i<C.placed.length&&C.placed[i].t===C.parts[i]) i++;
+    if(i>=C.parts.length) return; C.hist.push(JSON.stringify([C.placed,C.caret]));
+    const keep=C.placed.slice(0,i), need=C.parts[i];
+    const cand=C.bank.find(b=>b.t===need&&!keep.some(p=>p.k===b.k));
+    C.placed=[...keep,{k:cand.k,t:cand.t}]; C.caret=C.placed.length; C.checked=null; RUN.first[C.it.id]=RUN.first[C.it.id]||"no"; draw(); return; }
+  if(t.closest("#b-retry")){ RUN.cur.checked=null; draw(); return; }
+  if(t.closest("#b-show")){ const C=RUN.cur; RUN.first[C.it.id]="no"; ST.miss[C.it.id]=1; save();
+    C.checked={ok:false,msg:"정답은 이거예요. 한 번 소리 내어 읽고 다시 맞춰 보세요.",diff:esc(norm(C.it.en))}; draw(); return; }
+  if(t.closest("#b-next")||t.closest("#b-skip")){ if(RUN.i<RUN.L.length-1){ RUN.i++; load(); } else summary(); scrollTo({top:0}); return; }
+  if(t.closest("#b-prev")){ if(RUN.i){ RUN.i--; load(); } return; }
+  if(t.closest("#b-again")){ const L=RUN.miss; RUN={L,i:0,first:{},done:0}; load(); return; }
+  if(t.closest("#b-back")){ home(); return; }
+});
+$("#b-home").onclick=()=>{ if(!RUN||confirm("그만하고 처음 화면으로 갈까요?")) home(); };
+
+(async()=>{
+  try{ DATA=await (await fetch("content/sentences.json",{cache:"no-store"})).json(); }catch(e){ $("#app").innerHTML=`<div class="card" style="margin-top:20px">문장을 불러오지 못했어요</div>`; return; }
+  const want=QS.get("school")||ST.school||"";
+  SCH=DATA.schools.find(s=>want&&(s.name===want||want.includes(s.name)))||null;
+  if(SCH&&ST.school!==SCH.name){ ST.school=SCH.name; ST.cfg={}; save(); }
+  home();
+})();
+</script>
+</body>
+</html>

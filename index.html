@@ -579,6 +579,7 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
       <div class="card" style="padding:14px 16px" id="scope-card"></div>
     </div>
 
+    <div class="pad" style="margin-top:22px" id="smem-slot"></div>
     <div class="pad" style="margin-top:22px" id="todo-slot"></div>
 
     <div class="pad" style="margin-top:22px" id="wrong-slot"></div>
@@ -987,7 +988,16 @@ function doneCount(){
   const b=bestOf();
   return PARTS.reduce((s,p)=>s+(b[p.id]?.done||0),0);
 }
+/* 문장암기 (구현고·구로고·신서고): 교과서 본문 스크램블 영작 → sentence.html */
+const SMEM_SCHOOLS=["구현고","구로고","신서고"];
+function renderSmem(){ const el=document.getElementById("smem-slot"); if(!el) return;
+  const nm=(S.cls&&S.cls.name)||"", sc=SMEM_SCHOOLS.find(x=>nm.includes(x));
+  el.innerHTML=sc?`<a href="sentence?school=${encodeURIComponent(sc)}" class="card" style="display:flex;align-items:center;gap:12px;padding:15px 16px;text-decoration:none;color:inherit">
+    <span style="flex:none;width:42px;height:42px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:21px">🧩</span>
+    <span style="flex:1;min-width:0"><b style="font-size:15px">문장암기</b><span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">${esc(sc)} 시험범위 교과서 본문 · 스크램블로 영작하기 · ⭐ 중요 문장만 따로</span></span>
+    <span style="flex:none;color:var(--ink-3);font-size:18px">›</span></a>`:""; }
 function renderHome(){
+  renderSmem();
   const q=qGet?qGet().length:0;
   $("#home-hi").innerHTML = (S.name?`${esc(S.name)}님`:"hazel_studylog")+(q?` · <span style="color:var(--cat-3);font-weight:700">미전송 ${q}건</span>`:"");
   $("#home-book-t").textContent = UNIT ? `${UNIT.book.subject} · ${UNIT.no}` : "교재 선택";
