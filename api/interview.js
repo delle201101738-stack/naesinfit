@@ -94,7 +94,7 @@ async function aiComment(d) {
     + ((d.missions || []).length ? `\n이번 미션: ${d.missions.join(" / ")}` : "");
   const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5", max_tokens: 1400, system: SYS, messages: [{ role: "user", content: msg }] }) });
+    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: 1400, system: SYS, messages: [{ role: "user", content: msg }] }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error("AI 요청 실패: " + ((j.error && j.error.message) || r.status));
   const txt = (j.content || []).map(c => c.text || "").join("");
