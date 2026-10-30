@@ -86,6 +86,20 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 .tabsw{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .tabsw button{padding:9px 14px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-3)}
 .tabsw button.on{background:var(--accent);color:var(--on-accent)}
+/* 지필 점수 입력 */
+#pdlg{max-width:720px}
+.pf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin:14px 0 6px}
+.pf label{display:block;font-size:12px;font-weight:700;color:var(--ink-3);margin-bottom:4px}
+.pf select,.pf input,.pin{width:100%;padding:10px 12px;border-radius:11px;border:1.5px solid var(--line-2);background:var(--surface);font:inherit;font-size:14px;color:var(--ink)}
+.pf .full{grid-column:1/-1}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chips button{padding:5px 10px;border-radius:999px;background:var(--surface-2);font-size:12px;font-weight:700;color:var(--ink-2)}
+.chips button.on{background:var(--accent-soft);color:var(--accent)}
+.ptab td{padding:7px 10px}
+.ptab input{width:92px;text-align:center;padding:8px;border-radius:10px;border:1.5px solid var(--line-2);background:var(--surface);font:inherit;font-weight:700;color:var(--ink)}
+.ptab input:focus,.pf select:focus,.pf input:focus{border-color:var(--accent);outline:none}
+.pmsg{font-size:13px;font-weight:700;min-height:20px;margin-top:10px}
+@media (max-width:560px){ .pf{grid-template-columns:1fr} .bar-in{flex-wrap:wrap} }
 </style>
 </head>
 <body>
@@ -106,6 +120,7 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
     </div>
     <a class="btn pri" href="hw">반별 관리 · 리포트 보내기</a>
     <a class="btn" href="report" target="_blank" rel="noopener">리포트 만들기</a>
+    <button class="btn pri" id="paper-open">✍️ 지필 점수 입력</button>
     <button class="btn" id="csv">CSV 내려받기</button>
     <button class="btn pri" id="reload">새로고침</button>
   </div></header>
@@ -135,6 +150,7 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
   </div>
 </div>
 
+<dialog id="pdlg"><div class="dl-h"><b>✍️ 지필 점수 입력</b><button class="btn" id="p-close">닫기</button></div><div class="dl-b" id="p-body" style="max-height:75vh"></div></dialog>
 <dialog id="dlg"><div class="dl-h"><b id="dlg-t">상세</b><button class="btn" onclick="document.getElementById('dlg').close()">닫기</button></div><div class="dl-b" id="dlg-b"></div></dialog>
 
 <script>
@@ -202,7 +218,7 @@ async function load(){
 }
 $("#pin-go").onclick=async()=>{
   PIN=$("#pin").value.trim(); $("#pin-err").textContent="";
-  try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); }
+  try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); if(location.hash==="#paper") openPaper(); }
   catch(e){ $("#pin-err").textContent=e.message; }
 };
 $("#pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pin-go").click();});
@@ -234,7 +250,7 @@ function render(){
     const tt=todayRows.reduce((s,x)=>s+x.total,0), tc=todayRows.reduce((s,x)=>s+x.correct,0);
     const perS={};
     todayRows.forEach(x=>{const o=perS[x.student]=perS[x.student]||{t:0,c:0,n:0,parts:[]};
-      o.t+=x.total;o.c+=x.correct;o.n++;o.parts.push(PARTNAMES[x.part]||x.part);});
+      o.t+=x.total;o.c+=x.correct;o.n++;o.parts.push(PARTNAMES[x.part]||x.part_name||x.part);});
     const list=Object.entries(perS).map(([n,o])=>({n,pct:Math.round(o.c/o.t*100),cnt:o.n,parts:o.parts,
         done:doneRateOf(R.filter(x=>x.student===n))}))
       .sort((a,b)=>a.pct-b.pct);
@@ -327,10 +343,10 @@ function render(){
       <td style="color:var(--ink-3);font-size:13px">${fmt(r.created_at)}</td>
       <td style="font-weight:700">${esc(r.student)}</td>
       <td style="color:var(--ink-3);font-size:13px">${esc(r.book||"")}</td>
-      <td>${PARTNAMES[r.part]||esc(r.part)}</td>
+      <td>${PARTNAMES[r.part]||esc(r.part_name||r.part)}</td>
       <td style="color:var(--ink-3)">${r.scope==="all"?"전체":esc(r.scope)}</td>
       <td><span class="pill ${pctClass(r.pct)}">${r.pct}%</span> <span class="num" style="color:var(--ink-3);font-size:12px">${r.correct}/${r.total}</span></td>
-      <td><button class="btn" data-att="${r.id}">오답 보기</button></td></tr>`).join("")+`</tbody>`;
+      <td>${r.scope==="지필"?`<span style="font-size:12px;color:var(--ink-3)">✍️ 수기 입력</span>`:`<button class="btn" data-att="${r.id}">오답 보기</button>`}</td></tr>`).join("")+`</tbody>`;
 }
 
 document.addEventListener("click",e=>{
@@ -344,7 +360,7 @@ function openStudent(n){
   $("#dlg-t").textContent=`${n} · ${rs.length}회 응시`;
   $("#dlg-b").innerHTML=`<table><thead><tr><th>시각</th><th>파트</th><th>점수</th><th></th></tr></thead><tbody>`+
     rs.map(r=>`<tr><td style="color:var(--ink-3);font-size:13px">${fmt(r.created_at)}</td>
-      <td>${PARTNAMES[r.part]||r.part}</td>
+      <td>${PARTNAMES[r.part]||esc(r.part_name||r.part)}</td>
       <td><span class="pill ${pctClass(r.pct)}">${r.pct}%</span> <span class="num" style="font-size:12px;color:var(--ink-3)">${r.correct}/${r.total}</span></td>
       <td><button class="btn" data-att="${r.id}">오답</button></td></tr>`).join("")+`</tbody></table>`;
   $("#dlg").showModal();
@@ -356,7 +372,7 @@ function openAttempt(id){
     (it.d||[]).forEach(x=>{ if(!x.ok) wrong.push({it,x}); });
     if(it.why||it.voc) notes.push(it);
   });
-  $("#dlg-t").textContent=`${r.student} · ${PARTNAMES[r.part]||r.part} · ${r.pct}%`;
+  $("#dlg-t").textContent=`${r.student} · ${PARTNAMES[r.part]||r.part_name||r.part} · ${r.pct}%`;
   $("#dlg-b").innerHTML = (wrong.length
     ? wrong.map(({it,x})=>`<div class="wrongrow">
         <div style="font-size:12px;color:var(--ink-3);font-weight:700;margin-bottom:3px">${esc(it.sec||"")} ${it.no} · ${esc(x.l)}</div>
@@ -370,14 +386,120 @@ function openAttempt(id){
         ${it.voc?`<span class="k">몰랐던 단어</span>${esc(it.voc)}`:""}</div>`).join("") : "");
   $("#dlg").showModal();
 }
+/* ───── 지필(종이) 테스트 점수 수기 입력 → 데일리 리포트에 반영 ───── */
+let HWS=null, PF={cid:"", day:"", bi:"", name:"", total:""}, PD={};   // PD = 선생님이 직접 친 점수 (다시 그려도 유지)
+const todayKST=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+const dKST=v=>new Date(+new Date(v)+9*3600e3).toISOString().slice(0,10);
+const unitsAll=()=>{ const L=[]; (MF.books||[]).forEach(b=>(b.units||[]).forEach(u=>L.push({label:`${b.subject} · ${b.publisher} · ${u.no}`, id:u.id, b, u}))); return L; };
+const OTHER="지필 테스트";
+const paperRows=()=>ALL.filter(r=>r.scope==="지필");
+function membersOf(cid){ return HWS?(HWS.members||[]).filter(m=>+m.class_id===+cid).map(m=>m.student).sort((a,b)=>a.localeCompare(b,"ko")):[]; }
+function guessBook(cid){   // 반 학생들이 최근 2주에 가장 많이 푼 과
+  const ms=new Set(membersOf(cid)), lim=Date.now()-14*864e5, w={};
+  ALL.forEach(r=>{ if(ms.has(r.student)&&r.scope!=="지필"&&+new Date(r.created_at)>lim) w[r.book]=(w[r.book]||0)+r.total; });
+  const top=(Object.entries(w).sort((a,b)=>b[1]-a[1])[0]||[])[0]; const L=unitsAll(); const i=L.findIndex(x=>x.label===top);
+  return i>=0?String(i):(top?"":OTHER); }
+const bookOf=bi=>{ if(bi===OTHER) return {label:OTHER,id:""}; const x=unitsAll()[+bi]; return x?{label:x.label,id:x.id}:null; };
+async function openPaper(){
+  $("#pdlg").showModal(); $("#p-body").innerHTML=`<div class="empty" style="padding:30px">불러오는 중…</div>`;
+  if(!HWS){ try{ const r=await fetch("/api/hw",{headers:{"x-pin":PIN},cache:"no-store"}); HWS=await r.json(); if(!r.ok) throw new Error(HWS.error||"반 목록을 못 불러왔어요"); }catch(e){ HWS=null; $("#p-body").innerHTML=`<div class="empty">${esc(e.message)}</div>`; return; } }
+  if(!PF.cid&&HWS.classes&&HWS.classes[0]) PF.cid=String(HWS.classes[0].id);
+  if(!PF.day) PF.day=todayKST();
+  if(PF.bi==="") PF.bi=guessBook(PF.cid);
+  drawPaper();
+}
+function drawPaper(){
+  const C=HWS.classes||[], cls=C.find(c=>String(c.id)===PF.cid), L=unitsAll(), bk=bookOf(PF.bi);
+  const studs=membersOf(PF.cid), ms=new Set(studs);
+  const nm=String(PF.name||"").trim();
+  // 이 반 · 이 날 이미 입력한 지필 테스트
+  const done={}; paperRows().forEach(r=>{ if(ms.has(r.student)&&dKST(r.created_at)===PF.day){ const k=r.book+"\u0001"+r.part_name; (done[k]=done[k]||{book:r.book,name:r.part_name.replace(/^지필 · /,""),total:r.total,n:0}).n++; } });
+  const groups=[...new Set(L.map(x=>x.b.subject+" · "+x.b.publisher))];
+  $("#p-body").innerHTML=`
+  <p style="margin:12px 0 0;font-size:13px;color:var(--ink-2);line-height:1.6">스터디로그 온라인 시험 대신 <b>종이로 본 테스트</b> 점수를 넣으면, 그날 <b>데일리 리포트</b>(시험 결과·누적 그래프·반평균)에 그대로 들어가요. 같은 날·같은 시험 이름으로 다시 저장하면 고쳐지고, 칸을 비우고 저장하면 지워져요.</p>
+  <div class="pf">
+    <div><label>반</label><select id="p-cls">${C.map(c=>`<option value="${c.id}"${String(c.id)===PF.cid?" selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
+    <div><label>시험 본 날</label><input type="date" id="p-day" value="${PF.day}"></div>
+    <div class="full"><label>교재 · 과 <span style="font-weight:500">(온라인 시험과 같은 과를 고르면 같은 리포트에 같이 나와요)</span></label>
+      <select id="p-book"><option value="${OTHER}"${PF.bi===OTHER?" selected":""}>교재와 상관없는 지필 테스트</option>
+      ${groups.map(g=>`<optgroup label="${esc(g)}">${L.map((x,i)=>x.b.subject+" · "+x.b.publisher===g?`<option value="${i}"${String(i)===PF.bi?" selected":""}>${esc(x.u.no)}${x.u.title?" · "+esc(x.u.title):""}</option>`:"").join("")}</optgroup>`).join("")}</select></div>
+    <div><label>시험 이름</label><input id="p-name" maxlength="40" placeholder="예: 3과 단어 시험" value="${esc(PF.name)}">
+      <div class="chips">${["단어 시험","어법 시험","본문 암기","서술형","통변형","동형 지필"].map(t=>`<button data-pn="${t}"${nm===t?' class="on"':""}>${t}</button>`).join("")}</div></div>
+    <div><label>만점 (문항 수)</label><input id="p-total" type="number" min="1" max="1000" inputmode="numeric" placeholder="예: 50" value="${esc(PF.total)}">
+      <div style="font-size:12px;color:var(--ink-3);margin-top:6px">100점 만점 점수로 넣으려면 100으로 두세요</div></div>
+  </div>
+  ${Object.keys(done).length?`<div style="margin:12px 0 4px;font-size:12px;font-weight:700;color:var(--ink-3)">이 반 · 이날 입력한 지필 테스트 (누르면 불러와 고칠 수 있어요)</div>
+    <div class="chips">${Object.values(done).map(g=>`<button data-pload="${esc(JSON.stringify([g.book,g.name,g.total]))}">${esc(g.name)} · ${esc(g.book.split(" · ").pop())} · ${g.n}명</button>`).join("")}</div>`:""}
+  <div class="scroll" style="margin-top:14px"><table class="ptab"><thead><tr><th>학생</th><th>맞힌 수 (점수)</th><th>정답률</th><th></th></tr></thead><tbody>
+  ${studs.length?studs.map(st=>`<tr><td style="font-weight:700">${esc(st)}</td>
+    <td><input type="number" min="0" inputmode="numeric" data-pst="${esc(st)}" placeholder="안 봄"></td>
+    <td class="num" data-ppct="${esc(st)}"></td><td style="font-size:12px;color:var(--ink-3)" data-psv="${esc(st)}"></td></tr>`).join("")
+    :`<tr><td colspan="4" class="empty" style="padding:24px">이 반에 학생이 없어요 (반별 관리에서 명단을 넣어 주세요)</td></tr>`}
+  </tbody></table></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">
+    <button class="btn pri" id="p-save" style="padding:11px 20px;font-size:14px">저장하고 리포트에 반영</button>
+    <span style="font-size:12px;color:var(--ink-3)">빈칸 = 이 시험 안 본 학생 (리포트에 안 나옴)</span></div>
+  <div class="pmsg" id="p-msg"></div>`;
+  refreshHave();
+}
+function haveNow(){ const bk=bookOf(PF.bi), nm=String(PF.name||"").trim(), have={};
+  if(bk&&nm) paperRows().forEach(r=>{ if(r.book===bk.label&&r.part_name==="지필 · "+nm&&dKST(r.created_at)===PF.day) have[r.student]=r; });
+  return have; }
+function refreshHave(){   // 이미 저장된 점수 불러오기 (선생님이 방금 친 칸은 그대로)
+  const have=haveNow(), t=$("#p-total");
+  if(t&&!t.value){ const h=Object.values(have)[0]; if(h){ t.value=h.total; PF.total=String(h.total); } }
+  document.querySelectorAll("[data-pst]").forEach(i=>{ const st=i.dataset.pst, h=have[st];
+    i.value = st in PD ? PD[st] : (h?h.correct:"");
+    const sv=document.querySelector(`[data-psv="${CSS.escape(st)}"]`); if(sv) sv.textContent=h?(st in PD&&String(PD[st])!==String(h.correct)?"고침":"저장됨"):""; });
+  document.querySelectorAll("[data-pn]").forEach(b=>b.classList.toggle("on",b.dataset.pn===PF.name));
+  pctSync(); }
+function pctSync(){ const t=+$("#p-total")?.value||0;
+  document.querySelectorAll("[data-pst]").forEach(i=>{ const c=i.value===""?null:+i.value, td=document.querySelector(`[data-ppct="${CSS.escape(i.dataset.pst)}"]`);
+    const bad=c!==null&&(c<0||(t&&c>t)); i.style.borderColor=bad?"var(--no)":"";
+    td.innerHTML=c===null||!t?"":bad?`<span style="color:var(--no);font-size:12px;font-weight:700">만점보다 커요</span>`:`<span class="pill ${pctClass(Math.round(c/t*100))}">${Math.round(c/t*100)}%</span>`; }); }
+$("#paper-open").onclick=openPaper;
+$("#p-close").onclick=()=>$("#pdlg").close();
+$("#pdlg").addEventListener("change",e=>{
+  const id=e.target.id;
+  if(id==="p-cls"){ PF.cid=e.target.value; PF.bi=guessBook(PF.cid); drawPaper(); }
+  else if(id==="p-day"){ PF.day=e.target.value||todayKST(); drawPaper(); }
+  else if(id==="p-book"){ PF.bi=e.target.value; PF.total=""; drawPaper(); }
+  else if(id==="p-name"){ PF.name=e.target.value.trim(); refreshHave(); }
+});
+$("#pdlg").addEventListener("input",e=>{ if(e.target.id==="p-total"){ PF.total=e.target.value; } if(e.target.dataset.pst!=null) PD[e.target.dataset.pst]=e.target.value;
+  if(e.target.id==="p-total"||e.target.dataset.pst!=null) pctSync(); });
+$("#pdlg").addEventListener("click",async e=>{
+  const pn=e.target.closest("[data-pn]"); if(pn){ PF.name=pn.dataset.pn; $("#p-name").value=PF.name; refreshHave(); return; }
+  const pl=e.target.closest("[data-pload]"); if(pl){ const [b,n,t]=JSON.parse(pl.dataset.pload); const i=unitsAll().findIndex(x=>x.label===b);
+    PF.bi=i>=0?String(i):OTHER; PF.name=n; PF.total=String(t); PD={}; drawPaper(); return; }
+  if(e.target.closest("#p-save")){
+    const msg=$("#p-msg"), bk=bookOf(PF.bi), name=$("#p-name").value.trim(), total=+$("#p-total").value||0;
+    PF.name=name; PF.total=String(total||"");
+    if(!name){ msg.style.color="var(--no)"; msg.textContent="시험 이름을 넣어 주세요"; return; }
+    if(!total){ msg.style.color="var(--no)"; msg.textContent="만점(문항 수)을 넣어 주세요"; return; }
+    if(!bk){ msg.style.color="var(--no)"; msg.textContent="교재·과를 골라 주세요"; return; }
+    const rows=[...document.querySelectorAll("[data-pst]")].map(i=>({student:i.dataset.pst, correct:i.value===""?null:+i.value}));
+    if(rows.some(r=>r.correct!==null&&(r.correct<0||r.correct>total))){ msg.style.color="var(--no)"; msg.textContent="만점보다 큰 점수가 있어요"; return; }
+    const cls=(HWS.classes||[]).find(c=>String(c.id)===PF.cid);
+    const b=e.target.closest("#p-save"); b.disabled=true; msg.style.color="var(--ink-3)"; msg.textContent="저장 중…";
+    try{
+      const r=await fetch("/api/hw",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},
+        body:JSON.stringify({action:"paper.save", day:PF.day, book:bk.label, unit_id:bk.id, name, total, class_name:cls?cls.name:"", rows})});
+      const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"저장하지 못했어요");
+      PD={}; await load(); render(); drawPaper();
+      const m=$("#p-msg"); m.style.color="var(--ok)"; m.textContent=`저장했어요 · ${j.saved}명 반영${j.removed?` · ${j.removed}명 지움`:""} · ${PF.day} 데일리 리포트에 나와요`;
+    }catch(err){ msg.style.color="var(--no)"; msg.textContent=err.message; b.disabled=false; }
+  }
+});
+
 $("#csv").onclick=()=>{
   const head=["시각","이름","교재","파트","범위","정답","전체","정답률(%)","소요(초)"];
-  const rows=ALL.map(r=>[fmt(r.created_at),r.student,r.book,PARTNAMES[r.part]||r.part,r.scope,r.correct,r.total,r.pct,r.secs]);
+  const rows=ALL.map(r=>[fmt(r.created_at),r.student,r.book,PARTNAMES[r.part]||r.part_name||r.part,r.scope,r.correct,r.total,r.pct,r.secs]);
   const csv="﻿"+[head,...rows].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
   const a=document.createElement("a"); a.href=url; a.download="hazel_studylog_결과.csv"; a.click(); URL.revokeObjectURL(url);
 };
-(async()=>{ if(PIN){ try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); }catch(e){} } })();
+(async()=>{ if(PIN){ try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); if(location.hash==="#paper") openPaper(); }catch(e){} } })();
 </script>
 </body>
 </html>
