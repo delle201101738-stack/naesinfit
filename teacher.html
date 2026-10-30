@@ -86,8 +86,26 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 .tabsw{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .tabsw button{padding:9px 14px;border-radius:11px;background:var(--surface-2);font-size:13px;font-weight:700;color:var(--ink-3)}
 .tabsw button.on{background:var(--accent);color:var(--on-accent)}
-/* 지필 점수 입력 */
-#pdlg{max-width:720px}
+/* 지필 점수 일괄 입력 */
+#pdlg{max-width:min(1100px,calc(100% - 24px))}
+.pgrid{width:auto;min-width:0;font-size:13px;border-collapse:separate;border-spacing:0}
+.pgrid th,.pgrid td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+.pgrid .pstk{position:sticky;left:0;background:var(--surface);z-index:2;min-width:92px;max-width:140px;box-shadow:1px 0 0 var(--line)}
+.pgrid td.pstk b{display:block;font-size:13.5px}
+.pgrid td.pstk a{font-size:11px;color:var(--accent);text-decoration:none;font-weight:700}
+.pgrid .pch{min-width:150px;width:150px;background:var(--surface-2);color:var(--ink);font-size:12px;letter-spacing:0}
+.pgrid .pch input,.pgrid .pch select{width:100%;padding:6px 8px;border-radius:8px;border:1.5px solid var(--line-2);background:var(--surface);font:inherit;font-size:12.5px;color:var(--ink)}
+.pgrid .pch .pnm{font-weight:800}
+.pgrid .pch select{display:block;margin-top:5px;font-size:11.5px;color:var(--ink-2)}
+.pgrid .pdel{flex:none;width:26px;height:26px;border-radius:8px;color:var(--ink-3);font-size:13px}
+.pgrid .pdel:hover{background:var(--no-soft);color:var(--no)}
+.psv{display:block;margin-top:5px;font-size:10.5px;font-weight:800;color:var(--ok)} .psv.new{color:var(--accent)}
+.psc{width:64px;text-align:center;padding:7px 4px;border-radius:9px;border:1.5px solid var(--line-2);background:var(--surface);font:inherit;font-weight:700;color:var(--ink)}
+.psc:focus,.pgrid .pch input:focus{border-color:var(--accent);outline:none}
+.psc.chg{background:var(--accent-soft)} .psc.bad{border-color:var(--no)}
+.ppc{display:inline-block;min-width:38px;margin-left:6px;font-size:11.5px;font-weight:800;font-family:'Archivo',sans-serif;vertical-align:middle;border-radius:99px;padding:2px 6px;text-align:center}
+.ppc.bad{color:var(--no);font-family:inherit}
+.pavg{font-size:12px}
 .pf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin:14px 0 6px}
 .pf label{display:block;font-size:12px;font-weight:700;color:var(--ink-3);margin-bottom:4px}
 .pf select,.pf input,.pin{width:100%;padding:10px 12px;border-radius:11px;border:1.5px solid var(--line-2);background:var(--surface);font:inherit;font-size:14px;color:var(--ink)}
@@ -386,109 +404,155 @@ function openAttempt(id){
         ${it.voc?`<span class="k">몰랐던 단어</span>${esc(it.voc)}`:""}</div>`).join("") : "");
   $("#dlg").showModal();
 }
-/* ───── 지필(종이) 테스트 점수 수기 입력 → 데일리 리포트에 반영 ───── */
-let HWS=null, PF={cid:"", day:"", bi:"", name:"", total:""}, PD={};   // PD = 선생님이 직접 친 점수 (다시 그려도 유지)
+/* ───── 지필(종이) 테스트 점수 일괄 입력 → 데일리 리포트에 반영 ─────
+   숙제 검사표처럼: 줄 = 학생, 칸 = 그날 본 지필 시험들. 한 번 저장으로 전부 반영 */
+let HWS=null, PF={cid:"", day:"", bi:""}, COLS=[], PD={}, CK=0;   // PD["칸|학생"] = 선생님이 친 점수
 const todayKST=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
 const dKST=v=>new Date(+new Date(v)+9*3600e3).toISOString().slice(0,10);
 const unitsAll=()=>{ const L=[]; (MF.books||[]).forEach(b=>(b.units||[]).forEach(u=>L.push({label:`${b.subject} · ${b.publisher} · ${u.no}`, id:u.id, b, u}))); return L; };
 const OTHER="지필 테스트";
 const paperRows=()=>ALL.filter(r=>r.scope==="지필");
+const QUICK=["단어 시험","어법 시험","본문 암기","서술형","통변형","동형 지필"];
 function membersOf(cid){ return HWS?(HWS.members||[]).filter(m=>+m.class_id===+cid).map(m=>m.student).sort((a,b)=>a.localeCompare(b,"ko")):[]; }
 function guessBook(cid){   // 반 학생들이 최근 2주에 가장 많이 푼 과
   const ms=new Set(membersOf(cid)), lim=Date.now()-14*864e5, w={};
   ALL.forEach(r=>{ if(ms.has(r.student)&&r.scope!=="지필"&&+new Date(r.created_at)>lim) w[r.book]=(w[r.book]||0)+r.total; });
-  const top=(Object.entries(w).sort((a,b)=>b[1]-a[1])[0]||[])[0]; const L=unitsAll(); const i=L.findIndex(x=>x.label===top);
-  return i>=0?String(i):(top?"":OTHER); }
-const bookOf=bi=>{ if(bi===OTHER) return {label:OTHER,id:""}; const x=unitsAll()[+bi]; return x?{label:x.label,id:x.id}:null; };
+  const top=(Object.entries(w).sort((a,b)=>b[1]-a[1])[0]||[])[0]; const i=unitsAll().findIndex(x=>x.label===top);
+  return i>=0?String(i):OTHER; }
+const biOf=label=>{ const i=unitsAll().findIndex(x=>x.label===label); return i>=0?String(i):OTHER; };
+const bookOf=bi=>{ if(bi===OTHER) return {label:OTHER,id:""}; const x=unitsAll()[+bi]; return x?{label:x.label,id:x.id}:{label:OTHER,id:""}; };
+const shortBook=bi=>{ if(bi===OTHER) return "교재 무관"; const x=unitsAll()[+bi]; return x?`${x.b.publisher.replace(/\(.*\)/,"")} ${x.u.no}`:"교재 무관"; };
+function newCol(name){ return {k:"c"+(++CK), bi:PF.bi, name:name||"", total:"", orig:null, have:{}}; }
+function loadCols(){   // 이 반 · 이날 이미 넣은 지필 시험 → 칸으로
+  const ms=new Set(membersOf(PF.cid)), g={};
+  paperRows().forEach(r=>{ if(!ms.has(r.student)||dKST(r.created_at)!==PF.day) return;
+    const k=r.book+"\u0001"+r.part_name, o=g[k]=g[k]||{book:r.book,name:r.part_name.replace(/^지필 · /,""),total:r.total,have:{}}; o.have[r.student]=r.correct; });
+  COLS=Object.values(g).map(o=>({k:"c"+(++CK), bi:biOf(o.book), name:o.name, total:String(o.total), orig:{book:o.book,name:o.name,total:o.total}, have:o.have}));
+  if(!COLS.length) COLS=[newCol("")];
+  PD={};
+}
 async function openPaper(){
   $("#pdlg").showModal(); $("#p-body").innerHTML=`<div class="empty" style="padding:30px">불러오는 중…</div>`;
   if(!HWS){ try{ const r=await fetch("/api/hw",{headers:{"x-pin":PIN},cache:"no-store"}); HWS=await r.json(); if(!r.ok) throw new Error(HWS.error||"반 목록을 못 불러왔어요"); }catch(e){ HWS=null; $("#p-body").innerHTML=`<div class="empty">${esc(e.message)}</div>`; return; } }
   if(!PF.cid&&HWS.classes&&HWS.classes[0]) PF.cid=String(HWS.classes[0].id);
   if(!PF.day) PF.day=todayKST();
-  if(PF.bi==="") PF.bi=guessBook(PF.cid);
-  drawPaper();
+  if(!PF.bi) PF.bi=guessBook(PF.cid);
+  loadCols(); drawPaper();
 }
+function bookOpts(sel){ const L=unitsAll(), groups=[...new Set(L.map(x=>x.b.subject+" · "+x.b.publisher))];
+  return `<option value="${OTHER}"${sel===OTHER?" selected":""}>교재와 상관없는 지필 테스트</option>`+
+    groups.map(g=>`<optgroup label="${esc(g)}">${L.map((x,i)=>x.b.subject+" · "+x.b.publisher===g?`<option value="${i}"${String(i)===sel?" selected":""}>${esc(x.u.no)}${x.u.title?" · "+esc(x.u.title):""}</option>`:"").join("")}</optgroup>`).join(""); }
 function drawPaper(){
-  const C=HWS.classes||[], cls=C.find(c=>String(c.id)===PF.cid), L=unitsAll(), bk=bookOf(PF.bi);
-  const studs=membersOf(PF.cid), ms=new Set(studs);
-  const nm=String(PF.name||"").trim();
-  // 이 반 · 이 날 이미 입력한 지필 테스트
-  const done={}; paperRows().forEach(r=>{ if(ms.has(r.student)&&dKST(r.created_at)===PF.day){ const k=r.book+"\u0001"+r.part_name; (done[k]=done[k]||{book:r.book,name:r.part_name.replace(/^지필 · /,""),total:r.total,n:0}).n++; } });
-  const groups=[...new Set(L.map(x=>x.b.subject+" · "+x.b.publisher))];
+  const C=HWS.classes||[], studs=membersOf(PF.cid);
   $("#p-body").innerHTML=`
-  <p style="margin:12px 0 0;font-size:13px;color:var(--ink-2);line-height:1.6">스터디로그 온라인 시험 대신 <b>종이로 본 테스트</b> 점수를 넣으면, 그날 <b>데일리 리포트</b>(시험 결과·누적 그래프·반평균)에 그대로 들어가요. 같은 날·같은 시험 이름으로 다시 저장하면 고쳐지고, 칸을 비우고 저장하면 지워져요.</p>
+  <p style="margin:12px 0 0;font-size:13px;color:var(--ink-2);line-height:1.6">종이로 본 테스트 점수를 <b>숙제 검사표처럼 한 번에</b> 넣어요. 칸 하나 = 시험 하나 · 줄 하나 = 학생.
+    <b>저장</b> 한 번이면 그날 <b>데일리 리포트</b>(시험 결과·누적·반평균)에 전부 들어가요. 빈칸 = 그 시험 안 본 학생.
+    <span style="color:var(--ink-3)">엑셀에서 점수 열을 복사해 첫 칸에 붙여넣으면 아래로 쭉 채워져요.</span></p>
   <div class="pf">
     <div><label>반</label><select id="p-cls">${C.map(c=>`<option value="${c.id}"${String(c.id)===PF.cid?" selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
     <div><label>시험 본 날</label><input type="date" id="p-day" value="${PF.day}"></div>
-    <div class="full"><label>교재 · 과 <span style="font-weight:500">(온라인 시험과 같은 과를 고르면 같은 리포트에 같이 나와요)</span></label>
-      <select id="p-book"><option value="${OTHER}"${PF.bi===OTHER?" selected":""}>교재와 상관없는 지필 테스트</option>
-      ${groups.map(g=>`<optgroup label="${esc(g)}">${L.map((x,i)=>x.b.subject+" · "+x.b.publisher===g?`<option value="${i}"${String(i)===PF.bi?" selected":""}>${esc(x.u.no)}${x.u.title?" · "+esc(x.u.title):""}</option>`:"").join("")}</optgroup>`).join("")}</select></div>
-    <div><label>시험 이름</label><input id="p-name" maxlength="40" placeholder="예: 3과 단어 시험" value="${esc(PF.name)}">
-      <div class="chips">${["단어 시험","어법 시험","본문 암기","서술형","통변형","동형 지필"].map(t=>`<button data-pn="${t}"${nm===t?' class="on"':""}>${t}</button>`).join("")}</div></div>
-    <div><label>만점 (문항 수)</label><input id="p-total" type="number" min="1" max="1000" inputmode="numeric" placeholder="예: 50" value="${esc(PF.total)}">
-      <div style="font-size:12px;color:var(--ink-3);margin-top:6px">100점 만점 점수로 넣으려면 100으로 두세요</div></div>
+    <div class="full"><label>새 시험 칸의 기본 교재 · 과 <span style="font-weight:500">(온라인 시험과 같은 과면 같은 리포트에 같이 나와요 · 칸마다 바꿀 수 있어요)</span></label>
+      <select id="p-book">${bookOpts(PF.bi)}</select></div>
   </div>
-  ${Object.keys(done).length?`<div style="margin:12px 0 4px;font-size:12px;font-weight:700;color:var(--ink-3)">이 반 · 이날 입력한 지필 테스트 (누르면 불러와 고칠 수 있어요)</div>
-    <div class="chips">${Object.values(done).map(g=>`<button data-pload="${esc(JSON.stringify([g.book,g.name,g.total]))}">${esc(g.name)} · ${esc(g.book.split(" · ").pop())} · ${g.n}명</button>`).join("")}</div>`:""}
-  <div class="scroll" style="margin-top:14px"><table class="ptab"><thead><tr><th>학생</th><th>맞힌 수 (점수)</th><th>정답률</th><th></th></tr></thead><tbody>
-  ${studs.length?studs.map(st=>`<tr><td style="font-weight:700">${esc(st)}</td>
-    <td><input type="number" min="0" inputmode="numeric" data-pst="${esc(st)}" placeholder="안 봄"></td>
-    <td class="num" data-ppct="${esc(st)}"></td><td style="font-size:12px;color:var(--ink-3)" data-psv="${esc(st)}"></td></tr>`).join("")
-    :`<tr><td colspan="4" class="empty" style="padding:24px">이 반에 학생이 없어요 (반별 관리에서 명단을 넣어 주세요)</td></tr>`}
-  </tbody></table></div>
-  <div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap">
-    <button class="btn pri" id="p-save" style="padding:11px 20px;font-size:14px">저장하고 리포트에 반영</button>
-    <span style="font-size:12px;color:var(--ink-3)">빈칸 = 이 시험 안 본 학생 (리포트에 안 나옴)</span></div>
-  <div class="pmsg" id="p-msg"></div>`;
-  refreshHave();
+  <div class="chips" style="margin-top:10px"><span style="font-size:12px;font-weight:700;color:var(--ink-3);align-self:center;margin-right:2px">시험 칸 추가</span>
+    ${QUICK.map(t=>`<button data-padd="${t}">＋ ${t}</button>`).join("")}<button data-padd="">＋ 직접 입력</button></div>
+  <div class="scroll pgrid-wrap" style="margin-top:12px"><table class="pgrid"><thead><tr><th class="pstk">학생</th>
+    ${COLS.map(c=>`<th class="pch" data-pk="${c.k}">
+      <div style="display:flex;gap:4px;align-items:center"><input class="pnm" data-pcol="${c.k}" data-f="name" maxlength="40" placeholder="시험 이름" value="${esc(c.name)}">
+        <button class="pdel" data-pdel="${c.k}" title="이 시험 칸 지우기">✕</button></div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:5px"><span style="font-size:11px;color:var(--ink-3);white-space:nowrap">만점</span>
+        <input class="ptot" data-pcol="${c.k}" data-f="total" type="number" min="1" max="1000" inputmode="numeric" placeholder="문항 수" value="${esc(c.total)}"></div>
+      <select class="pbk" data-pcol="${c.k}" data-f="bi" title="교재 · 과">${bookOpts(c.bi)}</select>
+      ${c.orig?`<span class="psv">저장됨</span>`:`<span class="psv new">새 시험</span>`}</th>`).join("")}</tr></thead>
+    <tbody>${studs.length?studs.map((st,ri)=>`<tr><td class="pstk"><b>${esc(st)}</b><a href="report?student=${encodeURIComponent(st)}&day=${PF.day}" target="_blank" rel="noopener">리포트</a></td>
+      ${COLS.map((c,ci)=>`<td><input class="psc" type="number" min="0" inputmode="numeric" data-pc="${c.k}" data-ps="${esc(st)}" data-r="${ri}" data-c="${ci}" placeholder="–"><span class="ppc" data-pp="${c.k}|${esc(st)}"></span></td>`).join("")}</tr>`).join("")
+      :`<tr><td class="pstk">—</td><td colspan="${COLS.length}" class="empty" style="padding:24px">이 반에 학생이 없어요 (반별 관리에서 명단을 넣어 주세요)</td></tr>`}</tbody>
+    <tfoot><tr><td class="pstk">반 평균</td>${COLS.map(c=>`<td class="pavg" data-pavg="${c.k}"></td>`).join("")}</tr></tfoot>
+  </table></div>
+  <div style="position:sticky;bottom:-20px;z-index:3;background:var(--surface);margin:0 -20px -20px;padding:12px 20px 14px;border-top:1px solid var(--line)">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <button class="btn pri" id="p-save" style="padding:11px 20px;font-size:14px">전체 저장하고 리포트에 반영</button>
+    <span style="font-size:12px;color:var(--ink-3)">Enter = 아래 학생 · Tab = 옆 시험</span></div>
+    <div class="pmsg" id="p-msg" style="margin-top:6px;min-height:0"></div></div>`;
+  document.querySelectorAll(".psc").forEach(i=>{ const c=COLS.find(x=>x.k===i.dataset.pc), st=i.dataset.ps, key=c.k+"|"+st;
+    i.value = key in PD ? PD[key] : (st in c.have ? c.have[st] : ""); });
+  pctSync();
 }
-function haveNow(){ const bk=bookOf(PF.bi), nm=String(PF.name||"").trim(), have={};
-  if(bk&&nm) paperRows().forEach(r=>{ if(r.book===bk.label&&r.part_name==="지필 · "+nm&&dKST(r.created_at)===PF.day) have[r.student]=r; });
-  return have; }
-function refreshHave(){   // 이미 저장된 점수 불러오기 (선생님이 방금 친 칸은 그대로)
-  const have=haveNow(), t=$("#p-total");
-  if(t&&!t.value){ const h=Object.values(have)[0]; if(h){ t.value=h.total; PF.total=String(h.total); } }
-  document.querySelectorAll("[data-pst]").forEach(i=>{ const st=i.dataset.pst, h=have[st];
-    i.value = st in PD ? PD[st] : (h?h.correct:"");
-    const sv=document.querySelector(`[data-psv="${CSS.escape(st)}"]`); if(sv) sv.textContent=h?(st in PD&&String(PD[st])!==String(h.correct)?"고침":"저장됨"):""; });
-  document.querySelectorAll("[data-pn]").forEach(b=>b.classList.toggle("on",b.dataset.pn===PF.name));
-  pctSync(); }
-function pctSync(){ const t=+$("#p-total")?.value||0;
-  document.querySelectorAll("[data-pst]").forEach(i=>{ const c=i.value===""?null:+i.value, td=document.querySelector(`[data-ppct="${CSS.escape(i.dataset.pst)}"]`);
-    const bad=c!==null&&(c<0||(t&&c>t)); i.style.borderColor=bad?"var(--no)":"";
-    td.innerHTML=c===null||!t?"":bad?`<span style="color:var(--no);font-size:12px;font-weight:700">만점보다 커요</span>`:`<span class="pill ${pctClass(Math.round(c/t*100))}">${Math.round(c/t*100)}%</span>`; }); }
+const colOf=k=>COLS.find(c=>c.k===k);
+function pctSync(){
+  COLS.forEach(c=>{ const t=+c.total||0; let n=0, sum=0, bad=0;
+    document.querySelectorAll(`.psc[data-pc="${c.k}"]`).forEach(i=>{ const v=i.value===""?null:+i.value, pp=document.querySelector(`[data-pp="${CSS.escape(c.k+"|"+i.dataset.ps)}"]`);
+      const over=v!==null&&(v<0||(t&&v>t)); i.classList.toggle("bad",over); const st=i.dataset.ps, key=c.k+"|"+st;
+      i.classList.toggle("chg", key in PD && String(PD[key])!==String(st in c.have?c.have[st]:""));
+      if(over){ bad++; pp.textContent="만점↑"; pp.className="ppc bad"; return; }
+      if(v===null||!t){ pp.textContent=""; pp.className="ppc"; return; }
+      const pc=Math.round(v/t*100); n++; sum+=pc; pp.textContent=pc+"%"; pp.className="ppc "+pctClass(pc); });
+    const av=document.querySelector(`[data-pavg="${c.k}"]`); if(av) av.innerHTML=n?`<span class="pill ${pctClass(Math.round(sum/n))}">${Math.round(sum/n)}%</span> <span style="font-size:11px;color:var(--ink-3)">${n}명</span>`:""; });
+}
 $("#paper-open").onclick=openPaper;
 $("#p-close").onclick=()=>$("#pdlg").close();
+const pDirty=()=>Object.keys(PD).length>0 || COLS.some(c=>!c.orig&&(c.name||c.total)) || COLS.some(c=>c.orig&&(c.name!==c.orig.name||String(c.total)!==String(c.orig.total)||bookOf(c.bi).label!==c.orig.book));
 $("#pdlg").addEventListener("change",e=>{
   const id=e.target.id;
-  if(id==="p-cls"){ PF.cid=e.target.value; PF.bi=guessBook(PF.cid); drawPaper(); }
-  else if(id==="p-day"){ PF.day=e.target.value||todayKST(); drawPaper(); }
-  else if(id==="p-book"){ PF.bi=e.target.value; PF.total=""; drawPaper(); }
-  else if(id==="p-name"){ PF.name=e.target.value.trim(); refreshHave(); }
+  if(id==="p-cls"||id==="p-day"){
+    if(pDirty()&&!confirm("저장 안 한 점수가 있어요. 버리고 바꿀까요?")){ e.target.value=id==="p-cls"?PF.cid:PF.day; return; }
+    if(id==="p-cls"){ PF.cid=e.target.value; PF.bi=guessBook(PF.cid); } else PF.day=e.target.value||todayKST();
+    loadCols(); drawPaper(); }
+  else if(id==="p-book"){ PF.bi=e.target.value; COLS.forEach(c=>{ if(!c.orig&&!c.name&&!Object.keys(PD).some(k=>k.startsWith(c.k+"|"))) c.bi=PF.bi; }); drawPaper(); }
+  else if(e.target.dataset.f==="bi"){ colOf(e.target.dataset.pcol).bi=e.target.value; }
 });
-$("#pdlg").addEventListener("input",e=>{ if(e.target.id==="p-total"){ PF.total=e.target.value; } if(e.target.dataset.pst!=null) PD[e.target.dataset.pst]=e.target.value;
-  if(e.target.id==="p-total"||e.target.dataset.pst!=null) pctSync(); });
+$("#pdlg").addEventListener("input",e=>{ const t=e.target;
+  if(t.dataset.f==="name"){ colOf(t.dataset.pcol).name=t.value.trim(); return; }
+  if(t.dataset.f==="total"){ colOf(t.dataset.pcol).total=t.value; pctSync(); return; }
+  if(t.dataset.pc){ PD[t.dataset.pc+"|"+t.dataset.ps]=t.value; pctSync(); } });
+$("#pdlg").addEventListener("keydown",e=>{ const t=e.target; if(!t.classList||!t.classList.contains("psc")||e.key!=="Enter") return;
+  e.preventDefault(); const n=document.querySelector(`.psc[data-c="${t.dataset.c}"][data-r="${+t.dataset.r+(e.shiftKey?-1:1)}"]`); if(n){ n.focus(); n.select(); } });
+$("#pdlg").addEventListener("paste",e=>{ const t=e.target; if(!t.classList||!t.classList.contains("psc")) return;
+  const txt=(e.clipboardData||window.clipboardData).getData("text"); if(!/[\n\t]/.test(txt.trim())) return;
+  e.preventDefault(); const lines=txt.replace(/\r/g,"").replace(/\n$/,"").split("\n");
+  lines.forEach((ln,dr)=>ln.split("\t").forEach((v,dc)=>{ const i=document.querySelector(`.psc[data-c="${+t.dataset.c+dc}"][data-r="${+t.dataset.r+dr}"]`); if(!i) return;
+    const x=String(v).trim().replace(/[^\d.\-]/g,""); i.value=x===""?"":String(Math.round(+x)); PD[i.dataset.pc+"|"+i.dataset.ps]=i.value; }));
+  pctSync(); });
+async function paperPost(body){ const r=await fetch("/api/hw",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"paper.save",...body})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"저장하지 못했어요"); return j; }
 $("#pdlg").addEventListener("click",async e=>{
-  const pn=e.target.closest("[data-pn]"); if(pn){ PF.name=pn.dataset.pn; $("#p-name").value=PF.name; refreshHave(); return; }
-  const pl=e.target.closest("[data-pload]"); if(pl){ const [b,n,t]=JSON.parse(pl.dataset.pload); const i=unitsAll().findIndex(x=>x.label===b);
-    PF.bi=i>=0?String(i):OTHER; PF.name=n; PF.total=String(t); PD={}; drawPaper(); return; }
+  const ad=e.target.closest("[data-padd]"); if(ad){ const nm=ad.dataset.padd;
+    const empty=COLS.find(c=>!c.orig&&!c.name&&!Object.keys(PD).some(k=>k.startsWith(c.k+"|")));
+    let tg; if(empty){ tg=empty; if(nm) tg.name=nm; } else { tg=newCol(nm); COLS.push(tg); }
+    drawPaper(); const f=document.querySelector(`.${nm?"ptot":"pnm"}[data-pcol="${tg.k}"]`); if(f){ f.focus(); f.scrollIntoView({block:"nearest",inline:"nearest"}); } return; }
+  const dl=e.target.closest("[data-pdel]"); if(dl){ const c=colOf(dl.dataset.pdel);
+    if(c.orig){ if(!confirm(`'${c.orig.name}' 점수를 이 반·이날에서 모두 지울까요? (리포트에서도 빠져요)`)) return;
+      try{ await paperPost({day:PF.day, book:c.orig.book, unit_id:"", name:c.orig.name, total:c.orig.total, class_name:"", rows:membersOf(PF.cid).map(st=>({student:st,correct:null}))});
+        await load(); render(); }catch(err){ alert(err.message); return; } }
+    Object.keys(PD).forEach(k=>{ if(k.startsWith(c.k+"|")) delete PD[k]; });
+    COLS=COLS.filter(x=>x!==c); if(!COLS.length) COLS=[newCol("")]; drawPaper(); return; }
   if(e.target.closest("#p-save")){
-    const msg=$("#p-msg"), bk=bookOf(PF.bi), name=$("#p-name").value.trim(), total=+$("#p-total").value||0;
-    PF.name=name; PF.total=String(total||"");
-    if(!name){ msg.style.color="var(--no)"; msg.textContent="시험 이름을 넣어 주세요"; return; }
-    if(!total){ msg.style.color="var(--no)"; msg.textContent="만점(문항 수)을 넣어 주세요"; return; }
-    if(!bk){ msg.style.color="var(--no)"; msg.textContent="교재·과를 골라 주세요"; return; }
-    const rows=[...document.querySelectorAll("[data-pst]")].map(i=>({student:i.dataset.pst, correct:i.value===""?null:+i.value}));
-    if(rows.some(r=>r.correct!==null&&(r.correct<0||r.correct>total))){ msg.style.color="var(--no)"; msg.textContent="만점보다 큰 점수가 있어요"; return; }
-    const cls=(HWS.classes||[]).find(c=>String(c.id)===PF.cid);
-    const b=e.target.closest("#p-save"); b.disabled=true; msg.style.color="var(--ink-3)"; msg.textContent="저장 중…";
+    const msg=$("#p-msg"), studs=membersOf(PF.cid), cls=(HWS.classes||[]).find(c=>String(c.id)===PF.cid);
+    const val=(c,st)=>{ const key=c.k+"|"+st, v=key in PD?PD[key]:(st in c.have?c.have[st]:""); return v===""||v==null?null:Math.round(+v); };
+    const work=COLS.filter(c=>c.orig||studs.some(st=>val(c,st)!==null));
+    const err=t=>{ msg.style.color="var(--no)"; msg.textContent=t; };
+    if(!work.length) return err("넣은 점수가 없어요");
+    for(const c of work){
+      const lab=c.name||"(이름 없음)";
+      if(!c.name) return err("시험 이름이 빈 칸이 있어요");
+      if(!(+c.total>0)) return err(`'${lab}' 만점(문항 수)을 넣어 주세요`);
+      if(studs.some(st=>{ const v=val(c,st); return v!==null&&(v<0||v>+c.total); })) return err(`'${lab}'에 만점보다 큰 점수가 있어요`);
+    }
+    const names=work.map(c=>bookOf(c.bi).label+"|"+c.name); if(new Set(names).size!==names.length) return err("같은 교재에 같은 시험 이름이 두 칸 있어요");
+    const b=e.target.closest("#p-save"); b.disabled=true; msg.style.color="var(--ink-3)";
+    let saved=0, removed=0;
     try{
-      const r=await fetch("/api/hw",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},
-        body:JSON.stringify({action:"paper.save", day:PF.day, book:bk.label, unit_id:bk.id, name, total, class_name:cls?cls.name:"", rows})});
-      const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"저장하지 못했어요");
-      PD={}; await load(); render(); drawPaper();
-      const m=$("#p-msg"); m.style.color="var(--ok)"; m.textContent=`저장했어요 · ${j.saved}명 반영${j.removed?` · ${j.removed}명 지움`:""} · ${PF.day} 데일리 리포트에 나와요`;
-    }catch(err){ msg.style.color="var(--no)"; msg.textContent=err.message; b.disabled=false; }
+      for(const [n,c] of work.entries()){
+        msg.textContent=`저장 중… (${n+1}/${work.length}) ${c.name}`;
+        const bk=bookOf(c.bi);
+        if(c.orig&&(c.orig.name!==c.name||c.orig.book!==bk.label))   // 이름·교재를 바꾼 칸 → 예전 기록 지우고 새로
+          await paperPost({day:PF.day, book:c.orig.book, unit_id:"", name:c.orig.name, total:c.orig.total, class_name:"", rows:studs.map(st=>({student:st,correct:null}))});
+        const j=await paperPost({day:PF.day, book:bk.label, unit_id:bk.id, name:c.name, total:+c.total, class_name:cls?cls.name:"", rows:studs.map(st=>({student:st,correct:val(c,st)}))});
+        saved+=j.saved; removed+=j.removed;
+      }
+      await load(); render(); loadCols(); drawPaper();
+      const m=$("#p-msg"); m.style.color="var(--ok)"; m.textContent=`저장했어요 · 시험 ${work.length}개 · 점수 ${saved}개 반영${removed?` · ${removed}개 지움`:""} · ${PF.day} 데일리 리포트에 나와요`;
+    }catch(er){ err(er.message+" — 다시 저장을 눌러 주세요"); b.disabled=false; }
   }
 });
 
