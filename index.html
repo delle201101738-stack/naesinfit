@@ -772,7 +772,9 @@ const PARTS=[
  {id:"wmean", n:"단어 뜻 쓰기",   s:"표제어를 보고 우리말 뜻 쓰기",     c:"var(--cat-3)", b:"var(--cat-3-s)", k:"세트"},
  {id:"wsyn",  n:"유의어 연결",    s:"표제어와 뜻이 가장 가까운 유의어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"세트"},
  {id:"wsynw", n:"유의어 쓰기",    s:"표제어와 뜻이 가장 가까운 유의어 직접 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"세트"},
- {id:"wdef",  n:"영영풀이",       s:"영영풀이 보고 표제어·유의어 쓰기",  c:"var(--cat-4)", b:"var(--cat-4-s)", k:"문항"}
+ {id:"wdef",  n:"영영풀이",       s:"영영풀이 보고 표제어·유의어 쓰기",  c:"var(--cat-4)", b:"var(--cat-4-s)", k:"문항"},
+ {id:"dfa",   n:"영영풀이 매칭",   s:"영영풀이에 해당하는 단어를 보기에서 고르기", c:"var(--cat-4)", b:"var(--cat-4-s)", k:"세트"},
+ {id:"dfb",   n:"영영풀이 정오",   s:"단어와 영영풀이 연결이 옳지 않은 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"}
 ];
 const P = Object.fromEntries(PARTS.map(p=>[p.id,p]));
 const labelOf = id => (C&&C.labels&&C.labels[id]) || P[id].n;
@@ -788,7 +790,7 @@ function pts(part, it){
   if(part==="vocab"||part==="gram"||part==="cloze") return it.blanks.length;
   if(isSegP(part)) return it.seg.length;
   if(part==="tf") return it.st.length;
-  if(part==="wmean"||part==="wsyn"||part==="wsynw") return it.rows.length;
+  if(part==="wmean"||isWsP(part)||part==="wsynw") return it.rows.length;
   if(part==="wdef") return 2;
   return 1;
 }
@@ -850,7 +852,8 @@ function go(id){
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const isSegP=p=>p==="fix"||p==="word"||p==="word2"||p==="fixg"||p==="fixv"||p==="gbbw"||p==="vbbw";
-const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb";
+const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb"||p==="dfb";
+const isWsP=p=>p==="wsyn"||p==="dfa";   // 보기(A~T) 고르기 매칭
 const multiAns=it=>Array.isArray(it.ans);
 const ulHTML=t=>esc(t).replace(/\[\[(.+?)\]\]/g,"<u>$1</u>");
 const norm=s=>String(s||"").toLowerCase().replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
@@ -963,7 +966,7 @@ function subset(part, it, keep){
   if(isSegP(part))   return subSeg(it,keep);
   if(part==="tf")                   return subTF(it,keep);
   if(part==="cloze")                return subCloze(it,keep);
-  if(part==="wmean"||part==="wsyn"||part==="wsynw") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
+  if(part==="wmean"||isWsP(part)||part==="wsynw") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
   if(part==="wdef")                 return Object.assign({}, it);
   return Object.assign({}, it, {_map:keep.slice()});
 }
@@ -982,7 +985,7 @@ const subLen = (part,it) =>
   (part==="vocab"||part==="gram"||part==="cloze") ? it.blanks.length :
   (isSegP(part))   ? it.seg.length :
   (part==="tf")                   ? it.st.length :
-  (part==="wmean"||part==="wsyn"||part==="wsynw") ? it.rows.length :
+  (part==="wmean"||isWsP(part)||part==="wsynw") ? it.rows.length :
   (part==="wdef")                 ? 2 : 1;
 const wrongCount = (part, ever) => wrongItems(part, ever).reduce((s,it)=>s+pts(part,it),0);
 const wrongTotal = ever => livePARTS().reduce((s,p)=>s+wrongCount(p.id, ever),0);
@@ -1220,6 +1223,8 @@ const HOWTO={
  mwrite:"원문 참조 없이, 각 지문의 <b>중요 문장</b>을 단어 배열 + <b>어형 변형</b>으로 완성합니다. 어법 포인트가 힌트로 붙어 있어요. "+ARR_PASS+"점 이상 + 어형 변형이 맞아야 정답.",
  wmean:"표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 그중 하나만 써도 되고, <b>뜻이 비슷한 말</b>도 정답이에요. 단, <b>품사</b>가 다르면 틀려요(예: preserve → 보존하다·지키다 ○ / 보존 ✕). 자동 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  wsyn:"왼쪽 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 같은 유의어는 한 번만 쓰여요.",
+ dfa:"영영풀이마다 해당하는 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 한 번씩만 쓰여요.",
+ dfb:"단어와 영영풀이의 연결이 <b>옳지 않은 것</b>을 고릅니다. 결과 화면 💡해설에 바른 풀이가 있어요.",
  wsynw:"표제어마다 뜻이 가장 가까운 <b>유의어를 영어로 직접</b> 씁니다. 첫 글자·글자 수 힌트를 참고하세요. 대소문자는 봐주지만 철자는 정확해야 해요.",
  wdef:"영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 글자 힌트에 맞춰 <b>유의어</b>도 씁니다. 두 칸이 따로 채점돼요.",
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
@@ -1291,7 +1296,7 @@ function blankAns(part,it){
   if(part==="cloze") return it.blanks.map(()=>"");
   if(isChoiceP(part)) return multiAns(it)?[]:null;
   if(part==="wmean") return it.rows.map(()=>"");
-  if(part==="wsyn") return it.rows.map(()=>null);
+  if(isWsP(part)) return it.rows.map(()=>null);
   if(part==="wsynw") return it.rows.map(()=>"");
   if(part==="wdef") return ["",""];
   return "";
@@ -1415,6 +1420,14 @@ function renderQ(){
         <div class="czrow"><span class="czb num">${esc(r.n||i+1)}</span>
           <span class="czh" style="min-width:0;flex:1 1 42%"><b style="font-size:15px">${esc(r.w)}</b></span>
           <input class="cz-in" data-wm="${i}" value="${esc(a[i]||"")}" placeholder="우리말 뜻" autocomplete="off" spellcheck="false"></div>`).join("")}</div>`;
+  } else if(part==="dfa"){
+    const opts=it.opts.map((o,j)=>`<option value="${j}">${String.fromCharCode(65+j)}  ${esc(o)}</option>`).join("");
+    body=`${tag}<p class="q-stem">${stemOf("영영풀이에 해당하는 단어를 <b>보기 A~T</b>에서 고르세요.")}</p>
+      <div class="card" style="margin-top:14px;padding:10px 16px;font-size:13px;line-height:1.9;color:var(--ink-2)">${it.opts.map((o,j)=>`<span style="display:inline-block;margin-right:12px"><b>${String.fromCharCode(65+j)}</b> ${esc(o)}</span>`).join("")}</div>
+      <div class="card" style="margin-top:12px;padding:6px 16px">${it.rows.map((r,i)=>`
+        <div style="padding:11px 0;border-bottom:1px solid var(--line)"><div style="display:flex;gap:10px;align-items:flex-start"><span class="czb num">${esc(r.n||i+1)}</span>
+          <span style="flex:1;font-size:14px;line-height:1.6">${esc(r.w)}</span></div>
+          <select class="cz-in" data-ws="${i}" style="margin-top:8px;width:100%"><option value="">선택</option>${opts.replace(`value="${a[i]}"`,`value="${a[i]}" selected`)}</select></div>`).join("")}</div>`;
   } else if(part==="wsyn"){
     const opts=it.opts.map((o,j)=>`<option value="${j}">${String.fromCharCode(65+j)}  ${esc(o)}</option>`).join("");
     body=`${tag}<p class="q-stem">${stemOf("표제어와 뜻이 가장 가까운 <b>유의어</b>를 고르세요.")}</p>
@@ -1854,7 +1867,7 @@ function fixRows(it,a){
     `<div class="fixrow"><span class="lb">${s.L}</span><input data-fix="${i}" value="${esc(a[i].txt)}" placeholder="바르게 고쳐 쓰기 (문장째 써도 돼요)" autocomplete="off" spellcheck="false"></div>`:"").join("");
   return rows||`<div style="padding:12px 0;font-size:13px;color:var(--ink-3)">어색한 부분을 눌러 표시하세요</div>`;
 }
-const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef"]);
+const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef","dfa","dfb"]);
 function syncCta(){
   qdelSync();
   const b=$("#quiz-cta"), last=Q.i===Q.items.length-1, p=Q.pl[Q.i], it=Q.items[Q.i], a=Q.ans[Q.i];
@@ -2058,8 +2071,8 @@ function grade(part,it,a){
   } else if(part==="wmean"){
     it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
       d.push({ok:koMatch(mine,r.ko,r.koAlt), label:r.w, mine:mine||"무응답", right:r.ko}); });
-  } else if(part==="wsyn"){
-    it.rows.forEach((r,i)=>d.push({ok:a[i]===r.ans, label:r.w,
+  } else if(isWsP(part)){
+    it.rows.forEach((r,i)=>d.push({ok:a[i]===r.ans, label:part==="dfa"?`${r.n}. ${String(r.w).slice(0,40)}…`:r.w,
       mine:a[i]==null?"무응답":`${String.fromCharCode(65+a[i])} ${it.opts[a[i]]}`,
       right:`${String.fromCharCode(65+r.ans)} ${it.opts[r.ans]}`}));
   } else if(part==="wsynw"){
@@ -2249,7 +2262,7 @@ function ptLabel(part,it,j){
   if(isSegP(part)){ const s=it.seg[j]; return s?`(${s.L}) ${s.t}`:""; }
   if(part==="tf") return it.st[j]||"";
   if(part==="cloze"||part==="vocab"||part==="gram") return `빈칸 (${j+1})`;
-  if(part==="wmean"||part==="wsyn"||part==="wsynw") return (it.rows[j]||{}).w||"";
+  if(part==="wmean"||isWsP(part)||part==="wsynw") return (it.rows[j]||{}).w||"";
   if(part==="wdef") return j?"유의어 쓰기":"표제어 쓰기";
   return "";
 }

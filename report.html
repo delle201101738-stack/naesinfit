@@ -299,8 +299,8 @@ details.more[open]>summary{border-bottom:1px solid var(--line);margin-bottom:6px
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const n0=v=>Math.round(v);
-const PARTORDER=["wmean","wsyn","wsynw","wdef","twrite","cloze","vocab","gram","word","word2","fix","fixg","fixv","tf","choice","sjt","gbbw","gbb","vbbw","vbb","order","insert","arrange","mwrite","write"];
-const PARTBASE={wmean:"단어 뜻 쓰기",wsyn:"유의어 객관식",wsynw:"유의어 주관식",wdef:"영영풀이",vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",word2:"통변형 ②",fixg:"통변형 ③ 어법 집중",fixv:"통변형 ④ 어휘 집중",fix:"어법 오류 수정",
+const PARTORDER=["wmean","wsyn","wsynw","wdef","dfa","dfb","twrite","cloze","vocab","gram","word","word2","fix","fixg","fixv","tf","choice","sjt","gbbw","gbb","vbbw","vbb","order","insert","arrange","mwrite","write"];
+const PARTBASE={wmean:"단어 뜻 쓰기",wsyn:"유의어 객관식",wsynw:"유의어 주관식",wdef:"영영풀이",dfa:"영영풀이 매칭",dfb:"영영풀이 정오",vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",word2:"통변형 ②",fixg:"통변형 ③ 어법 집중",fixv:"통변형 ④ 어휘 집중",fix:"어법 오류 수정",
   tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작",twrite:"주제문 영작",cloze:"빈칸 추론",choice:"독해",sjt:"영문선지 비법 TEST",gbbw:"어법 비법 밑줄 고치기",gbb:"어법 비법 TEST",vbbw:"어휘 비법 밑줄 고치기",vbb:"어휘 비법 TEST",mwrite:"중요 문장 영작"};
 
 /* ── 등급 (절대평가) ── */
@@ -382,7 +382,7 @@ const uidOf=rows=>{ const c={}; rows.forEach(x=>{ if(x.unit_id) c[x.unit_id]=(c[
 const bk=b=>String(b||"").replace(/\s*올킬\s*$/,"").trim();   // 예전 'N과 올킬' 기록은 N과로 합침
 let SELBOOK=new URL(location.href).searchParams.get("book")||"";
 let SELDAY=new URL(location.href).searchParams.get("day")||"";
-const WORDP=new Set(["wmean","wsyn","wsynw","wdef"]);
+const WORDP=new Set(["wmean","wsyn","wsynw","wdef","dfa","dfb"]);
 const READP=new Set(["tf","order","insert","choice","sjt","cloze"]);
 /* 오답 유형: 파트 성격 먼저, 그다음 틀린 말·정답 비교 */
 function catOf(w){
@@ -463,7 +463,7 @@ function areaOf(x,SI){
   const p=x.part, ok=x.ok==="1";
   if(p==="wmean") return ["어휘","단어 뜻"];
   if(p==="wsyn"||p==="wsynw") return ["어휘","유의어"];
-  if(p==="wdef") return ["어휘","영영풀이"];
+  if(p==="wdef"||p==="dfa"||p==="dfb") return ["어휘","영영풀이"];
   if(p==="vocab") return ["어휘","어휘 선택 (박스)"];
   if(p==="vbb") return ["어휘","어휘 5지선다 (비법)"];
   if(p==="gbb") return ["어법","어법 5지선다 (비법)"];
@@ -637,7 +637,7 @@ function renderHwOnly(D, HW, day, allDays){
   $("#app").hidden=false; dayChange();
 }
 /* ── 학부모용 공통 조각 ── */
-const PNAME={wmean:"단어 뜻 쓰기",wsyn:"유의어 고르기",wsynw:"유의어 쓰기",wdef:"영영풀이 보고 단어 쓰기",
+const PNAME={wmean:"단어 뜻 쓰기",wsyn:"유의어 고르기",wsynw:"유의어 쓰기",dfa:"영영풀이 보고 단어 고르기",dfb:"영영풀이 맞는지 판단하기",wdef:"영영풀이 보고 단어 쓰기",
   word:"어법·어휘 틀린 곳 고치기 (기본)",word2:"어법·어휘 틀린 곳 고치기 (심화)",fix:"어법 틀린 곳 고치기",
   fixg:"어법 틀린 곳 고치기 (집중)",fixv:"어휘 틀린 곳 고치기 (집중)",gbbw:"어법 고치기 (실전)",vbbw:"어휘 고치기 (실전)",
   gbb:"어법 객관식 (실전)",vbb:"어휘 객관식 (실전)",sjt:"지문 독해 객관식 (영어 보기)",cloze:"빈칸 채우기",
