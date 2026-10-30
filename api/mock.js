@@ -5,7 +5,7 @@ import { ensureMock, KINDS, AREAS_ALL, BLUEPRINT45, baseName, scoreExam, reportD
 const kday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const DAY = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null);
 const T = (v, n) => String(v ?? "").trim().slice(0, n);
-const MODEL = () => process.env.MOCK_MODEL || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
+const MODEL = () => process.env.MOCK_MODEL || process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
 
 /* ── Anthropic 호출 ── */
 async function claude(system, content, maxTokens) {
