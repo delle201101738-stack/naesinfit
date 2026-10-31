@@ -1100,10 +1100,10 @@ function renderHome(){
   $("#part-count").textContent=livePARTS().length+"개 파트";
   const GH=(C&&C.groups)||null, gstart={};
   if(GH) GH.forEach(g=>{ const f=livePARTS().find(p=>g.parts.includes(p.id)); if(f) gstart[f.id]=g.t; });
-  const firstSeg=(livePARTS().find(p=>isSegP(p.id))||{}).id;
+  const firstSeg=(livePARTS().find(p=>oddAble(p.id))||{}).id;
   const oddBar=()=>`<div class="card" data-oddh="1" style="margin:8px 16px 6px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer">
       <span style="font-size:18px">🔢</span>
-      <span style="flex:1;min-width:0"><b style="font-size:14px">통변형 홀수 번호만 풀기</b><span style="display:block;font-size:12px;color:var(--ink-3);margin-top:2px">${S.odd?"켜짐 · 밑줄 1·3·5…번만 나와요 (통변형 전체 적용)":"꺼짐 · 모든 밑줄을 풀어요"}</span></span>
+      <span style="flex:1;min-width:0"><b style="font-size:14px">홀수 번호만 풀기</b><span style="display:block;font-size:12px;color:var(--ink-3);margin-top:2px">${S.odd?"켜짐 · 통변형 밑줄, 40개 이상 단어 시험은 1·3·5…번만":"꺼짐 · 통변형 밑줄·단어(40개 이상) 모두 풀어요"}</span></span>
       <span style="flex:none;width:46px;height:28px;border-radius:14px;background:${S.odd?"var(--accent)":"var(--line-2)"};position:relative;transition:background .2s"><i style="position:absolute;top:3px;left:${S.odd?21:3}px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s"></i></span></div>`;
   $("#part-list").innerHTML=livePARTS().map(p=>{
     const all=itemsOfX(p.id,S.scope), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
@@ -1198,17 +1198,24 @@ document.addEventListener("click",e=>{
   const g=e.target.closest("[data-gs]");
   if(g){ if(LOCKED) return; S.scope=g.dataset.gs; save(); renderHome();
          toast(`시험 범위: ${SCOPES()[S.scope].label}`); return; }
-  if(e.target.closest("[data-oddh]")){ S.odd=!S.odd; save(); renderHome(); toast(S.odd?"🔢 통변형은 홀수 번호 밑줄만 풀어요":"통변형 모든 밑줄을 풀어요"); return; }
+  if(e.target.closest("[data-oddh]")){ S.odd=!S.odd; save(); renderHome(); toast(S.odd?"🔢 통변형·단어(40개 이상)는 홀수 번호만 풀어요":"모두 풀어요"); return; }
   const t=e.target.closest("[data-part]"); if(!t) return;
   sel.part=t.dataset.part; sel.scope=curScope(); renderSetup(); go("setup");
 });
 /* 🔢 통변형 홀수만 응시: 밑줄 번호(L)가 홀수인 것만 남김 — subSeg가 원래 번호·_map을 유지해서 오답노트도 정확 */
-const oddOn = part => !!S.odd && isSegP(part);
+/* 단어 시험도 40개 이상이면 홀수 번호만 (단어 뜻 쓰기·유의어·영영풀이·단어 동형) */
+const isWordP = p => /^(wmean|wsyn|wsynw|dfa|wdef|dfb|vdc1|vdc2|vdm1|vdm2|vdm3|vds)$/.test(p);
+const isRowP = p => p==="wmean"||p==="wsynw"||isWsP(p);
+const wordN = part => itemsOf(part,"all").reduce((n,it)=>n+(isRowP(part)?(it.rows||[]).length:isClozeP(part)?(it.blanks||[]).length:1),0);
+const oddAble = part => isSegP(part) || (isWordP(part) && wordN(part)>=40);
+const oddOn = part => !!S.odd && oddAble(part);
 function oddItems(part, arr){
   let n=0;
+  if(!isSegP(part) && !isRowP(part) && !isClozeP(part)) return arr.filter((it,i)=>i%2===0);   // 한 문항 = 한 단어
   return arr.map(it=>{
-    const keep=[]; (it.seg||[]).forEach((sg,i)=>{ const v=parseInt(sg.L,10); n++;
-      if(isNaN(v) ? n%2===1 : v%2===1) keep.push(i); });
+    const keep=[];
+    if(isSegP(part)) (it.seg||[]).forEach((sg,i)=>{ const v=parseInt(sg.L,10); n++; if(isNaN(v) ? n%2===1 : v%2===1) keep.push(i); });
+    else (isRowP(part)?(it.rows||[]):(it.blanks||[])).forEach((r,i)=>{ n++; if(n%2===1) keep.push(i); });
     return keep.length ? subset(part, it, keep) : null;
   }).filter(Boolean);
 }
@@ -1257,16 +1264,17 @@ function renderSetup(){
         ? `우리말만 보고 직접 씁니다 · 관사(a·the)와 사소한 철자 실수는 봐주고 <b>${ARR_PASS}점 이상이면 정답</b>`
         : "흩어진 토막을 끌어서 순서대로 맞춥니다 · 순서가 정확히 맞아야 정답"}</p>` : ""}
 
-    ${isSegP(sel.part) ? `
+    ${oddAble(sel.part) ? `
     <div class="sec" style="margin:24px 0 10px"><h2>응시 범위</h2>
-      <span class="note" style="font-size:12.5px;color:var(--ink-3)">통변형 공통 · 언제든 바꿀 수 있어요</span></div>
+      <span class="note" style="font-size:12.5px;color:var(--ink-3)">통변형 · 단어(40개 이상) 공통</span></div>
     <div class="seg-btn" id="odd-btn">
-      <button data-od="0"${S.odd?"":' class="on"'}>전체 밑줄</button>
+      <button data-od="0"${S.odd?"":' class="on"'}>${isSegP(sel.part)?"전체 밑줄":"전체"}</button>
       <button data-od="1"${S.odd?' class="on"':""}>🔢 홀수 번호만</button>
     </div>
     <p style="margin:9px 2px 0;font-size:12.5px;color:var(--ink-3);line-height:1.6">${S.odd
-      ? "밑줄 번호가 <b>홀수(1·3·5…)</b>인 것만 풀어요. 나머지는 바른 형태로 채워져 지문에 그대로 보여요. 번호·오답노트는 원래 번호 그대로예요."
-      : "모든 밑줄을 풀어요."}</p>` : ""}
+      ? (isSegP(sel.part) ? "밑줄 번호가 <b>홀수(1·3·5…)</b>인 것만 풀어요. 나머지는 바른 형태로 채워져 지문에 그대로 보여요. 번호·오답노트는 원래 번호 그대로예요."
+                          : `단어가 ${wordN(sel.part)}개라서 <b>홀수 번째(1·3·5…)</b> 단어만 풀어요. 오답노트는 그대로 남아요.`)
+      : (isSegP(sel.part) ? "모든 밑줄을 풀어요." : "모든 단어를 풀어요.")}</p>` : ""}
 
     <div class="sec" style="margin:24px 0 10px"><h2>문항 순서</h2>
       <span class="note" style="font-size:12.5px;color:var(--ink-3)">언제든 바꿀 수 있어요</span></div>
@@ -1316,7 +1324,7 @@ const HOWTO={
 };
 $("#setup-body").addEventListener("click",e=>{
   const od=e.target.closest("[data-od]");
-  if(od){ S.odd=od.dataset.od==="1"; save(); renderSetup(); toast(S.odd?"🔢 홀수 번호 밑줄만 풀어요":"모든 밑줄을 풀어요"); return; }
+  if(od){ S.odd=od.dataset.od==="1"; save(); renderSetup(); toast(S.odd?"🔢 홀수 번호만 풀어요":"모두 풀어요"); return; }
   const sh=e.target.closest("[data-sh]");
   if(sh){ S.shuffle=sh.dataset.sh==="1"; save(); renderSetup(); toast(S.shuffle?"🔀 문항 순서를 섞어서 풀어요":"원래 순서대로 풀어요"); return; }
   const am=e.target.closest("[data-am]");
