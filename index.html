@@ -777,6 +777,9 @@ const PARTS=[
  {id:"dfb",   n:"영영풀이 정오",   s:"단어와 영영풀이 연결이 옳지 않은 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdc1",  n:"단어 동형 객관식 Set 1", s:"예문 빈칸에 알맞은 단어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdc2",  n:"단어 동형 객관식 Set 2", s:"예문 빈칸에 알맞은 단어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdm1",  n:"단어 동형 모고 1세트", s:"예문 어디서든 빈칸 · 5지선다", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdm2",  n:"단어 동형 모고 2세트", s:"예문 어디서든 빈칸 · 5지선다", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdm3",  n:"단어 동형 모고 3세트", s:"예문 어디서든 빈칸 · 5지선다", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdw1",  n:"단어 동형 주관식 Set 1", s:"우리말 보고 첫 글자로 예문 빈칸 쓰기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"세트"},
  {id:"vdw2",  n:"단어 동형 주관식 Set 2", s:"우리말 보고 첫 글자로 예문 빈칸 쓰기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"세트"},
  {id:"vds",   n:"스페셜 변형",        s:"뜻 보고 원문 예문 빈칸 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"세트"}
@@ -863,7 +866,7 @@ function go(id){
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const isSegP=p=>p==="fix"||p==="word"||p==="word2"||p==="fixg"||p==="fixv"||p==="gbbw"||p==="vbbw";
-const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb"||p==="dfb"||p==="vdc1"||p==="vdc2";
+const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb"||p==="dfb"||p==="vdc1"||p==="vdc2"||p==="vdm1"||p==="vdm2"||p==="vdm3";
 const isClozeP=p=>p==="cloze"||p==="vdw1"||p==="vdw2"||p==="vds";   // 빈칸 쓰기형 (단어 동형 주관식·스페셜 포함)
 const isWsP=p=>p==="wsyn"||p==="dfa";   // 보기(A~T) 고르기 매칭
 /* ───── 올킬 심층 확인: 이미 풀어 온 시험을 '진짜 이해했는지'까지 묻기 ─────
