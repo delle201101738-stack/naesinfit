@@ -1,5 +1,5 @@
 // 10.27 기준 헤이즐 인원 파악.xlsx → 학교+학년 = 반, 이름은 명단 그대로 (뒤 알파벳·숫자는 구분자)
-export const ROSTER_VERSION = "2026-10-27";
+export const ROSTER_VERSION = "2026-10-31";
 export const ROSTER = {
  "경인고1": [
   "김강민j",
@@ -39,6 +39,7 @@ export const ROSTER = {
   "이은제b",
   "류다민"
  ],
+ "구일고2": [],
  "구현고2": [
   "김단우2",
   "김여진2",
