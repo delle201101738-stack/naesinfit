@@ -2705,7 +2705,7 @@ const unitLabel = () => UNIT ? `${UNIT.book.subject} · ${UNIT.book.publisher} �
 const gradeOfBook = b => b.grade || "고2";
 const allGrades = () => [...new Set((BOOKS||[]).map(gradeOfBook))]
   .sort((a,b)=>(parseInt(a.replace(/\D/g,""))||9)-(parseInt(b.replace(/\D/g,""))||9));
-const SUBJ_ORDER={"고1":["공통영어1","공통영어2"],"고2":["영어 I","영어 II","모의고사"]};
+const SUBJ_ORDER={"고1":["공통영어1","공통영어2"],"고2":["영어 I","영어 II","단어 동형","모의고사"]};
 const subjOf = b => b.subject||"";
 const subjectsOf = g => {
   const have=[...new Set((BOOKS||[]).filter(b=>gradeOfBook(b)===g).map(subjOf))];
