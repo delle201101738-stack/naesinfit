@@ -437,6 +437,22 @@
      },
      "total": 453,
      "labels": {}
+    },
+    {
+     "id": "ghw1617",
+     "no": "단어 W16–17",
+     "title": "구현고 단어 동형 · 예문 암기",
+     "file": "content/ghw1617.json",
+     "pts": {
+      "vdc1": 60,
+      "vdc2": 60,
+      "vdw1": 60,
+      "vdw2": 60,
+      "vds": 60,
+      "arrange": 60
+     },
+     "total": 360,
+     "labels": {}
     }
    ],
    "grade": "고2"
