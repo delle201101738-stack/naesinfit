@@ -774,7 +774,12 @@ const PARTS=[
  {id:"wsynw", n:"유의어 쓰기",    s:"표제어와 뜻이 가장 가까운 유의어 직접 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"세트"},
  {id:"wdef",  n:"영영풀이",       s:"영영풀이 보고 표제어·유의어 쓰기",  c:"var(--cat-4)", b:"var(--cat-4-s)", k:"문항"},
  {id:"dfa",   n:"영영풀이 매칭",   s:"영영풀이에 해당하는 단어를 보기에서 고르기", c:"var(--cat-4)", b:"var(--cat-4-s)", k:"세트"},
- {id:"dfb",   n:"영영풀이 정오",   s:"단어와 영영풀이 연결이 옳지 않은 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"}
+ {id:"dfb",   n:"영영풀이 정오",   s:"단어와 영영풀이 연결이 옳지 않은 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdc1",  n:"단어 동형 객관식 Set 1", s:"예문 빈칸에 알맞은 단어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdc2",  n:"단어 동형 객관식 Set 2", s:"예문 빈칸에 알맞은 단어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdw1",  n:"단어 동형 주관식 Set 1", s:"우리말 보고 첫 글자로 예문 빈칸 쓰기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"세트"},
+ {id:"vdw2",  n:"단어 동형 주관식 Set 2", s:"우리말 보고 첫 글자로 예문 빈칸 쓰기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"세트"},
+ {id:"vds",   n:"스페셜 변형",        s:"뜻 보고 원문 예문 빈칸 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"세트"}
 ];
 const P = Object.fromEntries(PARTS.map(p=>[p.id,p]));
 const labelOf = id => (C&&C.labels&&C.labels[id]) || P[id].n;
@@ -793,7 +798,7 @@ const itemTag = it => it.tag || `${secLab(it.sec)} ${it.no}`;
 
 /* 파트별 배점(=채점 포인트) */
 function pts(part, it){
-  if(part==="vocab"||part==="gram"||part==="cloze") return it.blanks.length;
+  if(part==="vocab"||part==="gram"||isClozeP(part)) return it.blanks.length;
   if(isSegP(part)) return it.seg.length;
   if(part==="tf") return it.st.length;
   if(part==="wmean"||isWsP(part)||part==="wsynw") return it.rows.length;
@@ -858,7 +863,8 @@ function go(id){
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const isSegP=p=>p==="fix"||p==="word"||p==="word2"||p==="fixg"||p==="fixv"||p==="gbbw"||p==="vbbw";
-const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb"||p==="dfb";
+const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb"||p==="dfb"||p==="vdc1"||p==="vdc2";
+const isClozeP=p=>p==="cloze"||p==="vdw1"||p==="vdw2"||p==="vds";   // 빈칸 쓰기형 (단어 동형 주관식·스페셜 포함)
 const isWsP=p=>p==="wsyn"||p==="dfa";   // 보기(A~T) 고르기 매칭
 /* ───── 올킬 심층 확인: 이미 풀어 온 시험을 '진짜 이해했는지'까지 묻기 ─────
    T/F: 영문 선지 중 F 2개(랜덤)만 '틀린 이유' 간단히 · 요약문: 고른 선지 단어의 우리말 뜻 · 함축: 밑줄 해석 (AI가 뜻이 통하면 인정)
@@ -1013,7 +1019,7 @@ function subset(part, it, keep){
   if(part==="vocab"||part==="gram") return subVG(it,keep);
   if(isSegP(part))   return subSeg(it,keep);
   if(part==="tf")                   return subTF(it,keep);
-  if(part==="cloze")                return subCloze(it,keep);
+  if(isClozeP(part))                return subCloze(it,keep);
   if(part==="wmean"||isWsP(part)||part==="wsynw") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
   if(part==="wdef")                 return Object.assign({}, it);
   return Object.assign({}, it, {_map:keep.slice()});
@@ -1030,7 +1036,7 @@ function wrongItems(part, ever){
   return out;
 }
 const subLen = (part,it) =>
-  (part==="vocab"||part==="gram"||part==="cloze") ? it.blanks.length :
+  (part==="vocab"||part==="gram"||isClozeP(part)) ? it.blanks.length :
   (isSegP(part))   ? it.seg.length :
   (part==="tf")                   ? it.st.length :
   (part==="wmean"||isWsP(part)||part==="wsynw") ? it.rows.length :
@@ -1044,7 +1050,7 @@ function doneCount(){
 /* 문장암기 (구현고·구로고·구일고·신서고): 교과서 본문 스크램블 영작 → sentence.html */
 const SMEM_SCHOOLS=["구현고","구로고","구일고","신서고"];
 function renderSmem(){ const el=document.getElementById("smem-slot"); if(!el) return;
-  const nm=(S.cls&&S.cls.name)||"", UMAP={e2cjk04:"구현고",e2cjk04ak:"구현고",e2cjs05:"구로고",e2cjs05ak:"구로고",e2cjs06:"구로고",e2cjs06ak:"구로고",ce2ybm03:"신서고",ce2ybm04:"신서고"}, sc=SMEM_SCHOOLS.find(x=>nm.includes(x))||(typeof UNIT!=="undefined"&&UNIT&&UMAP[UNIT.id])||"";
+  const nm=(S.cls&&S.cls.name)||"", UMAP={e2cjk04:"구현고",e2cjk04ak:"구현고",ghw1617:"구현고",e2cjs05:"구로고",e2cjs05ak:"구로고",e2cjs06:"구로고",e2cjs06ak:"구로고",ce2ybm03:"신서고",ce2ybm04:"신서고"}, sc=SMEM_SCHOOLS.find(x=>nm.includes(x))||(typeof UNIT!=="undefined"&&UNIT&&UMAP[UNIT.id])||"";
   el.innerHTML=sc?`<a href="sentence?school=${encodeURIComponent(sc)}" class="card" style="display:flex;align-items:center;gap:12px;padding:15px 16px;text-decoration:none;color:inherit">
     <span style="flex:none;width:42px;height:42px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:21px">🧩</span>
     <span style="flex:1;min-width:0"><b style="font-size:15px">문장암기</b><span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">${esc(sc)} 시험범위 교과서 본문 · 스크램블로 영작하기 · ⭐ 중요 문장만 따로</span></span>
@@ -1365,7 +1371,7 @@ function blankAns(part,it){
   if(part==="order") return [];
   if(part==="arrange") return S.arrMode==="type" ? "" : [];
   if(part==="insert") return null;
-  if(part==="cloze") return it.blanks.map(()=>"");
+  if(isClozeP(part)) return it.blanks.map(()=>"");
   if(isChoiceP(part)) return multiAns(it)?[]:null;
   if(part==="wmean") return it.rows.map(()=>"");
   if(isWsP(part)) return it.rows.map(()=>null);
@@ -1481,7 +1487,7 @@ function renderQ(){
       <div class="given" style="margin-top:14px">${esc(it.given)}</div>
       <div class="scrollbox-lb"><span>지문</span><span>상자 안에서 스크롤</span></div>
       <div class="psg scrollbox" style="line-height:2.2">${html}</div>`;
-  } else if(part==="cloze"){
+  } else if(isClozeP(part)){
     body=`${tag}<p class="q-stem">${stemOf("우리말 뜻과 힌트(첫 글자·글자 수)를 보고 빈칸에 들어갈 말을 쓰세요.")}</p>
       ${it.src?`<p class="hint" style="margin-top:6px">${esc(it.src)}</p>`:""}
       ${it.ko?`<p class="ko" style="margin-top:12px;font-size:14.5px;font-weight:700;line-height:1.7">${esc(it.ko)}</p>`:""}
@@ -1857,19 +1863,19 @@ function skHTML(it,a){
 }
 const skPending=a=>a.findIndex(x=>!x.done || (x.mk && !String(x.txt||"").trim()));
 /* ───── 한 문항씩 보여 주는 파트 (통변형 밑줄 · T/F 문장 · 빈칸) ───── */
-const isStepP=p=>isSegP(p)||p==="tf"||p==="cloze";
-const stepN=(p,it)=>isSegP(p)?it.seg.length:p==="tf"?it.st.length:p==="cloze"?it.blanks.length:0;
+const isStepP=p=>isSegP(p)||p==="tf"||isClozeP(p);
+const stepN=(p,it)=>isSegP(p)?it.seg.length:p==="tf"?it.st.length:isClozeP(p)?it.blanks.length:0;
 const stepWord=p=>isSegP(p)?"밑줄":p==="tf"?"문장":"빈칸";
 function stepLeft(p,it,a){
   if(isSegP(p)) return a.filter(x=>!x.done||(x.mk&&!String(x.txt||"").trim())).length;
   if(p==="tf") return deepTF(it)?a.filter((x,k)=>deepMissing(p,it,a,k)).length:a.filter(x=>x==null).length;
-  if(p==="cloze") return a.filter(x=>!String(x||"").trim()).length;
+  if(isClozeP(p)) return a.filter(x=>!String(x||"").trim()).length;
   return 0;
 }
 function stepPending(p,it,a){
   if(isSegP(p)) return skPending(a);
   if(p==="tf") return deepTF(it)?a.findIndex((x,k)=>deepMissing(p,it,a,k)):a.findIndex(x=>x==null);
-  if(p==="cloze") return a.findIndex(x=>!String(x||"").trim());
+  if(isClozeP(p)) return a.findIndex(x=>!String(x||"").trim());
   return -1;
 }
 function singleMissing(p,it,a){ // 한 화면 한 문제 파트: 답을 안 골랐는지
@@ -1892,7 +1898,7 @@ function qdelSync(){
 function stepFillRight(p,it,a,k){   // 삭제한 밑줄은 정답으로 채워 넘어갈 수 있게
   if(isSegP(p)){ const s=it.seg[k]; a[k]=s.wrong?{mk:true,txt:s.to||"삭제",done:true}:{mk:false,txt:"",done:true}; }
   else if(p==="tf") a[k]=it.ans[k];
-  else if(p==="cloze") a[k]=it.blanks[k].ans;
+  else if(isClozeP(p)) a[k]=it.blanks[k].ans;
 }
 function stepHTML(p,it,a){ return isSegP(p)?skHTML(it,a):p==="tf"?tfStepHTML(it,a):czStepHTML(it,a); }
 function stepDots(p,it,a,k,lab,state){
@@ -1939,7 +1945,7 @@ function skRender(focusFix){
   if(focusFix){ const f=$("#skfix")||$("#czin"); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
   syncCta();
 }
-function skGo(k){ const it=Q.items[Q.i]; if(k<0||k>=stepN(Q.pl[Q.i],it)) return; Q.sk[Q.i]=k; skRender(Q.pl[Q.i]==="cloze");
+function skGo(k){ const it=Q.items[Q.i]; if(k<0||k>=stepN(Q.pl[Q.i],it)) return; Q.sk[Q.i]=k; skRender(isClozeP(Q.pl[Q.i]));
   const box=$("#skbox"); if(box && box.getBoundingClientRect().top<0) box.scrollIntoView({block:"start"}); }
 function fixRows(it,a){
   const rows=it.seg.map((s,i)=>a[i].mk?
@@ -2072,7 +2078,7 @@ $("#quiz-cta").onclick=()=>{
     const pd=stepPending(p,it,a);
     if(pd>=0){ Q.sk[Q.i]=pd;
       if(isSegP(p)){ const m=a[pd]; skRender(m.done&&m.mk); toast(m.done?"고쳐 쓴 답을 입력해 주세요":"아직 O·X를 안 고른 밑줄이 있어요"); }
-      else { skRender(p==="cloze"); toast(p==="tf"?"아직 T·F를 안 고른 문장이 있어요":"아직 안 채운 빈칸이 있어요"); }
+      else { skRender(isClozeP(p)); toast(p==="tf"?"아직 T·F를 안 고른 문장이 있어요":"아직 안 채운 빈칸이 있어요"); }
       return; } }
   else if(singleMissing(p,it,a)){ toast("답을 골라야 다음으로 넘어가요"); return; }
   if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); }
@@ -2150,7 +2156,7 @@ function grade(part,it,a,gi){
     }
   } else if(part==="insert"){
     d.push({ok:a===it.ans, label:"위치", mine:a?`${a}번`:"무응답", right:`${it.ans}번`, ex:it.ex});
-  } else if(part==="cloze"){
+  } else if(isClozeP(part)){
     it.blanks.forEach((b,i)=>{
       const mine=String(a[i]||"").trim();
       const ok=czEqA(mine,b.ans) || (b.alt||[]).some(x=>czEqA(mine,x));
@@ -2373,7 +2379,7 @@ function wrongDel(part, key, subs){   // subs: 이 문항 안의 밑줄·문장�
 function ptLabel(part,it,j){
   if(isSegP(part)){ const s=it.seg[j]; return s?`(${s.L}) ${s.t}`:""; }
   if(part==="tf") return it.st[j]||"";
-  if(part==="cloze"||part==="vocab"||part==="gram") return `빈칸 (${j+1})`;
+  if(isClozeP(part)||part==="vocab"||part==="gram") return `빈칸 (${j+1})`;
   if(part==="wmean"||isWsP(part)||part==="wsynw") return (it.rows[j]||{}).w||"";
   if(part==="wdef") return j?"유의어 쓰기":"표제어 쓰기";
   return "";
