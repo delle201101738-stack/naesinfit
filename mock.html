@@ -357,7 +357,7 @@ async function paintOpen(){
     <button class="btn sm no" id="sh-del">이 OMR 지우기</button>${sh.confirmed?`<button class="btn sm" id="sh-unc">확정 풀기</button>`:`<button class="btn ok" id="sh-ok">✅ ${esc(s)} 확정</button>`}</span></div>
   <div class="grid2"><div class="card"><div class="note" style="margin-bottom:6px">원근을 바로 편 OMR (노란 칸 = 확인 필요)</div><canvas id="sheet-cv" class="sheetimg"></canvas></div>
   <div class="card"><div class="note">칸을 누르면 고칠 수 있어요. 초록 = 정답 · 빨강 = 오답 · 노랑 = 흐림/두 개/지운 자국</div>
-    <div class="qs" style="margin-top:8px">${objIt.map(x=>{ const m=(sh.marks||{})[x.n]??"", f=(sh.flags||{})[x.n]||"", k=key(x.n), ok=k.a&&m&&!m.includes(",")&&(k.a.split(",").includes(m)||k.a==="*");
+    <div class="qs" style="margin-top:8px">${objIt.map(x=>{ const m=(sh.marks||{})[x.n]??"", f=(sh.flags||{})[x.n]||"", k=key(x.n), ok=!!k.a&&markOkC(k.a.split(/[,\s/]+/).filter(Boolean),m,k.fx);
       return `<button class="q ${f&&f!=="blank"?"flag":k.a?(ok?"ok":"x"):""}" data-q="${esc(x.n)}"><b>${esc(x.n)}</b> <span class="m">${m?esc(m):"·"}</span> <span class="note">${k.a?"정답 "+esc(k.a):""}</span>${f&&f!=="blank"?`<div class="note">${{multi:"두 개 칠함",faint:"흐리게",check:"지운 자국?"}[f]||f}</div>`:""}</button>`; }).join("")}</div>
     <div id="q-edit"></div>
     ${subIt.length?`<div class="sec" style="margin-top:18px"><h2>서술형</h2>${AI?`<button class="btn sm" id="g-sub1">🤖 ${esc(s)} 서술형 AI 채점</button>`:""}</div>
@@ -560,6 +560,9 @@ function fitTo100(){
   it.forEach(x=>x.p=r10((+x.p||0)*100/sum)); evenOut(it,100);
   return `배점 비율은 그대로 두고 합계 ${sum}점 → 100점으로 맞췄어요.`;
 }
+/* 서버(_mock.js markOk)와 같은 객관식 판정: '3,4' = 둘 다 골라야 정답, 정정 '복수 정답'이면 하나만 골라도 정답 */
+function markOkC(acc,m,fx){ if(fx==="all"||acc.includes("*")) return true; const ms=[...new Set(String(m||"").split(/[,\s/]+/).filter(Boolean))];
+  if(!ms.length||!acc.length) return false; if(ms.length===acc.length&&ms.every(x=>acc.includes(x))) return true; return fx==="multi"&&ms.length===1&&acc.includes(ms[0]); }
 /* 문항 정정: 점수 바뀐 학생 알려 주기 */
 function scoreSnap(){ return JSON.parse(JSON.stringify((STATS&&STATS.scores)||{})); }
 function scoreDiff(before){ const now=(STATS&&STATS.scores)||{}, ch=[];
