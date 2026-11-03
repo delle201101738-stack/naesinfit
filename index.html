@@ -1361,6 +1361,10 @@ function shuffleRows(it){   // 단어 줄 섞기 — _map으로 원래 번호를
   const base=it._map||it.rows.map((_,i)=>i), idx=shuffleArr(it.rows.map((_,i)=>i));
   return Object.assign({}, it, {rows:idx.map(i=>it.rows[i]), _map:idx.map(i=>base[i])});
 }
+function shuffleTF(it){   // T/F 문장 순서 섞기 — _map으로 원래 번호를 기억해서 오답노트가 맞는 문장을 가리킴
+  const base=it._map||it.st.map((_,i)=>i), idx=shuffleArr(it.st.map((_,i)=>i));
+  return Object.assign(subTF(it, idx), {_map:idx.map(i=>base[i])});
+}
 function startQuiz(opts){
   opts=opts||{};
   { const k=rsKey(opts), sv=rsAll()[k];
@@ -1378,7 +1382,8 @@ function startQuiz(opts){
   if(!list.length){toast("문항이 없어요"); return;}
   if(S.shuffle){   // 🔀 섞어서 응시: 문항(단락) 순서 + 단어 뜻·유의어 쓰기는 단어 순서까지
     list=shuffleGroups(list);
-    list=list.map(x=>(x.part==="wmean"||x.part==="wsynw")&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
+    list=list.map(x=>(x.part==="wmean"||x.part==="wsynw"||isWsP(x.part))&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
+    list=list.map(x=>x.part==="tf"&&Array.isArray(x.it.st)&&x.it.st.length>1?{part:x.part, it:shuffleTF(x.it)}:x);   // T/F 문장 순서도 섞음
   }
   const items=list.map(x=>x.it);
   Q={review:!!opts.review, part: opts.review ? (opts.part||"review") : sel.part,
@@ -2300,6 +2305,7 @@ async function finish(){
   save();
   showResult();
 }
+const oorN=()=>Object.keys((Q&&Q.oor)||{}).length;
 function tally(){
   let t=0,c=0;
   Q.detail.forEach(ds=>ds.forEach(x=>{t++; if(x.ok)c++;}));
@@ -2357,7 +2363,7 @@ function showResult(){
   // 기록 저장
   S.exp+=10+c*2;
   if(!Q.review){
-    S.attempts.push({d:new Date().toISOString().slice(0,10), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":""),
+    S.attempts.push({d:new Date().toISOString().slice(0,10), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
              scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs});
     const b=bestOf()[part];
     if(!b || pct>b.pct) bestOf()[part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
@@ -2371,7 +2377,7 @@ function showResult(){
     Q.sent=true;
     submitResult({
       student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
-      part, partName:Q.review?("오답노트 · "+(part!=="review"&&P[part]?labelOf(part):"전체")):labelOf(part)+(Q.odd?" (홀수)":""),
+      part, partName:Q.review?("오답노트 · "+(part!=="review"&&P[part]?labelOf(part):"전체")):labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
       scope:Q.review?"재시험":(SCOPES()[sel.scope]?.short||sel.scope),
       total:t, correct:c, pct, secs,
       detail:Q.items.map((it,i)=>{
