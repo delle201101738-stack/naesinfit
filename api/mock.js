@@ -152,6 +152,24 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: e.message });
         }
       }
+      case "ai.name": {       // 손글씨 이름 칸 사진들 → 반 명단 중 누구인지
+        const ims = (Array.isArray(b.images) ? b.images : []).slice(0, 12), names = (Array.isArray(b.names) ? b.names : []).map(x => T(x, 20)).filter(Boolean).slice(0, 80);
+        if (!ims.length || !names.length) return res.status(400).json({ error: "이름 칸 사진과 명단이 필요해요" });
+        try {
+          const content = [];
+          ims.forEach((d, i) => { content.push({ type: "text", text: `사진 ${i}:` }); content.push(img(d)); });
+          content.push({ type: "text", text: `반 명단: ${JSON.stringify(names)}\n각 사진의 손글씨 이름을 읽고 명단에서 같은 학생을 고른다. JSON 배열만 출력.` });
+          const txt = await claude(`너는 학원 OMR 답안지의 '이름' 칸 손글씨를 읽는 조교다. 사진마다 학생이 직접 쓴 한글 이름이 있다.
+명단 이름 끝의 영문·숫자(예: 김민준51, 이은제b)는 동명이인 구분 글자라 학생은 보통 쓰지 않는다. 손글씨와 한글 이름이 같은 명단 이름을 고른다.
+같은 한글 이름이 명단에 여러 명이면 손글씨에 구분 글자가 없을 때 match를 비운다. 읽을 수 없거나 명단에 없으면 match를 비운다. 억지로 고르지 않는다.
+출력: [{"i":사진번호,"read":"읽은 글자","match":"명단 이름 그대로 또는 빈 문자열"}]`, content, 1500);
+          const arr = jsonOf(txt, true);
+          return res.status(200).json({ ok: true, res: (Array.isArray(arr) ? arr : []).map(x => ({ i: Number(x.i), read: T(x.read, 20), match: names.includes(String(x.match || "")) ? String(x.match) : "" })) });
+        } catch (e) {
+          if (e.message === "NO_KEY") return res.status(400).json({ error: "AI 키가 없어요", noKey: true });
+          return res.status(400).json({ error: e.message });
+        }
+      }
       case "sheet.save": {    // OMR 한 장 (쪽 하나) 저장
         const id = Number(b.exam_id) || 0, st = T(b.student, 20);
         if (!id || !st) return res.status(400).json({ error: "시험·학생이 없어요" });
