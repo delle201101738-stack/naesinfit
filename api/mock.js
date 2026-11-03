@@ -55,7 +55,8 @@ async function withRoster(cid, cfg) {
 }
 const cleanItems = items => (Array.isArray(items) ? items : []).slice(0, 80).map(it => ({
   n: normN(it.n), t: it.t === "s" ? "s" : "o", a: T(it.a, 20), p: Math.max(0, Math.min(100, Number(it.p) || 0)), k: T(it.k, 20), d: AREAS_ALL.includes(it.d) ? it.d : (it.t === "s" ? "서술형" : ""),
-  e: T(it.e, 1200), m: T(it.m, 800), r: T(it.r, 800), q: T(it.q, 60), ai: T(it.ai, 300), why: T(it.why, 300), chk: T(it.chk, 10), bp: it.bp ? 1 : 0 })).filter(it => it.n);
+  e: T(it.e, 1200), m: T(it.m, 800), r: T(it.r, 800), q: T(it.q, 60), ai: T(it.ai, 300), why: T(it.why, 300), chk: T(it.chk, 10), bp: it.bp ? 1 : 0,
+  ...(["change", "multi", "all", "out"].includes(it.fx) ? { fx: it.fx, fo: T(it.fo, 20) } : {}) })).filter(it => it.n);
 
 const pubExam = (e, sheets) => ({ id: +e.id, class_id: +e.class_id, cls: e.cls || "", title: e.title, day: e.day, cfg: e.cfg, updated_at: e.updated_at,
   sheets: (sheets || []).map(s => ({ student: s.student, marks: s.marks, flags: s.flags, subs: Object.fromEntries(Object.entries(s.subs || {}).map(([k, v]) => [k, { ...v, img: v.img ? 1 : 0 }])),

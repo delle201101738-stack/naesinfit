@@ -59,7 +59,7 @@ export function itemScore(it, sh) {
   const p = num(it.p);
   if (it.t === "s") { const s = (sh.subs || {})[it.n] || {}; const v = s.score === "" || s.score == null ? null : Math.max(0, Math.min(p, num(s.score))); return { got: v == null ? 0 : v, max: p, ok: v != null && v >= p, part: v != null && v > 0 && v < p, mark: s.read || "", graded: v != null }; }
   const m = String((sh.marks || {})[it.n] ?? "").trim(), acc = String(it.a || "").split(/[,\s/]+/).filter(Boolean);
-  const ok = acc.includes("*") || (!!m && !m.includes(",") && acc.includes(m));
+  const ok = it.fx === "all" || acc.includes("*") || (!!m && !m.includes(",") && acc.includes(m));   // fx all = 전원 정답
   return { got: ok ? p : 0, max: p, ok, mark: m, graded: true };
 }
 /* 등급: 절대평가 90↑1 … 20↑8 그 외 9 (100점 환산) */
@@ -73,7 +73,7 @@ export function gradeOf(cfg, score, total) {
 }
 /* 시험 하나 전체 채점 */
 export function scoreExam(exam, sheets) {
-  const cfg = exam.cfg || {}, items = (cfg.items || []).filter(it => it.t === "s" || String(it.a || "").trim());
+  const cfg = exam.cfg || {}, items = (cfg.items || []).filter(it => it.fx !== "out" && (it.t === "s" || it.fx === "all" || String(it.a || "").trim()));   // fx out = 범위 외 제외
   const total = r1(items.reduce((s, it) => s + num(it.p), 0));
   const done = sheets.filter(s => s.confirmed);
   const per = done.map(sh => { const rows = items.map(it => ({ it, area: areaOf(it), ...itemScore(it, sh) })); return { student: sh.student, sh, rows, score: r1(rows.reduce((s, r) => s + r.got, 0)) }; });
@@ -105,6 +105,15 @@ export function templateComment(d) {
 }
 
 /* 학생 한 명 리포트 데이터 */
+/* 문항 정정 안내 (리포트에 표시) */
+export function fixList(cfg) {
+  const ans = v => String(v || "").split(/[,\s/]+/).filter(Boolean).join(", ");
+  return ((cfg || {}).items || []).filter(it => it.fx).map(it =>
+    it.fx === "out" ? `${it.n}번: 시험 범위 밖 문항이라 채점에서 제외했습니다.`
+    : it.fx === "all" ? `${it.n}번: 문항 오류로 전원 정답 처리했습니다.`
+    : it.fx === "multi" ? `${it.n}번: 복수 정답(${ans(it.a)}번)을 인정했습니다.`
+    : `${it.n}번: 정답을 ${it.fo ? ans(it.fo) + "번에서 " : ""}${ans(it.a)}번으로 정정했습니다.`);
+}
 export async function reportData(exam, sheets, student, cls) {
   const S = scoreExam(exam, sheets), me = S.per.find(p => p.student === student);
   if (!me) return null;
@@ -138,7 +147,7 @@ export async function reportData(exam, sheets, student, cls) {
     rate: S.itemRate[r.it.n], e: r.it.e || "", m: r.it.m || "", why: r.it.t === "s" ? (((me.sh.subs || {})[r.it.n] || {}).why || "") : "" }));
   const wrong = items.filter(i => !i.ok).map(i => ({ ...i, pri: (i.rate ?? 0) >= 70 }));
   const d = {
-    exam: { id: exam.id, title: exam.title, day: exam.day, cls: cls || "", academy: cfg.academy || "헤이즐 영어", total: S.total, nQ: S.items.length, nObj: S.items.filter(i => i.t !== "s").length, nSub: S.items.filter(i => i.t === "s").length },
+    exam: { id: exam.id, title: exam.title, day: exam.day, cls: cls || "", academy: cfg.academy || "헤이즐 영어", total: S.total, nQ: S.items.length, nObj: S.items.filter(i => i.t !== "s").length, nSub: S.items.filter(i => i.t === "s").length, fixes: fixList(cfg) },
     student, name: baseName(student), score: me.score, total: S.total, pct: S.total ? Math.round(me.score / S.total * 100) : 0,
     grade: g, rank: me.rank, n: S.n, avg: S.avg, max: S.max, min: S.min,
     allRank, allN, allAvg, topPct: allN ? (allRank / allN * 100).toFixed(1) : "0.0",
