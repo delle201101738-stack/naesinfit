@@ -197,7 +197,7 @@ function keyHTML(){
       ${AI?`<span class="note">해설지만 올려도 돼요(검수는 시험지가 있어야 해요). 페이지가 많으면 몇 분 걸려요.</span>`:`<span class="note">AI 키가 없어 꺼져 있어요 — 아래 '정답 한 번에 붙여넣기'로 넣어 주세요.</span>`}</div>
     ${BUSY==="ai"||AILOG?`<div class="prog"><i style="width:${AIP}%"></i></div><div class="log" id="ai-log">${esc(AILOG)}</div>`:""}
   </div>
-  <div class="sec"><h2>문항 · 정답표 <span class="note">총 ${it.length}문항 · ${Math.round(tot*10)/10}점 만점${nOut?` (범위 밖 ${nOut}문항 제외)`:""}</span>${it.length&&Math.round(tot*10)!==1000?` <span class="tag t-no">← 총점이 100인지 확인</span>`:""}</h2>
+  <div class="sec"><h2>문항 · 정답표 <span class="note">총 ${it.length}문항 · ${Math.round(tot*10)/10}점 만점${nOut?` (범위 밖 ${nOut}문항 제외)`:""}</span>${it.length&&Math.round(tot*10)!==1000?` <span class="tag t-no">← 총점이 100점이 아니에요</span> <button class="btn sm pri" id="k-fit">🔢 100점에 맞추기</button>`:""}</h2>
     <span class="row">${nDiff?`<span class="tag t-warn">⚠ AI와 다른 문항 ${nDiff}</span>`:""}${nNo?`<span class="tag t-no">정답 없음 ${nNo}</span>`:""}${EX.cfg.keyDone?`<span class="tag t-ok">정답 확정 ✓</span>`:""}</span></div>
   <div class="card">
     <div class="row" style="margin-bottom:10px">
@@ -216,7 +216,7 @@ function keyHTML(){
       <td><b class="num">${esc(x.n)}</b>${x.t==="s"?` <span class="tag t-mute">서술형</span>`:""}</td>
       <td>${x.t==="s"?`<span class="note">모범답안 →</span>`:`<input class="fld num" data-f="a" value="${esc(x.a)}" style="width:62px" placeholder="1~5">`}</td>
       <td><select class="fld" data-f="fx" style="width:118px">${[["","—"],["change","정답 변경"],["multi","복수 정답"],["all","전원 정답"],["out","범위 밖 · 제외"]].filter(o=>x.t!=="s"||o[0]===""||o[0]==="all"||o[0]==="out").map(o=>`<option value="${o[0]}"${(x.fx||"")===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select>${x.fx&&x.fo&&(x.fx==="change"||x.fx==="multi")?`<div class="note">원래 ${esc(x.fo)}번</div>`:""}</td>
-      <td><input class="fld num" data-f="p" value="${x.p}" style="width:58px"></td>
+      <td><input class="fld num" data-f="p" value="${x.p}" style="width:58px${x.ps==="ai"||x.ps==="me"?"":";background:var(--warn-s,#fff6e0)"}" title="${x.ps==="ai"?"시험지·해설지에서 읽은 배점":x.ps==="me"?"직접 고친 배점":"기본값 (시험지에서 못 읽음)"}">${x.ps==="ai"?`<div class="note" style="font-size:10.5px">📄 읽음</div>`:x.ps==="me"?"":`<div class="note" style="font-size:10.5px">기본값</div>`}</td>
       <td><select class="fld" data-f="d">${areaOpts(x.d)}</select></td><td><select class="fld" data-f="k">${kindOpts(x.k)}</select></td>
       <td>${x.t==="s"?(x.ai?`<span class="note">AI 답: ${esc(x.ai)}</span>`:""):x.chk==="diff"?`<div><span class="tag t-warn">⚠ AI는 ${esc(x.ai)}번</span></div><div class="note" style="max-width:240px">${esc(x.why)}</div>
           <div class="row" style="margin-top:4px"><button class="btn sm" data-keep="${i}">해설지 ${esc(x.a)}번 유지</button><button class="btn sm" data-useai="${i}">${esc(x.ai)}번으로</button></div>`
@@ -230,7 +230,7 @@ function keyHTML(){
 function readKeyForm(){
   if(!$("#k-title")) return;
   const it=items();
-  $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
+  $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; if(f==="p"&&(+el.value||0)!==(+x.p||0)) x.ps="me"; x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
   const g={mode:($("#k-gmode")||{}).value||"csat",cuts:(($("#k-cuts")||{}).value||"").split(/[\s,]+/).map(Number).filter(x=>x>0)};
   EX.cfg.grade=g; EX.cfg.academy=($("#k-acad")||{}).value||EX.cfg.academy||"헤이즐 영어"; EX.title=$("#k-title").value.trim()||EX.title; EX.day=$("#k-day").value||EX.day;
 }
@@ -266,6 +266,9 @@ async function runAI(){
       done++; prog(5+Math.round(done/jobs.length*90)); };
     const q=[...jobs]; await Promise.all([0,1,2].map(async()=>{ while(q.length) await run(q.shift()); }));
     mergeAI(K,P); log(`끝! 정답 ${K.length?"추출":"없음"} · ⚠ AI와 다른 문항 ${items().filter(x=>x.chk==="diff").length}개`);
+    { const it=items(), nAI=it.filter(x=>x.ps==="ai").length, tot=r10(it.filter(x=>x.fx!=="out").reduce((a,x)=>a+(+x.p||0),0));
+      log(`배점: 시험지·해설지에서 ${nAI}/${it.length}문항 읽음 · 지금 합계 ${tot}점`);
+      if(tot!==100){ const r=fitTo100(); log(r?`→ ${r}`:`⚠ 배점 합계가 ${tot}점이에요. 아래 표에서 배점을 확인해 주세요`); } }
     await saveExam(null,true); prog(100);
   }catch(e){ log("✗ "+e.message); toast(e.message,4000); }
   BUSY=""; render();
@@ -274,9 +277,9 @@ function mergeAI(K,P){
   const it=items(), by=n=>it.find(x=>x.n===n);
   const add=(n,t)=>{ let x=by(n); if(!x){ x={n,t:t==="s"?"s":"o",a:"",p:t==="s"?5:2,k:"",e:"",m:"",r:""}; it.push(x); } return x; };
   K.forEach(k=>{ const x=add(k.n,k.t); if(k.t) x.t=k.t==="s"?"s":"o"; if(x.t!=="s"&&k.a) x.a=String(k.a).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,"");
-    if(k.e) x.e=k.e; if(k.m) x.m=k.m; if(k.r) x.r=k.r; if(k.p!=null&&+k.p>0&&!x.bp) x.p=+k.p; });
+    if(k.e) x.e=k.e; if(k.m) x.m=k.m; if(k.r) x.r=k.r; if(k.p!=null&&+k.p>0&&x.ps!=="me"){ x.p=+k.p; x.ps="ai"; } });
   const best={}; P.forEach(p=>{ if(!best[p.n]||(p.full&&!best[p.n].full)) best[p.n]=p; else if(p.full&&best[p.n].full&&String(p.ai)!==String(best[p.n].ai)) best[p.n].dis=String(p.ai); });
-  Object.values(best).forEach(p=>{ const x=add(p.n,p.t); if(!x.bp){ if(p.k) x.k=p.k; if(p.d&&AREAS.includes(p.d)) x.d=p.d; } if(p.q) x.q=p.q; if(!x.bp&&p.p!=null&&+p.p>0&&!K.find(k=>k.n===p.n&&k.p)) x.p=+p.p;
+  Object.values(best).forEach(p=>{ const x=add(p.n,p.t); if(!x.bp){ if(p.k) x.k=p.k; if(p.d&&AREAS.includes(p.d)) x.d=p.d; } if(p.q) x.q=p.q; if(x.ps!=="me"&&p.p!=null&&+p.p>0&&!K.find(k=>k.n===p.n&&k.p)){ x.p=+p.p; x.ps="ai"; }
     if(p.full!==false&&p.ai!==""&&p.ai!=null){ x.ai=String(p.ai).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).trim(); x.why=(p.why||"")+(p.dis?` (다른 풀이에선 ${p.dis}번)`:""); } });
   it.forEach(x=>{ if(x.t==="s"||!x.ai||!x.a){ if(x.t!=="s"&&x.a&&!x.ai) x.chk=""; return; }
     x.chk=x.a.split(",").includes(x.ai)&&!(x.why||"").includes("다른 풀이")?"ok":"diff"; });
@@ -486,6 +489,10 @@ document.addEventListener("click",async e=>{
   const kp=t.closest("[data-keep]"); if(kp){ readKeyForm(); items()[+kp.dataset.keep].chk="ok"; render(); return; }
   const ua=t.closest("[data-useai]"); if(ua){ readKeyForm(); const x=items()[+ua.dataset.useai]; x.a=x.ai; x.chk="ok"; render(); return; }
   if(t.closest("#ai-run")){ runAI(); return; }
+  if(t.closest("#k-fit")){ readKeyForm(); const it=items(), tot=r10(it.filter(x=>x.fx!=="out").reduce((a,x)=>a+(+x.p||0),0));
+    const nF=it.filter(x=>x.fx!=="out"&&!(x.ps==="ai"||x.ps==="me")).length;
+    if(!confirm(nF?`지금 합계 ${tot}점이에요.\n📄 시험지에서 읽은 배점과 직접 고친 배점은 그대로 두고,\n기본값인 ${nF}문항에 남은 점수를 나눠 100점에 맞출까요?`:`지금 합계 ${tot}점이에요.\n배점 비율은 그대로 두고 100점에 맞출까요?`)) return;
+    const msg=fitTo100(); render(); toast(msg+" 저장을 눌러야 반영돼요",6000); return; }
   if(t.closest("#k-save")){ try{ const before=scoreSnap(); await saveExam(); if(EX.cfg.keyDone){ await openExam(EX.id); const msg=scoreDiff(before); toast(msg?"저장했어요 · "+msg:"저장했어요",msg?8000:2500); } else toast("저장했어요"); render(); }catch(err){ toast(err.message); } return; }
   if(t.closest("#k-done")){ readKeyForm(); const it=items(); const nNo=it.filter(x=>x.t!=="s"&&!x.a&&x.fx!=="all"&&x.fx!=="out").length, nD=it.filter(x=>x.chk==="diff").length, nK=it.filter(x=>!x.d&&x.fx!=="out").length, nOut=it.filter(x=>x.fx==="out").length, tot=Math.round(it.filter(x=>x.fx!=="out").reduce((a,x)=>a+(+x.p||0),0)*10)/10;
     if(nNo) return toast(`정답이 빈 객관식이 ${nNo}문항 있어요`);
@@ -534,6 +541,25 @@ document.addEventListener("click",async e=>{
       <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn pri" data-csave="${esc(s)}">저장</button></div></div>`; $("#cedit").scrollIntoView({behavior:"smooth"}); return; }
   const cs=t.closest("[data-csave]"); if(cs){ await mock({action:"sheet.set",exam_id:EX.id,student:cs.dataset.csave,comment:{title:"",body:$("#ce-b").value}}); await openExam(EX.id); render(); toast("저장했어요"); return; }
 });
+/* 배점 합계 100점 맞추기: 시험지에서 읽은 배점(📄)·직접 고친 배점은 그대로 두고, 기본값 문항에 남은 점수를 고르게 나눔.
+   모든 배점이 읽힌/고친 값이면 비율대로 늘리거나 줄임. 0.1점 단위, 끝수는 마지막 문항에. */
+const r10=v=>Math.round(v*10)/10;
+function evenOut(list,target){   // 합계가 target이 되도록 0.1점씩 앞 문항부터 나눠 더하거나 뺌 (한 문항에 몰리지 않게)
+  let d=Math.round((target-list.reduce((a,x)=>a+(+x.p||0),0))*10), i=0;
+  while(d!==0&&list.length){ const x=list[i%list.length]; x.p=r10(x.p+(d>0?0.1:-0.1)); d+=d>0?-1:1; i++; } }
+function fitTo100(){
+  const it=items().filter(x=>x.fx!=="out"); if(!it.length) return "";
+  const fixed=it.filter(x=>x.ps==="ai"||x.ps==="me"), free=it.filter(x=>!(x.ps==="ai"||x.ps==="me"));
+  const fsum=r10(fixed.reduce((a,x)=>a+(+x.p||0),0));
+  if(free.length && fsum<100){
+    const rest=r10(100-fsum), each=Math.floor(rest/free.length*10)/10;
+    free.forEach(x=>x.p=each); evenOut(free,rest);
+    return `배점을 못 읽은 ${free.length}문항에 남은 ${rest}점을 나눴어요(문항당 약 ${each}점). 📄 읽은 ${fixed.length}문항은 그대로예요.`;
+  }
+  const sum=r10(it.reduce((a,x)=>a+(+x.p||0),0)); if(!sum) return "";
+  it.forEach(x=>x.p=r10((+x.p||0)*100/sum)); evenOut(it,100);
+  return `배점 비율은 그대로 두고 합계 ${sum}점 → 100점으로 맞췄어요.`;
+}
 /* 문항 정정: 점수 바뀐 학생 알려 주기 */
 function scoreSnap(){ return JSON.parse(JSON.stringify((STATS&&STATS.scores)||{})); }
 function scoreDiff(before){ const now=(STATS&&STATS.scores)||{}, ch=[];
