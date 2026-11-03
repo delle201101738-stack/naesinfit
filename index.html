@@ -2323,7 +2323,7 @@ function showResult(){
           <span class="k">내 답</span><span class="bad">${esc(x.mine)}</span><br>
           <span class="k">정답</span><span class="good">${esc(x.right)}</span>
           ${x.ex?`<div style="margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.65">💡 ${esc(x.ex)}</div>`:""}
-          ${(Q.pl[i]==="write"||Q.pl[i]==="twrite"||Q.pl[i]==="mwrite"||Q.pl[i]==="wmean"||x.self||(Q.pl[i]==="arrange"&&S.arrMode==="type"))?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
+          ${selfOK(Q.pl[i],x)?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
         </div>`).join("")||`<div class="expl">전부 맞았어요 👏</div>`}</div></div>`;
   }).join("");
 
@@ -2349,7 +2349,7 @@ function showResult(){
       total:t, correct:c, pct, secs,
       detail:Q.items.map((it,i)=>{
         const row={no:it.no, sec:(secLab(it.sec)),
-          d:Q.detail[i].map(x=>Object.assign(x.ok?{l:x.label,ok:1}:{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)}, x.tag?{t:String(x.tag).slice(0,12)}:{}, x.ai?{ai:1,m:String(x.mine).slice(0,80)}:{}))};
+          d:Q.detail[i].map(x=>Object.assign(x.ok?(x.so?{l:x.label,ok:1,so:1,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)}:{l:x.label,ok:1}):{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)}, x.tag?{t:String(x.tag).slice(0,12)}:{}, x.ai?{ai:1,m:String(x.mine).slice(0,80)}:{}))};
         const n=Q.notes&&Q.notes[i];
         if(n && (n.why.trim()||n.voc.trim())){ row.why=n.why.trim().slice(0,300); row.voc=n.voc.trim().slice(0,300); }
         return row;
@@ -2357,10 +2357,12 @@ function showResult(){
     });
   }
 }
+/* 직접 쓴 답(주관식)은 오타 등으로 틀렸을 때 학생이 '맞게 썼어요'로 정답 처리할 수 있음 — 고르기만 하는 문항은 제외 */
+const selfOK=(p,x)=>!!x.mine && x.mine!=="무응답" && String(x.mine).trim()!=="" && (!!x.self || /^(write|twrite|mwrite|wmean|wsynw|wdef)$/.test(p) || isClozeP(p) || (p==="arrange"&&S.arrMode==="type"));   // 통변형은 x.self(틀린 밑줄을 X하고 고쳐 쓴 경우)만
 $("#review-list").addEventListener("click",e=>{
   const sf=e.target.closest("[data-self]");
   if(sf){ const [i,j]=sf.dataset.self.split(".").map(Number);
-    Q.detail[i][j].ok=true; S.exp+=2;
+    Q.detail[i][j].ok=true; Q.detail[i][j].so=1; S.exp+=2;
     (function(){ const mp=Q.items[i]._map, bad=[];
       Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
       if(!(Q.del||{})[i]) markWrong(Q.pl[i], Q.items[i], bad); })();

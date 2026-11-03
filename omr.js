@@ -88,16 +88,15 @@
     codeCells().forEach(([x, y], i) => { if (bits[i]) pdf.rect(x - CODE_S / 2, y - CODE_S / 2, CODE_S, CODE_S, "F"); });
     pdf.setDrawColor(190, 190, 190); pdf.setLineWidth(0.15);
     codeCells().forEach(([x, y], i) => { if (!bits[i]) pdf.rect(x - CODE_S / 2, y - CODE_S / 2, CODE_S, CODE_S, "S"); });
-    const qr = qrImg(`HZM|${exam.id}|${st.code}|${pg.page}`);
-    if (qr) pdf.addImage(qr, "JPEG", QR.x, QR.y, QR.s, QR.s);
+    // QR은 더 이상 찍지 않음 (이름은 학생이 직접 쓰고, 올릴 때 AI가 읽음). 예전 OMR의 QR은 읽기에서 계속 지원
     putText(pdf, "헤이즐's 동형모의고사 OMR", 20, 21, 9, { color: "#C2185B", w: 800 });
     putText(pdf, exam.title || "동형모의고사", 20, 29, 15, { w: 900, max: 140 });
     putText(pdf, `${exam.cls || ""}  ·  ${exam.day || ""}${pg.kind === "sub" ? "  ·  서술형 답안" : ""}`, 20, 36.5, 9.5, { color: "#555", w: 500, max: 140 });
     pdf.setDrawColor(0, 0, 0); pdf.setLineWidth(0.5); pdf.roundedRect(20, 40.5, 140, 13, 2, 2, "S");
     putText(pdf, "이름", 25, 47, 9, { color: "#555", w: 500 });
     putText(pdf, st.name ? st.name : "", 40, 47, 17, { w: 900, max: 112 });
-    if (!st.name) putText(pdf, "← 이름을 또박또박 쓰세요", 70, 47, 9, { color: "#999", w: 500 });
-    putText(pdf, "※ 검은 네모 · 아래 코드 줄 · QR을 가리거나 접지 마세요", 105, 292.5, 7, { color: "#888", w: 500, align: "center" });
+    if (!st.name) putText(pdf, "← 이름을 또박또박 직접 쓰세요", 116, 47, 8.5, { color: "#999", w: 500 });
+    putText(pdf, "※ 검은 네모 · 아래 코드 줄을 가리거나 접지 마세요", 105, 292.5, 7, { color: "#888", w: 500, align: "center" });
   }
   function drawObj(pdf, pg) {
     putText(pdf, "컴퓨터용 사인펜으로 ● 처럼 꽉 채워 칠하세요. 고칠 땐 수정테이프.", 20, 57.5, 8, { color: "#777", w: 500 });
@@ -261,6 +260,7 @@
     const pg = layout(exam)[info.page];
     if (!pg) return { ok: false, why: "이 시험에 없는 쪽이에요", info };
     const out = { ok: true, exam6: info.exam6, code: info.code, page: info.page, kind: pg.kind, viaQR: !!info.viaQR };
+    out.nameImg = rectify(G1, Hm, 6, { x: 20, y: 40.5, w: 140, h: 13 }).toDataURL("image/jpeg", 0.8);   // 손글씨 이름 칸
     if (pg.kind === "obj") {
       const r = pg.bd * 0.33, vals = pg.items.map(it => it.bubbles.map(([x, y]) => darkness(S, Hm, x, y, r, pg.bd * 0.62)));
       Object.assign(out, decide(vals)); out.vals = vals.map(v => v.map(x => +x.toFixed(3)));

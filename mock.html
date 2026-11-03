@@ -287,25 +287,23 @@ function printHTML(){
   const ro=roster(), mem=members(), printed=EX.cfg.omr;
   const changed=printed&&JSON.stringify(printed.items.map(x=>[x.n,x.t]))!==JSON.stringify(items().map(x=>[x.n,x.t]));
   return `<div class="card">
-    <p style="margin:0 0 10px">학생마다 이름 · QR · 코드 줄이 찍힌 OMR을 만들어요. 객관식 ${items().filter(x=>x.t!=="s").length}문항${items().some(x=>x.t==="s")?` + 서술형 답안지 ${items().filter(x=>x.t==="s").length}칸(뒷장)`:""}.</p>
+    <p style="margin:0 0 10px">이름 칸이 비어 있는 <b>똑같은 OMR</b>을 원하는 장수만큼 만들어요. 아무에게나 나눠 주고 <b>학생이 이름을 직접</b> 쓰면 돼요. 올리면 AI가 손글씨 이름을 읽어 학생을 맞춰 줘요(못 읽으면 고르기만). 객관식 ${items().filter(x=>x.t!=="s").length}문항${items().some(x=>x.t==="s")?` + 서술형 답안지 ${items().filter(x=>x.t==="s").length}칸(뒷장)`:""}.</p>
     ${!items().length?`<div class="warnbox">① 시험 · 정답에서 문항 틀을 먼저 만들어 주세요.</div>`:""}
     ${changed?`<div class="warnbox">⚠ OMR을 뽑은 뒤 문항 수가 바뀌었어요. 이미 나눠 준 OMR이 있으면 그대로 두고, 새로 뽑으면 새 양식으로 바뀌어요.</div>`:""}
-    <div class="row" style="margin:8px 0">${mem.map(s=>`<label class="chip" style="cursor:pointer"><input type="checkbox" class="p-st" value="${esc(s)}" checked> ${esc(s)}</label>`).join("")}</div>
-    <div class="row" style="margin-top:12px"><label class="f">이름 빈칸 OMR (명단에 없는 학생용)<input class="fld num" id="p-blank" type="number" min="0" max="30" value="2" style="width:90px"></label>
+    <div class="row" style="margin-top:12px"><label class="f">OMR 장수 (반 ${mem.length}명)<input class="fld num" id="p-blank" type="number" min="1" max="80" value="${mem.length+3}" style="width:90px"></label>
       <button class="btn pri" id="p-go" style="align-self:flex-end"${items().length?"":" disabled"}>🖨 OMR PDF 만들기</button></div>
-    <p class="note" style="margin-top:12px">인쇄할 때 '실제 크기(100%)'가 가장 좋지만, 크기가 달라져도 네 모서리 네모로 맞춰 읽어요. 네모 · 아래 코드 줄 · QR을 가리거나 접지 않게만 해 주세요.${printed?` · 마지막으로 뽑은 때 ${esc(String(printed.at||"").slice(0,16).replace("T"," "))}`:""}</p>
+    <p class="note" style="margin-top:12px">인쇄할 때 '실제 크기(100%)'가 가장 좋지만, 크기가 달라져도 네 모서리 네모로 맞춰 읽어요. 네모 · 아래 코드 줄을 가리거나 접지 않게만 해 주세요.${printed?` · 마지막으로 뽑은 때 ${esc(String(printed.at||"").slice(0,16).replace("T"," "))}`:""}</p>
   </div>`;
 }
 async function makeOMR(){
   await libsPDF();
-  const sel=$$(".p-st").filter(x=>x.checked).map(x=>x.value), nb=Math.max(0,Math.min(30,+$("#p-blank").value||0));
+  const nb=Math.max(1,Math.min(80,+$("#p-blank").value||0));
   EX.cfg.omr={items:items().map(x=>({n:x.n,t:x.t,p:x.p})),at:new Date().toISOString()};
   const j=await mock({action:"exam.save",id:EX.id,class_id:CUR,title:EX.title,day:EX.day,cfg:EX.cfg}); const sh=EX.sheets; EX=j.exam; EX.sheets=sh;
-  const ro=roster(); const sts=sel.map(s=>({name:baseNm(s)||s,code:(ro.find(r=>r.student===s)||{}).code})).filter(x=>x.code);
-  for(let i=0;i<nb;i++) sts.push({name:"",code:0});
+  const sts=Array.from({length:nb},()=>({name:"",code:0}));   // 이름은 학생이 직접 (QR·학생 코드 없음)
   const pdf=await OMR.makePDF({id:EX.id,title:EX.title,cls:cls().name,day:EX.day,items:omrItems()},sts);
   const a=document.createElement("a"); a.href=URL.createObjectURL(pdf.output("blob")); a.download=`OMR_${cls().name}_${EX.title}.pdf`.replace(/[\\/:*?"<>|]/g,""); document.body.appendChild(a); a.click(); setTimeout(()=>a.remove(),1500);
-  toast(`OMR ${sts.length}명분 PDF를 받았어요`);
+  toast(`OMR ${sts.length}장 PDF를 받았어요`);
 }
 
 /* ── ③ OMR 올리기 · 확인 ── */
@@ -328,10 +326,16 @@ function scanHTML(){
       <div class="note" style="margin-top:6px">순서 · 방향 상관없어요. 코드 줄로 학생 · 쪽을 알아서 찾아요. 엑셀은 '반 · 이름 · 1 · 2 · … ' 머리글 줄이 있으면 돼요 (빈칸 = 무응답).</div></div>
     ${SCAN.n?`<div class="prog"><i style="width:${Math.round(SCAN.done/SCAN.n*100)}%"></i></div>`:""}${SCAN.log?`<div class="log" id="scan-log">${esc(SCAN.log)}</div>`:""}
   </div>
-  ${PENDING.length?`<div class="sec"><h2>🙋 이름을 정해 주세요 (${PENDING.length}장)</h2><span class="note">이름 빈칸 OMR이거나 명단에 없는 코드예요</span></div>
-    <div class="card">${PENDING.map((p,i)=>`<div class="row" style="margin-bottom:12px;align-items:flex-start"><img src="${p.img}" style="width:220px;border-radius:8px;border:1px solid var(--line)">
-      <div><div class="note">${esc(p.name)}${p.kind==="sub"?" · 서술형 답안지":""}</div><select class="fld" data-pend="${i}"><option value="">학생 고르기</option>${mem.map(s=>`<option>${esc(s)}</option>`).join("")}</select>
-      <button class="btn sm" data-pend-x="${i}">버리기</button></div></div>`).join("")}</div>`:""}
+  ${PENDING.length?(()=>{ const cnt={}; PENDING.forEach(p=>{ if(p.guess) cnt[p.guess+"|"+p.kind]=(cnt[p.guess+"|"+p.kind]||0)+1; });
+    const nG=PENDING.filter(p=>p.guess&&cnt[p.guess+"|"+p.kind]===1).length;
+    return `<div class="sec"><h2>🙋 손글씨 이름 확인 (${PENDING.length}장)</h2><span class="row">${nG?`<button class="btn ok" id="pend-all">✅ AI가 고른 이름 ${nG}장 저장</button>`:""}</span></div>
+    <div class="card"><p class="note" style="margin:0 0 10px">${AI?"AI가 이름 칸을 읽고 명단에서 골라 뒀어요. 맞는지 보고 저장하거나, 틀리면 직접 고르세요(고르면 바로 저장).":"이름 칸을 보고 학생을 고르면 바로 저장돼요."}</p>
+    ${PENDING.map((p,i)=>{ const dup=p.guess&&cnt[p.guess+"|"+p.kind]>1;
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--line)">
+      ${p.nameImg?`<img src="${p.nameImg}" style="width:100%;max-width:520px;border-radius:8px;border:1px solid var(--line);display:block">`:`<img src="${p.img}" style="width:220px;border-radius:8px;border:1px solid var(--line)">`}
+      <div class="row" style="margin-top:6px;align-items:center"><span class="note">${esc(p.name)}${p.kind==="sub"?" · 서술형 답안지":""}${p.read?` · AI가 읽은 글자: <b>${esc(p.read)}</b>`:""}${dup?` · <b style="color:var(--no)">⚠ 같은 이름이 여러 장</b>`:""}</span>
+      <select class="fld" data-pend="${i}"><option value="">${p.guess?"✔ "+esc(p.guess)+" (AI) — 바꾸려면 고르기":"학생 고르기"}</option>${mem.map(s=>`<option>${esc(s)}</option>`).join("")}</select>
+      <button class="btn sm" data-pend-x="${i}">버리기</button></div></div>`; }).join("")}</div>`; })():""}
   <div class="sec"><h2>학생별 확인</h2><span class="row">
     ${nSub&&AI?`<button class="btn" id="g-subs"${BUSY?" disabled":""}>🤖 서술형 모두 AI 채점</button>`:""}
     <button class="btn ok" id="c-all"${ready.length?"":" disabled"}>✅ 문제없는 ${ready.length}명 확정</button></span></div>
@@ -393,12 +397,17 @@ async function handleFiles(files){
       const st=(ro.find(r=>r.code===R.code)||{}).student;
       const payload=R.kind==="sub"?{kind:"sub",subs:Object.fromEntries(R.subs.map(x=>[x.n,{img:x.img}]))}
         :{kind:"obj",marks:Object.fromEntries(R.ns.map((n,i)=>[n,R.marks[i]])),flags:Object.fromEntries(R.ns.map((n,i)=>[n,R.flags[i]])),img:R.img};
-      if(!st){ PENDING.push({name,img:R.img,kind:R.kind,payload}); log(`? ${name}: 이름 빈칸 OMR → 아래에서 학생을 골라 주세요`); continue; }
+      if(!st){ PENDING.push({name,img:R.img,nameImg:R.nameImg,kind:R.kind,payload,guess:"",read:""}); log(`· ${name}: 손글씨 이름 OMR${R.kind==="sub"?" (서술형 답안지)":""}`); continue; }
       await mock({action:"sheet.save",exam_id:EX.id,student:st,...payload}); Object.keys(IMGC).filter(k=>k.startsWith(st+"|")).forEach(k=>delete IMGC[k]);
       const fl=R.flags?R.flags.filter(f=>f&&f!=="blank").length:0; ok++;
       log(`✓ ${name} → ${st}${R.kind==="sub"?" 서술형 답안지":""}${fl?` (확인할 칸 ${fl})`:""}${R.viaQR?" · QR로 찾음":""}`);
     }
-    log(`끝 — 저장 ${ok}장${bad?` · 못 읽음 ${bad}장 (다시 찍어 주세요)`:""}${PENDING.length?` · 이름 정할 것 ${PENDING.length}장`:""}`);
+    const todo=PENDING.filter(p=>!p.guess&&p.nameImg);
+    if(todo.length&&AI){ log(`🤖 손글씨 이름 ${todo.length}장 읽는 중…`);
+      for(let i=0;i<todo.length;i+=10){ const part=todo.slice(i,i+10);
+        try{ const j=await mock({action:"ai.name",images:part.map(p=>p.nameImg),names:members()}); (j.res||[]).forEach(x=>{ const p=part[x.i]; if(p){ p.guess=x.match||""; p.read=x.read||""; } }); }
+        catch(e){ log("  (이름 읽기 실패: "+e.message+")"); } } }
+    log(`끝 — 저장 ${ok}장${bad?` · 못 읽음 ${bad}장 (다시 찍어 주세요)`:""}${PENDING.length?` · 이름 확인할 것 ${PENDING.length}장 (아래)`:""}`);
     await openExam(EX.id);
   }catch(e){ log("✗ "+e.message); }
   BUSY=""; render();
@@ -492,6 +501,10 @@ document.addEventListener("click",async e=>{
   if(t.closest("#k-bp")){ readKeyForm(); const it=items(); if(it.filter(x=>x.t!=="s").length!==45) frameItems(45,2,it.filter(x=>x.t==="s").length,5);
     items().forEach(x=>{ const b=BP45[+x.n-1]; if(x.t!=="s"&&b){ x.d=b.d; x.k=b.k; x.p=b.p; x.bp=1; } }); render(); toast("45문항 표준 영역·세부유형·배점을 넣었어요 (3점 10문항 · 합계 100점)"); return; }
   const px=t.closest("[data-pend-x]"); if(px){ PENDING.splice(+px.dataset.pendX,1); render(); return; }
+  if(t.closest("#pend-all")){ const cnt={}; PENDING.forEach(p=>{ if(p.guess) cnt[p.guess+"|"+p.kind]=(cnt[p.guess+"|"+p.kind]||0)+1; });
+    const go=PENDING.filter(p=>p.guess&&cnt[p.guess+"|"+p.kind]===1); let n=0;
+    for(const p of go){ try{ await mock({action:"sheet.save",exam_id:EX.id,student:p.guess,...p.payload}); PENDING.splice(PENDING.indexOf(p),1); n++; }catch(err){ toast(err.message,4000); } }
+    Object.keys(IMGC).forEach(k=>delete IMGC[k]); await openExam(EX.id); render(); toast(`${n}장 저장했어요${PENDING.length?` · 남은 ${PENDING.length}장은 직접 골라 주세요`:""}`,4000); return; }
   const op=t.closest("[data-open]"); if(op){ OPEN=OPEN===op.dataset.open?null:op.dataset.open; render(); if(OPEN) setTimeout(()=>$("#open").scrollIntoView({behavior:"smooth"}),50); return; }
   const q=t.closest("[data-q]"); if(q){ qEdit(q.dataset.q); return; }
   const pk=t.closest("[data-pk]"); if(pk){ const box=$("#q-edit"); let cur=(box.dataset.sel||"").split(",").filter(Boolean); const v=pk.dataset.pk;
