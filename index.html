@@ -2010,7 +2010,9 @@ $("#quiz-body").addEventListener("click",e=>{
   if(e.target.closest("[data-oor]")){
     if(!confirm("이 문항을 '시험 범위 아님'으로 뺄까요?\n점수에서 제외되고, 다음부터는 나오지 않아요.\n(시험 준비 화면에서 되돌릴 수 있어요)")) return;
     (Q.oor ||= {})[Q.i]=true; (S.oor ||= {})[oorKey(Q.pl[Q.i],it)]=Date.now(); save(); rsSave&&rsSave();
-    toast("범위 아님으로 뺐어요 · 점수에서 제외"); renderQ(); return; }
+    if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); toast("범위 아님으로 빼고 다음 문제로 넘어갔어요"); }
+    else { renderQ(); toast("범위 아님으로 뺐어요 · 이제 제출하면 돼요"); }
+    return; }
   if(e.target.closest("[data-oorx]")){
     delete (Q.oor||{})[Q.i]; delete (S.oor||{})[oorKey(Q.pl[Q.i],it)]; save(); toast("다시 풀게 되돌렸어요"); renderQ(); return; }
   const ah=e.target.closest("[data-ah]");
