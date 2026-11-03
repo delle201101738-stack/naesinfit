@@ -171,7 +171,7 @@ function listHTML(){
 let KEYF={key:null,paper:null}, AILOG="", AIP=0;
 function keyHTML(){
   const it=items().slice().sort(sortN), g=EX.cfg.grade||{mode:"csat",cuts:[]};
-  const tot=it.reduce((s,x)=>s+(+x.p||0),0), nDiff=it.filter(x=>x.chk==="diff").length, nNo=it.filter(x=>x.t!=="s"&&!x.a).length;
+  const tot=it.filter(x=>x.fx!=="out").reduce((s,x)=>s+(+x.p||0),0), nDiff=it.filter(x=>x.chk==="diff").length, nNo=it.filter(x=>x.t!=="s"&&!x.a&&x.fx!=="all"&&x.fx!=="out").length, nOut=it.filter(x=>x.fx==="out").length;
   const areaOpts=v=>`<option value="">영역</option>`+AREAS.map(k=>`<option${k===v?" selected":""}>${esc(k)}</option>`).join("");
   const kindOpts=v=>`<option value="">세부유형</option>`+KINDS.map(k=>`<option${k===v?" selected":""}>${esc(k)}</option>`).join("")+(v&&!KINDS.includes(v)?`<option selected>${esc(v)}</option>`:"");
   return `<div class="card">
@@ -197,7 +197,7 @@ function keyHTML(){
       ${AI?`<span class="note">해설지만 올려도 돼요(검수는 시험지가 있어야 해요). 페이지가 많으면 몇 분 걸려요.</span>`:`<span class="note">AI 키가 없어 꺼져 있어요 — 아래 '정답 한 번에 붙여넣기'로 넣어 주세요.</span>`}</div>
     ${BUSY==="ai"||AILOG?`<div class="prog"><i style="width:${AIP}%"></i></div><div class="log" id="ai-log">${esc(AILOG)}</div>`:""}
   </div>
-  <div class="sec"><h2>문항 · 정답표 <span class="note">총 ${it.length}문항 · ${Math.round(tot*10)/10}점 만점</span>${it.length&&Math.round(tot*10)!==1000?` <span class="tag t-no">← 총점이 100인지 확인</span>`:""}</h2>
+  <div class="sec"><h2>문항 · 정답표 <span class="note">총 ${it.length}문항 · ${Math.round(tot*10)/10}점 만점${nOut?` (범위 밖 ${nOut}문항 제외)`:""}</span>${it.length&&Math.round(tot*10)!==1000?` <span class="tag t-no">← 총점이 100인지 확인</span>`:""}</h2>
     <span class="row">${nDiff?`<span class="tag t-warn">⚠ AI와 다른 문항 ${nDiff}</span>`:""}${nNo?`<span class="tag t-no">정답 없음 ${nNo}</span>`:""}${EX.cfg.keyDone?`<span class="tag t-ok">정답 확정 ✓</span>`:""}</span></div>
   <div class="card">
     <div class="row" style="margin-bottom:10px">
@@ -210,11 +210,12 @@ function keyHTML(){
       <details style="flex:1;min-width:260px;align-self:flex-end"><summary>정답 한 번에 붙여넣기</summary>
         <div class="row" style="margin-top:6px"><input class="fld" id="k-paste" placeholder="예: 3 1 4 5 2 ... 또는 31452..." style="flex:1"><button class="btn sm" id="k-paste-go">객관식 1번부터 넣기</button></div></details>
     </div>
-    <div class="scroll"><table><thead><tr><th>번호</th><th>정답</th><th>배점</th><th>영역</th><th>세부유형</th><th>AI 검수</th><th>해설 · 모범답안</th></tr></thead><tbody>
+    <div class="scroll"><table><thead><tr><th>번호</th><th>정답</th><th>정정</th><th>배점</th><th>영역</th><th>세부유형</th><th>AI 검수</th><th>해설 · 모범답안</th></tr></thead><tbody>
     ${it.map(x=>{ const i=items().indexOf(x);
-      return `<tr class="${x.chk==="diff"?"diff":x.t!=="s"&&!x.a?"nokey":""}" data-it="${i}">
+      return `<tr class="${x.fx?"diff":x.chk==="diff"?"diff":x.t!=="s"&&!x.a&&x.fx!=="all"&&x.fx!=="out"?"nokey":""}" data-it="${i}">
       <td><b class="num">${esc(x.n)}</b>${x.t==="s"?` <span class="tag t-mute">서술형</span>`:""}</td>
       <td>${x.t==="s"?`<span class="note">모범답안 →</span>`:`<input class="fld num" data-f="a" value="${esc(x.a)}" style="width:62px" placeholder="1~5">`}</td>
+      <td><select class="fld" data-f="fx" style="width:118px">${[["","—"],["change","정답 변경"],["multi","복수 정답"],["all","전원 정답"],["out","범위 밖 · 제외"]].filter(o=>x.t!=="s"||o[0]===""||o[0]==="all"||o[0]==="out").map(o=>`<option value="${o[0]}"${(x.fx||"")===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select>${x.fx&&x.fo&&(x.fx==="change"||x.fx==="multi")?`<div class="note">원래 ${esc(x.fo)}번</div>`:""}</td>
       <td><input class="fld num" data-f="p" value="${x.p}" style="width:58px"></td>
       <td><select class="fld" data-f="d">${areaOpts(x.d)}</select></td><td><select class="fld" data-f="k">${kindOpts(x.k)}</select></td>
       <td>${x.t==="s"?(x.ai?`<span class="note">AI 답: ${esc(x.ai)}</span>`:""):x.chk==="diff"?`<div><span class="tag t-warn">⚠ AI는 ${esc(x.ai)}번</span></div><div class="note" style="max-width:240px">${esc(x.why)}</div>
@@ -485,13 +486,14 @@ document.addEventListener("click",async e=>{
   const kp=t.closest("[data-keep]"); if(kp){ readKeyForm(); items()[+kp.dataset.keep].chk="ok"; render(); return; }
   const ua=t.closest("[data-useai]"); if(ua){ readKeyForm(); const x=items()[+ua.dataset.useai]; x.a=x.ai; x.chk="ok"; render(); return; }
   if(t.closest("#ai-run")){ runAI(); return; }
-  if(t.closest("#k-save")){ try{ await saveExam(); toast("저장했어요"); render(); }catch(err){ toast(err.message); } return; }
-  if(t.closest("#k-done")){ readKeyForm(); const it=items(); const nNo=it.filter(x=>x.t!=="s"&&!x.a).length, nD=it.filter(x=>x.chk==="diff").length, nK=it.filter(x=>!x.d).length, tot=Math.round(it.reduce((a,x)=>a+(+x.p||0),0)*10)/10;
+  if(t.closest("#k-save")){ try{ const before=scoreSnap(); await saveExam(); if(EX.cfg.keyDone){ await openExam(EX.id); const msg=scoreDiff(before); toast(msg?"저장했어요 · "+msg:"저장했어요",msg?8000:2500); } else toast("저장했어요"); render(); }catch(err){ toast(err.message); } return; }
+  if(t.closest("#k-done")){ readKeyForm(); const it=items(); const nNo=it.filter(x=>x.t!=="s"&&!x.a&&x.fx!=="all"&&x.fx!=="out").length, nD=it.filter(x=>x.chk==="diff").length, nK=it.filter(x=>!x.d&&x.fx!=="out").length, nOut=it.filter(x=>x.fx==="out").length, tot=Math.round(it.filter(x=>x.fx!=="out").reduce((a,x)=>a+(+x.p||0),0)*10)/10;
     if(nNo) return toast(`정답이 빈 객관식이 ${nNo}문항 있어요`);
     if(nD&&!confirm(`⚠ AI와 다른 문항이 ${nD}개 남았어요. 해설지 답대로 확정할까요?`)) return;
     if(nK) return toast(`영역이 빈 문항이 ${nK}개 있어요 (리포트 영역별 분석에 필요해요)`);
-    if(tot!==100&&!confirm(`총점이 ${tot}점이에요 (100점이 아님). 이대로 확정할까요?`)) return;
-    it.forEach(x=>{ if(x.chk==="diff") x.chk="ok"; }); await saveExam({keyDone:true}); await openExam(EX.id); toast("정답을 확정했어요. 이미 올린 OMR도 새 정답으로 다시 채점돼요"); render(); return; }
+    if(tot!==100&&!nOut&&!confirm(`총점이 ${tot}점이에요 (100점이 아님). 이대로 확정할까요?`)) return;
+    const before=scoreSnap();
+    it.forEach(x=>{ if(x.chk==="diff") x.chk="ok"; }); await saveExam({keyDone:true}); await openExam(EX.id); const msg=scoreDiff(before); toast("정답을 확정했어요. 이미 올린 OMR도 새 정답으로 다시 채점돼요"+(msg?" · "+msg:""),msg?8000:3000); render(); return; }
   // ② OMR
   if(t.closest("#p-go")){ const b=t.closest("#p-go"); b.disabled=true; b.textContent="만드는 중…"; try{ await makeOMR(); }catch(err){ toast(err.message); } render(); return; }
   // ③ 올리기
@@ -532,8 +534,19 @@ document.addEventListener("click",async e=>{
       <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn pri" data-csave="${esc(s)}">저장</button></div></div>`; $("#cedit").scrollIntoView({behavior:"smooth"}); return; }
   const cs=t.closest("[data-csave]"); if(cs){ await mock({action:"sheet.set",exam_id:EX.id,student:cs.dataset.csave,comment:{title:"",body:$("#ce-b").value}}); await openExam(EX.id); render(); toast("저장했어요"); return; }
 });
+/* 문항 정정: 점수 바뀐 학생 알려 주기 */
+function scoreSnap(){ return JSON.parse(JSON.stringify((STATS&&STATS.scores)||{})); }
+function scoreDiff(before){ const now=(STATS&&STATS.scores)||{}, ch=[];
+  Object.keys(now).forEach(s=>{ const a=(before[s]||{}).score, b=now[s].score; if(a!=null&&a!==b) ch.push(`${baseNm(s)||s} ${a}→${b}`); });
+  return ch.length?`점수 바뀐 학생 ${ch.length}명: ${ch.slice(0,6).join(", ")}${ch.length>6?" 외":""}`:""; }
 document.addEventListener("change",async e=>{
   const t=e.target;
+  const fr=t.closest&&t.closest("#step tr[data-it]");
+  if(fr&&(t.dataset.f==="a"||t.dataset.f==="fx")){ const x=items()[+fr.dataset.it], old=String(x.a||"");
+    readKeyForm();
+    if(t.dataset.f==="a"&&EX.cfg.keyDone&&x.t!=="s"&&old!==String(x.a||"")){ if(!x.fo) x.fo=old; if(x.fx!=="all"&&x.fx!=="out") x.fx=String(x.a).includes(",")?"multi":(x.a===x.fo?"":"change"); if(!x.fx) delete x.fo; }
+    if(t.dataset.f==="fx"){ if((x.fx==="change"||x.fx==="multi")&&!x.fo) x.fo=old; if(!x.fx) delete x.fo; }
+    render(); return; }
   if(t.id==="f-key"||t.id==="f-paper"){ KEYF[t.id==="f-key"?"key":"paper"]=t.files[0]||null; readKeyForm(); render(); return; }
   if(t.id==="k-gmode"){ readKeyForm(); render(); return; }
   if(t.id==="f-xls"){ const f=t.files[0]; t.value=""; if(f) importXLS(f); return; }

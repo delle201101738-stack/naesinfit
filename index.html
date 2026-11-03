@@ -1031,6 +1031,7 @@ function wrongItems(part, ever){
   const m=(ever?everOf():wrongOf())[part]||{}, all=(C&&C[part])||[], out=[];
   Object.keys(m).forEach(k=>{
     const it=all.find(x=>wkey(x)===k); if(!it) return;
+    if(isOOR(part,it)) return;
     if(curScope()==="본문" && it.sec!=="본문") return;
     const keep=(m[k]||[]).filter(i=>i>=0 && i<subLen(part,it));
     if(!keep.length) return;
@@ -1219,7 +1220,11 @@ function oddItems(part, arr){
     return keep.length ? subset(part, it, keep) : null;
   }).filter(Boolean);
 }
-const itemsOfX = (part, scope) => oddOn(part) ? oddItems(part, itemsOf(part, scope)) : itemsOf(part, scope);
+/* 🚫 범위 아님: 학생이 '범위 아님'으로 뺀 문항은 점수에서 제외하고, 다음부터는 출제하지 않음 (준비 화면에서 되돌리기) */
+const oorKey = (part, it) => `${UNIT?UNIT.id:"_"}|${part}|${wkey(it)}`;
+const isOOR = (part, it) => !!(S.oor||{})[oorKey(part,it)];
+const oorList = part => (itemsOf(part,"all")||[]).filter(it=>isOOR(part,it));
+const itemsOfX = (part, scope) => { const a=itemsOf(part, scope).filter(it=>!isOOR(part,it)); return oddOn(part) ? oddItems(part, a) : a; };
 function scopeCounts(part){
   const f=s=>{const a=itemsOfX(part,s); return {n:a.length, p:a.reduce((x,i)=>x+pts(part,i),0)};};
   return {all:f("all"), 본문:f("본문"), RF:f("RF")};
@@ -1276,6 +1281,10 @@ function renderSetup(){
                           : `단어가 ${wordN(sel.part)}개라서 <b>홀수 번째(1·3·5…)</b> 단어만 풀어요. 오답노트는 그대로 남아요.`)
       : (isSegP(sel.part) ? "모든 밑줄을 풀어요." : "모든 단어를 풀어요.")}</p>` : ""}
 
+    ${oorList(sel.part).length?`<div class="card" style="margin-top:14px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">🚫</span><span style="flex:1;font-size:13px;line-height:1.55"><b>범위 아님으로 뺀 문항 ${oorList(sel.part).length}개</b><br><span style="color:var(--ink-3)">${oorList(sel.part).map(it=>esc(itemTag(it))).slice(0,6).join(" · ")}${oorList(sel.part).length>6?" …":""}</span></span>
+      <button class="btn-sm" data-oorall="1" style="padding:8px 12px;flex:none">모두 되돌리기</button></div>`:""}
+
     <div class="sec" style="margin:24px 0 10px"><h2>문항 순서</h2>
       <span class="note" style="font-size:12.5px;color:var(--ink-3)">언제든 바꿀 수 있어요</span></div>
     <div class="seg-btn" id="shuf-btn">
@@ -1323,6 +1332,7 @@ const HOWTO={
  write:"교재에 <b>★중요</b>로 표시된 문장만 골라 담았습니다. 우리말을 보고 영어로 쓰세요. 철자·대소문자·문장부호는 느슨하게 채점하고, 애매하면 결과 화면에서 직접 정답 처리할 수 있어요."
 };
 $("#setup-body").addEventListener("click",e=>{
+  if(e.target.closest("[data-oorall]")){ oorList(sel.part).forEach(it=>delete S.oor[oorKey(sel.part,it)]); save(); renderSetup(); toast("범위 아님으로 뺀 문항을 모두 되돌렸어요"); return; }
   const od=e.target.closest("[data-od]");
   if(od){ S.odd=od.dataset.od==="1"; save(); renderSetup(); toast(S.odd?"🔢 홀수 번호만 풀어요":"모두 풀어요"); return; }
   const sh=e.target.closest("[data-sh]");
@@ -1403,7 +1413,7 @@ $("#quiz-exit").onclick=()=>{ if(confirm("나갈까요?\n푼 데까지 저장돼
 
 /* ───── 이어 풀기: 시험 중간에 나가도(앱 닫기·새로고침·나가기) 푼 데까지 기기에 저장 ───── */
 const RSKEY="naesinfit.resume.v1";
-const RS_FIELDS=["items","pl","i","ans","cur","bd","af","notes","sk","del","dd","dp","odd"];
+const RS_FIELDS=["items","pl","i","ans","cur","bd","af","notes","sk","del","dd","dp","odd","oor"];
 function rsAll(){ try{ const o=JSON.parse(localStorage.getItem(RSKEY))||{}, now=Date.now(); let ch=false;
   Object.keys(o).forEach(k=>{ if(!o[k]||now-o[k].ts>14*864e5){ delete o[k]; ch=true; } }); if(ch) rsPut(o); return o; }catch(e){ return {}; } }
 function rsPut(o){ try{ localStorage.setItem(RSKEY,JSON.stringify(o)); }catch(e){
@@ -1598,6 +1608,11 @@ function renderQ(){
     </div>`;
   }
   if(Q.review) body+=`<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="wdel" id="qdel" data-qdel="1"></button></div>`;
+  if((Q.oor||{})[Q.i]) body=`${tag}<div class="card" style="margin-top:16px;padding:22px 18px;text-align:center">
+      <div style="font-size:30px">🚫</div><div style="font-size:16px;font-weight:800;margin-top:6px">범위 아님으로 뺐어요</div>
+      <div style="font-size:13px;color:var(--ink-3);margin-top:6px;line-height:1.6">이 문항은 <b>점수에서 제외</b>되고 다음부터 나오지 않아요.</div>
+      <button class="btn-sm" style="margin-top:14px;padding:9px 16px" data-oorx="1">↩ 되돌리기 (다시 풀기)</button></div>`;
+  else if(!Q.review) body+=`<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="wdel" data-oor="1" style="opacity:.85">🚫 시험 범위 아님 · 빼고 풀기</button></div>`;
   $("#quiz-body").innerHTML=body;
   if(part==="write" || part==="twrite" || part==="mwrite" || (part==="arrange" && S.arrMode==="type")){
     const w=$("#wr"); w.oninput=()=>{Q.ans[Q.i]=w.value; syncCta();}; }
@@ -1974,6 +1989,7 @@ function syncCta(){
   qdelSync();
   const b=$("#quiz-cta"), last=Q.i===Q.items.length-1, p=Q.pl[Q.i], it=Q.items[Q.i], a=Q.ans[Q.i];
   b.disabled=false;
+  if((Q.oor||{})[Q.i]){ b.textContent=last?"제출하고 채점하기":"다음"; return; }
   if(isStepP(p)){
     if(skCur()<stepN(p,it)-1){ b.textContent=`다음 ${stepWord(p)}`; return; }
     const left=stepLeft(p,it,a);
@@ -1991,6 +2007,12 @@ function syncCta(){
 }
 $("#quiz-body").addEventListener("click",e=>{
   const it=Q.items[Q.i], a=Q.ans[Q.i];
+  if(e.target.closest("[data-oor]")){
+    if(!confirm("이 문항을 '시험 범위 아님'으로 뺄까요?\n점수에서 제외되고, 다음부터는 나오지 않아요.\n(시험 준비 화면에서 되돌릴 수 있어요)")) return;
+    (Q.oor ||= {})[Q.i]=true; (S.oor ||= {})[oorKey(Q.pl[Q.i],it)]=Date.now(); save(); rsSave&&rsSave();
+    toast("범위 아님으로 뺐어요 · 점수에서 제외"); renderQ(); return; }
+  if(e.target.closest("[data-oorx]")){
+    delete (Q.oor||{})[Q.i]; delete (S.oor||{})[oorKey(Q.pl[Q.i],it)]; save(); toast("다시 풀게 되돌렸어요"); renderQ(); return; }
   const ah=e.target.closest("[data-ah]");
   if(ah){ S.arrHint=+ah.dataset.ah; save();
     const box=e.target.closest(".hintbox");
@@ -2091,6 +2113,7 @@ $("#quiz-body").addEventListener("input",e=>{
 });
 $("#quiz-cta").onclick=()=>{
   const p=Q.pl[Q.i], it=Q.items[Q.i], a=Q.ans[Q.i];
+  if((Q.oor||{})[Q.i]){ if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); } else finish(); return; }
   if(isStepP(p)){ const k=skCur(); if(k<stepN(p,it)-1){ skGo(k+1); return; }
     const pd=stepPending(p,it,a);
     if(pd>=0){ Q.sk[Q.i]=pd;
@@ -2264,13 +2287,13 @@ async function aiJudge(){
 async function finish(){
   if(Q.judging) return; Q.judging=true;
   clearInterval(Q.timer); clearTimeout(RS_T); if(Q.rk) rsDel(Q.rk);
-  Q.detail=Q.items.map((it,i)=>grade(Q.pl[i],it,Q.ans[i],i));
+  Q.detail=Q.items.map((it,i)=>(Q.oor||{})[i]?[]:grade(Q.pl[i],it,Q.ans[i],i));
   const nAi=await aiJudge().catch(()=>0);
   if(nAi) setTimeout(()=>toast(`🤖 뜻이 통하는 답 ${nAi}개를 정답으로 인정했어요`,2600),400);
   Q.items.forEach((it,i)=>{
     const mp=it._map, bad=[];
     Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
-    if(!(Q.del||{})[i]) markWrong(Q.pl[i], it, bad);   // 풀다가 삭제한 문제는 다시 쌓지 않음
+    if(!(Q.del||{})[i] && !(Q.oor||{})[i]) markWrong(Q.pl[i], it, bad);   // 풀다가 삭제한 문제·범위 아님은 다시 쌓지 않음
   });
   save();
   showResult();
@@ -2278,7 +2301,7 @@ async function finish(){
 function tally(){
   let t=0,c=0;
   Q.detail.forEach(ds=>ds.forEach(x=>{t++; if(x.ok)c++;}));
-  return {t,c,pct:Math.round(c/t*100)};
+  return {t,c,pct:t?Math.round(c/t*100):0};
 }
 function showResult(){
   const part=Q.part, {t,c,pct}=tally();
@@ -2300,6 +2323,8 @@ function showResult(){
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`;
 
   $("#review-list").innerHTML=Q.items.map((it,i)=>{
+    if((Q.oor||{})[i]) return `<div class="rv"><div class="rv-h" style="cursor:default"><span class="mark" style="background:var(--surface-3);color:var(--ink-3)">🚫</span>
+        <span style="flex:1"><span class="rv-q">${i+1}. ${esc(itemTag(it))}</span><span class="rv-meta">시험 범위 아님 · 점수에서 제외</span></span></div></div>`;
     const ds=Q.detail[i], ok=ds.filter(x=>x.ok).length;
     const allok=ok===ds.length;
     return `<div class="rv${allok?"":" open"}" data-rv>
