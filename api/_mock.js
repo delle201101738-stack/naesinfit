@@ -59,8 +59,21 @@ export function itemScore(it, sh) {
   const p = num(it.p);
   if (it.t === "s") { const s = (sh.subs || {})[it.n] || {}; const v = s.score === "" || s.score == null ? null : Math.max(0, Math.min(p, num(s.score))); return { got: v == null ? 0 : v, max: p, ok: v != null && v >= p, part: v != null && v > 0 && v < p, mark: s.read || "", graded: v != null }; }
   const m = String((sh.marks || {})[it.n] ?? "").trim(), acc = String(it.a || "").split(/[,\s/]+/).filter(Boolean);
-  const ok = it.fx === "all" || acc.includes("*") || (!!m && !m.includes(",") && acc.includes(m));   // fx all = 전원 정답
+  const ok = markOk(acc, m, it.fx);
   return { got: ok ? p : 0, max: p, ok, mark: m, graded: true };
+}
+/* 객관식 정답 판정
+   - 정답 "3,4" (정정에서 '복수 정답'이 아님) = 두 개 고르는 문항 → 학생도 정확히 3·4 둘 다 칠해야 정답 (순서 무관)
+   - '복수 정답'(fx multi) = 3이나 4 중 하나만 칠해도 정답 (둘 다 칠해도 정답)
+   - 전원 정답(fx all, '*') = 모두 정답 */
+export function markOk(acc, m, fx) {
+  if (fx === "all" || acc.includes("*")) return true;
+  const ms = [...new Set(String(m || "").split(/[,\s/]+/).filter(Boolean))];
+  if (!ms.length || !acc.length) return false;
+  const same = ms.length === acc.length && ms.every(x => acc.includes(x));
+  if (same) return true;
+  if (fx === "multi") return ms.length === 1 && acc.includes(ms[0]);
+  return false;
 }
 /* 등급: 절대평가 90↑1 … 20↑8 그 외 9 (100점 환산) */
 export const csatGrade = (score, total) => { const pc = total ? score / total * 100 : 0; return pc >= 90 ? 1 : pc >= 80 ? 2 : pc >= 70 ? 3 : pc >= 60 ? 4 : pc >= 50 ? 5 : pc >= 40 ? 6 : pc >= 30 ? 7 : pc >= 20 ? 8 : 9; };
@@ -176,10 +189,10 @@ export async function syncMock(id) {
 }
 // 이 기능 전에 확정해 둔 동형모고도 한 번 맞춰 둠
 export async function backfillMock() {
-  const [m] = await sql`select v from hw_meta where k = 'mocksync'`; if (m && m.v === "1") return;
+  const [m] = await sql`select v from hw_meta where k = 'mocksync'`; if (m && m.v === "2") return;   // 2: 두 개 고르기 문항 채점 수정(11.3) 뒤 전체 다시 맞춤
   const ex = await sql`select distinct exam_id from mock_sheets where confirmed`;
   for (const x of ex) await syncMock(x.exam_id);
-  await sql`insert into hw_meta (k, v) values ('mocksync', '1') on conflict (k) do update set v = excluded.v`;
+  await sql`insert into hw_meta (k, v) values ('mocksync', '2') on conflict (k) do update set v = excluded.v`;
 }
 export async function loadExam(id) {
   const [e] = await sql`select e.*, c.name as cls from mock_exams e left join hw_classes c on c.id = e.class_id where e.id = ${id}`;
