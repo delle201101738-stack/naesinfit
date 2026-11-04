@@ -2363,7 +2363,7 @@ function showResult(){
   // 기록 저장
   S.exp+=10+c*2;
   if(!Q.review){
-    S.attempts.push({d:new Date().toISOString().slice(0,10), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
+    S.attempts.push({d:todayKey(), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
              scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs});
     const b=bestOf()[part];
     if(!b || pct>b.pct) bestOf()[part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
