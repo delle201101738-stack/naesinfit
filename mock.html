@@ -206,7 +206,7 @@ function keyHTML(){
       <label class="f">서술형<input class="fld num" id="k-ns" type="number" min="0" max="20" style="width:80px" value="${it.filter(x=>x.t==="s").length}"></label>
       <label class="f">배점<input class="fld num" id="k-ps" type="number" step="0.5" style="width:70px" value="5"></label>
       <button class="btn" id="k-frame" style="align-self:flex-end">문항 틀 맞추기</button>
-      <button class="btn" id="k-bp" style="align-self:flex-end" title="1~17 듣기 … 41~45 장문독해, 3점 10문항 + 2점 35문항 = 100점">45문항 표준 영역·배점 넣기</button>
+      <button class="btn" id="k-bp" style="align-self:flex-end" title="수능형(듣기 포함) 45문항 모의고사일 때만. 1~17 듣기 … 41~45 장문독해, 3점 10문항 + 2점 35문항 = 100점">수능형 45문항 표준 넣기 (듣기 포함)</button>
       <details style="flex:1;min-width:260px;align-self:flex-end"><summary>정답 한 번에 붙여넣기</summary>
         <div class="row" style="margin-top:6px"><input class="fld" id="k-paste" placeholder="예: 3 1 4 5 2 ... 또는 31452..." style="flex:1"><button class="btn sm" id="k-paste-go">객관식 1번부터 넣기</button></div></details>
     </div>
@@ -217,7 +217,7 @@ function keyHTML(){
       <td>${x.t==="s"?`<span class="note">모범답안 →</span>`:`<input class="fld num" data-f="a" value="${esc(x.a)}" style="width:62px" placeholder="1~5">`}</td>
       <td><select class="fld" data-f="fx" style="width:118px">${[["","—"],["change","정답 변경"],["multi","복수 정답"],["all","전원 정답"],["out","범위 밖 · 제외"]].filter(o=>x.t!=="s"||o[0]===""||o[0]==="all"||o[0]==="out").map(o=>`<option value="${o[0]}"${(x.fx||"")===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select>${x.fx&&x.fo&&(x.fx==="change"||x.fx==="multi")?`<div class="note">원래 ${esc(x.fo)}번</div>`:""}</td>
       <td><input class="fld num" data-f="p" value="${x.p}" style="width:58px${x.ps==="ai"||x.ps==="me"?"":";background:var(--warn-s,#fff6e0)"}" title="${x.ps==="ai"?"시험지·해설지에서 읽은 배점":x.ps==="me"?"직접 고친 배점":"기본값 (시험지에서 못 읽음)"}">${x.ps==="ai"?`<div class="note" style="font-size:10.5px">📄 읽음</div>`:x.ps==="me"?"":`<div class="note" style="font-size:10.5px">기본값</div>`}</td>
-      <td><select class="fld" data-f="d">${areaOpts(x.d)}</select></td><td><select class="fld" data-f="k">${kindOpts(x.k)}</select></td>
+      <td><select class="fld" data-f="d">${areaOpts(x.d)}</select></td><td><select class="fld" data-f="k">${kindOpts(x.k)}</select>${x.kchk==="diff"?`<div><span class="tag t-warn">⚠ 해설지는 '${esc(x.kalt)}'</span></div><div class="row" style="margin-top:4px"><button class="btn sm" data-kalt="${i}">'${esc(x.kalt)}'로</button></div>`:x.kchk==="ok"?`<div class="note" style="font-size:10.5px">✓ 시험지·해설지 일치${x.kwhy?" · "+esc(x.kwhy):""}</div>`:x.kchk==="one"?`<div class="note" style="font-size:10.5px">한쪽에서만 분류</div>`:""}</td>
       <td>${x.t==="s"?(x.ai?`<span class="note">AI 답: ${esc(x.ai)}</span>`:""):x.chk==="diff"?`<div><span class="tag t-warn">⚠ AI는 ${esc(x.ai)}번</span></div><div class="note" style="max-width:240px">${esc(x.why)}</div>
           <div class="row" style="margin-top:4px"><button class="btn sm" data-keep="${i}">해설지 ${esc(x.a)}번 유지</button><button class="btn sm" data-useai="${i}">${esc(x.ai)}번으로</button></div>`
         :x.chk==="ok"?`<span class="tag t-ok">✓ 일치</span>`:x.ai?`<span class="note">AI ${esc(x.ai)}</span>`:`<span class="note">—</span>`}</td>
@@ -230,7 +230,7 @@ function keyHTML(){
 function readKeyForm(){
   if(!$("#k-title")) return;
   const it=items();
-  $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; if(f==="p"&&(+el.value||0)!==(+x.p||0)) x.ps="me"; x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
+  $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; if(f==="p"&&(+el.value||0)!==(+x.p||0)) x.ps="me"; if((f==="d"||f==="k")&&el.value!==(x[f]||"")){ x.dk="me"; x.bp=0; x.kchk=""; delete x.kalt; } x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
   const g={mode:($("#k-gmode")||{}).value||"csat",cuts:(($("#k-cuts")||{}).value||"").split(/[\s,]+/).map(Number).filter(x=>x>0)};
   EX.cfg.grade=g; EX.cfg.academy=($("#k-acad")||{}).value||EX.cfg.academy||"헤이즐 영어"; EX.title=$("#k-title").value.trim()||EX.title; EX.day=$("#k-day").value||EX.day;
 }
@@ -241,7 +241,7 @@ async function saveExam(extra,noRead){
 }
 function frameItems(no,po,ns,ps){
   const old=items(), keep=n=>old.find(x=>x.n===n);
-  const out=[]; for(let i=1;i<=no;i++){ const b=no===45?BP45[i-1]:null; out.push(keep(String(i))||(b?{...b,a:"",e:"",bp:1}:{n:String(i),t:"o",a:"",p:po,d:"",k:"",e:""})); }
+  const out=[]; for(let i=1;i<=no;i++){ out.push(keep(String(i))||{n:String(i),t:"o",a:"",p:po,d:"",k:"",e:""}); }
   for(let i=1;i<=ns;i++) out.push(keep("서"+i)||{n:"서"+i,t:"s",a:"",p:ps,d:"서술형",k:"",e:"",m:"",r:""});
   EX.cfg.items=out;
 }
@@ -277,12 +277,23 @@ function mergeAI(K,P){
   const it=items(), by=n=>it.find(x=>x.n===n);
   const add=(n,t)=>{ let x=by(n); if(!x){ x={n,t:t==="s"?"s":"o",a:"",p:t==="s"?5:2,k:"",e:"",m:"",r:""}; it.push(x); } return x; };
   K.forEach(k=>{ const x=add(k.n,k.t); if(k.t) x.t=k.t==="s"?"s":"o"; if(x.t!=="s"&&k.a) x.a=String(k.a).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,"");
-    if(k.e) x.e=k.e; if(k.m) x.m=k.m; if(k.r) x.r=k.r; if(k.p!=null&&+k.p>0&&x.ps!=="me"){ x.p=+k.p; x.ps="ai"; } });
+    if(k.e) x.e=k.e; if(k.m) x.m=k.m; if(k.r) x.r=k.r; if(k.k||k.d) x._kt={k:k.k||"",d:k.d||"",w:String(k.kw||"").trim()}; if(k.p!=null&&+k.p>0&&x.ps!=="me"){ x.p=+k.p; x.ps="ai"; } });
   const best={}; P.forEach(p=>{ if(!best[p.n]||(p.full&&!best[p.n].full)) best[p.n]=p; else if(p.full&&best[p.n].full&&String(p.ai)!==String(best[p.n].ai)) best[p.n].dis=String(p.ai); });
-  Object.values(best).forEach(p=>{ const x=add(p.n,p.t); if(!x.bp){ if(p.k) x.k=p.k; if(p.d&&AREAS.includes(p.d)) x.d=p.d; } if(p.q) x.q=p.q; if(x.ps!=="me"&&p.p!=null&&+p.p>0&&!K.find(k=>k.n===p.n&&k.p)){ x.p=+p.p; x.ps="ai"; }
+  Object.values(best).forEach(p=>{ const x=add(p.n,p.t); if(p.k||p.d) x._pt={k:p.k||"",d:p.d||""}; if(p.q) x.q=p.q; if(!(x.ps==="me"||(x.ps==="ai"&&!K.length))&&p.p!=null&&+p.p>0&&!K.find(k=>k.n===p.n&&k.p)){ x.p=+p.p; x.ps="ai"; }
     if(p.full!==false&&p.ai!==""&&p.ai!=null){ x.ai=String(p.ai).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).trim(); x.why=(p.why||"")+(p.dis?` (다른 풀이에선 ${p.dis}번)`:""); } });
   it.forEach(x=>{ if(x.t==="s"||!x.ai||!x.a){ if(x.t!=="s"&&x.a&&!x.ai) x.chk=""; return; }
     x.chk=x.a.split(",").includes(x.ai)&&!(x.why||"").includes("다른 풀이")?"ok":"diff"; });
+  // 유형: 해설지·시험지 따로 분류한 것을 맞춰 봄. 해설지에 유형이 글자로 적혀 있으면 그게 우선, 아니면 둘이 같으면 그대로,
+  // 다르면 시험지(발문을 직접 본 쪽)를 넣고 ⚠ 표시해서 선생님이 고르게 함. 선생님이 직접 고친 유형(dk=me)은 안 건드림.
+  const okD=d=>AREAS.concat("서술형").includes(d);
+  it.forEach(x=>{ const K1=x._kt, P1=x._pt; delete x._kt; delete x._pt; if(!K1&&!P1) return;
+    if(x.dk==="me"){ x.kchk=""; return; }
+    let pick, why="";
+    if(K1&&P1){ if(K1.k===P1.k){ pick=P1; x.kchk="ok"; } else if(K1.w){ pick=K1; x.kchk="ok"; why=`해설지 표기 '${K1.w}'`; } else { pick=P1; x.kchk="diff"; x.kalt=K1.k; } }
+    else { pick=K1||P1; x.kchk="one"; }
+    if(pick.k) x.k=pick.k; if(okD(pick.d)) x.d=pick.d; x.bp=0; if(x.kchk!=="diff") delete x.kalt; x.kwhy=why; });
+  // 시험지를 읽었는데 AI가 듣기 문항을 하나도 못 찾았으면, 예전 수능 청사진에서 남은 '듣기' 유형은 비움
+  if((P.length||K.length)&&!P.concat(K).some(p=>p.d==="듣기"||p.k==="듣기")) it.forEach(x=>{ if(x.dk!=="me"&&x.d==="듣기"){ x.d=""; x.k=""; x.bp=0; } });
   it.sort(sortN); EX.cfg.items=it;
 }
 
@@ -447,21 +458,61 @@ async function gradeSubs(list){
 
 /* ── ④ 리포트 ── */
 let RP={busy:false,log:""};
+/* ── 보내기 전 채점 점검 ── 문제가 있으면 '확인했어요'를 눌러야 리포트·링크가 열림 */
+function auditExam(){
+  const it=items().filter(x=>x.fx!=="out"), obj=it.filter(x=>x.t!=="s"), done=EX.sheets.filter(s=>s.confirmed), n=done.length, R=[];
+  const add=(lv,txt)=>R.push({lv,txt});   // lv: bad(빨강) · warn(노랑) · info
+  const tot=Math.round(it.reduce((a,x)=>a+(+x.p||0),0)*10)/10;
+  if(tot!==100) add("warn",`총점이 ${tot}점이에요 (100점 아님). ① 시험 · 정답에서 배점을 확인하세요.`);
+  const noKey=obj.filter(x=>!String(x.a||"").trim()&&x.fx!=="all"); if(noKey.length) add("bad",`정답이 비어 있는 문항: ${noKey.map(x=>x.n+"번").join(", ")}`);
+  const dflt=it.filter(x=>!(x.ps==="ai"||x.ps==="me")&&!x.bp); if(dflt.length&&tot!==100) add("warn",`배점을 시험지에서 못 읽은(기본값) 문항 ${dflt.length}개`);
+  const sub=it.filter(x=>x.t==="s"), subMiss=done.filter(s=>sub.some(x=>{ const v=(s.subs||{})[x.n]; return !v||v.score==null||v.score===""; }));
+  if(sub.length&&subMiss.length) add("bad",`서술형 점수가 빈 학생 ${subMiss.length}명: ${subMiss.map(s=>baseNm(s.student)||s.student).join(", ")}`);
+  const pend=EX.sheets.filter(s=>!s.confirmed); if(pend.length) add("info",`OMR은 올렸지만 아직 확정 안 한 학생 ${pend.length}명 (리포트에서 빠져요): ${pend.map(s=>baseNm(s.student)||s.student).join(", ")}`);
+  const lis=obj.filter(x=>x.d==="듣기"||x.k==="듣기"); if(lis.length) add("bad",`듣기 유형으로 된 문항 ${lis.length}개 (${lis.length>6?lis[0].n+"~"+lis[lis.length-1].n:lis.map(x=>x.n).join(", ")}번). 이 시험에 듣기가 없으면 ① 시험 · 정답에서 시험지를 다시 넣고 AI를 돌리거나 영역·유형을 고치세요. 리포트 영역 분석·학습 처방이 틀려져요.`);
+  const kd=it.filter(x=>x.kchk==="diff"); if(kd.length) add("warn",`시험지·해설지 유형 분류가 다른 문항 ${kd.length}개: ${kd.map(x=>`${x.n}번(${x.k}/${x.kalt})`).join(", ")} — ① 시험 · 정답에서 골라 주세요`);
+  const noK=obj.filter(x=>!x.d&&!x.k); if(noK.length) add("warn",`영역·유형이 빈 문항 ${noK.length}개: ${noK.map(x=>x.n+"번").join(", ")} (리포트에선 '대의파악'으로 묶여요)`);
+  const norm=v=>[...new Set(String(v||"").split(/[,\s/]+/).filter(Boolean))].sort().join(",");
+  obj.forEach(x=>{ const acc=String(x.a||"").split(/[,\s/]+/).filter(Boolean); if(!acc.length&&x.fx!=="all") return;
+    const marks=done.map(s=>norm((s.marks||{})[x.n])), ok=done.map(s=>markOkC(acc,(s.marks||{})[x.n],x.fx)), nOk=ok.filter(Boolean).length;
+    // ① 학생 답이 정답과 똑같은데 오답 처리 (채점 규칙 오류)
+    const same=marks.map((m,i)=>m&&m===norm(x.a)&&!ok[i]).filter(Boolean).length;
+    if(same) add("bad",`${x.n}번: 정답과 똑같이 칠한 학생 ${same}명이 오답으로 처리됨 — 채점 오류`);
+    if(acc.length>1&&x.fx!=="multi"){ const both=marks.filter(m=>m===norm(x.a)).length, one=marks.filter(m=>m&&!m.includes(",")&&acc.includes(m)).length;
+      add("warn",`${x.n}번 정답 ${x.a} (두 개 고르기): 둘 다 칠한 학생 ${both}명 → 정답 · 하나만 칠한 학생 ${one}명 → 오답. 둘 중 하나만 맞아도 되는 문항이면 '정정 → 복수 정답'으로 바꾸세요.`); }
+    if(n>=3){ const rate=nOk/n;
+      const cnt={}; marks.forEach(m=>{ if(m) cnt[m]=(cnt[m]||0)+1; }); const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+      if(top&&top[0]!==norm(x.a)&&top[1]>=Math.max(2,Math.ceil(n*0.5))) add("bad",`${x.n}번: 학생 ${top[1]}/${n}명이 ${top[0]}번을 골랐는데 정답은 ${x.a}번 — 정답이 맞는지 확인`);
+      else if(rate===0) add("warn",`${x.n}번: 반 정답률 0% — 정답·배점이 맞는지 확인`); }
+  });
+  return R;
+}
+const auditSig=()=>JSON.stringify([items().map(x=>[x.n,x.a,x.p,x.fx||"",x.d||"",x.k||""]),EX.sheets.filter(s=>s.confirmed).map(s=>[s.student,s.marks,Object.values(s.subs||{}).map(v=>v.score)])]);
+let AUDIT_SIG="";
+function auditHTML(R,open){
+  if(!R.length) return `<div class="card" style="border-left:4px solid var(--ok,#16a34a)"><b>✅ 채점 점검 통과</b> <span class="note">정답·배점·두 개 고르기·정답률을 확인했어요. 리포트를 보내도 돼요.</span></div>`;
+  const ic={bad:"⛔",warn:"⚠️",info:"ℹ️"};
+  return `<div class="card" style="border-left:4px solid ${R.some(r=>r.lv==="bad")?"var(--no,#dc2626)":"var(--warn,#d97706)"}">
+    <b>🔍 보내기 전 채점 점검 · 확인할 것 ${R.length}개</b>
+    <ul style="margin:8px 0 10px;padding-left:18px;line-height:1.75">${R.map(r=>`<li>${ic[r.lv]} ${esc(r.txt)}</li>`).join("")}</ul>
+    ${open?`<span class="tag t-ok">확인 완료 — 리포트 열림</span> <span class="note">정답·배점·OMR이 바뀌면 다시 점검해요</span>`:`<button class="btn pri" id="r-audit-ok">위 내용을 모두 확인했어요 · 리포트 열기</button> <span class="note">확인하기 전에는 리포트·링크가 잠겨 있어요</span>`}</div>`;
+}
 function reportHTML(){
   const done=EX.sheets.filter(s=>s.confirmed).sort((a,b)=>a.student.localeCompare(b.student,"ko")), sc=(STATS&&STATS.scores)||{};
   if(!done.length) return `<div class="card empty">③에서 확정한 학생이 아직 없어요.</div>`;
   const noC=done.filter(s=>!(s.comment&&s.comment.body)).length;
-  return `<div class="card"><div class="row">
+  const R=auditExam(), open=!R.length||(EX.cfg.auditSig&&EX.cfg.auditSig===auditSig()), lk=open?"":" style=\"pointer-events:none;opacity:.4\" aria-disabled=\"true\"";
+  return `${auditHTML(R,open)}<div class="card" style="margin-top:12px"><div class="row">
     <span class="tag t-mute">응시 ${STATS.n}명 · 평균 ${STATS.avg} · 최고 ${STATS.max} · 최저 ${STATS.min} (${STATS.total}점 만점)</span><span style="flex:1"></span>
     ${AI?`<button class="btn" id="r-cmt"${RP.busy?" disabled":""}>🤖 총평 AI로 다듬기 ${noC?`(${noC}명 남음)`:"(다시 쓰기)"}</button>`:""}
-    <a class="btn" href="mockr?exam=${EX.id}" target="_blank" rel="noopener">📄 전체 보기 · 합본 PDF</a>
-    <a class="btn pri" href="mockr?exam=${EX.id}&auto=zip" target="_blank" rel="noopener">🖨 일괄 생성 (ZIP)</a>
-    <button class="btn" id="r-links">🔗 학부모 링크 모두 복사</button></div>
+    <a class="btn" href="mockr?exam=${EX.id}" target="_blank" rel="noopener"${lk}>📄 전체 보기 · 합본 PDF</a>
+    <a class="btn pri" href="mockr?exam=${EX.id}&auto=zip" target="_blank" rel="noopener"${lk}>🖨 일괄 생성 (ZIP)</a>
+    <button class="btn" id="r-links"${open?"":" disabled"}>🔗 학부모 링크 모두 복사</button></div>
     ${RP.log?`<div class="log">${esc(RP.log)}</div>`:""}</div>
   <div class="card" style="margin-top:12px"><table><thead><tr><th>학생</th><th>점수</th><th>석차</th><th>등급</th><th>코멘트</th><th></th></tr></thead><tbody>
   ${done.map(s=>`<tr><td><b>${esc(s.student)}</b></td><td class="num">${sc[s.student]?sc[s.student].score:""}/${STATS.total}</td><td class="num">${sc[s.student]?sc[s.student].rank+"등":""}</td><td>${sc[s.student]?esc(sc[s.student].grade):""}</td>
     <td style="max-width:420px">${s.comment&&s.comment.body?`<b>${esc(s.comment.title)}</b><div class="note">${esc(String(s.comment.body).replace(/\*\*/g,"").slice(0,90))}…</div>`:`<span class="note">규칙 템플릿 총평이 들어가요${AI?" (AI로 다듬기 전)":""}</span>`}</td>
-    <td class="row"><a class="btn sm" href="mockr?exam=${EX.id}&student=${encodeURIComponent(s.student)}" target="_blank" rel="noopener">보기 · PDF</a><button class="btn sm" data-cedit="${esc(s.student)}">코멘트 고치기</button></td></tr>`).join("")}
+    <td class="row"><a class="btn sm" href="mockr?exam=${EX.id}&student=${encodeURIComponent(s.student)}" target="_blank" rel="noopener"${lk}>보기 · PDF</a><button class="btn sm" data-cedit="${esc(s.student)}">코멘트 고치기</button></td></tr>`).join("")}
   </tbody></table></div><div id="cedit"></div>`;
 }
 async function aiComments(){
@@ -489,6 +540,7 @@ document.addEventListener("click",async e=>{
   const kp=t.closest("[data-keep]"); if(kp){ readKeyForm(); items()[+kp.dataset.keep].chk="ok"; render(); return; }
   const ua=t.closest("[data-useai]"); if(ua){ readKeyForm(); const x=items()[+ua.dataset.useai]; x.a=x.ai; x.chk="ok"; render(); return; }
   if(t.closest("#ai-run")){ runAI(); return; }
+  if(t.closest("[data-kalt]")){ readKeyForm(); const x=items()[+t.closest("[data-kalt]").dataset.kalt]; x.k=x.kalt; x.dk="me"; x.kchk=""; delete x.kalt; render(); toast("유형을 바꿨어요 · 저장을 눌러야 반영돼요"); return; }
   if(t.closest("#k-fit")){ readKeyForm(); const it=items(), tot=r10(it.filter(x=>x.fx!=="out").reduce((a,x)=>a+(+x.p||0),0));
     const nF=it.filter(x=>x.fx!=="out"&&!(x.ps==="ai"||x.ps==="me")).length;
     if(!confirm(nF?`지금 합계 ${tot}점이에요.\n📄 시험지에서 읽은 배점과 직접 고친 배점은 그대로 두고,\n기본값인 ${nF}문항에 남은 점수를 나눠 100점에 맞출까요?`:`지금 합계 ${tot}점이에요.\n배점 비율은 그대로 두고 100점에 맞출까요?`)) return;
@@ -533,7 +585,9 @@ document.addEventListener("click",async e=>{
     for(const s of L) await mock({action:"sheet.set",exam_id:EX.id,student:s,confirmed:true}); await openExam(EX.id); render(); toast(`${L.length}명 확정`); return; }
   // ④ 리포트
   if(t.closest("#r-cmt")){ aiComments(); return; }
-  if(t.closest("#r-links")){ const j=await api(`/api/mock?exam=${EX.id}&report=1`); const [,m,d]=EX.day.split("-");
+  if(t.closest("#r-audit-ok")){ const R=auditExam(); if(R.some(r=>r.lv==="bad")&&!confirm("⛔ 빨간 항목(채점 오류 가능성)이 남아 있어요.\n정말 이대로 리포트를 열까요?")) return;
+    await saveExam({},true); await saveExam({auditSig:auditSig()},true); render(); toast("확인했어요 · 리포트를 보낼 수 있어요"); return; }
+  if(t.closest("#r-links")){ const R=auditExam(); if(R.length&&EX.cfg.auditSig!==auditSig()) return toast("먼저 채점 점검을 확인해 주세요",3000); const j=await api(`/api/mock?exam=${EX.id}&report=1`); const [,m,d]=EX.day.split("-");
     const txt=j.list.map(r=>`헤이즐 쌤 동형모의고사 성적표 · ${r.name} (${+m}.${+d})\n${location.origin}/mo/${r.token}?e=${EX.id}`).join("\n\n");
     try{ await navigator.clipboard.writeText(txt); toast(`${j.list.length}명 링크를 복사했어요`); }catch(err){ prompt("링크",txt); } return; }
   const ce=t.closest("[data-cedit]"); if(ce){ const s=ce.dataset.cedit, sh=sheetOf(s), cm=sh.comment||{};
