@@ -117,7 +117,7 @@ export default async function handler(req, res) {
       order by a.created_at desc
       limit 1500`;
 
-    const days = new Set(rows.map(r => new Date(r.created_at).toISOString().slice(0, 10))).size;
+    const days = new Set(rows.map(r => new Date(+new Date(r.created_at) + 9 * 3600e3).toISOString().slice(0, 10))).size;   // 한국 시간 기준 날짜
     res.status(200).json({ ok: true, student, rows, cls, wrong, dwrong, hw, days, ...extra });
   } catch (e) {
     console.error("[report]", e);
