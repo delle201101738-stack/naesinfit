@@ -469,6 +469,22 @@ function auditExam(){
   const sub=it.filter(x=>x.t==="s"), subMiss=done.filter(s=>sub.some(x=>{ const v=(s.subs||{})[x.n]; return !v||v.score==null||v.score===""; }));
   if(sub.length&&subMiss.length) add("bad",`서술형 점수가 빈 학생 ${subMiss.length}명: ${subMiss.map(s=>baseNm(s.student)||s.student).join(", ")}`);
   const pend=EX.sheets.filter(s=>!s.confirmed); if(pend.length) add("info",`OMR은 올렸지만 아직 확정 안 한 학생 ${pend.length}명 (리포트에서 빠져요): ${pend.map(s=>baseNm(s.student)||s.student).join(", ")}`);
+  const nmD=st=>{ const b=baseNm(st)||st; return done.filter(o=>(baseNm(o.student)||o.student)===b).length>1?st:b; };
+  // ① OMR 판독 애매(두 개·흐림·지운 자국) 칸을 확인 안 하고 확정한 학생
+  const fl=done.map(s=>({s,ns:obj.filter(x=>{ const f=(s.flags||{})[x.n]; return f&&f!=="blank"; }).map(x=>x.n)})).filter(o=>o.ns.length);
+  if(fl.length) add("bad",`OMR 판독이 애매한 칸(두 개 칠함·흐림·지운 자국)을 확인 안 한 학생 ${fl.length}명: ${fl.map(o=>`${nmD(o.s.student)}(${o.ns.slice(0,6).join("·")}${o.ns.length>6?"…":""}번)`).join(", ")} — ③에서 노란 칸을 눌러 확인·저장하세요`);
+  const bl=done.map(s=>({s,b:obj.filter(x=>!String((s.marks||{})[x.n]||"").trim()).length})).filter(o=>obj.length&&o.b>=Math.max(3,Math.ceil(obj.length*0.3)));
+  if(bl.length) add("warn",`답이 빈 칸이 많은 학생: ${bl.map(o=>`${nmD(o.s.student)} ${o.b}칸`).join(", ")} — OMR이 잘못 읽혔거나 다른 장일 수 있어요`);
+  // ② 석차·평균에 들어가는 학생 확인
+  const mem=members(), out=done.filter(s=>!mem.includes(s.student)); if(out.length) add("bad",`반 명단에 없는 학생이 석차에 들어가요: ${out.map(s=>s.student).join(", ")} — ③에서 다른 학생으로 옮기거나 지우세요`);
+  const bn={}; done.forEach(s=>{ const b=baseNm(s.student)||s.student; (bn[b]=bn[b]||[]).push(s.student); }); const dup=Object.values(bn).filter(a=>a.length>1);
+  if(dup.length) add("warn",`같은 이름 OMR이 여러 장: ${dup.map(a=>a.join("·")).join(", ")} — 동명이인이 맞는지, 한 학생 OMR이 두 번 들어간 건 아닌지 확인`);
+  const miss=mem.filter(m=>!EX.sheets.some(s=>s.student===m)); if(miss.length&&done.length) add("info",`OMR이 없는 학생 ${miss.length}명 (결시 · 석차·평균에서 빠져요): ${miss.map(m=>baseNm(m)||m).join(", ")}`);
+  // ③ 서술형 점수
+  const badS=[], aiS=[]; done.forEach(s=>sub.forEach(x=>{ const v=(s.subs||{})[x.n]; if(!v||v.score==null||v.score==="") return; const sc=+v.score, nm=nmD(s.student);
+    if(!(sc>=0&&sc<=(+x.p||0))||Math.abs(sc*2-Math.round(sc*2))>1e-9) badS.push(`${nm} ${x.n}(${sc}/${x.p}점)`); else if(v.src==="ai") aiS.push(`${nm} ${x.n}`); }));
+  if(badS.length) add("bad",`서술형 점수가 배점을 넘거나 0.5점 단위가 아니에요: ${badS.join(", ")}`);
+  if(aiS.length) add("info",`AI가 매긴 서술형 점수를 선생님이 아직 안 본 칸 ${aiS.length}개: ${aiS.slice(0,10).join(", ")}${aiS.length>10?" …":""} (저장을 누르면 '선생님 수정'으로 바뀌어요)`);
   const lis=obj.filter(x=>x.d==="듣기"||x.k==="듣기"); if(lis.length) add("bad",`듣기 유형으로 된 문항 ${lis.length}개 (${lis.length>6?lis[0].n+"~"+lis[lis.length-1].n:lis.map(x=>x.n).join(", ")}번). 이 시험에 듣기가 없으면 ① 시험 · 정답에서 시험지를 다시 넣고 AI를 돌리거나 영역·유형을 고치세요. 리포트 영역 분석·학습 처방이 틀려져요.`);
   const kd=it.filter(x=>x.kchk==="diff"); if(kd.length) add("warn",`시험지·해설지 유형 분류가 다른 문항 ${kd.length}개: ${kd.map(x=>`${x.n}번(${x.k}/${x.kalt})`).join(", ")} — ① 시험 · 정답에서 골라 주세요`);
   const noK=obj.filter(x=>!x.d&&!x.k); if(noK.length) add("warn",`영역·유형이 빈 문항 ${noK.length}개: ${noK.map(x=>x.n+"번").join(", ")} (리포트에선 '대의파악'으로 묶여요)`);
@@ -487,7 +503,7 @@ function auditExam(){
   });
   return R;
 }
-const auditSig=()=>JSON.stringify([items().map(x=>[x.n,x.a,x.p,x.fx||"",x.d||"",x.k||""]),EX.sheets.filter(s=>s.confirmed).map(s=>[s.student,s.marks,Object.values(s.subs||{}).map(v=>v.score)])]);
+const auditSig=()=>JSON.stringify([items().map(x=>[x.n,x.a,x.p,x.fx||"",x.d||"",x.k||""]),EX.sheets.filter(s=>s.confirmed).map(s=>[s.student,s.marks,Object.values(s.flags||{}).filter(f=>f&&f!=="blank").length,Object.values(s.subs||{}).map(v=>v.score)])]);
 let AUDIT_SIG="";
 function auditHTML(R,open){
   if(!R.length) return `<div class="card" style="border-left:4px solid var(--ok,#16a34a)"><b>✅ 채점 점검 통과</b> <span class="note">정답·배점·두 개 고르기·정답률을 확인했어요. 리포트를 보내도 돼요.</span></div>`;
@@ -572,10 +588,11 @@ document.addEventListener("click",async e=>{
     if(!v) cur=[]; else cur=cur.includes(v)?cur.filter(x=>x!==v):[...cur,v].sort(); box.dataset.sel=cur.join(",");
     box.querySelectorAll("[data-pk]").forEach(b=>b.classList.toggle("on",b.dataset.pk?cur.includes(b.dataset.pk):!cur.length)); return; }
   const pks=t.closest("[data-pk-save]"); if(pks){ const n=pks.dataset.pkSave, v=$("#q-edit").dataset.sel||""; await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,marks:{[n]:v}}); await openExam(EX.id); render(); return; }
-  const ss=t.closest("[data-sub-save]"); if(ss){ const n=ss.dataset.subSave; await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,sub:{n,score:$(`[data-sub-score="${n}"]`).value,read:$(`[data-sub-read="${n}"]`).value,why:$(`[data-sub-why="${n}"]`).value}}); await openExam(EX.id); render(); toast("저장했어요"); return; }
+  const ss=t.closest("[data-sub-save]"); if(ss){ const n=ss.dataset.subSave; { const v=$(`[data-sub-score="${n}"]`).value.trim(), mx=+((items().find(x=>x.n===n)||{}).p)||0; if(v!==""&&(!(+v>=0&&+v<=mx)||Math.abs(+v*2-Math.round(+v*2))>1e-9)) return toast(`점수는 0~${mx}점, 0.5점 단위로 넣어 주세요`,3500); } await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,sub:{n,score:$(`[data-sub-score="${n}"]`).value,read:$(`[data-sub-read="${n}"]`).value,why:$(`[data-sub-why="${n}"]`).value}}); await openExam(EX.id); render(); toast("저장했어요"); return; }
   if(t.closest("#g-sub1")){ gradeSubs([OPEN]); return; }
   if(t.closest("#g-subs")){ gradeSubs(EX.sheets.filter(s=>Object.keys(s.subs||{}).length).map(s=>s.student)); return; }
-  if(t.closest("#sh-ok")){ const sh=sheetOf(OPEN), nSub=omrItems().filter(x=>x.t==="s").length;
+  if(t.closest("#sh-ok")){ const sh=sheetOf(OPEN), nSub=omrItems().filter(x=>x.t==="s").length, nFl=Object.values(sh.flags||{}).filter(f=>f&&f!=="blank").length;
+    if(nFl&&!confirm(`노란 칸(두 개 칠함·흐림·지운 자국) ${nFl}개를 아직 확인 안 했어요.\n칸을 눌러 확인·저장하는 게 안전해요. 그래도 확정할까요?`)) return;
     if(nSub&&Object.values(sh.subs||{}).filter(v=>v.score!=null&&v.score!=="").length<nSub&&!confirm("채점 안 된 서술형이 있어요(0점 처리). 확정할까요?")) return;
     await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,confirmed:true}); await openExam(EX.id); render(); toast(`${OPEN} 확정`); return; }
   if(t.closest("#sh-unc")){ await mock({action:"sheet.set",exam_id:EX.id,student:OPEN,confirmed:false}); await openExam(EX.id); render(); return; }
