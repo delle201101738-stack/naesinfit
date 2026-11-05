@@ -799,11 +799,12 @@ async function render(D){
   (D.cls||[]).filter(x=>bk(x.book)===mainBook && x.day===day).forEach(x=>{const o=clsP[x.part]=clsP[x.part]||{t:0,c:0,s:0,ps:0};
     o.t+=x.t;o.c+=x.c;o.s+=x.s||0;o.ps+=(x.p!=null?x.p:Math.round(x.c/x.t*100))*(x.s||1);});
   const tests=PARTORDER.concat(Object.keys(best).filter(k=>!PARTORDER.includes(k))).filter(k=>best[k]).map(k=>{
-    const b=best[k], me=Math.round(b.r*100), cl=clsP[k];
-    const cls=(cl&&cl.t&&cl.s>=3)?Math.round(cl.ps/cl.s):null;   // 반평균은 3명 이상일 때만
-    return {...b, me, cls, cn:cl?cl.s:0, d:cls===null?null:me-cls};
+    const dec=v=>!Number.isInteger(+v), rp=(v,one)=>one?Math.round(v*10)/10:Math.round(v);   // 동형모고는 소수점 점수 그대로(86.8)
+    const b=best[k], me=rp(b.r*100,dec(b.c)), cl=clsP[k];
+    const cls=(cl&&cl.t&&cl.s>=3)?rp(cl.ps/cl.s,dec(cl.ps)||dec(b.c)):null;   // 반평균은 3명 이상일 때만
+    return {...b, me, cls, cn:cl?cl.s:0, d:cls===null?null:Math.round((me-cls)*10)/10};
   });
-  const T={t:tests.reduce((s,x)=>s+x.t,0), c:tests.reduce((s,x)=>s+x.c,0)};
+  const T={t:tests.reduce((s,x)=>s+x.t,0), c:Math.round(tests.reduce((s,x)=>s+x.c,0)*10)/10};
   const score=T.t?Math.round(T.c/T.t*100):0, grade=gradeOf(score);
   const RE={t:curRe.reduce((s,x)=>s+x.total,0), c:curRe.reduce((s,x)=>s+x.correct,0), n:curRe.length};
 
