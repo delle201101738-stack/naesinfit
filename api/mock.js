@@ -135,7 +135,7 @@ export default async function handler(req, res) {
         const c = { ...((prev && prev.cfg) || {}), ...(b.cfg || {}) };
         if (b.cfg && b.cfg.items) c.items = cleanItems(b.cfg.items);
         c.academy = T(c.academy, 30) || "헤이즐 영어";
-        c.grade = { mode: ["csat", "cut", "score"].includes((c.grade || {}).mode) ? c.grade.mode : "csat", cuts: ((c.grade || {}).cuts || []).map(Number).filter(x => x > 0).slice(0, 9) };
+        c.grade = { mode: ["csat", "cut", "score"].includes((c.grade || {}).mode) ? c.grade.mode : "score", cuts: ((c.grade || {}).cuts || []).map(Number).filter(x => x > 0).slice(0, 9) };
         await withRoster(cid, c);
         let id;
         if (prev) { await sql`update mock_exams set class_id = ${cid}, title = ${title}, day = ${day}, cfg = ${JSON.stringify(c)}::jsonb, updated_at = now() where id = ${prev.id}`; id = +prev.id; }
