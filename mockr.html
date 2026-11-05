@@ -139,7 +139,7 @@ function page1(R){
   <div class="sh">성적 요약</div>
   <div class="tiles">
     <div class="tile main"><small>원점수</small><b>${R.score}<em>점</em></b><span>반평균 ${R.avg}점 · 전체평균 ${R.allAvg}점</span></div>
-    <div class="tile"><small>${g?"절대평가 등급":"정답률"}</small><b>${g?`${g.n}<em>등급</em>`:`${R.pct}<em>%</em>`}</b><span>${g?(g.n===1?"1등급입니다":`1등급까지 ${g.toTop}점`):"&nbsp;"}</span></div>
+    <div class="tile"><small>${g?(g.note==="절대평가"?"절대평가 등급":"등급 (커트라인 기준)"):"정답률"}</small><b>${g?`${g.n}<em>등급</em>`:`${R.pct}<em>%</em>`}</b><span>${g?(g.n===1?"1등급입니다":`1등급까지 ${g.toTop}점`):"&nbsp;"}</span></div>
     <div class="tile"><small>전체 석차</small><b>${R.allRank}<em>/ ${R.allN}명</em></b><span>반 석차 ${R.rank} / ${R.n}명</span></div>
     <div class="tile"><small>상위 백분율</small><b>${R.topPct}<em>%</em></b><span>응시자 ${R.allN}명 기준 상위</span></div></div>
   ${R.exam.fixes&&R.exam.fixes.length?`<div class="fn" style="margin-top:3mm;padding:2.2mm 3mm;border:1px solid var(--line,#ddd);border-radius:2mm;color:var(--ink,#222)"><b>※ 문항 정정 안내</b><br>${R.exam.fixes.map(esc).join("<br>")}</div>`:""}

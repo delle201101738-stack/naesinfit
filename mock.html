@@ -126,7 +126,7 @@ const today=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
 const fmtD=d=>{ if(!d) return ""; const [y,m,dd]=d.split("-"); return `${+m}.${+dd} (${"일월화수목금토"[new Date(+y,+m-1,+dd).getDay()]})`; };
 const baseNm=n=>String(n||"").replace(/[A-Za-z0-9]+$/,"");
 let PIN=(()=>{try{return localStorage.getItem("naesinfit.pin")||sessionStorage.getItem("naesinfit.pin")||""}catch(e){return ""}})();
-let AREAS=["듣기","대의파악","세부정보","어법·어휘","빈칸추론","간접쓰기","장문독해","서술형"], BP45=[], DB=null, CUR=+(localStorage.getItem("hw.class")||0), EXAMS=null, KINDS=[], AI=false, EX=null, STATS=null, STEP=localStorage.getItem("mock.step")||"key", OPEN=null, PENDING=[], BUSY="";
+let AREAS=["대의파악","세부정보","어법·어휘","빈칸추론","간접쓰기","장문독해","서술형","듣기"], BP45=[], DB=null, CUR=+(localStorage.getItem("hw.class")||0), EXAMS=null, KINDS=[], AI=false, EX=null, STATS=null, STEP=localStorage.getItem("mock.step")||"key", OPEN=null, PENDING=[], BUSY="";
 const QS=new URLSearchParams(location.search);
 function toast(t,ms){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),ms||2600); }
 function loadJS(src,test){ return test()?Promise.resolve():new Promise((ok,no)=>{ const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>no(new Error("도구를 불러오지 못했어요")); document.head.appendChild(s); }); }
@@ -177,7 +177,7 @@ async function pagesOf(fs,log){ if(!fs) return []; const out=[];
     out.push(...pg); }
   return out; }
 function keyHTML(){
-  const it=items().slice().sort(sortN), g=EX.cfg.grade||{mode:"csat",cuts:[]};
+  const it=items().slice().sort(sortN), g=EX.cfg.grade||{mode:"score",cuts:[]};
   const tot=it.filter(x=>x.fx!=="out").reduce((s,x)=>s+(+x.p||0),0), nDiff=it.filter(x=>x.chk==="diff").length, nNo=it.filter(x=>x.t!=="s"&&!x.a&&x.fx!=="all"&&x.fx!=="out").length, nOut=it.filter(x=>x.fx==="out").length;
   const areaOpts=v=>`<option value="">영역</option>`+AREAS.map(k=>`<option${k===v?" selected":""}>${esc(k)}</option>`).join("");
   const kindOpts=v=>`<option value="">세부유형</option>`+KINDS.map(k=>`<option${k===v?" selected":""}>${esc(k)}</option>`).join("")+(v&&!KINDS.includes(v)?`<option selected>${esc(v)}</option>`:"");
@@ -187,9 +187,9 @@ function keyHTML(){
       <label class="f">날짜<input class="fld" type="date" id="k-day" value="${EX.day}"></label>
       <label class="f">학원명 (리포트 머리글)<input class="fld" id="k-acad" value="${esc(EX.cfg.academy||"헤이즐 영어")}" style="width:150px"></label>
       <label class="f">등급 기준<select class="fld" id="k-gmode">
-        <option value="csat"${g.mode==="csat"?" selected":""}>모고형 · 수능 영어 절대평가</option>
-        <option value="score"${g.mode==="score"?" selected":""}>내신형 · 점수만</option>
-        <option value="cut"${g.mode==="cut"?" selected":""}>내신형 · 커트라인 입력</option></select></label>
+        <option value="score"${g.mode==="score"?" selected":""}>내신형 · 점수만 (등급 없음)</option>
+        <option value="cut"${g.mode==="cut"?" selected":""}>내신형 · 커트라인 입력</option>
+        <option value="csat"${g.mode==="csat"?" selected":""}>수능 모의고사 · 절대평가 등급</option></select></label>
       ${g.mode==="cut"?`<label class="f" style="min-width:200px">커트라인(1등급부터, 원점수)<input class="fld" id="k-cuts" placeholder="예: 92 85 76 64" value="${esc((g.cuts||[]).join(" "))}"></label>`:""}
     </div>
   </div>
@@ -239,7 +239,7 @@ function readKeyForm(){
   if(!$("#k-title")) return;
   const it=items();
   $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; if(f==="p"&&(+el.value||0)!==(+x.p||0)) x.ps="me"; if((f==="d"||f==="k")&&el.value!==(x[f]||"")){ x.dk="me"; x.bp=0; x.kchk=""; delete x.kalt; } x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
-  const g={mode:($("#k-gmode")||{}).value||"csat",cuts:(($("#k-cuts")||{}).value||"").split(/[\s,]+/).map(Number).filter(x=>x>0)};
+  const g={mode:($("#k-gmode")||{}).value||"score",cuts:(($("#k-cuts")||{}).value||"").split(/[\s,]+/).map(Number).filter(x=>x>0)};
   EX.cfg.grade=g; EX.cfg.academy=($("#k-acad")||{}).value||EX.cfg.academy||"헤이즐 영어"; EX.title=$("#k-title").value.trim()||EX.title; EX.day=$("#k-day").value||EX.day;
 }
 async function saveExam(extra,noRead){
@@ -562,7 +562,7 @@ document.addEventListener("click",async e=>{
   const t=e.target;
   const c=t.closest("[data-cls]"); if(c){ CUR=+c.dataset.cls; localStorage.setItem("hw.class",CUR); EX=null; await loadExams(); render(); return; }
   if(t.closest("#ex-new")){ const title=prompt("시험 이름",`${cls().name} 동형모의고사 ${(EXAMS||[]).length+1}회`); if(!title) return;
-    const j=await mock({action:"exam.save",class_id:CUR,title,day:today(),cfg:{grade:{mode:"csat"},items:[]}}); await openExam(j.exam.id); STEP="key"; render(); toast("시험지·해설지를 올리고 'AI로 채우기'를 누르면 문항 수·정답·배점·유형이 채워져요",5000); return; }
+    const j=await mock({action:"exam.save",class_id:CUR,title,day:today(),cfg:{grade:{mode:"score"},items:[]}}); await openExam(j.exam.id); STEP="key"; render(); toast("시험지·해설지를 올리고 'AI로 채우기'를 누르면 문항 수·정답·배점·유형이 채워져요",5000); return; }
   const ex=t.closest("[data-ex]"); if(ex){ await openExam(+ex.dataset.ex); history.replaceState(null,"",`?exam=${EX.id}`); render(); return; }
   if(t.closest("#ex-back")){ EX=null; history.replaceState(null,"","mock"); await loadExams(); render(); return; }
   if(t.closest("#ex-del")){ if(!confirm(`'${EX.title}' 시험과 OMR 기록을 모두 지울까요?`)) return; await mock({action:"exam.delete",id:EX.id}); EX=null; await loadExams(); render(); return; }
