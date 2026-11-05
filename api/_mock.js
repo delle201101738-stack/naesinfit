@@ -77,11 +77,14 @@ export function markOk(acc, m, fx) {
 }
 /* 등급: 절대평가 90↑1 … 20↑8 그 외 9 (100점 환산) */
 export const csatGrade = (score, total) => { const pc = total ? score / total * 100 : 0; return pc >= 90 ? 1 : pc >= 80 ? 2 : pc >= 70 ? 3 : pc >= 60 ? 4 : pc >= 50 ? 5 : pc >= 40 ? 6 : pc >= 30 ? 7 : pc >= 20 ? 8 : 9; };
+export const CUT5 = [90, 83, 70, 60, 50];   // 기본 등급: 내신 5등급제 (선생님 지정 커트라인)
 export function gradeOf(cfg, score, total) {
-  const g = cfg.grade || {};
-  if (g.mode === "cut") { const cuts = (g.cuts || []).map(num).filter(x => x > 0).sort((a, b) => b - a); if (!cuts.length) return null;
-    const i = cuts.findIndex(c => score >= c), n = i < 0 ? cuts.length + 1 : i + 1; return { n, label: `${n}등급`, note: "선생님 커트라인 기준", toTop: cuts[0] > score ? r1(cuts[0] - score) : 0 }; }
-  if (g.mode !== "csat") return null;   // 기본은 내신형(점수만). 수능 절대평가 등급은 선생님이 고른 경우만
+  const g = cfg.grade || {}, mode = g.mode || "cut";
+  if (mode === "cut") { let cuts = (g.cuts || []).map(num).filter(x => x > 0).sort((a, b) => b - a); if (!cuts.length) cuts = CUT5.slice();
+    // 5등급제: 마지막 등급 아래로는 내려가지 않음 (커트 5개 → 1~5등급)
+    const k = total ? 100 / total : 1, sc = score * k;   // 커트라인은 100점 기준 (총점이 100이 아니어도 비율로)
+    const i = cuts.findIndex(c => sc >= c - 1e-9), n = i < 0 ? cuts.length : i + 1; return { n, label: `${n}등급`, note: "내신 커트라인", toTop: cuts[0] > sc ? r1((cuts[0] - sc) / k) : 0 }; }
+  if (mode !== "csat") return null;   // 기본은 내신형(점수만). 수능 절대평가 등급은 선생님이 고른 경우만
   const n = csatGrade(score, total); return { n, label: `${n}등급`, note: "절대평가", toTop: n > 1 ? r1(Math.max(0, total * 0.9 - score)) : 0 };
 }
 /* 시험 하나 전체 채점 */

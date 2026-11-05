@@ -1,6 +1,6 @@
 // 동형모고 OMR 리포트 — 시험 만들기 · 정답(AI 추출·검수) · OMR 기록 · 서술형 AI 채점 · AI 코멘트 · 학부모 열람
 import { sql, ensure, readBody, checkPin, pinError, tokenFor } from "./_db.js";
-import { ensureMock, KINDS, KIND_AREA, AREAS_ALL, BLUEPRINT45, baseName, scoreExam, reportData, loadExam, gradeOf, syncMock, backfillMock } from "./_mock.js";
+import { CUT5, ensureMock, KINDS, KIND_AREA, AREAS_ALL, BLUEPRINT45, baseName, scoreExam, reportData, loadExam, gradeOf, syncMock, backfillMock } from "./_mock.js";
 
 const kday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const DAY = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null);
@@ -135,7 +135,8 @@ export default async function handler(req, res) {
         const c = { ...((prev && prev.cfg) || {}), ...(b.cfg || {}) };
         if (b.cfg && b.cfg.items) c.items = cleanItems(b.cfg.items);
         c.academy = T(c.academy, 30) || "헤이즐 영어";
-        c.grade = { mode: ["csat", "cut", "score"].includes((c.grade || {}).mode) ? c.grade.mode : "score", cuts: ((c.grade || {}).cuts || []).map(Number).filter(x => x > 0).slice(0, 9) };
+        c.grade = { mode: ["csat", "cut", "score"].includes((c.grade || {}).mode) ? c.grade.mode : "cut", cuts: ((c.grade || {}).cuts || []).map(Number).filter(x => x > 0).slice(0, 9) };
+        if (c.grade.mode === "cut" && !c.grade.cuts.length) c.grade.cuts = CUT5.slice();
         await withRoster(cid, c);
         let id;
         if (prev) { await sql`update mock_exams set class_id = ${cid}, title = ${title}, day = ${day}, cfg = ${JSON.stringify(c)}::jsonb, updated_at = now() where id = ${prev.id}`; id = +prev.id; }
