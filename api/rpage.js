@@ -30,7 +30,7 @@ const dDiff = (a, b) => Math.round((new Date(a + "T00:00:00Z") - new Date(b + "T
 
 async function build(student, dayQ, range) {
   await ensure();
-  const rows = await sql`select id, book, part, part_name, scope, total, correct, created_at
+  const rows = await sql`select id, book, part, part_name, scope, total, coalesce(score, correct) as correct, created_at
                          from attempts where student = ${student} order by created_at desc limit 1000`;
   const hw = await sql`
     select i.id, i.day, i.title, i.memo, c.name as class_name, k.status, k.score, k.memo as cmemo,
@@ -97,11 +97,11 @@ async function build(student, dayQ, range) {
   if (S.tests.length) {
     const books = [...new Set(rows.map(r => r.book))];
     const A = await sql`
-      with x as (select student, book, part, total, correct, to_char(created_at at time zone 'Asia/Seoul','YYYY-MM-DD') as day
+      with x as (select student, book, part, total, coalesce(score, correct)::float as correct, to_char(created_at at time zone 'Asia/Seoul','YYYY-MM-DD') as day
                  from attempts where scope <> '재시험' and total > 0 and book = any(${books})),
            b as (select distinct on (student, book, part, day) student, book, part, day, total, correct
                  from x where day = ${day} order by student, book, part, day, (correct::float / total) desc)
-      select book, part, count(*)::int as s, round(avg(correct * 100.0 / total))::int as p from b group by book, part`;
+      select book, part, count(*)::int as s, (case when bool_or(correct <> floor(correct)) then round(avg(correct * 100.0 / total)::numeric, 1) else round(avg(correct * 100.0 / total)) end)::float as p from b group by book, part`;
     A.forEach(a => { if (a.s >= 3) avg[bk(a.book) + "|" + a.part] = a; });
   }
   const nt = noteOf("day");
