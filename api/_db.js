@@ -37,6 +37,8 @@ export async function ensure() {
   // 단원 id (예: ce2ne03) — 리포트가 교재 이름 대신 정확한 단원으로 묶도록
   await sql`alter table attempts add column if not exists unit_id text not null default ''`;
   await sql`alter table attempts add column if not exists class_name text not null default ''`;
+  // 동형모고 점수(소수점) — correct는 정수라 86.8점이 87로 보이던 것 방지. 있으면 이 값을 맞힌 수 대신 씀
+  await sql`alter table attempts add column if not exists score real`;
   // 반 · 숙제 검사 (시험과 별개)
   await sql`create table if not exists hw_classes (
       id bigserial primary key, name text not null, created_at timestamptz not null default now())`;

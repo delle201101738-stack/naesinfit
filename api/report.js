@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     }
 
     const rows = (await sql`
-      select id, book, unit_id, part, part_name, scope, total, correct, pct, secs, created_at
+      select id, book, unit_id, part, part_name, scope, total, coalesce(score, correct) as correct, pct, secs, created_at
       from attempts where student = ${student}
       order by created_at desc limit 1000`).reverse();
 
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     const books = [...new Set(rows.map(r => r.book))];
     const cls = await sql`
       with x as (
-        select student, book, part, total, correct,
+        select student, book, part, total, coalesce(score, correct)::float as correct,
                to_char(created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') as day
         from attempts
         where scope <> '재시험' and total > 0 and book = any(${books})
@@ -86,8 +86,8 @@ export default async function handler(req, res) {
         from x
         order by student, book, part, day, (correct::float / total) desc
       )
-      select book, part, day, sum(total)::int as t, sum(correct)::int as c,
-             count(*)::int as s, round(avg(correct * 100.0 / total))::int as p
+      select book, part, day, sum(total)::int as t, round(sum(correct)::numeric, 1)::float as c,
+             count(*)::int as s, (case when bool_or(correct <> floor(correct)) then round(avg(correct * 100.0 / total)::numeric, 1) else round(avg(correct * 100.0 / total)) end)::float as p
       from b group by book, part, day`;
 
     // 반복 오답 — 같은 자리에서 여러 번 틀린 것

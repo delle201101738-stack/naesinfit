@@ -186,16 +186,16 @@ export async function syncMock(id) {
   const total = Math.max(1, Math.round(S.total)), book = "동형모의고사 · " + e.title, pname = "동형 · " + e.title, at = `${e.day}T12:00:00+09:00`;
   for (const p of S.per) {
     const c = Math.max(0, Math.min(total, Math.round(p.score)));
-    await sql`insert into attempts (student, book, unit_id, class_name, part, part_name, scope, total, correct, pct, secs, detail, created_at)
-      values (${p.student}, ${book}, '', ${e.cls || ""}, ${part}, ${pname}, '동형', ${total}, ${c}, ${Math.round(p.score / S.total * 100)}, 0, '[]'::jsonb, ${at}::timestamptz)`;
+    await sql`insert into attempts (student, book, unit_id, class_name, part, part_name, scope, total, correct, score, pct, secs, detail, created_at)
+      values (${p.student}, ${book}, '', ${e.cls || ""}, ${part}, ${pname}, '동형', ${total}, ${c}, ${r1(p.score * total / S.total)}, ${Math.round(p.score / S.total * 100)}, 0, '[]'::jsonb, ${at}::timestamptz)`;
   }
 }
 // 이 기능 전에 확정해 둔 동형모고도 한 번 맞춰 둠
 export async function backfillMock() {
-  const [m] = await sql`select v from hw_meta where k = 'mocksync'`; if (m && m.v === "2") return;   // 2: 두 개 고르기 문항 채점 수정(11.3) 뒤 전체 다시 맞춤
+  const [m] = await sql`select v from hw_meta where k = 'mocksync'`; if (m && m.v === "3") return;   // 2: 두 개 고르기 문항 채점 수정(11.3) 뒤 전체 다시 맞춤 · 3: 소수점 점수(score) 채움(11.5)
   const ex = await sql`select distinct exam_id from mock_sheets where confirmed`;
   for (const x of ex) await syncMock(x.exam_id);
-  await sql`insert into hw_meta (k, v) values ('mocksync', '2') on conflict (k) do update set v = excluded.v`;
+  await sql`insert into hw_meta (k, v) values ('mocksync', '3') on conflict (k) do update set v = excluded.v`;
 }
 export async function loadExam(id) {
   const [e] = await sql`select e.*, c.name as cls from mock_exams e left join hw_classes c on c.id = e.class_id where e.id = ${id}`;
