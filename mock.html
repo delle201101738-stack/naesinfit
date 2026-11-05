@@ -169,6 +169,13 @@ function listHTML(){
 
 /* ── ① 시험·정답 ── */
 let KEYF={key:null,paper:null}, AILOG="", AIP=0;
+const fnames=fs=>fs.length===1?fs[0].name:`${fs[0].name} 외 ${fs.length-1}개`;
+/* 사진·PDF 여러 개 → AI용 페이지. 못 읽은 파일 이름은 따로 알려 줌 (아이폰 HEIC 등) */
+async function pagesOf(fs,log){ if(!fs) return []; const out=[];
+  for(const f of fs){ const pg=await OMR.pagesForAI(f).catch(e=>{ log(`✗ ${f.name}: ${e.message}`); return []; });
+    if(!pg.length) log(`✗ ${f.name}을(를) 읽지 못했어요${/heic|heif/i.test(f.type+f.name)?" — 아이폰 HEIC 사진은 PDF나 JPG로 바꿔 올려 주세요":" — PDF나 JPG·PNG인지 확인해 주세요"}`);
+    out.push(...pg); }
+  return out; }
 function keyHTML(){
   const it=items().slice().sort(sortN), g=EX.cfg.grade||{mode:"csat",cuts:[]};
   const tot=it.filter(x=>x.fx!=="out").reduce((s,x)=>s+(+x.p||0),0), nDiff=it.filter(x=>x.chk==="diff").length, nNo=it.filter(x=>x.t!=="s"&&!x.a&&x.fx!=="all"&&x.fx!=="out").length, nOut=it.filter(x=>x.fx==="out").length;
@@ -189,10 +196,11 @@ function keyHTML(){
   <div class="sec"><h2>🤖 AI로 정답 · 유형 · 해설 채우기</h2><span class="note">해설지에서 정답을 뽑고, 시험지는 AI가 직접 풀어 정답과 다른 문항만 ⚠ 로 알려 줘요</span></div>
   <div class="card">
     <div class="row">
-      <label class="drop" style="flex:1;min-width:220px;cursor:pointer" for="f-key">📘 정답·해설지 (PDF/사진)<br><b id="fn-key">${KEYF.key?esc(KEYF.key.name):"파일 고르기"}</b></label>
-      <label class="drop" style="flex:1;min-width:220px;cursor:pointer" for="f-paper">📄 시험지 (PDF/사진)<br><b id="fn-paper">${KEYF.paper?esc(KEYF.paper.name):"파일 고르기"}</b></label>
+      <label class="drop" style="flex:1;min-width:220px;cursor:pointer" for="f-key">📘 정답·해설지 (PDF/사진)<br><b id="fn-key">${KEYF.key?esc(fnames(KEYF.key)):"파일 고르기 (사진 여러 장 가능)"}</b></label>
+      <label class="drop" style="flex:1;min-width:220px;cursor:pointer" for="f-paper">📄 시험지 (PDF/사진)<br><b id="fn-paper">${KEYF.paper?esc(fnames(KEYF.paper)):"파일 고르기 (사진 여러 장 가능)"}</b></label>
     </div>
-    <input type="file" id="f-key" accept="application/pdf,image/*" hidden><input type="file" id="f-paper" accept="application/pdf,image/*" hidden>
+    <input type="file" id="f-key" accept="application/pdf,image/*" multiple hidden><input type="file" id="f-paper" accept="application/pdf,image/*" multiple hidden>
+    ${EX.cfg.ailog&&!AILOG?`<div class="note" style="margin-top:10px">마지막 AI 실행 (${esc(String(EX.cfg.ailog.at||"").slice(5,16).replace("T"," "))}): 해설지 ${EX.cfg.ailog.key}쪽 · 시험지 ${EX.cfg.ailog.paper}쪽 → 정답 ${EX.cfg.ailog.nk}문항 · 유형 ${EX.cfg.ailog.np}문항${EX.cfg.ailog.err?` · <b style="color:var(--no,#dc2626)">${esc(EX.cfg.ailog.err)}</b>`:""}</div>`:""}
     <div class="row" style="margin-top:12px"><button class="btn pri" id="ai-run"${BUSY||!AI?" disabled":""}>🤖 AI로 채우기</button>
       ${AI?`<span class="note">해설지만 올려도 돼요(검수는 시험지가 있어야 해요). 페이지가 많으면 몇 분 걸려요.</span>`:`<span class="note">AI 키가 없어 꺼져 있어요 — 아래 '정답 한 번에 붙여넣기'로 넣어 주세요.</span>`}</div>
     ${BUSY==="ai"||AILOG?`<div class="prog"><i style="width:${AIP}%"></i></div><div class="log" id="ai-log">${esc(AILOG)}</div>`:""}
@@ -201,7 +209,7 @@ function keyHTML(){
     <span class="row">${nDiff?`<span class="tag t-warn">⚠ AI와 다른 문항 ${nDiff}</span>`:""}${nNo?`<span class="tag t-no">정답 없음 ${nNo}</span>`:""}${EX.cfg.keyDone?`<span class="tag t-ok">정답 확정 ✓</span>`:""}</span></div>
   <div class="card">
     <div class="row" style="margin-bottom:10px">
-      <label class="f">객관식<input class="fld num" id="k-no" type="number" min="0" max="60" style="width:80px" value="${it.filter(x=>x.t!=="s").length||45}"></label>
+      <label class="f">객관식<input class="fld num" id="k-no" type="number" min="0" max="60" style="width:80px" value="${it.filter(x=>x.t!=="s").length||""}" placeholder="예: 20"></label>
       <label class="f">배점<input class="fld num" id="k-po" type="number" step="0.1" style="width:70px" value="2"></label>
       <label class="f">서술형<input class="fld num" id="k-ns" type="number" min="0" max="20" style="width:80px" value="${it.filter(x=>x.t==="s").length}"></label>
       <label class="f">배점<input class="fld num" id="k-ps" type="number" step="0.5" style="width:70px" value="5"></label>
@@ -253,19 +261,29 @@ async function runAI(){
   const prog=p=>{ AIP=p; const el=$(".prog i"); if(el) el.style.width=p+"%"; };
   try{
     await libsPDFJS();
-    const key=KEYF.key?await OMR.pagesForAI(KEYF.key):[], paper=KEYF.paper?await OMR.pagesForAI(KEYF.paper):[];
+    const key=await pagesOf(KEYF.key,log), paper=await pagesOf(KEYF.paper,log);
     log(`해설지 ${key.length}쪽 · 시험지 ${paper.length}쪽을 읽어요`);
+    if(!key.length&&!paper.length) throw new Error("파일에서 페이지를 하나도 못 읽었어요. PDF나 JPG·PNG로 올려 주세요");
     const jobs=[];
     for(let i=0;i<key.length;i++) jobs.push({role:"ai.key",pages:[i],src:key});
     if(paper.length===1) jobs.push({role:"ai.paper",pages:[0],src:paper});
     for(let i=0;i+1<paper.length;i++) jobs.push({role:"ai.paper",pages:[i,i+1],src:paper});
-    const K=[],P=[]; let done=0;
+    const K=[],P=[]; let done=0, ok=0;
     const run=async jb=>{ for(let t=0;t<2;t++){ try{ const j=await mock({action:jb.role,images:jb.pages.map(p=>jb.src[p]),pages:jb.pages.map(p=>p+1).join(",")});
-          (jb.role==="ai.key"?K:P).push(...j.items); log(`✓ ${jb.role==="ai.key"?"해설지":"시험지"} ${jb.pages.map(p=>p+1).join("·")}쪽: ${j.items.length}문항`); break; }
+          (jb.role==="ai.key"?K:P).push(...j.items); ok++; log(`✓ ${jb.role==="ai.key"?"해설지":"시험지"} ${jb.pages.map(p=>p+1).join("·")}쪽: ${j.items.length}문항`); break; }
         catch(e){ if(e.noKey) throw e; log(`… ${jb.role==="ai.key"?"해설지":"시험지"} ${jb.pages.map(p=>p+1).join("·")}쪽 다시 시도 (${e.message})`); if(t) log(`✗ ${jb.pages.map(p=>p+1).join("·")}쪽은 건너뜀`); } }
       done++; prog(5+Math.round(done/jobs.length*90)); };
     const q=[...jobs]; await Promise.all([0,1,2].map(async()=>{ while(q.length) await run(q.shift()); }));
-    mergeAI(K,P); log(`끝! 정답 ${K.length?"추출":"없음"} · ⚠ AI와 다른 문항 ${items().filter(x=>x.chk==="diff").length}개`);
+    const nk=new Set(K.map(k=>k.n)).size, np=new Set(P.map(p=>p.n)).size, fail=jobs.length-ok;
+    if(!K.length&&!P.length){ EX.cfg.ailog={at:new Date().toISOString(),key:key.length,paper:paper.length,nk:0,np:0,err:"AI가 문항을 하나도 읽지 못함"}; await saveExam(null,true);
+      throw new Error(`AI가 문항을 하나도 읽지 못했어요(${fail}/${jobs.length}번 실패). 파일이 시험지·해설지가 맞는지, 사진이 흐리지 않은지 확인하고 다시 눌러 주세요`); }
+    mergeAI(K,P);
+    { // AI가 찾은 번호만 남김: 처음에 만든 빈 틀(정답·배점·유형 모두 비어 있고 AI도 못 본 문항)은 지움
+      const seen=new Set([...K,...P].map(x=>x.n)), before=items().length;
+      EX.cfg.items=items().filter(x=>seen.has(x.n)||String(x.a||"").trim()||x.ps==="me"||x.dk==="me"||x.fx);
+      const cut=before-items().length; if(cut) log(`시험에 없는 빈 문항 ${cut}개를 지웠어요 → 객관식 ${items().filter(x=>x.t!=="s").length} · 서술형 ${items().filter(x=>x.t==="s").length}`); }
+    EX.cfg.ailog={at:new Date().toISOString(),key:key.length,paper:paper.length,nk,np,err:fail?`${fail}번 읽기 실패`:""};
+    log(`끝! 해설지에서 정답 ${nk}문항 · 시험지에서 유형 ${np}문항 · ⚠ AI와 다른 정답 ${items().filter(x=>x.chk==="diff").length}개 · ⚠ 유형 다름 ${items().filter(x=>x.kchk==="diff").length}개`);
     { const it=items(), nAI=it.filter(x=>x.ps==="ai").length, tot=r10(it.filter(x=>x.fx!=="out").reduce((a,x)=>a+(+x.p||0),0));
       log(`배점: 시험지·해설지에서 ${nAI}/${it.length}문항 읽음 · 지금 합계 ${tot}점`);
       if(tot!==100){ const r=fitTo100(); log(r?`→ ${r}`:`⚠ 배점 합계가 ${tot}점이에요. 아래 표에서 배점을 확인해 주세요`); } }
@@ -544,7 +562,7 @@ document.addEventListener("click",async e=>{
   const t=e.target;
   const c=t.closest("[data-cls]"); if(c){ CUR=+c.dataset.cls; localStorage.setItem("hw.class",CUR); EX=null; await loadExams(); render(); return; }
   if(t.closest("#ex-new")){ const title=prompt("시험 이름",`${cls().name} 동형모의고사 ${(EXAMS||[]).length+1}회`); if(!title) return;
-    const j=await mock({action:"exam.save",class_id:CUR,title,day:today(),cfg:{grade:{mode:"csat"},items:[]}}); await openExam(j.exam.id); STEP="key"; frameItems(45,2,0,5); await saveExam(null,true); render(); return; }
+    const j=await mock({action:"exam.save",class_id:CUR,title,day:today(),cfg:{grade:{mode:"csat"},items:[]}}); await openExam(j.exam.id); STEP="key"; render(); toast("시험지·해설지를 올리고 'AI로 채우기'를 누르면 문항 수·정답·배점·유형이 채워져요",5000); return; }
   const ex=t.closest("[data-ex]"); if(ex){ await openExam(+ex.dataset.ex); history.replaceState(null,"",`?exam=${EX.id}`); render(); return; }
   if(t.closest("#ex-back")){ EX=null; history.replaceState(null,"","mock"); await loadExams(); render(); return; }
   if(t.closest("#ex-del")){ if(!confirm(`'${EX.title}' 시험과 OMR 기록을 모두 지울까요?`)) return; await mock({action:"exam.delete",id:EX.id}); EX=null; await loadExams(); render(); return; }
@@ -647,7 +665,7 @@ document.addEventListener("change",async e=>{
     if(t.dataset.f==="a"&&EX.cfg.keyDone&&x.t!=="s"&&old!==String(x.a||"")){ if(!x.fo) x.fo=old; if(x.fx!=="all"&&x.fx!=="out") x.fx=String(x.a).includes(",")?"multi":(x.a===x.fo?"":"change"); if(!x.fx) delete x.fo; }
     if(t.dataset.f==="fx"){ if((x.fx==="change"||x.fx==="multi")&&!x.fo) x.fo=old; if(!x.fx) delete x.fo; }
     render(); return; }
-  if(t.id==="f-key"||t.id==="f-paper"){ KEYF[t.id==="f-key"?"key":"paper"]=t.files[0]||null; readKeyForm(); render(); return; }
+  if(t.id==="f-key"||t.id==="f-paper"){ KEYF[t.id==="f-key"?"key":"paper"]=t.files.length?[...t.files]:null; readKeyForm(); render(); return; }
   if(t.id==="k-gmode"){ readKeyForm(); render(); return; }
   if(t.id==="f-xls"){ const f=t.files[0]; t.value=""; if(f) importXLS(f); return; }
   if(t.id==="f-omr"||t.id==="f-cam"){ const f=[...t.files]; t.value=""; handleFiles(f); return; }
