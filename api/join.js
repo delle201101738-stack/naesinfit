@@ -22,7 +22,7 @@ export default async function handler(req, res) {
                                 where i.class_id = ${wc} and i.day >= ${from} and i.day <= ${to} order by i.day desc, i.id`;
         return res.status(200).json({ ok: true, today, class: c || null, items });
       }
-      const classes = await sql`select id, name, exam_date, exam_name from hw_classes order by right(name, 1), name`;
+      const classes = await sql`select id, name, exam_date, exam_name, units from hw_classes order by right(name, 1), name`;
       return res.status(200).json({ ok: true, classes });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "GET·POST만 받습니다" });

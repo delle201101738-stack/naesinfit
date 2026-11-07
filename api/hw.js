@@ -7,7 +7,7 @@ const STATUS = new Set(["done", "part", "none", "skip"]);
 
 async function snapshot() {
   const [classes, members, items, checks, students, views, attend] = await Promise.all([
-    sql`select id, name, created_at, exam_date, exam_name from hw_classes order by right(name, 1), name`,
+    sql`select id, name, created_at, exam_date, exam_name, units from hw_classes order by right(name, 1), name`,
     sql`select class_id, student, focus from hw_members order by student`,
     sql`select id, class_id, day, title, memo, created_at from hw_items order by day desc, id desc limit 1500`,
     sql`select item_id, student, status, score, memo, checked_at from hw_checks`,
@@ -130,6 +130,11 @@ export default async function handler(req, res) {
       case "class.exam": {   // 반 내신 시험 날짜 (리포트 D-day)
         if (!id) return res.status(400).json({ error: "반이 없습니다" });
         await sql`update hw_classes set exam_date = ${DAY(b.exam_date) || ""}, exam_name = ${S(b.exam_name, 40)} where id = ${id}`; break;
+      }
+      case "class.units": {  // 🏫 반(학교) 시험범위 단원 체크 → 학생 앱 교재 목록에 그 단원만 보임 (reset이면 기본값으로)
+        if (!id) return res.status(400).json({ error: "반이 없습니다" });
+        const list = [...new Set((Array.isArray(b.units) ? b.units : []).map(x => S(x, 40)).filter(x => /^[A-Za-z0-9_]+$/.test(x)))].slice(0, 60);
+        await sql`update hw_classes set units = ${b.reset ? null : list.join(",")} where id = ${id}`; break;
       }
       case "tokens.get": {   // 학부모에게 보낼 비공개 링크 토큰
         const list = [...new Set((Array.isArray(b.students) ? b.students : []).map(x => S(x, 20)).filter(Boolean))].slice(0, 300);

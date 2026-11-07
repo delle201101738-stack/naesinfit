@@ -61,6 +61,8 @@ export async function ensure() {
   await sql`alter table hw_members add column if not exists focus text not null default ''`;   // ★ 집중관리 사유
   await sql`alter table hw_classes add column if not exists exam_date text not null default ''`;
   await sql`alter table hw_classes add column if not exists exam_name text not null default ''`;
+  // 🏫 학교(반)별 시험범위 단원 id 목록 (쉼표 구분). null = 아직 안 정함 → content/index.json ranges 기본값
+  await sql`alter table hw_classes add column if not exists units text`;
   // 출결: 정시(on) · 지각(late) · 결석(absent) · 기타(etc)
   await sql`create table if not exists hw_attend (
       class_id bigint not null, day text not null, student text not null, status text not null,
