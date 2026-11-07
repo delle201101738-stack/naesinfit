@@ -634,7 +634,8 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
       <span>과목 · 출판사 · 과</span>
       <button id="books-grade" style="font-size:12px;font-weight:700;color:var(--accent)">학년 바꾸기</button>
     </div>
-    <div class="pad" style="padding-top:14px;padding-bottom:0"><div id="books-subj" class="chiprow"></div></div>
+    <div class="pad" style="padding-top:14px;padding-bottom:0"><div id="books-sch" class="chiprow"></div></div>
+    <div class="pad" style="padding-top:10px;padding-bottom:0"><div id="books-subj" class="chiprow"></div></div>
     <div class="pad" id="books-body" style="padding-bottom:24px"></div>
   </section>
 
@@ -745,7 +746,7 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
 <script>
 "use strict";
 let C = null;   // 교재 내용은 content/ 폴더에서 불러옵니다
-let BOOKS = null, UNIT = null;
+let BOOKS = null, UNIT = null, RANGES = {};
 
 const PARTS=[
  {id:"twrite",n:"주제문 영작",   s:"주제 문장을 배열·어형 변형해 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"},
@@ -777,6 +778,8 @@ const PARTS=[
  {id:"dfb",   n:"영영풀이 정오",   s:"단어와 영영풀이 연결이 옳지 않은 것 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdc1",  n:"단어 동형 객관식 Set 1", s:"예문 빈칸에 알맞은 단어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdc2",  n:"단어 동형 객관식 Set 2", s:"예문 빈칸에 알맞은 단어 고르기", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdt1",  n:"단어 동형 동형모고 30문제", s:"단어장 예문 빈칸 · 6지선다 30문항", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
+ {id:"vdt2",  n:"단어 동형 예문변형 동형모고 30문제", s:"예문을 바꿔 쓴 문장 빈칸 · 6지선다 30문항", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdm1",  n:"단어 동형 모고 1세트", s:"예문 어디서든 빈칸 · 5지선다", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdm2",  n:"단어 동형 모고 2세트", s:"예문 어디서든 빈칸 · 5지선다", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vdm3",  n:"단어 동형 모고 3세트", s:"예문 어디서든 빈칸 · 5지선다", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
@@ -866,7 +869,7 @@ function go(id){
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const isSegP=p=>p==="fix"||p==="word"||p==="word2"||p==="fixg"||p==="fixv"||p==="gbbw"||p==="vbbw";
-const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb"||p==="dfb"||p==="vdc1"||p==="vdc2"||p==="vdm1"||p==="vdm2"||p==="vdm3";
+const isChoiceP=p=>p==="choice"||p==="sjt"||p==="gbb"||p==="vbb"||p==="dfb"||p==="vdc1"||p==="vdc2"||p==="vdm1"||p==="vdm2"||p==="vdm3"||p==="vdt1"||p==="vdt2";
 const isClozeP=p=>p==="cloze"||p==="vdw1"||p==="vdw2"||p==="vds";   // 빈칸 쓰기형 (단어 동형 주관식·스페셜 포함)
 const isWsP=p=>p==="wsyn"||p==="dfa";   // 보기(A~T) 고르기 매칭
 /* ───── 올킬 심층 확인: 이미 풀어 온 시험을 '진짜 이해했는지'까지 묻기 ─────
@@ -1205,7 +1208,7 @@ document.addEventListener("click",e=>{
 });
 /* 🔢 통변형 홀수만 응시: 밑줄 번호(L)가 홀수인 것만 남김 — subSeg가 원래 번호·_map을 유지해서 오답노트도 정확 */
 /* 단어 시험도 40개 이상이면 홀수 번호만 (단어 뜻 쓰기·유의어·영영풀이·단어 동형) */
-const isWordP = p => /^(wmean|wsyn|wsynw|dfa|wdef|dfb|vdc1|vdc2|vdm1|vdm2|vdm3|vds)$/.test(p);
+const isWordP = p => /^(wmean|wsyn|wsynw|dfa|wdef|dfb|vdc1|vdc2|vdm1|vdm2|vdm3|vdt1|vdt2|vds)$/.test(p);
 const isRowP = p => p==="wmean"||p==="wsynw"||isWsP(p);
 const wordN = part => itemsOf(part,"all").reduce((n,it)=>n+(isRowP(part)?(it.rows||[]).length:isClozeP(part)?(it.blanks||[]).length:1),0);
 const oddAble = part => isSegP(part) || (isWordP(part) && wordN(part)>=40);
@@ -2745,8 +2748,16 @@ const UKEY="naesinfit.unit";
 async function loadManifest(){
   const r=await fetch("content/index.json",{cache:"no-store"});
   if(!r.ok) throw new Error("교재 목록을 불러오지 못했습니다");
-  BOOKS=(await r.json()).books||[];
+  const j=await r.json(); BOOKS=j.books||[]; RANGES=j.ranges||{};
 }
+/* 🏫 학교별 시험범위: 선생님이 반별 관리에서 체크한 단원(hw_classes.units) → 없으면 content/index.json ranges 기본값 */
+const rangeOf = name => { if(!name) return [];
+  const c=(CLASSES||[]).find(x=>x.name===name);
+  const ids=(c && c.units!=null && c.units!==undefined) ? String(c.units).split(",").filter(Boolean) : (RANGES[name]||[]);
+  const all=allUnits(true); return ids.map(id=>all.find(u=>u.id===id)).filter(Boolean); };
+const rangeSchools = () => { const names=(CLASSES&&CLASSES.length)?CLASSES.map(c=>c.name):Object.keys(RANGES);
+  return names.filter(n=>rangeOf(n).length); };
+const curRangeSchool = () => { if(S.rsch==="*") return ""; const n=S.rsch||(S.cls&&S.cls.name)||""; return rangeOf(n).length?n:""; };
 async function loadUnit(u){
   const r=await fetch(u.file,{cache:"no-store"});
   if(!r.ok) throw new Error("교재 내용을 불러오지 못했습니다");
@@ -2781,7 +2792,7 @@ function renderGrades(){
 }
 $("#grade-list").addEventListener("click", e=>{
   const b=e.target.closest("[data-grade]"); if(!b) return;
-  S.grade=b.dataset.grade; S.subject=""; save();
+  S.grade=b.dataset.grade; S.subject=""; S.rsch="*"; save();
   const us=allUnits();
   if(us.length===1){ loadUnit(us[0]).then(()=>{renderHome();renderMy();go("home");}).catch(()=>{renderBooks();go("books");}); return; }
   renderBooks(); go("books");
@@ -2797,8 +2808,31 @@ function allUnits(all){
   return out;
 }
 function renderBooks(){
+  if(CLASSES===null && !renderBooks._ld){ renderBooks._ld=1; loadClasses().then(()=>renderBooks()); }
   const list=allUnits();
   $("#books-back").hidden = !UNIT;
+  const schs=rangeSchools(), rs=curRangeSchool(), mine=(S.cls&&S.cls.name)||"";
+  $("#books-sch").innerHTML = schs.length
+    ? schs.slice().sort((a,b)=>(b===mine)-(a===mine)).map(n=>`<button class="chip${rs===n?" sel":""}" data-rsch="${esc(n)}">🏫 ${esc(n)}${n===mine?" · 내 학교":""}</button>`).join("")
+      + `<button class="chip${rs?"":" sel"}" data-rsch="*">📚 전체 교재</button>` : "";
+  $("#books-grade").hidden = !!rs;
+  if(rs){
+    const us=rangeOf(rs);
+    $("#books-subj").innerHTML="";
+    $("#s-books .top h1").textContent = `${rs} 시험범위`;
+    $("#books-body").innerHTML = `<div class="acc open">
+      <div class="acc-h" style="cursor:default"><span>🏫 ${esc(rs)} 시험범위</span>
+        <span class="count num" style="margin-left:auto">${us.length}</span></div>
+      <div class="acc-b"><div class="pub open"><div class="pub-b" style="padding:8px 16px 12px">
+        ${us.map(u=>`
+          <button class="unit${UNIT&&UNIT.id===u.id?" sel":""}" data-unit="${esc(u.id)}">
+            <span class="box">${svg("check")}</span>
+            <span class="u-n"><span style="display:block;font-size:12px;color:var(--ink-3);font-weight:600">${esc(u.book.subject)} · ${esc(u.book.publisher)}</span><b>${esc(u.no)}</b>${u.title?` <span style="color:var(--ink-3);font-weight:500">${esc(u.title)}</span>`:""}</span>
+          </button>`).join("")}
+      </div></div></div></div>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:12px 4px 0;line-height:1.6">선생님이 정한 시험범위만 보여요. 다른 교재는 <b>📚 전체 교재</b>를 누르세요.</p>`;
+    return;
+  }
   const subs=S.grade?subjectsOf(S.grade):[];
   if(S.subject && subs.indexOf(S.subject)<0) S.subject="";
   $("#books-subj").innerHTML = subs.length>1
@@ -2827,16 +2861,20 @@ $("#books-body").addEventListener("click",async e=>{
   const b=e.target.closest("[data-unit]"); if(!b) return;
   const u=allUnits(true).find(x=>x.id===b.dataset.unit); if(!u) return;
   toast("불러오는 중…");
-  try{ await loadUnit(u); sel={part:null,scope:curScope()}; renderHome(); renderMy(); go("home"); }
+  try{ await loadUnit(u); S.grade=gradeOfBook(u.book); save(); sel={part:null,scope:curScope()}; renderHome(); renderMy(); go("home"); }
   catch(err){ toast(err.message); }
 });
 $("#books-back").onclick=()=>{ renderHome(); go("home"); };
+$("#books-sch").addEventListener("click",e=>{
+  const b=e.target.closest("[data-rsch]"); if(!b) return;
+  const v=b.dataset.rsch; S.rsch = (v==="*") ? "*" : (v===((S.cls&&S.cls.name)||"") ? "" : v); save(); renderBooks();
+});
 $("#books-subj").addEventListener("click",e=>{
   const b=e.target.closest("[data-subj]"); if(!b) return;
   S.subject=b.dataset.subj||""; save(); renderBooks();
 });
 $("#books-grade").onclick=()=>{ renderGrades(); go("grade"); };
-$("#home-book").onclick=()=>{ renderBooks(); go("books"); };
+$("#home-book").onclick=()=>{ if(S.rsch==="*") S.rsch=""; renderBooks(); go("books"); };
 
 /* ───── 이름 입력 ───── */
 const nameIn=$("#login-name"), nameCta=$("#login-cta"), clsIn=$("#login-cls");
@@ -2889,8 +2927,9 @@ nameCta.onclick=async()=>{
     S.cls={id:cid,name:c?c.name:""};
   }
   if(nm!==nameIn.value.trim()) toast(`${nm}(으)로 들어왔어요`);
-  S.name=nm; save(); renderMy();
-  if(!S.grade){ renderGrades(); go("grade"); }
+  S.name=nm; S.rsch=""; save(); renderMy();
+  if(!UNIT && curRangeSchool()){ renderBooks(); go("books"); }
+  else if(!S.grade){ renderGrades(); go("grade"); }
   else if(!UNIT){ renderBooks(); go("books"); }
   else { renderHome(); go("home"); flushQueue(); }
 };
@@ -2953,6 +2992,7 @@ applyTheme();
   if(S.cls && CLASSES && !CL.find(c=>+c.id===+S.cls.id)){ S.cls=null; save(); }   // 선생님이 지운 반
   if(!S.name){ openLogin(); }
   else if(CL.length && !S.cls){ openLogin(`${esc(S.name)}님, <b>내 학교·학년</b>을 고르고 이름을 확인해 주세요. 이름 뒤 영어·숫자는 빼고 써도 돼요.`); }
+  else if(!UNIT && curRangeSchool()){ renderBooks(); go("books"); }
   else if(!S.grade){ renderGrades(); go("grade"); }
   else if(!UNIT){ renderBooks(); go("books"); }
   else { renderHome(); go("home"); flushQueue(); }

@@ -300,7 +300,7 @@ function render0(){
   const stat=it=>{const o={done:0,part:0,none:0,skip:0,no:0}; mem.forEach(s=>{const k=chk[it.id+"|"+s]; o[k?k.status:"no"]++;}); return o;};
   const HEAD=`
   <div class="sec"><h2>${esc(cls.name)} · 학생 ${mem.length}명</h2>
-    <span class="note"><button class="btn" id="cls-exam">📅 시험 ${cls.exam_date?`${esc(cls.exam_name||"내신")} ${fmtD(cls.exam_date)} (D-${Math.max(0,Math.round((new Date(cls.exam_date)-new Date(today()))/864e5))})`:"날짜 넣기"}</button> <button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>`;
+    <span class="note"><button class="btn" id="cls-exam">📅 시험 ${cls.exam_date?`${esc(cls.exam_name||"내신")} ${fmtD(cls.exam_date)} (D-${Math.max(0,Math.round((new Date(cls.exam_date)-new Date(today()))/864e5))})`:"날짜 넣기"}</button> <button class="btn" id="cls-range">📚 시험범위${rangeCount(cls)}</button> <button class="btn" id="cls-ren">이름 바꾸기</button> <button class="btn" id="cls-del" style="color:var(--no)">반 삭제</button></span></div>`;
   if(VIEW==="names"){ $("#cls").innerHTML=namesHTML(); return; }
   if(VIEW==="iv"){ $("#cls").innerHTML=ivHTML(); return; }
   if(!RES){ loadRes().then(()=>{ if(TAB==="hw") paintAlerts(); else render(); }); }
@@ -938,6 +938,43 @@ function oneLine(s, items, chk){
   if(st.tp!==null){ const dv=pv.pt?st.tp-pv.pt.v:null; out.push(`시험 ${st.tp}%${dv===null?"":dv>0?` ▲${dv}점`:dv<0?` ▼${-dv}점`:" (지난번과 같음)"}`); }
   return out.length?out.join(" · "):"오늘 기록 없음";
 }
+/* 🏫 반(학교)별 시험범위 체크 — 학생 앱 교재 목록에 체크한 단원만 '내 학교 시험범위'로 보임 */
+let MANI=null;
+async function manifest(){ if(MANI) return MANI; const r=await fetch("content/index.json",{cache:"no-store"}); MANI=await r.json(); return MANI; }
+manifest().then(()=>{ try{ if(DB) render(); }catch(e){} }).catch(()=>{});
+const rangeIds = cl => (cl.units!=null) ? String(cl.units).split(",").filter(Boolean) : ((MANI&&MANI.ranges&&MANI.ranges[cl.name])||[]);
+const rangeCount = cl => { const n=rangeIds(cl).length; return n?` ${n}개`:" 정하기"; };
+async function openRange(cl){
+  const m=await manifest().catch(()=>null); if(!m){ alert("교재 목록을 불러오지 못했어요"); return; }
+  const on=new Set(rangeIds(cl)), def=(m.ranges&&m.ranges[cl.name])||[];
+  const ov=document.createElement("div");
+  ov.style.cssText="position:fixed;inset:0;z-index:80;background:rgba(10,10,20,.45);display:flex;align-items:flex-end;justify-content:center";
+  const grades=[...new Set(m.books.map(b=>b.grade||"고2"))];
+  ov.innerHTML=`<div style="background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:86vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px 14px;box-shadow:var(--shadow)">
+    <div style="display:flex;align-items:center;gap:8px"><b style="font-size:16px;flex:1">📚 ${esc(cl.name)} 시험범위</b><button data-x="1" class="btn">닫기</button></div>
+    <p style="font-size:12.5px;color:var(--ink-3);margin:6px 0 10px;line-height:1.55">체크한 단원만 학생 앱 교재 목록에 <b>'🏫 ${esc(cl.name)} 시험범위'</b>로 바로 떠요. 학생은 '📚 전체 교재'로 다른 교재도 볼 수 있어요.${cl.units==null&&def.length?"<br>지금은 기본값이에요(아직 저장 안 함).":""}</p>
+    ${grades.map(g=>`<div style="font-size:12px;font-weight:800;color:var(--ink-3);margin:12px 0 4px">${esc(g)}</div>`+
+      m.books.filter(b=>(b.grade||"고2")===g).map(b=>`<div style="border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:6px 0">
+        <div style="font-size:13px;font-weight:700">${esc(b.subject)} <span style="color:var(--ink-3);font-weight:600">${esc(b.publisher)}</span></div>
+        ${(b.units||[]).map(u=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 2px;font-size:13.5px;cursor:pointer">
+          <input type="checkbox" data-u="${esc(u.id)}"${on.has(u.id)?" checked":""} style="width:18px;height:18px;accent-color:var(--accent)">
+          <span><b>${esc(u.no)}</b> <span style="color:var(--ink-3)">${esc(u.title||"")}</span></span></label>`).join("")}
+      </div>`).join("")).join("")}
+    <div style="position:sticky;bottom:-14px;background:var(--surface);display:flex;gap:8px;padding:12px 0 4px;margin-top:8px;border-top:1px solid var(--line)">
+      <button class="btn" data-reset="1" style="flex:none">기본값으로</button>
+      <button class="btn" data-save="1" style="flex:1;background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:800">저장 <span data-n></span></button>
+    </div></div>`;
+  const cnt=()=>{ ov.querySelector("[data-n]").textContent=`(${ov.querySelectorAll("[data-u]:checked").length}개)`; };
+  ov.addEventListener("change",cnt); cnt();
+  ov.addEventListener("click",async e=>{ e.stopPropagation();
+    if(e.target===ov||e.target.closest("[data-x]")){ ov.remove(); return; }
+    if(e.target.closest("[data-reset]")){ if(!confirm("기본 시험범위로 되돌릴까요?")) return; ov.remove();
+      await act({action:"class.units",id:cl.id,reset:true},"기본 시험범위로 되돌렸어요"); return; }
+    if(e.target.closest("[data-save]")){ const ids=[...ov.querySelectorAll("[data-u]:checked")].map(x=>x.dataset.u); ov.remove();
+      await act({action:"class.units",id:cl.id,units:ids},`${cl.name} 시험범위 ${ids.length}개를 저장했어요 · 학생 앱에 바로 떠요`); }
+  });
+  document.body.appendChild(ov);
+}
 /* 링크 복사 — 카톡·문자에 바로 붙여넣기 */
 async function copyText(t){
   try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
@@ -955,6 +992,7 @@ document.addEventListener("click",async e=>{
   const vd=t.closest("[data-vday]"); if(vd){ VD=vd.dataset.vday; render(); return; }
   const tc=t.closest("[data-tcopy]"); if(tc){ try{ const tk=await tokensFor([tc.dataset.tcopy]); const d=tc.dataset.tday;
       const ok=await copyText(parentUrl(tk[tc.dataset.tcopy], d)); toast(ok?"학부모 링크를 복사했어요 · 카톡에 바로 붙여넣으세요":"복사가 안 돼요"); }catch(err){ alert(err.message); } return; }
+  if(t.closest("#cls-range")){ const cl=DB.classes.find(x=>+x.id===CUR); if(cl) openRange(cl); return; }
   if(t.closest("#cls-exam")){ const cl=DB.classes.find(x=>+x.id===CUR);
     const d=prompt("내신 시험 날짜 (예: 2026-11-20 · 지우려면 비워 두기)", cl.exam_date||""); if(d===null) return;
     if(d.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(d.trim())){ toast("날짜는 2026-11-20 처럼 넣어 주세요"); return; }
