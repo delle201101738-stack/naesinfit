@@ -419,6 +419,21 @@
      "labels": {}
     },
     {
+     "id": "e2cjk02h",
+     "no": "2과 올킬 심화",
+     "title": "The Power of Nudges · 올킬 심화 (영등포여고)",
+     "file": "content/e2cjk02h.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
+    },
+    {
      "id": "e2cjk04",
      "no": "4과",
      "title": "The Future Is Now",
@@ -616,13 +631,632 @@
       "tf": 50,
       "choice": 20,
       "order": 10,
-      "insert": 10
+      "insert": 10,
+      "word2": 47
      },
-     "total": 376,
+     "total": 423,
      "labels": {
       "word": "통변형 O·X 고치기",
-      "fix": "통변형 O·X 고치기 (재시험)"
+      "fix": "통변형 O·X 고치기 (재시험)",
+      "word2": "통변형 심화 O·X 고치기"
      }
+    },
+    {
+     "id": "gwybmk06h",
+     "no": "6과 올킬 심화",
+     "title": "관계가 만드는 행복 · 올킬 심화 (금옥여고)",
+     "file": "content/gwybmk06h.json",
+     "pts": {
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 105,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo2-2610",
+   "subject": "모의고사",
+   "publisher": "26년 10월 고2 학평",
+   "grade": "고2",
+   "units": [
+    {
+     "id": "m2610a1",
+     "no": "20–24번",
+     "title": "구일고판 · 올킬+통변형",
+     "file": "content/m2610a1.json",
+     "pts": {
+      "word": 70,
+      "word2": 70,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 8
+     },
+     "total": 243,
+     "labels": {}
+    },
+    {
+     "id": "m2610a2",
+     "no": "29–33번",
+     "title": "구일고판 · 올킬+통변형",
+     "file": "content/m2610a2.json",
+     "pts": {
+      "word": 74,
+      "word2": 74,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 253,
+     "labels": {}
+    },
+    {
+     "id": "m2610a3",
+     "no": "34–38번",
+     "title": "구일고판 · 올킬+통변형",
+     "file": "content/m2610a3.json",
+     "pts": {
+      "word": 67,
+      "word2": 67,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 239,
+     "labels": {}
+    },
+    {
+     "id": "m2610a4",
+     "no": "39–41번",
+     "title": "구일고판 · 올킬+통변형",
+     "file": "content/m2610a4.json",
+     "pts": {
+      "word": 45,
+      "word2": 45,
+      "cloze": 9,
+      "tf": 30,
+      "choice": 12,
+      "order": 6,
+      "insert": 6
+     },
+     "total": 153,
+     "labels": {}
+    },
+    {
+     "id": "m2610b1",
+     "no": "29–33번",
+     "title": "금옥여고·신도림고판 · 올킬+통변형",
+     "file": "content/m2610b1.json",
+     "pts": {
+      "word": 64,
+      "word2": 64,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 233,
+     "labels": {}
+    },
+    {
+     "id": "m2610b2",
+     "no": "34–38번",
+     "title": "금옥여고·신도림고판 · 올킬+통변형",
+     "file": "content/m2610b2.json",
+     "pts": {
+      "word": 70,
+      "word2": 70,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 245,
+     "labels": {}
+    },
+    {
+     "id": "m2610b3",
+     "no": "39–42번",
+     "title": "금옥여고·신도림고판 · 올킬+통변형",
+     "file": "content/m2610b3.json",
+     "pts": {
+      "word": 43,
+      "word2": 43,
+      "cloze": 9,
+      "tf": 30,
+      "choice": 12,
+      "order": 6,
+      "insert": 6
+     },
+     "total": 149,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo2-2609",
+   "subject": "모의고사",
+   "publisher": "26년 9월 고2 학평",
+   "grade": "고2",
+   "units": [
+    {
+     "id": "m2609c1",
+     "no": "20–24번",
+     "title": "올킬+통변형",
+     "file": "content/m2609c1.json",
+     "pts": {
+      "word": 59,
+      "word2": 59,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 223,
+     "labels": {}
+    },
+    {
+     "id": "m2609c2",
+     "no": "29–33번",
+     "title": "올킬+통변형",
+     "file": "content/m2609c2.json",
+     "pts": {
+      "word": 61,
+      "word2": 61,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 227,
+     "labels": {}
+    },
+    {
+     "id": "m2609c3",
+     "no": "34–38번",
+     "title": "올킬+통변형",
+     "file": "content/m2609c3.json",
+     "pts": {
+      "word": 63,
+      "word2": 63,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 231,
+     "labels": {}
+    },
+    {
+     "id": "m2609c4",
+     "no": "39–42번",
+     "title": "올킬+통변형",
+     "file": "content/m2609c4.json",
+     "pts": {
+      "word": 34,
+      "word2": 34,
+      "cloze": 9,
+      "tf": 30,
+      "choice": 12,
+      "order": 6,
+      "insert": 6
+     },
+     "total": 131,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo2-2510",
+   "subject": "모의고사",
+   "publisher": "25년 10월 고2 학평",
+   "grade": "고2",
+   "units": [
+    {
+     "id": "m2510g1",
+     "no": "20–24번",
+     "title": "올킬+통변형",
+     "file": "content/m2510g1.json",
+     "pts": {
+      "word": 65,
+      "word2": 65,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 235,
+     "labels": {}
+    },
+    {
+     "id": "m2510g2",
+     "no": "29–33번",
+     "title": "올킬+통변형",
+     "file": "content/m2510g2.json",
+     "pts": {
+      "word": 64,
+      "word2": 64,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 233,
+     "labels": {}
+    },
+    {
+     "id": "m2510g3",
+     "no": "34–38번",
+     "title": "올킬+통변형",
+     "file": "content/m2510g3.json",
+     "pts": {
+      "word": 56,
+      "word2": 56,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 217,
+     "labels": {}
+    },
+    {
+     "id": "m2510g4",
+     "no": "39–42번",
+     "title": "올킬+통변형",
+     "file": "content/m2510g4.json",
+     "pts": {
+      "word": 55,
+      "word2": 55,
+      "cloze": 9,
+      "tf": 30,
+      "choice": 12,
+      "order": 6,
+      "insert": 6
+     },
+     "total": 173,
+     "labels": {}
+    },
+    {
+     "id": "m2510y1",
+     "no": "21–24·29번",
+     "title": "영등포여고판 · 올킬+통변형",
+     "file": "content/m2510y1.json",
+     "pts": {
+      "word": 58,
+      "word2": 58,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 221,
+     "labels": {}
+    },
+    {
+     "id": "m2510y2",
+     "no": "30–34번",
+     "title": "영등포여고판 · 올킬+통변형",
+     "file": "content/m2510y2.json",
+     "pts": {
+      "word": 55,
+      "word2": 55,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 215,
+     "labels": {}
+    },
+    {
+     "id": "m2510y3",
+     "no": "36·39·40번",
+     "title": "영등포여고판 · 올킬+통변형",
+     "file": "content/m2510y3.json",
+     "pts": {
+      "word": 42,
+      "word2": 42,
+      "cloze": 9,
+      "tf": 30,
+      "choice": 12,
+      "order": 6,
+      "insert": 6
+     },
+     "total": 147,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo2-2211",
+   "subject": "모의고사",
+   "publisher": "22년 11월 고2 학평",
+   "grade": "고2",
+   "units": [
+    {
+     "id": "m2211y",
+     "no": "30–35번",
+     "title": "영등포여고 · 올킬+통변형",
+     "file": "content/m2211y.json",
+     "pts": {
+      "word": 90,
+      "word2": 90,
+      "cloze": 18,
+      "tf": 60,
+      "choice": 24,
+      "order": 12,
+      "insert": 12
+     },
+     "total": 306,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo2-ghtop",
+   "subject": "모의고사",
+   "publisher": "구현고 상위권 (고2 모고 22~25년)",
+   "grade": "고2",
+   "units": [
+    {
+     "id": "mgh22",
+     "no": "22년 지문 5개",
+     "title": "올킬+통변형",
+     "file": "content/mgh22.json",
+     "pts": {
+      "word": 66,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 171,
+     "labels": {}
+    },
+    {
+     "id": "mgh23",
+     "no": "23년 지문 5개",
+     "title": "올킬+통변형",
+     "file": "content/mgh23.json",
+     "pts": {
+      "word": 61,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 22,
+      "order": 10,
+      "insert": 8
+     },
+     "total": 166,
+     "labels": {}
+    },
+    {
+     "id": "mgh24",
+     "no": "24년 지문 5개",
+     "title": "올킬+통변형",
+     "file": "content/mgh24.json",
+     "pts": {
+      "word": 65,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 170,
+     "labels": {}
+    },
+    {
+     "id": "mgh25",
+     "no": "25년 지문 5개",
+     "title": "올킬+통변형",
+     "file": "content/mgh25.json",
+     "pts": {
+      "word": 62,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 167,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo2-dy",
+   "subject": "모의고사",
+   "publisher": "대영고 기말 대비",
+   "grade": "고2",
+   "units": [
+    {
+     "id": "mdy1",
+     "no": "1회 지문 1–5",
+     "title": "올킬+통변형",
+     "file": "content/mdy1.json",
+     "pts": {
+      "word": 50,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 155,
+     "labels": {}
+    },
+    {
+     "id": "mdy2",
+     "no": "2회 지문 6–9",
+     "title": "올킬+통변형",
+     "file": "content/mdy2.json",
+     "pts": {
+      "word": 48,
+      "cloze": 12,
+      "tf": 40,
+      "choice": 16,
+      "order": 8,
+      "insert": 8
+     },
+     "total": 132,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo1-2510",
+   "subject": "모의고사",
+   "publisher": "25년 10월 고1 학평",
+   "grade": "고1",
+   "units": [
+    {
+     "id": "m1510g1",
+     "no": "20–24번",
+     "title": "올킬+통변형",
+     "file": "content/m1510g1.json",
+     "pts": {
+      "word": 64,
+      "word2": 64,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 233,
+     "labels": {}
+    },
+    {
+     "id": "m1510g2",
+     "no": "29–33번",
+     "title": "올킬+통변형",
+     "file": "content/m1510g2.json",
+     "pts": {
+      "word": 68,
+      "word2": 68,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 241,
+     "labels": {}
+    },
+    {
+     "id": "m1510g3",
+     "no": "34–38번",
+     "title": "올킬+통변형",
+     "file": "content/m1510g3.json",
+     "pts": {
+      "word": 68,
+      "word2": 68,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
+     },
+     "total": 241,
+     "labels": {}
+    },
+    {
+     "id": "m1510g4",
+     "no": "39–42번",
+     "title": "올킬+통변형",
+     "file": "content/m1510g4.json",
+     "pts": {
+      "word": 47,
+      "word2": 47,
+      "cloze": 9,
+      "tf": 30,
+      "choice": 12,
+      "order": 6,
+      "insert": 6
+     },
+     "total": 157,
+     "labels": {}
+    }
+   ]
+  },
+  {
+   "id": "mo1-2610",
+   "subject": "모의고사",
+   "publisher": "26년 10월 고1 학평",
+   "grade": "고1",
+   "units": [
+    {
+     "id": "m1610g1",
+     "no": "20–24·29번",
+     "title": "올킬+통변형",
+     "file": "content/m1610g1.json",
+     "pts": {
+      "word": 61,
+      "word2": 61,
+      "cloze": 18,
+      "tf": 60,
+      "choice": 24,
+      "order": 12,
+      "insert": 12
+     },
+     "total": 248,
+     "labels": {}
+    },
+    {
+     "id": "m1610g2",
+     "no": "30–35번",
+     "title": "올킬+통변형",
+     "file": "content/m1610g2.json",
+     "pts": {
+      "word": 67,
+      "word2": 67,
+      "cloze": 18,
+      "tf": 60,
+      "choice": 24,
+      "order": 12,
+      "insert": 12
+     },
+     "total": 260,
+     "labels": {}
+    },
+    {
+     "id": "m1610g3",
+     "no": "36–41번",
+     "title": "올킬+통변형",
+     "file": "content/m1610g3.json",
+     "pts": {
+      "word": 72,
+      "word2": 72,
+      "cloze": 18,
+      "tf": 60,
+      "choice": 24,
+      "order": 12,
+      "insert": 12
+     },
+     "total": 270,
+     "labels": {}
     }
    ]
   }
@@ -630,36 +1264,76 @@
  "ranges": {
   "구현고2": [
    "e2cjk04",
-   "ghw1617"
+   "ghw1617",
+   "mgh22",
+   "mgh23",
+   "mgh24",
+   "mgh25"
   ],
   "구로고2": [
    "e2cjs05",
-   "e2cjs06"
+   "e2cjs06",
+   "m2609c1",
+   "m2609c2",
+   "m2609c3",
+   "m2609c4"
   ],
   "구일고2": [
-   "e2cjs06"
+   "e2cjs06",
+   "m2610a1",
+   "m2610a2",
+   "m2610a3",
+   "m2610a4"
   ],
   "대영고2": [
    "e2ne03",
-   "e2ne04"
+   "e2ne04",
+   "mdy1",
+   "mdy2"
   ],
   "신도림고2": [
    "e2ybm02",
-   "e2ybm05"
+   "e2ybm05",
+   "m2610b1",
+   "m2610b2",
+   "m2610b3"
   ],
   "영등포여고2": [
-   "e2cjk02"
+   "e2cjk02",
+   "e2cjk02h",
+   "m2510y1",
+   "m2510y2",
+   "m2510y3",
+   "m2211y"
   ],
   "금옥여고2": [
-   "gwybmk06"
+   "gwybmk06",
+   "gwybmk06h",
+   "m2610b1",
+   "m2610b2",
+   "m2610b3"
   ],
   "경인고1": [
    "ce2ne03",
-   "ce2ne04"
+   "ce2ne04",
+   "m1510g1",
+   "m1510g2",
+   "m1510g3",
+   "m1510g4",
+   "m1610g1",
+   "m1610g2",
+   "m1610g3"
   ],
   "신서고1": [
    "ce2ybm03",
-   "ce2ybm04"
+   "ce2ybm04",
+   "m1510g1",
+   "m1510g2",
+   "m1510g3",
+   "m1510g4",
+   "m1610g1",
+   "m1610g2",
+   "m1610g3"
   ]
  }
 }
