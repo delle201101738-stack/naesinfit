@@ -567,6 +567,10 @@
      "title": "See the Future in Movies",
      "file": "content/e2cjs06.json",
      "pts": {
+      "wmean": 119,
+      "wsyn": 20,
+      "wsynw": 20,
+      "wdef": 30,
       "word": 57,
       "word2": 64,
       "cloze": 15,
@@ -575,7 +579,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 226,
+     "total": 415,
      "labels": {}
     }
    ],
