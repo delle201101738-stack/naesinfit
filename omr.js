@@ -285,9 +285,11 @@
       else if (up.length > 1) {
         const s = [...v].sort((a, b) => b - a);
         if (s[1] < s[0] * 0.55 && s[1] < T + 0.08) { marks.push(String(mi + 1)); flags.push("check"); }   // 지운 자국 같음 → 진한 것, 확인 표시
+        else if (up.length === 2 && s[1] >= s[0] * 0.7 && s[1] >= T + 0.08 && s[2] < Tf) { marks.push(up.join(",")); flags.push(""); }   // 두 칸 다 또렷하게 칠함(정답 2개 문항 등) → 그대로, 확인 안 물음
         else { marks.push(up.join(",")); flags.push("multi"); }
       }
-      else if (mx >= Tf) { marks.push(String(mi + 1)); flags.push("faint"); }
+      else if (mx >= Tf) { const s2 = [...v].sort((a, b) => b - a)[1];
+        marks.push(String(mi + 1)); flags.push(mx >= T * 0.75 && s2 < blank + 0.12 ? "" : "faint"); }   // 연하지만 한 칸만 분명하면 그대로
       else { marks.push(""); flags.push("blank"); }
     });
     return { marks, flags, th: { blank: +blank.toFixed(3), fill: +fill.toFixed(3), T: +T.toFixed(3) } };
