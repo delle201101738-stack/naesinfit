@@ -40,6 +40,7 @@ ${TYPE_RULES}
 지문이나 선택지가 잘려 이 페이지들만으로 풀 수 없는 문항은 "full":false 로 표시하고 ai는 빈 문자열로 둔다. 정답지를 보지 말고 스스로 푼다.
 배점(p)이 가장 중요하다: 학교 시험지는 발문 끝이나 문항 번호 옆에 [3점], (2.5점), <4.2점>, '3.3점', [서술형 1] (5점) 처럼 문항마다 배점을 적는다. 보이는 숫자를 소수점까지 그대로 옮긴다. 정말 안 보이면 null(추측해서 2를 넣지 않는다).`;
 const SYS_SUB = `너는 영어 학원 선생님의 서술형 채점을 돕는다. 문항마다 학생 답안 손글씨 사진, 모범답안, 채점 기준, 배점이 주어진다.
+사진 대신 '학생 답(선생님·조교가 옮겨 적음)' 글이 오면 그 글이 학생 답이다. 그대로 채점하고 read에는 그 글을 그대로 넣는다.
 1) 손글씨를 보이는 그대로 옮겨 적는다(철자·문법 실수도 고치지 말고 그대로). 읽을 수 없는 글자는 [?].
 2) 모범답안·채점 기준에 맞춰 점수를 준다. 0.5점 단위, 0~배점. 채점 기준이 없으면: 핵심 내용·어법·철자를 보고 같은 뜻의 다른 표현은 인정, 어법 오류 1개당 배점의 20~30% 감점, 내용이 틀리면 0점.
 3) why: 감점 이유를 학부모가 읽어도 되는 존댓말 한 문장으로(만점이면 '모범답안과 같아요' 정도).
@@ -188,7 +189,9 @@ export default async function handler(req, res) {
         if (!id || !st) return res.status(400).json({ error: "시험·학생이 없어요" });
         await sql`insert into mock_sheets (exam_id, student) values (${id}, ${st}) on conflict do nothing`;
         if (b.kind === "sub") {
-          const subs = {}; for (const [k, v] of Object.entries(b.subs || {})) subs[normN(k)] = { img: String(v.img || "").slice(0, 600000), read: "", score: null, why: "", src: "" };
+          const [o] = await sql`select subs from mock_sheets where exam_id = ${id} and student = ${st}`; const old = (o && o.subs) || {};
+          const subs = {}; for (const [k, v] of Object.entries(b.subs || {})) { const n = normN(k), p = old[n] || {}, im = String(v.img || "").slice(0, 600000);
+            subs[n] = (p.src === "edit" || (!p.img && String(p.read || "").trim())) ? { ...p, img: im } : { img: im, read: "", score: null, why: "", src: "" }; }   // 직접 넣은 답·점수는 그대로 두고 사진만 바꿈
           await sql`update mock_sheets set subs = subs || ${JSON.stringify(subs)}::jsonb, confirmed = false, updated_at = now() where exam_id = ${id} and student = ${st}`;
         } else {
           await sql`update mock_sheets set marks = ${JSON.stringify(b.marks || {})}::jsonb, flags = ${JSON.stringify(b.flags || {})}::jsonb,
@@ -224,16 +227,26 @@ export default async function handler(req, res) {
         const id = Number(b.exam_id) || 0, st = T(b.student, 20), e = await loadExam(id);
         const [s] = await sql`select subs from mock_sheets where exam_id = ${id} and student = ${st}`;
         if (!e || !s) return res.status(404).json({ error: "OMR이 없어요" });
-        const its = ((e.cfg || {}).items || []).filter(it => it.t === "s" && (s.subs || {})[it.n] && s.subs[it.n].img && (b.force || s.subs[it.n].src !== "edit"));
-        if (!its.length) return res.status(200).json({ ok: true, n: 0 });
+        // 채점 대상: 사진이 있거나 직접 적은 학생 답이 있는 서술형. 직접 고친 칸은 점수가 비어 있을 때만(또는 force)
+        const SB = s.subs || {}, only = b.only != null ? normN(b.only) : null, has = v => v && (v.img || String(v.read || "").trim());
+        const subIt = ((e.cfg || {}).items || []).filter(it => it.t === "s" && (!only || it.n === only));
+        const its = subIt.filter(it => has(SB[it.n]) && (b.force || SB[it.n].src !== "edit" || SB[it.n].score == null || SB[it.n].score === ""));
+        if (!its.length) {
+          const why = !subIt.some(it => has(SB[it.n])) ? "답안 사진도, 직접 적은 학생 답도 없어요" : "이미 점수가 들어가 있어요(직접 넣은 점수는 다시 채점하지 않아요)";
+          return res.status(200).json({ ok: true, n: 0, why });
+        }
         const content = [];
-        its.forEach(it => { content.push({ type: "text", text: `[문항 ${it.n}] 배점 ${it.p}점\n모범답안: ${it.m || "(없음)"}\n채점 기준: ${it.r || "(없음 — 기본 규칙)"}\n${it.q ? "발문: " + it.q + "\n" : ""}학생 답안 사진:` }); content.push(img(s.subs[it.n].img)); });
+        its.forEach(it => { const v = SB[it.n], typed = String(v.read || "").trim() && (v.src === "edit" || !v.img);
+          content.push({ type: "text", text: `[문항 ${it.n}] 배점 ${it.p}점\n모범답안: ${it.m || "(없음)"}\n채점 기준: ${it.r || "(없음 — 기본 규칙)"}\n${it.q ? "발문: " + it.q + "\n" : ""}` +
+            (typed ? `학생 답(선생님·조교가 옮겨 적음): ${String(v.read).trim()}${v.img ? "\n(참고용 답안 사진:)" : ""}` : "학생 답안 사진:") });
+          if (v.img) { try { content.push(img(v.img)); } catch (e3) {} } });
         content.push({ type: "text", text: "JSON 배열만 출력." });
         try {
           const arr = jsonOf(await claude(SYS_SUB, content, 3000), true);
           for (const x of arr) { const it = its.find(i => i.n === normN(x.n)); if (!it) continue;
             const sc = Math.max(0, Math.min(Number(it.p) || 0, Math.round((Number(x.score) || 0) * 2) / 2));
-            const v = { read: T(x.read, 600), score: sc, why: T(x.why, 300), src: "ai" };
+            const pv = SB[it.n] || {}, typed = String(pv.read || "").trim() && (pv.src === "edit" || !pv.img);
+            const v = { read: typed ? T(pv.read, 600) : T(x.read, 600), score: sc, why: T(x.why, 300), src: "ai" };   // 직접 적은 답은 AI가 바꾸지 않음
             await sql`update mock_sheets set subs = jsonb_set(subs, ${[it.n]}, subs->${it.n} || ${JSON.stringify(v)}::jsonb), updated_at = now() where exam_id = ${id} and student = ${st}`; }
           await syncMock(id);
           return res.status(200).json({ ok: true, n: arr.length });
