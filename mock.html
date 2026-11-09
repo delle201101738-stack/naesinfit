@@ -202,7 +202,7 @@ function keyHTML(){
     </div>
     <input type="file" id="f-key" accept="application/pdf,image/*" multiple hidden><input type="file" id="f-paper" accept="application/pdf,image/*" multiple hidden>
     ${EX.cfg.ailog&&!AILOG?`<div class="note" style="margin-top:10px">마지막 AI 실행 (${esc(String(EX.cfg.ailog.at||"").slice(5,16).replace("T"," "))}): 해설지 ${EX.cfg.ailog.key}쪽 · 시험지 ${EX.cfg.ailog.paper}쪽 → 정답 ${EX.cfg.ailog.nk}문항 · 유형 ${EX.cfg.ailog.np}문항${EX.cfg.ailog.err?` · <b style="color:var(--no,#dc2626)">${esc(EX.cfg.ailog.err)}</b>`:""}</div>`:""}
-    <div class="row" style="margin-top:12px"><button class="btn pri" id="ai-run"${BUSY||!AI?" disabled":""}>🤖 AI로 채우기</button>
+    <div class="row" style="margin-top:12px"><button class="btn pri" id="ai-run"${BUSY||!AI?" disabled":""}>🤖 AI로 채우기</button>${items().some(x=>x.q&&x.t!=="s")?`<button class="btn" id="k-stem" title="AI를 다시 돌리지 않고, 저장된 발문 글자로 세부유형·영역을 다시 정해요">🔁 발문으로 유형 다시 정하기</button>`:""}
       ${AI?`<span class="note">해설지만 올려도 돼요(검수는 시험지가 있어야 해요). 페이지가 많으면 몇 분 걸려요.</span>`:`<span class="note">AI 키가 없어 꺼져 있어요 — 아래 '정답 한 번에 붙여넣기'로 넣어 주세요.</span>`}</div>
     ${BUSY==="ai"||AILOG?`<div class="prog"><i style="width:${AIP}%"></i></div><div class="log" id="ai-log">${esc(AILOG)}</div>`:""}
   </div>
@@ -255,6 +255,24 @@ function frameItems(no,po,ns,ps){
   EX.cfg.items=out;
 }
 /* AI: 해설지 → 정답, 시험지 → 직접 풀기 · 유형 */
+/* ── 발문(q) 글자로 세부유형 정하기: AI 분류가 흔들려도 발문에 '영영풀이'·'어법'·'순서'처럼 적혀 있으면 그대로 따름 ──
+   빈칸·배열처럼 발문만으로 정할 수 없는 건 null(AI 분류 유지). 선생님이 직접 고친 유형(dk=me)과 서술형은 건드리지 않음 */
+const KAREA={"목적":"대의파악","심경·분위기":"대의파악","주장":"대의파악","함축의미":"대의파악","요지":"대의파악","주제":"대의파악","제목":"대의파악",
+  "도표":"세부정보","내용일치":"세부정보","실용문":"세부정보","어법":"어법·어휘","어휘":"어법·어휘","영영풀이":"어법·어휘",
+  "연결어":"빈칸추론","무관한 문장":"간접쓰기","순서":"간접쓰기","삽입":"간접쓰기","요약문":"간접쓰기","지칭":"장문독해"};
+function stemKind(q){ const s=String(q||"").replace(/\s+/g," "); if(!s.trim()) return null;
+  if(/우리말과 (일치|같)|번째|배열/.test(s)) return null;   // 우리말 짝 고르기·배열형은 발문만으로 못 정함
+  const R=[[/가리키는 대상|가리키는 것이 나머지|지칭/,"지칭"],[/영영\s*풀이|뜻풀이|단어(의)? ?설명/,"영영풀이"],[/어법/,"어법"],[/연결어|연결사|접속(어|사)/,"연결어"],[/요약/,"요약문"],
+    [/순서/,"순서"],[/주어진 문장.*(들어|위치)|들어갈 곳|들어가기에|들어갈 위치/,"삽입"],[/흐름.*(관계|무관|맞지|어색)|관계\s*없는|무관한/,"무관한 문장"],
+    [/낱말|어휘|쓰임|의 뜻(으로|은|이)?(\s|$|\?)/,"어휘"],[/제목/,"제목"],[/주제/,"주제"],[/요지/,"요지"],[/주장/,"주장"],[/목적/,"목적"],[/심경|분위기|태도/,"심경·분위기"],
+    [/의미|뜻하는|함축|가리키는 바/,"함축의미"],[/도표|그래프/,"도표"],[/안내문|광고|공지|포스터/,"실용문"],
+    [/일치|언급되지|언급된|부합|바르게 이해|답할 수 없는|알 수 없는/,"내용일치"]];
+  for(const [re,k] of R) if(re.test(s)) return k; return null; }
+function applyStem(list){ let n=0;
+  (list||items()).forEach(x=>{ if(x.t==="s"||x.dk==="me") return; const k=stemKind(x.q); if(!k) return;
+    const d=(x.d==="장문독해"&&k!=="지칭"&&!["어법","어휘","영영풀이"].includes(k))?"장문독해":KAREA[k];
+    if(x.k!==k||x.d!==d){ x.k=k; x.d=d; n++; } x.kchk="ok"; delete x.kalt; x.kwhy=`발문 '${String(x.q).slice(0,24)}' 기준`; x.bp=0; });
+  return n; }
 async function runAI(){
   if(!KEYF.key&&!KEYF.paper) return toast("정답·해설지나 시험지 파일을 골라 주세요");
   readKeyForm(); BUSY="ai"; AILOG=""; AIP=2; render();
@@ -296,7 +314,7 @@ function mergeAI(K,P){
   const it=items(), by=n=>it.find(x=>x.n===n);
   const add=(n,t)=>{ let x=by(n); if(!x){ x={n,t:t==="s"?"s":"o",a:"",p:t==="s"?5:2,k:"",e:"",m:"",r:""}; it.push(x); } return x; };
   K.forEach(k=>{ const x=add(k.n,k.t); if(k.t) x.t=k.t==="s"?"s":"o"; if(x.t!=="s"&&k.a) x.a=String(k.a).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,"");
-    if(k.e) x.e=k.e; if(k.m) x.m=k.m; if(k.r) x.r=k.r; if(k.k||k.d) x._kt={k:k.k||"",d:k.d||"",w:String(k.kw||"").trim()}; if(k.p!=null&&+k.p>0&&x.ps!=="me"){ x.p=+k.p; x.ps="ai"; } });
+    if(k.e) x.e=k.e; if(k.m) x.m=k.m; if(k.r) x.r=k.r; if(k.k||k.d) x._kt={k:k.k||"",d:k.d||"",w:String(k.kw||"").trim()}; if(k.q&&!x.q) x.q=k.q; if(k.p!=null&&+k.p>0&&x.ps!=="me"){ x.p=+k.p; x.ps="ai"; } });
   const best={}; P.forEach(p=>{ if(!best[p.n]||(p.full&&!best[p.n].full)) best[p.n]=p; else if(p.full&&best[p.n].full&&String(p.ai)!==String(best[p.n].ai)) best[p.n].dis=String(p.ai); });
   Object.values(best).forEach(p=>{ const x=add(p.n,p.t); if(p.k||p.d) x._pt={k:p.k||"",d:p.d||""}; if(p.q) x.q=p.q; if(!(x.ps==="me"||(x.ps==="ai"&&!K.length))&&p.p!=null&&+p.p>0&&!K.find(k=>k.n===p.n&&k.p)){ x.p=+p.p; x.ps="ai"; }
     if(p.full!==false&&p.ai!==""&&p.ai!=null){ x.ai=String(p.ai).replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).trim(); x.why=(p.why||"")+(p.dis?` (다른 풀이에선 ${p.dis}번)`:""); } });
@@ -311,6 +329,7 @@ function mergeAI(K,P){
     if(K1&&P1){ if(K1.k===P1.k){ pick=P1; x.kchk="ok"; } else if(K1.w){ pick=K1; x.kchk="ok"; why=`해설지 표기 '${K1.w}'`; } else { pick=P1; x.kchk="diff"; x.kalt=K1.k; } }
     else { pick=K1||P1; x.kchk="one"; }
     if(pick.k) x.k=pick.k; if(okD(pick.d)) x.d=pick.d; x.bp=0; if(x.kchk!=="diff") delete x.kalt; x.kwhy=why; });
+  applyStem(it);   // 발문 글자로 한 번 더 확정
   // 시험지를 읽었는데 AI가 듣기 문항을 하나도 못 찾았으면, 예전 수능 청사진에서 남은 '듣기' 유형은 비움
   if((P.length||K.length)&&!P.concat(K).some(p=>p.d==="듣기"||p.k==="듣기")) it.forEach(x=>{ if(x.dk!=="me"&&x.d==="듣기"){ x.d=""; x.k=""; x.bp=0; } });
   it.sort(sortN); EX.cfg.items=it;
@@ -507,6 +526,7 @@ function auditExam(){
   if(badS.length) add("bad",`서술형 점수가 배점을 넘거나 0.5점 단위가 아니에요: ${badS.join(", ")}`);
   if(aiS.length) add("info",`AI가 매긴 서술형 점수를 선생님이 아직 안 본 칸 ${aiS.length}개: ${aiS.slice(0,10).join(", ")}${aiS.length>10?" …":""} (저장을 누르면 '선생님 수정'으로 바뀌어요)`);
   const lis=obj.filter(x=>x.d==="듣기"||x.k==="듣기"); if(lis.length) add("bad",`듣기 유형으로 된 문항 ${lis.length}개 (${lis.length>6?lis[0].n+"~"+lis[lis.length-1].n:lis.map(x=>x.n).join(", ")}번). 이 시험에 듣기가 없으면 ① 시험 · 정답에서 시험지를 다시 넣고 AI를 돌리거나 영역·유형을 고치세요. 리포트 영역 분석·학습 처방이 틀려져요.`);
+  const sm=it.filter(x=>x.t!=="s"&&x.dk!=="me"&&stemKind(x.q)&&stemKind(x.q)!==x.k); if(sm.length) add("warn",`발문과 세부유형이 안 맞는 문항 ${sm.length}개: ${sm.slice(0,8).map(x=>`${x.n}번(발문 '${String(x.q).slice(0,14)}' → ${stemKind(x.q)}, 지금 ${x.k||"없음"})`).join(", ")} — ① 시험 · 정답의 '🔁 발문으로 유형 다시 정하기'`);
   const kd=it.filter(x=>x.kchk==="diff"); if(kd.length) add("warn",`시험지·해설지 유형 분류가 다른 문항 ${kd.length}개: ${kd.map(x=>`${x.n}번(${x.k}/${x.kalt})`).join(", ")} — ① 시험 · 정답에서 골라 주세요`);
   const noK=obj.filter(x=>!x.d&&!x.k); if(noK.length) add("warn",`영역·유형이 빈 문항 ${noK.length}개: ${noK.map(x=>x.n+"번").join(", ")} (리포트에선 '대의파악'으로 묶여요)`);
   const norm=v=>[...new Set(String(v||"").split(/[,\s/]+/).filter(Boolean))].sort().join(",");
@@ -577,6 +597,7 @@ document.addEventListener("click",async e=>{
   const kp=t.closest("[data-keep]"); if(kp){ readKeyForm(); items()[+kp.dataset.keep].chk="ok"; render(); return; }
   const ua=t.closest("[data-useai]"); if(ua){ readKeyForm(); const x=items()[+ua.dataset.useai]; x.a=x.ai; x.chk="ok"; render(); return; }
   if(t.closest("#ai-run")){ runAI(); return; }
+  if(t.closest("#k-stem")){ readKeyForm(); const n=applyStem(); render(); toast(n?`발문 기준으로 ${n}문항 유형을 고쳤어요 · '저장'을 눌러야 반영돼요`:"발문과 유형이 이미 맞아요",4000); return; }
   if(t.closest("[data-kalt]")){ readKeyForm(); const x=items()[+t.closest("[data-kalt]").dataset.kalt]; x.k=x.kalt; x.dk="me"; x.kchk=""; delete x.kalt; render(); toast("유형을 바꿨어요 · 저장을 눌러야 반영돼요"); return; }
   if(t.closest("#k-fit")){ readKeyForm(); const it=items(), tot=r10(it.filter(x=>x.fx!=="out").reduce((a,x)=>a+(+x.p||0),0));
     const nF=it.filter(x=>x.fx!=="out"&&!(x.ps==="ai"||x.ps==="me")).length;
