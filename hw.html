@@ -286,6 +286,47 @@ document.addEventListener("visibilitychange",()=>{ if(!document.hidden) livePoll
 async function act(body,msg){ try{ const j=await api(body); await load(); render(); if(msg) toast(msg); return j; }catch(e){ alert(e.message); } }
 
 function render(){ render0(); gridStats(); paintAlerts(); }
+/* ── 🔗 앱 테스트 연결 숙제: 학생이 앱에서 본 점수로 서버가 자동 검사 (직접 고친 칸은 그대로) ── */
+const PN={vmc:"뜻 고르기",vmcr:"단어 고르기",wmean:"단어 뜻 쓰기",wsyn:"유의어 고르기",wsynw:"유의어 쓰기",wdef:"영영풀이",dfa:"영영풀이 매칭",dfb:"영영풀이 정오",
+  vocab:"어휘 선택",gram:"어법 선택",word:"통변형 기본",word2:"통변형 심화",fix:"어법 고치기",fixg:"통변형 어법",fixv:"통변형 어휘",tf:"내용일치 TF",choice:"독해",sjt:"영문선지",
+  gbbw:"어법 비법 ①",gbb:"어법 비법 ②",vbbw:"어휘 비법 ①",vbb:"어휘 비법 ②",order:"순서",insert:"삽입",arrange:"단어배열",mwrite:"중요 문장 영작",write:"영작",twrite:"주제문 영작",cloze:"빈칸",
+  vdc1:"단어 동형 객관식 1",vdc2:"단어 동형 객관식 2",vdm1:"단어 동형 모고 1",vdm2:"단어 동형 모고 2",vdm3:"단어 동형 모고 3",vdt1:"동형모고 30",vdt2:"예문변형 동형모고 30",vds:"스페셜 변형"};
+let LK={book:"",units:[],parts:[],min:80,each:false};
+function linkHTML(){
+  if(!MANI){ manifest().then(()=>render()).catch(()=>{}); return `<div class="card" style="padding:14px 18px;margin-top:10px;color:var(--ink-3)">🔗 앱 테스트 연결 숙제 불러오는 중…</div>`; }
+  const books=MANI.books||[], cl=DB.classes.find(x=>+x.id===CUR), rg=cl?rangeIds(cl):[];
+  if(!LK.book){ const b=books.find(b=>(b.units||[]).some(u=>rg.includes(u.id))); LK.book=b?b.id:(books[0]||{}).id||""; }
+  const bk=books.find(b=>b.id===LK.book)||{units:[]}, us=bk.units||[];
+  const sel=us.filter(u=>LK.units.includes(u.id)), pk=[...new Set((sel.length?sel:us).flatMap(u=>Object.keys(u.pts||{})))];
+  LK.parts=LK.parts.filter(p=>pk.includes(p)); if(!LK.parts.length&&pk.length&&pk.length<=3) LK.parts=pk.slice();
+  const pl=p=>((sel[0]||us[0]||{}).labels||{})[p]||PN[p]||p;
+  return `<div class="card" style="padding:14px 18px;margin-top:10px">
+    <div class="row" style="justify-content:space-between"><b style="font-size:14.5px">🔗 앱 테스트 연결 숙제 <span style="font-weight:600;color:var(--ink-3);font-size:12.5px">— 학생이 앱에서 본 점수로 자동 검사</span></b></div>
+    <div class="row" style="margin-top:10px;gap:8px"><select class="fld" id="lk-book" style="flex:1;min-width:200px">${books.map(b=>`<option value="${esc(b.id)}"${b.id===LK.book?" selected":""}>${esc([b.grade,b.subject,b.publisher].filter(Boolean).join(" · "))}${(b.units||[]).some(u=>rg.includes(u.id))?" ★":""}</option>`).join("")}</select>
+      <label style="font-size:13px;font-weight:700;color:var(--ink-2)">기준 <input class="fld" id="lk-min" value="${LK.min}" inputmode="numeric" style="width:60px;text-align:center">점 이상 = 완료</label></div>
+    <div style="font-size:12px;color:var(--ink-3);margin:10px 0 4px">단원 (여러 개 가능)</div>
+    <div class="row" style="gap:6px">${us.map(u=>`<button class="chip${LK.units.includes(u.id)?" on":""}" data-lku="${esc(u.id)}" style="padding:7px 11px;font-size:12.5px">${esc(u.no||u.id)}</button>`).join("")||`<span class="note">단원이 없어요</span>`}</div>
+    <div style="font-size:12px;color:var(--ink-3);margin:10px 0 4px">테스트 (모두 기준을 넘어야 완료)</div>
+    <div class="row" style="gap:6px">${pk.map(p=>`<button class="chip${LK.parts.includes(p)?" on":""}" data-lkp="${esc(p)}" style="padding:7px 11px;font-size:12.5px">${esc(pl(p))}</button>`).join("")}</div>
+    <div class="row" style="margin-top:10px;justify-content:space-between;gap:8px">
+      <label style="font-size:13px;color:var(--ink-2)"><input type="checkbox" id="lk-each"${LK.each?" checked":""}> 단원마다 숙제 따로 내기</label>
+      <span style="flex:1;min-width:160px;font-size:12px;color:var(--ink-3);text-align:right">검사 날짜 = 맨 위 날짜 · 오늘부터 그날 밤까지 본 기록 중 최고점 · ✅ 기준 이상 / 🟡 응시·공부만 / ❌ 검사일까지 안 함</span>
+      <button class="btn pri" id="lk-add">🔗 연결 숙제 추가</button></div>
+  </div>`;
+}
+async function addLinked(){
+  const day=$("#hw-day").value; if(!day){ toast("검사 날짜를 넣어 주세요"); return; }
+  const books=MANI.books||[], bk=books.find(b=>b.id===LK.book)||{units:[]}, us=(bk.units||[]).filter(u=>LK.units.includes(u.id));
+  if(!us.length||!LK.parts.length){ toast("단원과 테스트를 골라 주세요"); return; }
+  const min=Math.max(1,Math.min(100,parseInt($("#lk-min").value)||80)); LK.min=min;
+  const pl=p=>(us[0].labels||{})[p]||PN[p]||p, lab=Object.fromEntries(us.map(u=>[u.id,u.no||u.id])), pls=Object.fromEntries(LK.parts.map(p=>[p,pl(p)]));
+  const name=list=>`${bk.publisher||bk.subject||""} ${list.length>2?list[0].no+"~"+list[list.length-1].no:list.map(u=>u.no).join("·")} 앱 테스트 (${LK.parts.map(pl).join("·")} ${min}점↑)`;
+  const groups=LK.each?us.map(u=>[u]):[us];
+  try{ for(const g of groups) await api({action:"item.create",class_id:CUR,day,title:name(g).trim(),memo:$("#hw-memo").value||"",
+      link:{units:g.map(u=>u.id),parts:LK.parts,min,from:today(),lab,pl:pls}}); }catch(err){ alert(err.message); return; }
+  GR.mode="day"; GR.day=day; localStorage.setItem("hw.gmode","day"); LK.units=[];
+  await load(); render(); toast(`연결 숙제 ${groups.length}개를 냈어요 · 학생이 앱에서 풀면 표가 저절로 채워져요`,4000);
+}
 function render0(){
   const C=DB.classes;
   if(!C.find(c=>+c.id===CUR)) CUR=C[0]?+C[0].id:0;
@@ -323,6 +364,7 @@ function render0(){
     <textarea class="fld" id="hw-memo" placeholder="(선택) 공통 메모 · 자세한 범위 (예: 다음 수업 시작 전 검사)" style="margin-top:8px">${EDIT?esc(EDIT.memo):""}</textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end">${EDIT?`<button class="btn" id="hw-cancel">취소</button><button class="btn pri" id="hw-save">수정 저장</button>`:`<button class="btn pri" id="hw-add">숙제 추가</button>`}</div>
   </div>
+  ${EDIT?"":linkHTML()}
 
   ${gridHTML(mem, items, chk)}
 
@@ -367,17 +409,17 @@ function gridHTML(mem, items, chk){
   if(!mem.length) return head+`<div class="card empty" style="padding:24px">반에 학생이 없어요</div>`;
   if(!cols.length) return head+`<div class="card empty" style="padding:24px">이 기간에 낸 숙제가 없어요 · 위 '숙제 내기'에서 여러 개를 한 번에 낼 수 있어요</div>`;
   const cell=(it,s)=>{ const k=chk[it.id+"|"+s]||{}, st=k.status||"";
-    return `<td class="gcell"><button class="gc ${st}" data-gc="${it.id}" data-gs="${esc(s)}" title="${ST[st]||"미검사"}">${ICON[st]}<span>${ST[st]||""}</span></button>
+    return `<td class="gcell"><button class="gc ${st}" data-gc="${it.id}" data-gs="${esc(s)}" title="${k.auto?"🔗 앱 기록으로 자동 검사 · 누르면 직접 검사로 바뀌어요":ST[st]||"미검사"}">${ICON[st]}<span>${ST[st]||""}${k.auto?" 🔗":""}</span></button>
       <input class="gm" data-gm="${it.id}" data-gs="${esc(s)}" placeholder="메모" value="${esc(k.memo||"")}"></td>`; };
   if(NARROW()) return head+`<div class="mcards">${mem.map(s=>`<div class="mcard"><div class="mh"><b>${esc(s)}</b><span data-bell="${esc(s)}"></span><span class="rr" data-rr="${esc(s)}"></span></div>
       ${cols.map(it=>{ const k=chk[it.id+"|"+s]||{}, st=k.status||"";
         return `<div class="mi"><span>${fmtD(it.day).replace(/ \(.\)/,"")} · ${esc(it.title)}</span><button class="gc ${st}" data-gc="${it.id}" data-gs="${esc(s)}">${ICON[st]}<span>${ST[st]||"미검사"}</span></button></div>`; }).join("")}
       <div class="row" style="margin-top:8px;gap:6px"><a class="btn sm" href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="btn sm" data-tcopy="${esc(s)}" data-tday="${GR.mode==="day"?GR.day:""}">학부모 링크 복사</button></div></div>`).join("")}
     </div><div hidden>${cols.map(it=>`<span data-cc="${it.id}"></span>`).join("")}</div>
-    <div class="row" style="margin-top:10px">${cols.map(it=>`<button class="btn sm" data-gall="${it.id}">${esc(it.title.slice(0,12))} · 미검사 → 완료</button>`).join("")}</div>`;
+    <div class="row" style="margin-top:10px">${cols.filter(it=>!it.link).map(it=>`<button class="btn sm" data-gall="${it.id}">${esc(it.title.slice(0,12))} · 미검사 → 완료</button>`).join("")}</div>`;
   return head+`<div class="card scroll"><table class="grid">
-    <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b title="${esc(it.memo||"")}">${esc(it.title)}</b>
-      <button class="gall" data-gall="${it.id}">미검사 → 완료</button><button class="gall" data-del="${it.id}" style="color:var(--no)">🗑 삭제</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
+    <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b title="${esc(it.memo||"")}">${esc(it.title)}</b>${it.link?`<span style="display:block;font-size:11px;color:var(--accent);font-weight:700">🔗 자동 검사 · ${(typeof it.link==="string"?JSON.parse(it.link):it.link).min||80}점↑</span>`:""}
+      ${it.link?"":`<button class="gall" data-gall="${it.id}">미검사 → 완료</button>`}<button class="gall" data-del="${it.id}" style="color:var(--no)">🗑 삭제</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
     <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><span data-bell="${esc(s)}"></span><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="cpy" data-tcopy="${esc(s)}" data-tday="${GR.mode==="day"?GR.day:""}">학부모 링크 복사</button></td>
       ${cols.map(it=>cell(it,s)).join("")}<td class="rr" data-rr="${esc(s)}"></td></tr>`).join("")}</tbody>
     <tfoot><tr><td class="stk">완료</td>${cols.map(it=>`<td class="cc" data-cc="${it.id}"></td>`).join("")}<td></td></tr></tfoot>
@@ -985,6 +1027,10 @@ function flash(msg){ const e=document.createElement("div"); e.textContent=msg;
   e.style.cssText="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#16151F;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:99";
   document.body.appendChild(e); setTimeout(()=>e.remove(),1800); }
 document.addEventListener("click",async e=>{
+  { const t0=e.target, u=t0.closest("[data-lku]"), p=t0.closest("[data-lkp]");
+    if(u){ const v=u.dataset.lku; LK.units=LK.units.includes(v)?LK.units.filter(x=>x!==v):[...LK.units,v]; const m=$("#lk-min"); if(m) LK.min=parseInt(m.value)||80; render(); return; }
+    if(p){ const v=p.dataset.lkp; LK.parts=LK.parts.includes(v)?LK.parts.filter(x=>x!==v):[...LK.parts,v]; const m=$("#lk-min"); if(m) LK.min=parseInt(m.value)||80; render(); return; }
+    if(t0.closest("#lk-add")){ addLinked(); return; } }
   const t=e.target;
   if(await namesClick(t)) return;
   const cp=t.closest("[data-copy]"); if(cp){ const ok=await copyText(location.origin+"/"+cp.dataset.copy.replace(/^report\?/,"r?")); toast(ok?"리포트 링크를 복사했어요":"복사가 안 돼요"); return; }
@@ -1055,6 +1101,8 @@ document.addEventListener("click",async e=>{
   const op=t.closest("[data-open]"); if(op){ OPEN[op.dataset.open]=!OPEN[op.dataset.open]; render(); return; }
 });
 document.addEventListener("change",async e=>{
+  if(e.target.id==="lk-book"){ LK.book=e.target.value; LK.units=[]; LK.parts=[]; render(); return; }
+  if(e.target.id==="lk-each"){ LK.each=e.target.checked; return; }
   if(e.target.id==="iv-day"){ IV.day=e.target.value||today(); IV.list=null; IV.last=null; render(); return; }
   const ge=e.target.closest&&e.target.closest(".ivg select[data-f]"); if(ge){ if(ge.classList.contains("gsel")) ge.className=`gsel g${GR_G.indexOf(ge.value)}`; if(ge.dataset.f==="mr") ge.className=`mrs ${ge.value==="O"?"ok":ge.value==="X"?"no":""}`; ivMark(ge); ivQueue(ge.closest("tr")); return; }
   if(e.target.id==="att-day"){ AD=e.target.value||today(); render(); return; }
