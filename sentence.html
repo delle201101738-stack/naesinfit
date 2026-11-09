@@ -85,6 +85,33 @@ textarea.ty:focus{outline:none;border-color:var(--accent)}
 .li .n{font-family:'Archivo';font-weight:700;color:var(--ink-3);min-width:24px}
 .li .t{flex:1} .li .t small{display:block;color:var(--ink-3)}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;z-index:60}
+/* ★ 시험 예상 문장 */
+.xtop{margin-top:16px;padding:16px;border-radius:20px;background:linear-gradient(135deg,var(--accent),#9C7BFF);color:#fff;box-shadow:var(--shadow)}
+.xtop h3{margin:0;font-size:17px} .xtop p{margin:4px 0 12px;font-size:12.5px;opacity:.9}
+.xtop .tb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.xtop .tb button{padding:12px 6px;border-radius:13px;background:rgba(255,255,255,.18);color:#fff;font-size:13.5px;font-weight:800;line-height:1.3}
+.xtop .tb button small{display:block;font-size:11px;font-weight:600;opacity:.85;margin-top:2px}
+.mc{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:14px 15px;margin-top:10px}
+.mc .h{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink-3);font-weight:700}
+.mc .h .tg{padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.mc .ko{margin-top:8px;font-size:14px;line-height:1.6;color:var(--ink-2)}
+.mc .en{margin-top:8px;font-size:15.5px;line-height:1.65;font-weight:600;cursor:pointer}
+.mc .en mark{background:#FFE58A;color:#16151F;border-radius:4px;padding:0 2px}
+.mc .en .cv{display:inline-block;min-width:60px;background:var(--surface-2);border-radius:6px;color:transparent;user-select:none}
+.mc .en.cvall{color:transparent;background:var(--surface-2);border-radius:10px;padding:6px 8px;user-select:none}
+.mc .en.cvall::after{content:"눌러서 영어 보기";color:var(--ink-3);font-size:13px}
+.mc .pt{margin-top:8px;font-size:12.5px;line-height:1.55;color:var(--accent);font-weight:700}
+.mc .ck{margin-left:auto;padding:6px 10px;border-radius:10px;background:var(--surface-2);font-size:12px;font-weight:800;color:var(--ink-3)}
+.mc .ck.on{background:#12A150;color:#fff}
+.xq{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:15px;margin-top:12px}
+.xq .qn{font-size:13.5px;font-weight:800} .xq .qs{font-size:13px;color:var(--ink-2);margin-top:4px;line-height:1.55}
+.xq .bx{margin-top:10px;padding:10px 12px;border:1.5px solid var(--line,#E4E4EF);border-radius:12px;font-size:14.5px;line-height:1.7}
+.xq .bk{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px} .xq .bk span{padding:4px 9px;border-radius:8px;background:var(--surface-2);font-size:13px;font-weight:600}
+.xq input,.xq textarea{width:100%;margin-top:8px;padding:11px 12px;border-radius:12px;border:1.5px solid var(--line,#E4E4EF);background:var(--surface-2);color:var(--ink);font:inherit;font-size:14.5px}
+.xq .two{display:flex;gap:8px;align-items:center} .xq .two input{flex:1}
+.xq.ok{outline:2px solid #12A150} .xq.no{outline:2px solid #E5484D}
+.xq .rs{margin-top:10px;font-size:13px;line-height:1.6;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.xq .rs b.o{color:#12A150} .xq .rs b.x{color:#E5484D}
 </style>
 </head>
 <body>
@@ -134,7 +161,7 @@ function pool(){
   return L;
 }
 function home(){
-  RUN=null; $("#b-home").hidden=true;
+  RUN=null; TM=null; $("#b-home").hidden=true;
   if(!SCH){ $("#app").innerHTML=`<div class="sec"><h2>학교 고르기</h2></div><div class="chips">${DATA.schools.map(s=>`<button class="chip" data-sch="${esc(s.name)}">${esc(s.name)}<small>${esc(s.book)}</small></button>`).join("")}</div>`; return; }
   const c=CFG(); c.sets=c.sets&&c.sets.length?c.sets.filter(id=>setsOf().some(s=>s.id===id)):setsOf().filter(s=>!/rf$/.test(s.id)).map(s=>s.id);
   if(!c.sets.length) c.sets=[setsOf()[0].id];
@@ -142,7 +169,7 @@ function home(){
   const P=pool();
   $("#sub").textContent=`${SCH.name} · ${SCH.book}`;
   const RS=runGet(), rsOn=RS&&RS.sch===SCH.name;
-  $("#app").innerHTML=`${rsOn?`<div class="card" style="margin-top:16px;display:flex;align-items:center;gap:10px">
+  $("#app").innerHTML=`${topCard()}${rsOn?`<div class="card" style="margin-top:16px;display:flex;align-items:center;gap:10px">
     <div style="flex:1;min-width:0"><b>⏸ 하던 문장암기가 있어요</b><div class="hint" style="margin-top:2px">${RS.ids.length}문장 중 ${RS.i+1}번째에서 멈췄어요</div></div>
     <button class="big" data-rsm style="flex:none;width:auto;padding:10px 16px;margin:0">이어 하기</button>
     <button class="ib" data-rsmx aria-label="버리기" style="flex:none">✕</button></div>`:""}
@@ -162,6 +189,71 @@ function home(){
   <div style="margin-top:18px;text-align:center"><button class="ib" id="b-sch">학교 바꾸기</button></div>`;
   save();
 }
+
+/* ───────── ★ 시험 예상 문장: 암기 · 스크램블 · 시험 미리보기 ───────── */
+const topList=()=>{ if(!SCH||!SCH.top) return []; const M={}; setsOf().forEach(st=>st.items.forEach(it=>M[it.id]={...it,set:st}));
+  return SCH.top.items.map(x=>M[x.id]?{...M[x.id],pt:x.pt,q:x.q}:null).filter(Boolean); };
+const lessonOf=it=>(it.set&&it.set.label||"").split(" ")[0];
+const toks=s=>norm(s).split(" ").map(bare).filter(Boolean);
+let TM=null, EX=null;
+function topCard(){ if(!SCH||!SCH.top) return ""; const L=topList(), k=L.filter(it=>(ST.topok||{})[it.id]).length, last=ST.topx&&ST.topx[SCH.name];
+  return `<div class="xtop"><h3>★ ${esc(SCH.top.label)}</h3><p>${esc(SCH.top.note||"")} · 외운 문장 ${k}/${L.length}${last?` · 지난 미리보기 ${last.s}/${last.n}`:""}</p>
+    <div class="tb"><button data-top="memo">📖 암기<small>가리고 외우기</small></button><button data-top="scr">🧩 배열 연습<small>스크램블·타이핑</small></button><button data-top="exam">📝 시험 미리보기<small>서술형 ${L.length}문항</small></button></div></div>`; }
+function hlKey(it){ const q=it.q||{}, k=q.key||q.from||""; const e=esc(it.en), ke=esc(k); return k&&e.includes(ke)?e.replace(ke,`<mark>${ke}</mark>`):e; }
+function topMemo(only){ TM=TM||{mode:"key",open:{},only:!!only}; if(only!==undefined) TM.only=!!only; RUN=null; $("#b-home").hidden=false;
+  const OK=ST.topok||(ST.topok={}), WR=(ST.topwr||{}); let L=topList(); if(TM.only) L=L.filter(it=>WR[it.id]||!OK[it.id]);
+  const enHTML=it=>{ const op=TM.open[it.id], q=it.q||{}, k=q.key||q.from||"";
+    if(TM.mode==="all"||op) return `<div class="en" data-tmo="${it.id}">${hlKey(it)}</div>`;
+    if(TM.mode==="en") return `<div class="en cvall" data-tmo="${it.id}"></div>`;
+    const e=esc(it.en), ke=esc(k); return `<div class="en" data-tmo="${it.id}">${k&&e.includes(ke)?e.replace(ke,`<span class="cv">${ke}</span>`):e}</div>`; };
+  $("#app").innerHTML=`<div class="sec"><h2>📖 ${esc(SCH.top.label)} 암기</h2><span class="note">${L.length}문장</span></div>
+    <div class="seg" data-tmk="mode">${[["key","핵심만 가리기"],["en","영어 가리기"],["all","모두 보기"]].map(([v,t])=>`<button data-tmv="${v}" class="${TM.mode===v?"on":""}">${t}</button>`).join("")}</div>
+    <div class="seg" data-tmk="only" style="margin-top:8px">${[["0","20문장 전체"],["1","못 외운 것·틀린 것만"]].map(([v,t])=>`<button data-tmv="${v}" class="${(+TM.only)===+v?"on":""}">${t}</button>`).join("")}</div>
+    <div class="hint">노란 부분이 시험에 나오는 핵심이에요 · 가린 곳을 누르면 보여요 · 다 외우면 ✔</div>
+    ${L.map((it,i)=>`<div class="mc"><div class="h"><span class="tg">${esc(lessonOf(it))} ${it.n}번</span><span>${i+1}/${L.length}</span><button class="ck${OK[it.id]?" on":""}" data-tok="${it.id}">${OK[it.id]?"✔ 외웠어요":"외웠어요?"}</button></div>
+      <div class="ko">${esc(it.ko)}</div>${enHTML(it)}<div class="pt">💡 ${esc(it.pt)}</div></div>`).join("")||`<div class="card" style="margin-top:12px;text-align:center">다 외웠어요 🎉</div>`}
+    <button class="big" data-top="exam" style="margin-top:16px">📝 시험 미리보기로 확인하기</button>`;
+  save(); }
+function topScr(){ const L=topList(); if(!L.length) return; runDel(); RUN={L,i:0,first:{},done:0}; $("#b-home").hidden=false; load(); }
+/* 시험 미리보기: 어법 고치기(틀린 말·고친 말) / 빈칸(첫 글자) / <보기> 영작 */
+function exParts(it){ const q=it.q;
+  if(q.t==="fix"){ const w=toks(q.wrong), f=toks(q.from); return {wrongCore:w.filter(x=>!f.includes(x)), rightCore:f.filter(x=>!w.includes(x))}; }
+  return {}; }
+function exGrade(it,a){ const q=it.q; a=a||{};
+  if(q.t==="fix"){ const P=exParts(it), w=toks(a.w||""), f=toks(a.f||""); return P.wrongCore.every(x=>w.includes(x))&&P.rightCore.every(x=>f.includes(x))&&!P.wrongCore.some(x=>f.includes(x)&&!P.rightCore.includes(x)); }
+  if(q.t==="blank") return toks(a.v||"").join(" ")===toks(q.key).join(" ");
+  const want=toks(it.en), got=toks(a.v||""); const strip=x=>x[0]==="so"?x.slice(1):x; return strip(got).join(" ")===strip(want).join(" "); }
+function exQ(it,i){ const q=it.q, a=EX.ans[it.id]||{}, d=EX.done, ok=d&&exGrade(it,a);
+  let body="";
+  if(q.t==="fix") body=`<div class="qs">다음 문장에서 <b>어법상 틀린 부분 하나</b>를 찾아 바르게 고치시오.</div>
+    <div class="bx">${esc(it.en.replace(q.from,q.wrong))}</div>
+    <div class="two"><input data-xw="${it.id}" placeholder="틀린 말" value="${esc(a.w||"")}"${d?" disabled":""}><span>→</span><input data-xf="${it.id}" placeholder="고친 말" value="${esc(a.f||"")}"${d?" disabled":""}></div>`;
+  else if(q.t==="blank"){ const hint=q.key.split(/\s+/).map(w=>w[0]+"_".repeat(Math.max(1,w.replace(/[^A-Za-z]/g,"").length-1))).join(" ");
+    body=`<div class="qs">우리말과 같도록 빈칸에 알맞은 말을 쓰시오. (첫 글자 제시)</div><div class="qs" style="margin-top:6px">${esc(it.ko)}</div>
+    <div class="bx">${esc(it.en).replace(esc(q.key),`<b style="color:var(--accent)">( ${esc(hint)} )</b>`)}</div>
+    <input data-xv="${it.id}" placeholder="빈칸에 들어갈 말" value="${esc(a.v||"")}" autocapitalize="off" spellcheck="false"${d?" disabled":""}>`; }
+  else { const bank=EX.bank[it.id]||(EX.bank[it.id]=shuffle(q.bank));
+    body=`<div class="qs">&lt;보기&gt;의 표현을 <b>모두 한 번씩</b> 사용하여 우리말을 영작하시오. (조건: ${esc(q.cond)}${q.opt?" · 문장 앞 '"+esc(q.opt.trim())+"'는 써도 되고 안 써도 됨":""})</div>
+    <div class="qs" style="margin-top:6px">${esc(it.ko)}</div><div class="bk">${bank.map(b=>`<span>${esc(b)}</span>`).join("")}</div>
+    <textarea data-xv="${it.id}" rows="2" placeholder="영어 문장" autocapitalize="off" spellcheck="false"${d?" disabled":""}>${esc(a.v||"")}</textarea>`; }
+  const ans=q.t==="fix"?`${esc(q.wrong)} → ${esc(q.from)}`:q.t==="blank"?esc(q.key):esc(it.en);
+  return `<div class="xq${d?(ok?" ok":" no"):""}"><div class="qn">${i+1}. <span style="color:var(--ink-3);font-weight:700">${esc(lessonOf(it))} ${it.n}번 · ${q.t==="fix"?"어법 고치기":q.t==="blank"?"빈칸 쓰기":"조건 영작"}</span></div>${body}
+    ${d?`<div class="rs">${ok?`<b class="o">✔ 정답</b>`:`<b class="x">✘ 오답</b>`} · 정답: ${ans}<br>💡 ${esc(it.pt)}</div>`:""}</div>`; }
+function topExam(){ RUN=null; $("#b-home").hidden=false; const L=topList();
+  if(!EX) EX={order:shuffle(L.map(it=>it.id)),ans:{},bank:{},done:false};
+  const M=Object.fromEntries(L.map(it=>[it.id,it])), Q=EX.order.map(id=>M[id]).filter(Boolean);
+  const sc=EX.done?Q.filter(it=>exGrade(it,EX.ans[it.id])).length:0;
+  $("#app").innerHTML=`<div class="sec"><h2>📝 시험 미리보기 · ${esc(SCH.top.label)}</h2><span class="note">서술형 ${Q.length}문항</span></div>
+    ${EX.done?`<div class="card" style="margin-top:12px;text-align:center"><div style="font-size:30px;font-weight:900">${sc} / ${Q.length}</div><div class="hint">틀린 문장은 암기에서 '못 외운 것·틀린 것만'으로 다시 볼 수 있어요</div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="big" data-top="memo1" style="margin:0">틀린 ${Q.length-sc}문장 암기</button><button class="big" data-ex="new" style="margin:0;background:var(--surface-2);color:var(--ink)">새로 풀기</button></div></div>`
+    :`<div class="hint">실제 시험처럼 끝까지 풀고 맨 아래 '채점하기'를 누르세요 · 대소문자·문장부호는 채점에 안 들어가요</div>`}
+    ${Q.map((it,i)=>exQ(it,i)).join("")}
+    ${EX.done?"":`<button class="big" data-ex="grade" style="margin-top:16px">채점하기</button>`}`; }
+function exGradeAll(){ const L=topList(), WR=ST.topwr||(ST.topwr={}); let s=0;
+  L.forEach(it=>{ const ok=exGrade(it,EX.ans[it.id]); if(ok){ s++; delete WR[it.id]; } else WR[it.id]=1; });
+  EX.done=true; (ST.topx||(ST.topx={}))[SCH.name]={s,n:L.length,at:Date.now()}; save(); topExam(); scrollTo({top:0}); toast(`${s}/${L.length} 맞혔어요`); }
+document.addEventListener("input",e=>{ if(!EX||EX.done) return; const t=e.target, id=t.dataset.xw||t.dataset.xf||t.dataset.xv; if(!id) return;
+  const a=EX.ans[id]||(EX.ans[id]={}); if(t.dataset.xw) a.w=t.value; else if(t.dataset.xf) a.f=t.value; else a.v=t.value; });
 
 /* ───────── 문제 화면 ───────── */
 function start(){
@@ -324,6 +416,12 @@ document.addEventListener("input",e=>{ if(e.target.id==="ty"){ RUN.cur.typed=e.t
 document.addEventListener("keydown",e=>{ if(e.target.id==="ty"&&e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); (RUN.cur.checked&&RUN.cur.checked.ok?$("#b-next"):$("#b-check"))?.click(); } });
 document.addEventListener("click",e=>{
   const t=e.target; if(Date.now()-SUP<400&&t.closest&&(t.closest("#zone")||t.closest("#bank"))) return;
+  const tp=t.closest("[data-top]"); if(tp){ const v=tp.dataset.top; if(v==="memo") { TM=null; topMemo(false); } else if(v==="memo1"){ TM=null; topMemo(true); } else if(v==="scr") topScr(); else { if(EX&&EX.done&&v==="exam") EX=null; topExam(); } scrollTo({top:0}); return; }
+  const tmv=t.closest("[data-tmv]"); if(tmv&&TM){ const k=tmv.parentElement.dataset.tmk; if(k==="mode"){ TM.mode=tmv.dataset.tmv; TM.open={}; } else TM.only=tmv.dataset.tmv==="1"; topMemo(); return; }
+  const tmo=t.closest("[data-tmo]"); if(tmo&&TM){ TM.open[tmo.dataset.tmo]=!TM.open[tmo.dataset.tmo]; topMemo(); return; }
+  const tok=t.closest("[data-tok]"); if(tok&&TM){ const OK=ST.topok||(ST.topok={}), id=tok.dataset.tok; if(OK[id]) delete OK[id]; else { OK[id]=1; if(ST.topwr) delete ST.topwr[id]; } save(); topMemo(); return; }
+  const ex=t.closest("[data-ex]"); if(ex){ if(ex.dataset.ex==="grade"){ const L=topList(), blank=L.filter(it=>{ const a=EX.ans[it.id]||{}; return !(a.v||a.w||a.f); }).length;
+      if(blank&&!confirm(`안 푼 문항이 ${blank}개 있어요. 그래도 채점할까요?`)) return; exGradeAll(); } else { EX=null; topExam(); scrollTo({top:0}); } return; }
   const sc=t.closest("[data-sch]"); if(sc){ ST.school=sc.dataset.sch; SCH=DATA.schools.find(s=>s.name===ST.school); ST.cfg={}; save(); home(); return; }
   if(t.closest("#b-sch")){ SCH=null; delete ST.school; save(); home(); return; }
   const st=t.closest("[data-set]"); if(st){ const c=CFG(), id=st.dataset.set; c.sets=c.sets.includes(id)?c.sets.filter(x=>x!==id):[...c.sets,id]; if(!c.sets.length) c.sets=[id]; home(); return; }
