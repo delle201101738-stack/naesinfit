@@ -1100,7 +1100,9 @@ const SMEM_SCHOOLS=["구현고","구로고","구일고","신서고"];
 /* ───── 📖 단어 암기 공부칸 (C.study: [{n,w,m}]) — 기록은 이 기기에만 ───── */
 const vsKey=()=>"vstudy."+((typeof UNIT!=="undefined"&&UNIT&&UNIT.id)||"x");
 function vsKnown(){ try{ return JSON.parse(localStorage.getItem(vsKey()))||[]; }catch(e){ return []; } }
-function vsSetKnown(L){ try{ localStorage.setItem(vsKey(),JSON.stringify(L)); }catch(e){} }
+function vsSetKnown(L){ try{ localStorage.setItem(vsKey(),JSON.stringify(L)); }catch(e){}
+  clearTimeout(vsSetKnown.t); const uid=(typeof UNIT!=="undefined"&&UNIT&&UNIT.id)||"", tot=(C&&C.study||[]).length, k=L.length;   // 선생님 숙제 자동 검사에 '공부칸 k/tot'로 보임
+  if(S.name&&uid) vsSetKnown.t=setTimeout(()=>{ fetch("/api/submit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"study",student:S.name,className:S.cls?S.cls.name:"",unitId:uid,known:k,total:tot})}).catch(()=>{}); },1500); }
 let VS={mode:"list",hide:"m",only:false,open:{},deck:[],k:0,flip:false,miss:[]};
 function vsSay(w){ try{ const u=new SpeechSynthesisUtterance(w); u.lang="en-US"; u.rate=.9; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
 function vsOpen(){ VS={mode:"list",hide:"m",only:false,open:{},deck:[],k:0,flip:false,miss:[]}; let el=document.getElementById("vs");
