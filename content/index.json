@@ -1263,6 +1263,254 @@
      "labels": {}
     }
    ]
+  },
+  {
+   "id": "vbom",
+   "grade": "예비고1",
+   "subject": "어휘",
+   "publisher": "어휘를 봄",
+   "units": [
+    {
+     "id": "vbom01",
+     "no": "DAY 01",
+     "title": "DAY 01 단어 50개",
+     "file": "content/vbom01.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom02",
+     "no": "DAY 02",
+     "title": "DAY 02 단어 50개",
+     "file": "content/vbom02.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom03",
+     "no": "DAY 03",
+     "title": "DAY 03 단어 50개",
+     "file": "content/vbom03.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom04",
+     "no": "DAY 04",
+     "title": "DAY 04 단어 50개",
+     "file": "content/vbom04.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom05",
+     "no": "DAY 05",
+     "title": "DAY 05 단어 50개",
+     "file": "content/vbom05.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom06",
+     "no": "DAY 06",
+     "title": "DAY 06 단어 50개",
+     "file": "content/vbom06.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom07",
+     "no": "DAY 07",
+     "title": "DAY 07 단어 50개",
+     "file": "content/vbom07.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom08",
+     "no": "DAY 08",
+     "title": "DAY 08 단어 50개",
+     "file": "content/vbom08.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom09",
+     "no": "DAY 09",
+     "title": "DAY 09 단어 50개",
+     "file": "content/vbom09.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom10",
+     "no": "DAY 10",
+     "title": "DAY 10 단어 50개",
+     "file": "content/vbom10.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom11",
+     "no": "DAY 11",
+     "title": "DAY 11 단어 50개",
+     "file": "content/vbom11.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom12",
+     "no": "DAY 12",
+     "title": "DAY 12 단어 50개",
+     "file": "content/vbom12.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom13",
+     "no": "DAY 13",
+     "title": "DAY 13 단어 50개",
+     "file": "content/vbom13.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom14",
+     "no": "DAY 14",
+     "title": "DAY 14 단어 50개",
+     "file": "content/vbom14.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom15",
+     "no": "DAY 15",
+     "title": "DAY 15 단어 50개",
+     "file": "content/vbom15.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom16",
+     "no": "DAY 16",
+     "title": "DAY 16 단어 50개",
+     "file": "content/vbom16.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom17",
+     "no": "DAY 17",
+     "title": "DAY 17 단어 50개",
+     "file": "content/vbom17.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom18",
+     "no": "DAY 18",
+     "title": "DAY 18 단어 50개",
+     "file": "content/vbom18.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom19",
+     "no": "DAY 19",
+     "title": "DAY 19 단어 50개",
+     "file": "content/vbom19.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    },
+    {
+     "id": "vbom20",
+     "no": "DAY 20",
+     "title": "DAY 20 단어 50개",
+     "file": "content/vbom20.json",
+     "pts": {
+      "vmc": 50,
+      "vmcr": 50
+     },
+     "total": 100,
+     "labels": {}
+    }
+   ]
   }
  ],
  "ranges": {
@@ -1338,6 +1586,50 @@
    "m1610g1",
    "m1610g2",
    "m1610g3"
+  ],
+  "예비고1 월금": [
+   "vbom01",
+   "vbom02",
+   "vbom03",
+   "vbom04",
+   "vbom05",
+   "vbom06",
+   "vbom07",
+   "vbom08",
+   "vbom09",
+   "vbom10",
+   "vbom11",
+   "vbom12",
+   "vbom13",
+   "vbom14",
+   "vbom15",
+   "vbom16",
+   "vbom17",
+   "vbom18",
+   "vbom19",
+   "vbom20"
+  ],
+  "예비고1 화목": [
+   "vbom01",
+   "vbom02",
+   "vbom03",
+   "vbom04",
+   "vbom05",
+   "vbom06",
+   "vbom07",
+   "vbom08",
+   "vbom09",
+   "vbom10",
+   "vbom11",
+   "vbom12",
+   "vbom13",
+   "vbom14",
+   "vbom15",
+   "vbom16",
+   "vbom17",
+   "vbom18",
+   "vbom19",
+   "vbom20"
   ]
  }
 }
