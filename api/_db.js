@@ -63,6 +63,13 @@ export async function ensure() {
   await sql`alter table hw_classes add column if not exists exam_name text not null default ''`;
   // 🏫 학교(반)별 시험범위 단원 id 목록 (쉼표 구분). null = 아직 안 정함 → content/index.json ranges 기본값
   await sql`alter table hw_classes add column if not exists units text`;
+  // 🔗 앱 테스트 연결 숙제: link = {units:[단원], parts:[파트], min:기준%, from:'YYYY-MM-DD', lab:{단원:이름}, pl:{파트:이름}} · auto = 자동 검사 칸
+  await sql`alter table hw_items add column if not exists link jsonb`;
+  await sql`alter table hw_checks add column if not exists auto boolean not null default false`;
+  // 📖 학생 앱 단어 공부칸: 외운 단어 수
+  await sql`create table if not exists vstudy (
+      student text not null, unit_id text not null, known int not null default 0, total int not null default 0,
+      updated_at timestamptz not null default now(), primary key (student, unit_id))`;
   // 출결: 정시(on) · 지각(late) · 결석(absent) · 기타(etc)
   await sql`create table if not exists hw_attend (
       class_id bigint not null, day text not null, student text not null, status text not null,
@@ -114,6 +121,53 @@ export async function bump(k) {   // 숫자 도장 +1 (한 번에 하나씩 올�
   const [r] = await sql`insert into hw_meta (k, v) values (${"stamp:" + k}, '1')
     on conflict (k) do update set v = (coalesce(nullif(regexp_replace(hw_meta.v, '[^0-9]', '', 'g'), ''), '0')::bigint + 1)::text returning v`;
   return Number(r.v);
+}
+/* 🔗 앱 테스트 연결 숙제 자동 검사 — 숙제 낸 날(from)부터 검사일(day) 밤까지 본 기록 중 단원·파트별 최고점
+   모두 기준 이상 = 완료, 응시·공부칸 기록이 있으면 일부, 검사일이 지났는데 아무것도 없으면 안 함.
+   선생님·조교가 직접 고친 칸(auto=false)은 건드리지 않음. 바뀐 칸이 있으면 hw 도장 +1 */
+export async function syncAuto() {
+  const kd = v => new Date(new Date(v).getTime() + 9 * 3600e3).toISOString().slice(0, 10);
+  const items = await sql`select id, class_id, day, link, created_at from hw_items where link is not null and day >= to_char(now() - interval '60 days', 'YYYY-MM-DD')`;
+  const L0 = items.map(i => ({ ...i, L: typeof i.link === "string" ? JSON.parse(i.link) : i.link })).filter(i => i.L && Array.isArray(i.L.units) && i.L.units.length && Array.isArray(i.L.parts) && i.L.parts.length);
+  if (!L0.length) return 0;
+  const fromOf = i => (/^\d{4}-\d{2}-\d{2}$/.test(i.L.from || "") ? i.L.from : kd(i.created_at));
+  const units = [...new Set(L0.flatMap(i => i.L.units))], ids = L0.map(i => +i.id), cids = [...new Set(L0.map(i => +i.class_id))];
+  const first = L0.map(fromOf).sort()[0];
+  const [att, mem, study, ex] = await Promise.all([
+    sql`select student, unit_id, part, pct, secs, created_at from attempts where unit_id = any(${units}) and created_at >= ${first + "T00:00:00+09:00"}::timestamptz`,
+    sql`select class_id, student from hw_members where class_id = any(${cids})`,
+    sql`select student, unit_id, known, total from vstudy where unit_id = any(${units})`,
+    sql`select item_id, student, status, score, memo, auto from hw_checks where item_id = any(${ids})`]);
+  const today = kd(Date.now()); let n = 0;
+  const mmss = s => (s >= 60 ? Math.floor(s / 60) + "분 " : "") + (s % 60) + "초";
+  for (const it of L0) {
+    const L = it.L, min = Number(L.min) || 80, t0 = Date.parse(fromOf(it) + "T00:00:00+09:00"), t1 = Date.parse(it.day + "T23:59:59.999+09:00");
+    const req = []; L.units.forEach(u => L.parts.forEach(p => req.push(u + "|" + p)));
+    for (const m of mem.filter(x => +x.class_id === +it.class_id)) {
+      const st = m.student, cur = ex.find(k => +k.item_id === +it.id && k.student === st);
+      if (cur && !cur.auto) continue;
+      const my = att.filter(a => a.student === st && L.units.includes(a.unit_id) && L.parts.includes(a.part) && (t => t >= t0 && t <= t1)(new Date(a.created_at).getTime()));
+      const best = {}; my.forEach(a => { const k = a.unit_id + "|" + a.part; if (!best[k] || a.pct > best[k].pct) best[k] = a; });
+      const sv = study.filter(v => v.student === st && L.units.includes(v.unit_id)), sk = sv.reduce((s, v) => s + v.known, 0), stt = sv.reduce((s, v) => s + v.total, 0);
+      const pass = req.filter(k => best[k] && best[k].pct >= min).length;
+      const status = pass === req.length ? "done" : (my.length || sk) ? "part" : (today >= it.day ? "none" : "");
+      const lab = u => (L.lab && L.lab[u]) || u, pl = p => (L.pl && L.pl[p]) || p;
+      const parts = req.length <= 4 ? req.map(k => { const [u, p] = k.split("|"); return `${L.units.length > 1 ? lab(u) + " " : ""}${pl(p)} ${best[k] ? best[k].pct + "점" : "미응시"}`; }).join(" · ")
+                                    : `${pass}/${req.length}개 통과`;
+      const secs = Object.values(best).reduce((s, a) => s + (Number(a.secs) || 0), 0);
+      const memo = status === "none" ? "앱 테스트 미응시" + (stt ? ` · 공부칸 ${sk}/${stt}` : "")
+        : [parts, my.length ? `${my.length}회` : "", secs ? mmss(secs) : "", stt ? `공부칸 ${sk}/${stt}` : ""].filter(Boolean).join(" · ");
+      const score = Math.round(req.reduce((s, k) => s + (best[k] ? best[k].pct : 0), 0) / req.length);
+      if (!status) { if (cur) { await sql`delete from hw_checks where item_id = ${it.id} and student = ${st} and auto`; n++; } continue; }
+      if (cur && cur.status === status && cur.score === score && cur.memo === memo) continue;
+      await sql`insert into hw_checks (item_id, student, status, score, memo, auto, checked_at) values (${it.id}, ${st}, ${status}, ${score}, ${memo.slice(0, 300)}, true, now())
+                on conflict (item_id, student) do update set status = excluded.status, score = excluded.score, memo = excluded.memo, auto = true, checked_at = now()
+                where hw_checks.auto`;
+      n++;
+    }
+  }
+  if (n) await bump("hw");
+  return n;
 }
 export async function stampOf(k) {
   const [r] = await sql`select v from hw_meta where k = ${"stamp:" + k}`;
