@@ -1,4 +1,4 @@
-import { sql, ensure, readBody, nameFromText } from "./_db.js";
+import { sql, ensure, readBody, nameFromText, syncAuto } from "./_db.js";
 import { createHash } from "node:crypto";
 
 /* ── 주관식 '뜻이 통하면 정답' AI 판정 — 정답과 철자가 달라도 유의어·같은 뜻이면 인정 ──
@@ -50,6 +50,16 @@ export default async function handler(req, res) {
   try {
     const b = await readBody(req);
     if (b.action === "judge") { await ensure(); return res.status(200).json({ ok: true, res: await judge(b.items) }); }
+    if (b.action === "study") {   // 📖 단어 공부칸: 외운 단어 수 (숙제 자동 검사에 '공부칸 42/50'으로 보임)
+      const st = String(b.student || "").trim().slice(0, 20), uid = String(b.unitId || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 30);
+      if (!st || !uid) return res.status(400).json({ error: "이름·단원이 없습니다" });
+      await ensure();
+      const total = Math.max(0, Math.min(2000, Math.round(+b.total || 0))), known = Math.max(0, Math.min(total, Math.round(+b.known || 0)));
+      await sql`insert into vstudy (student, unit_id, known, total, updated_at) values (${st}, ${uid}, ${known}, ${total}, now())
+                on conflict (student, unit_id) do update set known = excluded.known, total = excluded.total, updated_at = now()`;
+      await syncAuto().catch(e => console.error("[study auto]", e));
+      return res.status(200).json({ ok: true });
+    }
     const student = String(b.student || "").trim().slice(0, 20);
     if (!student) return res.status(400).json({ error: "이름이 없습니다" });
     const num = (v, d = 0) => (Number.isFinite(+v) ? Math.round(+v) : d);
@@ -80,6 +90,7 @@ export default async function handler(req, res) {
               ${num(b.total)}, ${num(b.correct)}, ${num(b.pct)}, ${num(b.secs)},
               ${JSON.stringify(b.detail || [])}::jsonb)
       returning id, created_at`;
+    await syncAuto().catch(e => console.error("[submit auto]", e));
     res.status(200).json({ ok: true, id: row.id, at: row.created_at });
   } catch (e) {
     const msg = e?.message === "NO_DB"
