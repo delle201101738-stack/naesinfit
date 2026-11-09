@@ -162,6 +162,8 @@ function pool(){
 }
 function home(){
   RUN=null; TM=null; $("#b-home").hidden=true;
+  if(VIEW==="top"&&hasTop()) return topHome();
+  $("#ttl").firstChild.textContent="문장암기";
   if(!SCH){ $("#app").innerHTML=`<div class="sec"><h2>학교 고르기</h2></div><div class="chips">${DATA.schools.map(s=>`<button class="chip" data-sch="${esc(s.name)}">${esc(s.name)}<small>${esc(s.book)}</small></button>`).join("")}</div>`; return; }
   const c=CFG(); c.sets=c.sets&&c.sets.length?c.sets.filter(id=>setsOf().some(s=>s.id===id)):setsOf().filter(s=>!/rf$/.test(s.id)).map(s=>s.id);
   if(!c.sets.length) c.sets=[setsOf()[0].id];
@@ -169,7 +171,7 @@ function home(){
   const P=pool();
   $("#sub").textContent=`${SCH.name} · ${SCH.book}`;
   const RS=runGet(), rsOn=RS&&RS.sch===SCH.name;
-  $("#app").innerHTML=`${topCard()}${rsOn?`<div class="card" style="margin-top:16px;display:flex;align-items:center;gap:10px">
+  $("#app").innerHTML=`${topLink()}${rsOn?`<div class="card" style="margin-top:16px;display:flex;align-items:center;gap:10px">
     <div style="flex:1;min-width:0"><b>⏸ 하던 문장암기가 있어요</b><div class="hint" style="margin-top:2px">${RS.ids.length}문장 중 ${RS.i+1}번째에서 멈췄어요</div></div>
     <button class="big" data-rsm style="flex:none;width:auto;padding:10px 16px;margin:0">이어 하기</button>
     <button class="ib" data-rsmx aria-label="버리기" style="flex:none">✕</button></div>`:""}
@@ -190,25 +192,41 @@ function home(){
   save();
 }
 
-/* ───────── ★ 시험 예상 문장: 암기 · 스크램블 · 시험 미리보기 ───────── */
-const topList=()=>{ if(!SCH||!SCH.top) return []; const M={}; setsOf().forEach(st=>st.items.forEach(it=>M[it.id]={...it,set:st}));
-  return SCH.top.items.map(x=>M[x.id]?{...M[x.id],pt:x.pt,q:x.q}:null).filter(Boolean); };
+/* ───────── ⭐ 중요문장 외우기 (따로 보는 화면: ?mode=top) — 과마다 20문장 · 암기 · 배열 연습 · 시험 미리보기 ───────── */
+let VIEW=QS.get("mode")==="top"?"top":"all";
+const hasTop=()=>!!(SCH&&SCH.tops&&SCH.tops.sets&&SCH.tops.sets.length);
+const tSel=()=>{ const v=ST.tsel; return v==="all"||(SCH.tops.sets.some(x=>x.id===v))?v:SCH.tops.sets[0].id; };
+const topList=sel=>{ if(!hasTop()) return []; sel=sel||tSel(); const M={}; setsOf().forEach(st=>st.items.forEach(it=>M[it.id]={...it,set:st}));
+  return SCH.tops.sets.filter(x=>sel==="all"||x.id===sel).flatMap(x=>x.items.map(y=>M[y.id]?{...M[y.id],pt:y.pt,q:y.q}:null)).filter(Boolean); };
+const selLabel=()=>{ const v=tSel(); return v==="all"?SCH.tops.sets.map(x=>x.label.split(" ")[0]).join("·")+" 중요문장 "+topList("all").length:SCH.tops.sets.find(x=>x.id===v).label; };
 const lessonOf=it=>(it.set&&it.set.label||"").split(" ")[0];
 const toks=s=>norm(s).split(" ").map(bare).filter(Boolean);
 let TM=null, EX=null;
-function topCard(){ if(!SCH||!SCH.top) return ""; const L=topList(), k=L.filter(it=>(ST.topok||{})[it.id]).length, last=ST.topx&&ST.topx[SCH.name];
-  return `<div class="xtop"><h3>★ ${esc(SCH.top.label)}</h3><p>${esc(SCH.top.note||"")} · 외운 문장 ${k}/${L.length}${last?` · 지난 미리보기 ${last.s}/${last.n}`:""}</p>
-    <div class="tb"><button data-top="memo">📖 암기<small>가리고 외우기</small></button><button data-top="scr">🧩 배열 연습<small>스크램블·타이핑</small></button><button data-top="exam">📝 시험 미리보기<small>서술형 ${L.length}문항</small></button></div></div>`; }
+function setView(v){ VIEW=v; try{ const u=new URL(location.href); if(v==="top") u.searchParams.set("mode","top"); else u.searchParams.delete("mode"); history.replaceState(null,"",u); }catch(e){} }
+function topLink(){ if(!hasTop()) return ""; return `<button class="card" data-view="top" style="margin-top:16px;width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:0;cursor:pointer">
+  <span style="flex:none;width:42px;height:42px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:21px">⭐</span>
+  <span style="flex:1;min-width:0"><b style="font-size:15px">중요문장만 따로 외우기</b><span class="hint" style="display:block;margin-top:2px">${SCH.tops.sets.map(x=>esc(x.label)).join(" · ")} · 암기 · 배열 · 시험 미리보기</span></span><span style="color:var(--ink-3);font-size:18px">›</span></button>`; }
 function hlKey(it){ const q=it.q||{}, k=q.key||q.from||""; const e=esc(it.en), ke=esc(k); return k&&e.includes(ke)?e.replace(ke,`<mark>${ke}</mark>`):e; }
+function topHome(){ RUN=null; TM=null; $("#b-home").hidden=true; const sel=tSel(), L=topList(sel), OK=ST.topok||{}, k=L.filter(it=>OK[it.id]).length, last=(ST.topx||{})[SCH.name+"|"+sel];
+  $("#ttl").firstChild.textContent="중요문장 외우기"; $("#sub").textContent=`${SCH.name} · ${SCH.book}`;
+  $("#app").innerHTML=`<div class="sec"><h2>⭐ ${esc(SCH.tops.title||"중요문장 외우기")}</h2><span class="note">${esc(SCH.tops.note||"")}</span></div>
+    <div class="seg" data-tsk="1">${SCH.tops.sets.map(x=>`<button data-tsv="${x.id}" class="${sel===x.id?"on":""}">${esc(x.label)}</button>`).join("")}<button data-tsv="all" class="${sel==="all"?"on":""}">둘 다 ${topList("all").length}</button></div>
+    <div class="xtop"><h3>${esc(selLabel())}</h3><p>외운 문장 ${k}/${L.length}${last?` · 지난 시험 미리보기 ${last.s}/${last.n}점`:" · 시험 미리보기 아직 안 봄"}</p>
+      <div class="tb"><button data-top="memo">📖 암기<small>가리고 외우기</small></button><button data-top="scr">🧩 배열 연습<small>스크램블·타이핑</small></button><button data-top="exam">📝 시험 미리보기<small>서술형 ${L.length}문항</small></button></div></div>
+    <div class="sec"><h2>문장 ${L.length}개</h2><span class="note">노란 부분 = 시험 핵심</span></div>
+    ${L.map((it,i)=>`<div class="mc"><div class="h"><span class="tg">${esc(lessonOf(it))} ${it.n}번</span><span>${i+1}</span>${OK[it.id]?`<span class="ck on">✔ 외움</span>`:(ST.topwr||{})[it.id]?`<span class="ck" style="color:#E5484D">✘ 틀렸던 문장</span>`:""}</div>
+      <div class="ko">${esc(it.ko)}</div><div class="en" style="cursor:default">${hlKey(it)}</div><div class="pt">💡 ${esc(it.pt)}</div></div>`).join("")}
+    <div style="margin-top:18px;text-align:center"><button class="ib" data-view="all">전체 본문 문장암기로 →</button></div>`;
+  save(); }
 function topMemo(only){ TM=TM||{mode:"key",open:{},only:!!only}; if(only!==undefined) TM.only=!!only; RUN=null; $("#b-home").hidden=false;
   const OK=ST.topok||(ST.topok={}), WR=(ST.topwr||{}); let L=topList(); if(TM.only) L=L.filter(it=>WR[it.id]||!OK[it.id]);
   const enHTML=it=>{ const op=TM.open[it.id], q=it.q||{}, k=q.key||q.from||"";
     if(TM.mode==="all"||op) return `<div class="en" data-tmo="${it.id}">${hlKey(it)}</div>`;
     if(TM.mode==="en") return `<div class="en cvall" data-tmo="${it.id}"></div>`;
     const e=esc(it.en), ke=esc(k); return `<div class="en" data-tmo="${it.id}">${k&&e.includes(ke)?e.replace(ke,`<span class="cv">${ke}</span>`):e}</div>`; };
-  $("#app").innerHTML=`<div class="sec"><h2>📖 ${esc(SCH.top.label)} 암기</h2><span class="note">${L.length}문장</span></div>
+  $("#app").innerHTML=`<div class="sec"><h2>📖 ${esc(selLabel())} 암기</h2><span class="note">${L.length}문장</span></div>
     <div class="seg" data-tmk="mode">${[["key","핵심만 가리기"],["en","영어 가리기"],["all","모두 보기"]].map(([v,t])=>`<button data-tmv="${v}" class="${TM.mode===v?"on":""}">${t}</button>`).join("")}</div>
-    <div class="seg" data-tmk="only" style="margin-top:8px">${[["0","20문장 전체"],["1","못 외운 것·틀린 것만"]].map(([v,t])=>`<button data-tmv="${v}" class="${(+TM.only)===+v?"on":""}">${t}</button>`).join("")}</div>
+    <div class="seg" data-tmk="only" style="margin-top:8px">${[["0",`${topList().length}문장 전체`],["1","못 외운 것·틀린 것만"]].map(([v,t])=>`<button data-tmv="${v}" class="${(+TM.only)===+v?"on":""}">${t}</button>`).join("")}</div>
     <div class="hint">노란 부분이 시험에 나오는 핵심이에요 · 가린 곳을 누르면 보여요 · 다 외우면 ✔</div>
     ${L.map((it,i)=>`<div class="mc"><div class="h"><span class="tg">${esc(lessonOf(it))} ${it.n}번</span><span>${i+1}/${L.length}</span><button class="ck${OK[it.id]?" on":""}" data-tok="${it.id}">${OK[it.id]?"✔ 외웠어요":"외웠어요?"}</button></div>
       <div class="ko">${esc(it.ko)}</div>${enHTML(it)}<div class="pt">💡 ${esc(it.pt)}</div></div>`).join("")||`<div class="card" style="margin-top:12px;text-align:center">다 외웠어요 🎉</div>`}
@@ -228,7 +246,7 @@ function exQ(it,i){ const q=it.q, a=EX.ans[it.id]||{}, d=EX.done, ok=d&&exGrade(
   if(q.t==="fix") body=`<div class="qs">다음 문장에서 <b>어법상 틀린 부분 하나</b>를 찾아 바르게 고치시오.</div>
     <div class="bx">${esc(it.en.replace(q.from,q.wrong))}</div>
     <div class="two"><input data-xw="${it.id}" placeholder="틀린 말" value="${esc(a.w||"")}"${d?" disabled":""}><span>→</span><input data-xf="${it.id}" placeholder="고친 말" value="${esc(a.f||"")}"${d?" disabled":""}></div>`;
-  else if(q.t==="blank"){ const hint=q.key.split(/\s+/).map(w=>w[0]+"_".repeat(Math.max(1,w.replace(/[^A-Za-z]/g,"").length-1))).join(" ");
+  else if(q.t==="blank"){ const hint=q.key.split(/\s+/).map(w=>{ const m=w.match(/^([^A-Za-z]*)([A-Za-z])([A-Za-z'\-]*)(.*)$/); return m?m[1]+m[2]+"_".repeat(Math.max(1,m[3].length))+m[4]:w; }).join(" ");
     body=`<div class="qs">우리말과 같도록 빈칸에 알맞은 말을 쓰시오. (첫 글자 제시)</div><div class="qs" style="margin-top:6px">${esc(it.ko)}</div>
     <div class="bx">${esc(it.en).replace(esc(q.key),`<b style="color:var(--accent)">( ${esc(hint)} )</b>`)}</div>
     <input data-xv="${it.id}" placeholder="빈칸에 들어갈 말" value="${esc(a.v||"")}" autocapitalize="off" spellcheck="false"${d?" disabled":""}>`; }
@@ -239,11 +257,11 @@ function exQ(it,i){ const q=it.q, a=EX.ans[it.id]||{}, d=EX.done, ok=d&&exGrade(
   const ans=q.t==="fix"?`${esc(q.wrong)} → ${esc(q.from)}`:q.t==="blank"?esc(q.key):esc(it.en);
   return `<div class="xq${d?(ok?" ok":" no"):""}"><div class="qn">${i+1}. <span style="color:var(--ink-3);font-weight:700">${esc(lessonOf(it))} ${it.n}번 · ${q.t==="fix"?"어법 고치기":q.t==="blank"?"빈칸 쓰기":"조건 영작"}</span></div>${body}
     ${d?`<div class="rs">${ok?`<b class="o">✔ 정답</b>`:`<b class="x">✘ 오답</b>`} · 정답: ${ans}<br>💡 ${esc(it.pt)}</div>`:""}</div>`; }
-function topExam(){ RUN=null; $("#b-home").hidden=false; const L=topList();
-  if(!EX) EX={order:shuffle(L.map(it=>it.id)),ans:{},bank:{},done:false};
+function topExam(){ RUN=null; $("#b-home").hidden=false; const L=topList(), sel=tSel();
+  if(!EX||EX.sel!==sel) EX={sel,order:shuffle(L.map(it=>it.id)),ans:{},bank:{},done:false};
   const M=Object.fromEntries(L.map(it=>[it.id,it])), Q=EX.order.map(id=>M[id]).filter(Boolean);
   const sc=EX.done?Q.filter(it=>exGrade(it,EX.ans[it.id])).length:0;
-  $("#app").innerHTML=`<div class="sec"><h2>📝 시험 미리보기 · ${esc(SCH.top.label)}</h2><span class="note">서술형 ${Q.length}문항</span></div>
+  $("#app").innerHTML=`<div class="sec"><h2>📝 시험 미리보기 · ${esc(selLabel())}</h2><span class="note">서술형 ${Q.length}문항</span></div>
     ${EX.done?`<div class="card" style="margin-top:12px;text-align:center"><div style="font-size:30px;font-weight:900">${sc} / ${Q.length}</div><div class="hint">틀린 문장은 암기에서 '못 외운 것·틀린 것만'으로 다시 볼 수 있어요</div>
       <div style="display:flex;gap:8px;margin-top:12px"><button class="big" data-top="memo1" style="margin:0">틀린 ${Q.length-sc}문장 암기</button><button class="big" data-ex="new" style="margin:0;background:var(--surface-2);color:var(--ink)">새로 풀기</button></div></div>`
     :`<div class="hint">실제 시험처럼 끝까지 풀고 맨 아래 '채점하기'를 누르세요 · 대소문자·문장부호는 채점에 안 들어가요</div>`}
@@ -251,7 +269,7 @@ function topExam(){ RUN=null; $("#b-home").hidden=false; const L=topList();
     ${EX.done?"":`<button class="big" data-ex="grade" style="margin-top:16px">채점하기</button>`}`; }
 function exGradeAll(){ const L=topList(), WR=ST.topwr||(ST.topwr={}); let s=0;
   L.forEach(it=>{ const ok=exGrade(it,EX.ans[it.id]); if(ok){ s++; delete WR[it.id]; } else WR[it.id]=1; });
-  EX.done=true; (ST.topx||(ST.topx={}))[SCH.name]={s,n:L.length,at:Date.now()}; save(); topExam(); scrollTo({top:0}); toast(`${s}/${L.length} 맞혔어요`); }
+  EX.done=true; (ST.topx||(ST.topx={}))[SCH.name+"|"+tSel()]={s,n:L.length,at:Date.now()}; save(); topExam(); scrollTo({top:0}); toast(`${s}/${L.length} 맞혔어요`); }
 document.addEventListener("input",e=>{ if(!EX||EX.done) return; const t=e.target, id=t.dataset.xw||t.dataset.xf||t.dataset.xv; if(!id) return;
   const a=EX.ans[id]||(EX.ans[id]={}); if(t.dataset.xw) a.w=t.value; else if(t.dataset.xf) a.f=t.value; else a.v=t.value; });
 
@@ -416,6 +434,8 @@ document.addEventListener("input",e=>{ if(e.target.id==="ty"){ RUN.cur.typed=e.t
 document.addEventListener("keydown",e=>{ if(e.target.id==="ty"&&e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); (RUN.cur.checked&&RUN.cur.checked.ok?$("#b-next"):$("#b-check"))?.click(); } });
 document.addEventListener("click",e=>{
   const t=e.target; if(Date.now()-SUP<400&&t.closest&&(t.closest("#zone")||t.closest("#bank"))) return;
+  const vw=t.closest("[data-view]"); if(vw){ setView(vw.dataset.view); home(); scrollTo({top:0}); return; }
+  const tsv=t.closest("[data-tsv]"); if(tsv){ ST.tsel=tsv.dataset.tsv; save(); topHome(); return; }
   const tp=t.closest("[data-top]"); if(tp){ const v=tp.dataset.top; if(v==="memo") { TM=null; topMemo(false); } else if(v==="memo1"){ TM=null; topMemo(true); } else if(v==="scr") topScr(); else { if(EX&&EX.done&&v==="exam") EX=null; topExam(); } scrollTo({top:0}); return; }
   const tmv=t.closest("[data-tmv]"); if(tmv&&TM){ const k=tmv.parentElement.dataset.tmk; if(k==="mode"){ TM.mode=tmv.dataset.tmv; TM.open={}; } else TM.only=tmv.dataset.tmv==="1"; topMemo(); return; }
   const tmo=t.closest("[data-tmo]"); if(tmo&&TM){ TM.open[tmo.dataset.tmo]=!TM.open[tmo.dataset.tmo]; topMemo(); return; }
