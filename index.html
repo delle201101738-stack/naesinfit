@@ -1156,6 +1156,11 @@ function vsClick(e){ const t=e.target, g=s=>t.closest(s);
 }
 document.addEventListener("click",e=>{ if(e.target.closest("#vs-open")) vsOpen(); });
 function renderSmem(){ const el=document.getElementById("smem-slot"); if(!el) return; renderSmem0(el);
+  { const lk=el.querySelector('a[href^="sentence?school="]'), TOPS={"신서고":"3과 20 · 4과 20"}, sc=lk&&decodeURIComponent((lk.getAttribute("href").split("school=")[1]||""));   // ⭐ 중요문장만 따로
+    if(lk&&TOPS[sc]) lk.insertAdjacentHTML("afterend",`<a href="sentence?school=${encodeURIComponent(sc)}&mode=top" class="card" style="display:flex;align-items:center;gap:12px;padding:15px 16px;text-decoration:none;color:inherit;margin-top:10px">
+    <span style="flex:none;width:42px;height:42px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:21px">⭐</span>
+    <span style="flex:1;min-width:0"><b style="font-size:15px">중요문장 외우기</b><span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">${esc(sc)} 시험 예상 문장 ${TOPS[sc]} · 암기 · 배열 · 시험 미리보기</span></span>
+    <span style="flex:none;color:var(--ink-3);font-size:18px">›</span></a>`); }
   if(C&&Array.isArray(C.study)&&C.study.length) el.insertAdjacentHTML("afterbegin",`<button class="card" id="vs-open" style="display:flex;align-items:center;gap:12px;padding:15px 16px;width:100%;text-align:left;border:0;cursor:pointer;margin-bottom:10px;font:inherit;color:inherit">
     <span style="flex:none;width:42px;height:42px;border-radius:12px;background:var(--cat-3-s);display:grid;place-items:center;font-size:21px">📖</span>
     <span style="flex:1;min-width:0"><b style="font-size:15px">${esc((C.secLabels&&C.secLabels["본문"])||"")} 단어 암기 공부칸</b><span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">${C.study.length}단어 · 목록 가리기 · 카드 뒤집기 · 외운 것 체크 <b class="num">${vsKnown().length}/${C.study.length}</b></span></span>
