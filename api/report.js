@@ -1,5 +1,5 @@
 // 리포트용 집계 — 학생 본인 기록 + 전체 반평균 + 반복 오답
-import { sql, ensure, checkPin } from "./_db.js";
+import { sql, ensure, checkPin, syncAuto } from "./_db.js";
 
 export default async function handler(req, res) {
   try {
@@ -49,7 +49,8 @@ export default async function handler(req, res) {
       from attempts where student = ${student}
       order by created_at desc limit 1000`).reverse();
 
-    // 숙제 검사 기록 — 학생이 속한 반의 숙제 + 검사 결과 + 반 완료율
+    // 숙제 검사 기록 — 학생이 속한 반의 숙제 + 검사 결과 + 반 완료율 (🔗 앱 테스트 연결 숙제는 먼저 자동 검사)
+    await syncAuto().catch(e => console.error("[report auto]", e));
     const hw = await sql`
       select i.id, i.day, i.title, i.memo, c.name as class_name,
              k.status, k.score, k.memo as cmemo,
