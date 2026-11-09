@@ -1,16 +1,17 @@
 // 반 · 숙제 관리 (선생님 비밀번호 필요) — 시험 기록과 별개
-import { sql, ensure, readBody, checkPin, pinError, tokenFor, bump, stampOf } from "./_db.js";
+import { sql, ensure, readBody, checkPin, pinError, tokenFor, bump, stampOf, syncAuto } from "./_db.js";
 
 const S = (v, n) => String(v ?? "").trim().slice(0, n);
 const DAY = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null);
 const STATUS = new Set(["done", "part", "none", "skip"]);
 
 async function snapshot() {
+  await syncAuto().catch(e => console.error("[hw auto]", e));
   const [classes, members, items, checks, students, views, attend] = await Promise.all([
     sql`select id, name, created_at, exam_date, exam_name, units from hw_classes order by right(name, 1), name`,
     sql`select class_id, student, focus from hw_members order by student`,
-    sql`select id, class_id, day, title, memo, created_at from hw_items order by day desc, id desc limit 1500`,
-    sql`select item_id, student, status, score, memo, checked_at from hw_checks`,
+    sql`select id, class_id, day, title, memo, created_at, link from hw_items order by day desc, id desc limit 1500`,
+    sql`select item_id, student, status, score, memo, checked_at, auto from hw_checks`,
     sql`select student, count(*)::int as n, max(created_at) as last, max(class_name) as cls from attempts group by student order by student`,
     sql`select student, day, first_at, last_at, n from report_views where last_at > now() - interval '60 days'`,
     sql`select class_id, day, student, status, memo from hw_attend where day >= to_char(now() - interval '120 days', 'YYYY-MM-DD')`
@@ -18,6 +19,12 @@ async function snapshot() {
   return { ok: true, classes, members, items, checks, students: students.map(r => r.student), stu: students, views, attend };
 }
 
+const cleanLink = v => { if (!v || typeof v !== "object") return null;
+  const id = x => String(x || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 30);
+  const units = [...new Set((Array.isArray(v.units) ? v.units : []).map(id).filter(Boolean))].slice(0, 40), parts = [...new Set((Array.isArray(v.parts) ? v.parts : []).map(id).filter(Boolean))].slice(0, 12);
+  if (!units.length || !parts.length) return null;
+  const map = o => Object.fromEntries(Object.entries(o && typeof o === "object" ? o : {}).slice(0, 60).map(([k, x]) => [id(k), S(x, 30)]));
+  return { units, parts, min: Math.max(1, Math.min(100, Math.round(Number(v.min) || 80))), from: DAY(v.from) || "", lab: map(v.lab), pl: map(v.pl) }; };
 const paperId = s => { let h = 5381; for (const ch of String(s).replace(/\s+/g, "")) h = ((h * 33) ^ ch.codePointAt(0)) >>> 0; return h.toString(36); };
 
 export default async function handler(req, res) {
@@ -82,13 +89,16 @@ export default async function handler(req, res) {
       case "item.create": {
         const cid = Number(b.class_id) || 0, day = DAY(b.day), title = S(b.title, 120);
         if (!cid || !day || !title) return res.status(400).json({ error: "반·날짜·숙제 내용을 모두 넣어 주세요" });
-        const [r] = await sql`insert into hw_items (class_id, day, title, memo) values (${cid}, ${day}, ${title}, ${S(b.memo, 600)}) returning id`;
+        const lk = cleanLink(b.link);
+        const [r] = await sql`insert into hw_items (class_id, day, title, memo, link) values (${cid}, ${day}, ${title}, ${S(b.memo, 600)}, ${lk ? JSON.stringify(lk) : null}::jsonb) returning id`;
+        if (lk) await syncAuto().catch(e => console.error("[hw auto]", e));
         out = { ok: true, id: r.id }; break;
       }
       case "item.update": {
         const day = DAY(b.day), title = S(b.title, 120);
         if (!id || !day || !title) return res.status(400).json({ error: "날짜·숙제 내용을 넣어 주세요" });
-        await sql`update hw_items set day = ${day}, title = ${title}, memo = ${S(b.memo, 600)} where id = ${id}`; break;
+        await sql`update hw_items set day = ${day}, title = ${title}, memo = ${S(b.memo, 600)} where id = ${id}`;
+        await syncAuto().catch(e => console.error("[hw auto]", e)); break;
       }
       case "item.delete": {
         if (!id) return res.status(400).json({ error: "숙제가 없습니다" });
@@ -103,7 +113,7 @@ export default async function handler(req, res) {
         await sql`insert into hw_checks (item_id, student, status, score, memo, checked_at)
                   values (${iid}, ${st}, ${status}, ${sc}, ${S(b.memo, 300)}, now())
                   on conflict (item_id, student) do update
-                  set status = excluded.status, score = excluded.score, memo = excluded.memo, checked_at = now()`;
+                  set status = excluded.status, score = excluded.score, memo = excluded.memo, auto = false, checked_at = now()`;
         break;
       }
       case "attend.set": {      // 출결 한 명 (status 비우면 지움)
