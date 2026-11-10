@@ -187,6 +187,9 @@ function keyHTML(){
       <label class="f" style="flex:2;min-width:220px">시험 이름<input class="fld" id="k-title" value="${esc(EX.title)}"></label>
       <label class="f">날짜<input class="fld" type="date" id="k-day" value="${EX.day}"></label>
       <label class="f">학원명 (리포트 머리글)<input class="fld" id="k-acad" value="${esc(EX.cfg.academy||"헤이즐 영어")}" style="width:150px"></label>
+      <label class="f">리포트 영역<select class="fld" id="k-amode" title="레벨테스트처럼 어휘·어법·독해로만 나눠 보여 줄 수 있어요">
+        <option value="csat"${EX.cfg.areaMode!=="lvl"?" selected":""}>수능형 7영역</option>
+        <option value="lvl"${EX.cfg.areaMode==="lvl"?" selected":""}>레벨테스트형 · 어휘·어법·독해</option></select></label>
       <label class="f">등급 기준<select class="fld" id="k-gmode">
         <option value="cut"${g.mode==="cut"?" selected":""}>내신 5등급제 · 커트라인</option>
         <option value="score"${g.mode==="score"?" selected":""}>점수만 (등급 없음)</option>
@@ -226,7 +229,7 @@ function keyHTML(){
       <td>${x.t==="s"?`<span class="note">모범답안 →</span>`:`<input class="fld num" data-f="a" value="${esc(x.a)}" style="width:62px" placeholder="1~5">`}</td>
       <td><select class="fld" data-f="fx" style="width:118px">${[["","—"],["change","정답 변경"],["multi","복수 정답"],["all","전원 정답"],["out","범위 밖 · 제외"]].filter(o=>x.t!=="s"||o[0]===""||o[0]==="all"||o[0]==="out").map(o=>`<option value="${o[0]}"${(x.fx||"")===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select>${x.fx&&x.fo&&(x.fx==="change"||x.fx==="multi")?`<div class="note">원래 ${esc(x.fo)}번</div>`:""}</td>
       <td><input class="fld num" data-f="p" value="${x.p}" style="width:58px${x.ps==="ai"||x.ps==="me"?"":";background:var(--warn-s,#fff6e0)"}" title="${x.ps==="ai"?"시험지·해설지에서 읽은 배점":x.ps==="me"?"직접 고친 배점":"기본값 (시험지에서 못 읽음)"}">${x.ps==="ai"?`<div class="note" style="font-size:10.5px">📄 읽음</div>`:x.ps==="me"?"":`<div class="note" style="font-size:10.5px">기본값</div>`}</td>
-      <td><select class="fld" data-f="d">${areaOpts(x.d)}</select></td><td><select class="fld" data-f="k">${kindOpts(x.k)}</select>${x.kchk==="diff"?`<div><span class="tag t-warn">⚠ 해설지는 '${esc(x.kalt)}'</span></div><div class="row" style="margin-top:4px"><button class="btn sm" data-kalt="${i}">'${esc(x.kalt)}'로</button></div>`:x.kchk==="ok"?`<div class="note" style="font-size:10.5px">✓ 시험지·해설지 일치${x.kwhy?" · "+esc(x.kwhy):""}</div>`:x.kchk==="one"?`<div class="note" style="font-size:10.5px">한쪽에서만 분류</div>`:""}</td>
+      <td>${EX.cfg.areaMode==="lvl"&&x.t!=="s"?`<select class="fld" data-f="lv">${["어휘","어법","독해"].map(a=>`<option${(x.lv||lvAuto(x))===a?" selected":""}>${a}</option>`).join("")}</select>`:`<select class="fld" data-f="d">${areaOpts(x.d)}</select>`}</td><td><select class="fld" data-f="k">${kindOpts(x.k)}</select>${x.kchk==="diff"?`<div><span class="tag t-warn">⚠ 해설지는 '${esc(x.kalt)}'</span></div><div class="row" style="margin-top:4px"><button class="btn sm" data-kalt="${i}">'${esc(x.kalt)}'로</button></div>`:x.kchk==="ok"?`<div class="note" style="font-size:10.5px">✓ 시험지·해설지 일치${x.kwhy?" · "+esc(x.kwhy):""}</div>`:x.kchk==="one"?`<div class="note" style="font-size:10.5px">한쪽에서만 분류</div>`:""}</td>
       <td>${x.t==="s"?(x.ai?`<span class="note">AI 답: ${esc(x.ai)}</span>`:""):x.chk==="diff"?`<div><span class="tag t-warn">⚠ AI는 ${esc(x.ai)}번</span></div><div class="note" style="max-width:240px">${esc(x.why)}</div>
           <div class="row" style="margin-top:4px"><button class="btn sm" data-keep="${i}">해설지 ${esc(x.a)}번 유지</button><button class="btn sm" data-useai="${i}">${esc(x.ai)}번으로</button></div>`
         :x.chk==="ok"?`<span class="tag t-ok">✓ 일치</span>`:x.ai?`<span class="note">AI ${esc(x.ai)}</span>`:`<span class="note">—</span>`}</td>
@@ -239,8 +242,9 @@ function keyHTML(){
 function readKeyForm(){
   if(!$("#k-title")) return;
   const it=items();
-  $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; if(f==="p"&&(+el.value||0)!==(+x.p||0)) x.ps="me"; if((f==="d"||f==="k")&&el.value!==(x[f]||"")){ x.dk="me"; x.bp=0; x.kchk=""; delete x.kalt; } x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
+  $$("#step tr[data-it]").forEach(tr=>{ const x=it[+tr.dataset.it]; tr.querySelectorAll("[data-f]").forEach(el=>{ const f=el.dataset.f; if(f==="lv"){ if(el.value&&el.value!==lvAuto(x)) x.lv=el.value; else delete x.lv; return; } if(f==="p"&&(+el.value||0)!==(+x.p||0)) x.ps="me"; if((f==="d"||f==="k")&&el.value!==(x[f]||"")){ x.dk="me"; x.bp=0; x.kchk=""; delete x.kalt; } x[f]=f==="p"?(+el.value||0):f==="a"?el.value.replace(/[①-⑤]/g,c=>"①②③④⑤".indexOf(c)+1).replace(/\s+/g,""):el.value; }); });
   const g={mode:($("#k-gmode")||{}).value||"cut",cuts:(($("#k-cuts")||{}).value||"").split(/[\s,]+/).map(Number).filter(x=>x>0)}; if(g.mode==="cut"&&!g.cuts.length) g.cuts=CUT5.slice();
+  if($("#k-amode")) EX.cfg.areaMode=$("#k-amode").value;
   EX.cfg.grade=g; EX.cfg.academy=($("#k-acad")||{}).value||EX.cfg.academy||"헤이즐 영어"; EX.title=$("#k-title").value.trim()||EX.title; EX.day=$("#k-day").value||EX.day;
 }
 async function saveExam(extra,noRead){
@@ -260,6 +264,7 @@ function frameItems(no,po,ns,ps){
 const KAREA={"목적":"대의파악","심경·분위기":"대의파악","주장":"대의파악","함축의미":"대의파악","요지":"대의파악","주제":"대의파악","제목":"대의파악",
   "도표":"세부정보","내용일치":"세부정보","실용문":"세부정보","어법":"어법·어휘","어휘":"어법·어휘","영영풀이":"어법·어휘",
   "연결어":"빈칸추론","무관한 문장":"간접쓰기","순서":"간접쓰기","삽입":"간접쓰기","요약문":"간접쓰기","지칭":"장문독해"};
+const lvAuto=x=>["어휘","영영풀이"].includes(x.k)?"어휘":x.k==="어법"?"어법":"독해";   // 레벨테스트형 영역 기본값 (서버 lvlArea와 같음)
 function stemKind(q){ const s=String(q||"").replace(/\s+/g," "); if(!s.trim()) return null;
   if(/우리말과 (일치|같)|번째|배열/.test(s)) return null;   // 우리말 짝 고르기·배열형은 발문만으로 못 정함
   const R=[[/가리키는 대상|가리키는 것이 나머지|지칭/,"지칭"],[/영영\s*풀이|뜻풀이|단어(의)? ?설명/,"영영풀이"],[/어법/,"어법"],[/연결어|연결사|접속(어|사)/,"연결어"],[/요약/,"요약문"],
@@ -585,7 +590,7 @@ document.addEventListener("click",async e=>{
   const t=e.target;
   const c=t.closest("[data-cls]"); if(c){ CUR=+c.dataset.cls; localStorage.setItem("hw.class",CUR); EX=null; await loadExams(); render(); return; }
   if(t.closest("#ex-new")){ const title=prompt("시험 이름",`${cls().name} 동형모의고사 ${(EXAMS||[]).length+1}회`); if(!title) return;
-    const j=await mock({action:"exam.save",class_id:CUR,title,day:today(),cfg:{grade:{mode:"cut",cuts:CUT5.slice()},items:[]}}); await openExam(j.exam.id); STEP="key"; render(); toast("시험지·해설지를 올리고 'AI로 채우기'를 누르면 문항 수·정답·배점·유형이 채워져요",5000); return; }
+    const j=await mock({action:"exam.save",class_id:CUR,title,day:today(),cfg:{grade:{mode:"cut",cuts:CUT5.slice()},items:[],areaMode:/레벨|level/i.test(title)?"lvl":"csat"}}); await openExam(j.exam.id); STEP="key"; render(); toast("시험지·해설지를 올리고 'AI로 채우기'를 누르면 문항 수·정답·배점·유형이 채워져요",5000); return; }
   const ex=t.closest("[data-ex]"); if(ex){ await openExam(+ex.dataset.ex); history.replaceState(null,"",`?exam=${EX.id}`); render(); return; }
   if(t.closest("#ex-back")){ EX=null; history.replaceState(null,"","mock"); await loadExams(); render(); return; }
   if(t.closest("#ex-del")){ if(!confirm(`'${EX.title}' 시험과 OMR 기록을 모두 지울까요?`)) return; await mock({action:"exam.delete",id:EX.id}); EX=null; await loadExams(); render(); return; }
