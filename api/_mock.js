@@ -36,7 +36,10 @@ export const KIND_AREA = { "목적": "대의파악", "심경·분위기": "대�
   "도표": "세부정보", "내용일치": "세부정보", "실용문": "세부정보", "어법": "어법·어휘", "어휘": "어법·어휘", "영영풀이": "어법·어휘",
   "빈칸-단어": "빈칸추론", "빈칸-구": "빈칸추론", "빈칸-절": "빈칸추론", "연결어": "빈칸추론", "무관한 문장": "간접쓰기", "순서": "간접쓰기", "삽입": "간접쓰기", "요약문": "간접쓰기",
   "장문-제목": "장문독해", "장문-어휘": "장문독해", "복합장문-순서": "장문독해", "복합장문-지칭": "장문독해", "복합장문-일치": "장문독해", "지칭": "장문독해", "듣기": "듣기" };
-export const areaOf = it => (it.t === "s" ? "서술형" : AREAS_ALL.includes(it.d) ? it.d : KIND_AREA[it.k] || (/^서술형/.test(it.k || "") ? "서술형" : "대의파악"));
+/* 리포트 영역 방식: csat = 수능형 7영역(기본) / lvl = 레벨테스트형 어휘·어법·독해 (선생님이 문항마다 lv로 바꿀 수 있음) */
+export const AREAS_LVL = ["어휘", "어법", "독해", "서술형"];
+export const lvlArea = it => (it.t === "s" ? "서술형" : ["어휘", "어법", "독해"].includes(it.lv) ? it.lv : ["어휘", "영영풀이"].includes(it.k) ? "어휘" : it.k === "어법" ? "어법" : "독해");
+export const areaOf = (it, mode) => (mode === "lvl" ? lvlArea(it) : it.t === "s" ? "서술형" : AREAS_ALL.includes(it.d) ? it.d : KIND_AREA[it.k] || (/^서술형/.test(it.k || "") ? "서술형" : "대의파악"));
 
 /* 영역별 학습 처방 (선생님 문구 그대로) */
 export const RX = {
@@ -47,6 +50,9 @@ export const RX = {
   "빈칸추론": ["가장 시급한 영역입니다. 근거 문장 찾기부터 다시 잡아야 합니다.", ["빈칸 문장을 먼저 정확히 해석하고, 빈칸이 '무엇에 대한 설명'인지 한글로 적기", "정답의 근거가 되는 문장을 지문에서 반드시 한 문장 지목하는 훈련 (근거 없이 고르지 않기)", "주 3회, 회당 4문항씩 시간을 재고 풀되 채점보다 근거 확인에 2배의 시간 쓰기"]],
   "간접쓰기": ["연결 장치(지시어·대명사·연결어)를 추적하는 훈련이 필요합니다.", ["순서·삽입은 대명사(it, they, this)와 관사(the)가 가리키는 대상을 화살표로 연결", "주어진 문장의 첫 단어가 연결어라면 앞 문단의 논지 방향을 먼저 확정", "무관한 문장은 '소재는 같지만 논지가 다른' 문장이 정답이라는 점을 기억"]],
   "장문독해": ["긴 지문에서 집중력을 유지하는 시간 관리가 필요합니다.", ["한 지문에 딸린 문항은 문항(발문·선지)부터 먼저 읽고 지문을 읽는 순서 연습", "복합장문은 등장인물 이름 옆에 (A)(B)(C) 표시하며 읽어 지칭 문제를 자동 해결", "문단별로 한글 5글자 요약을 여백에 적으며 읽기"]],
+  "어휘": ["단어를 뜻 하나가 아니라 여러 뜻·쓰임까지 외워야 합니다.", ["하루 30단어씩 단어 → 뜻, 뜻 → 단어 양방향으로 확인하고 틀린 단어만 다음 날 다시", "단어마다 예문 한 줄을 함께 읽어 문맥 속 뜻으로 기억", "헷갈린 단어는 반의어·유의어를 같이 묶어 정리"]],
+  "어법": ["중학 핵심 문법부터 유형별로 다시 잡아야 합니다.", ["수일치 / 시제 / 수동태 / to부정사·동명사 / 관계사 5개 단원을 하루 한 단원씩 정리", "틀린 문항은 '왜 이 형태인지' 이유를 한 줄로 써서 설명할 수 있을 때까지 복습", "네모·밑줄 문제는 문장의 주어와 동사부터 먼저 찾는 습관"]],
+  "독해": ["문장을 정확히 해석하고 글의 흐름을 잡는 연습이 필요합니다.", ["하루 한 지문, 문장마다 주어·동사에 표시하며 끊어 읽기", "다 읽고 나서 글의 주제를 한글 한 문장으로 먼저 적은 뒤 선지 보기", "틀린 문항은 정답 근거 문장을 지문에서 찾아 밑줄 긋기"]],
   "서술형": ["조건을 빠짐없이 지키는 답안 작성 절차를 고정해야 합니다.", ["문제의 조건(단어 수·형태 변화·주어진 단어 사용)에 번호를 붙이고 답을 쓴 뒤 하나씩 체크", "틀린 서술형은 모범답안을 보지 않고 다시 써 본 뒤, 감점 이유를 한 줄로 적기", "본문 핵심 문장 10개를 우리말만 보고 영작하는 연습을 주 3회"]]
 };
 
@@ -92,7 +98,7 @@ export function scoreExam(exam, sheets) {
   const cfg = exam.cfg || {}, items = (cfg.items || []).filter(it => it.fx !== "out" && (it.t === "s" || it.fx === "all" || String(it.a || "").trim()));   // fx out = 범위 외 제외
   const total = r1(items.reduce((s, it) => s + num(it.p), 0));
   const done = sheets.filter(s => s.confirmed);
-  const per = done.map(sh => { const rows = items.map(it => ({ it, area: areaOf(it), ...itemScore(it, sh) })); return { student: sh.student, sh, rows, score: r1(rows.reduce((s, r) => s + r.got, 0)) }; });
+  const per = done.map(sh => { const rows = items.map(it => ({ it, area: areaOf(it, cfg.areaMode), ...itemScore(it, sh) })); return { student: sh.student, sh, rows, score: r1(rows.reduce((s, r) => s + r.got, 0)) }; });
   per.forEach(p => { p.rank = 1 + per.filter(q => q.score > p.score).length; });
   const n = per.length, avg = n ? r1(per.reduce((s, p) => s + p.score, 0) / n) : 0, max = n ? Math.max(...per.map(p => p.score)) : 0, min = n ? Math.min(...per.map(p => p.score)) : 0;
   const itemRate = {}; items.forEach(it => { const g = per.map(p => p.rows.find(r => r.it.n === it.n)); itemRate[it.n] = n ? Math.round(g.reduce((s, r) => s + (r.max ? r.got / r.max : 0), 0) / n * 100) : null; });
@@ -152,7 +158,7 @@ export async function reportData(exam, sheets, student, cls) {
     prevAreas = T.areasOf(p.rows);
   }
   trend.push({ id: exam.id, title: exam.title, day: exam.day, pct: S.total ? Math.round(me.score / S.total * 100) : 0, score: me.score, total: S.total, rank: me.rank, n: S.n, cur: true });
-  const areas = AREAS_ALL.filter(a => mine[a]).map(a => { const m = mine[a], c = S.clsAreas[a], pv = prevAreas && prevAreas[a];
+  const areas = (cfg.areaMode === "lvl" ? AREAS_LVL : AREAS_ALL).filter(a => mine[a]).map(a => { const m = mine[a], c = S.clsAreas[a], pv = prevAreas && prevAreas[a];
     const pct = r1(pct1(m.got, m.max)), cl = c && c.max ? r1(pct1(c.got, c.max)) : null;
     return { a, n: m.n, ok: m.ok, got: r1(m.got), max: r1(m.max), pct, cls: cl, gap: cl == null ? null : r1(pct - cl), delta: pv && pv.max ? r1(pct - pct1(pv.got, pv.max)) : null }; });
   // 강점/약점: 절대 정답률 기준, 동점이면 반평균 격차
