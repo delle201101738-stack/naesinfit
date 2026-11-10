@@ -65,7 +65,7 @@ async function withRoster(cid, cfg) {
 }
 const cleanItems = items => (Array.isArray(items) ? items : []).slice(0, 80).map(it => ({
   n: normN(it.n), t: it.t === "s" ? "s" : "o", a: T(it.a, 20), p: Math.max(0, Math.min(100, Number(it.p) || 0)), k: T(it.k, 20), d: AREAS_ALL.includes(it.d) ? it.d : (it.t === "s" ? "서술형" : ""),
-  e: T(it.e, 1200), m: T(it.m, 800), r: T(it.r, 800), q: T(it.q, 60), ai: T(it.ai, 300), why: T(it.why, 300), chk: T(it.chk, 10), bp: it.bp ? 1 : 0, ...(it.ps === "ai" || it.ps === "me" ? { ps: it.ps } : {}), ...(it.dk === "me" ? { dk: "me" } : {}), ...(["ok", "diff", "one"].includes(it.kchk) ? { kchk: it.kchk, kalt: T(it.kalt, 20), kwhy: T(it.kwhy, 60) } : {}),
+  e: T(it.e, 1200), m: T(it.m, 800), r: T(it.r, 800), q: T(it.q, 60), ai: T(it.ai, 300), why: T(it.why, 300), chk: T(it.chk, 10), bp: it.bp ? 1 : 0, ...(it.ps === "ai" || it.ps === "me" ? { ps: it.ps } : {}), ...(it.dk === "me" ? { dk: "me" } : {}), ...(["어휘", "어법", "독해"].includes(it.lv) ? { lv: it.lv } : {}), ...(["ok", "diff", "one"].includes(it.kchk) ? { kchk: it.kchk, kalt: T(it.kalt, 20), kwhy: T(it.kwhy, 60) } : {}),
   ...(["change", "multi", "all", "out"].includes(it.fx) ? { fx: it.fx, fo: T(it.fo, 20) } : {}) })).filter(it => it.n);
 
 const pubExam = (e, sheets) => ({ id: +e.id, class_id: +e.class_id, cls: e.cls || "", title: e.title, day: e.day, cfg: e.cfg, updated_at: e.updated_at,
@@ -136,6 +136,7 @@ export default async function handler(req, res) {
         const c = { ...((prev && prev.cfg) || {}), ...(b.cfg || {}) };
         if (b.cfg && b.cfg.items) c.items = cleanItems(b.cfg.items);
         c.academy = T(c.academy, 30) || "헤이즐 영어";
+        c.areaMode = c.areaMode === "lvl" ? "lvl" : "csat";
         c.grade = { mode: ["csat", "cut", "score"].includes((c.grade || {}).mode) ? c.grade.mode : "cut", cuts: ((c.grade || {}).cuts || []).map(Number).filter(x => x > 0).slice(0, 9) };
         if (c.grade.mode === "cut" && !c.grade.cuts.length) c.grade.cuts = CUT5.slice();
         await withRoster(cid, c);
