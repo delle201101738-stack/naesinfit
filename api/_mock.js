@@ -39,7 +39,11 @@ export const KIND_AREA = { "목적": "대의파악", "심경·분위기": "대�
 /* 리포트 영역 방식: csat = 수능형 7영역(기본) / lvl = 레벨테스트형 어휘·어법·독해 (선생님이 문항마다 lv로 바꿀 수 있음) */
 export const AREAS_LVL = ["어휘", "어법", "독해", "서술형"];
 export const lvlArea = it => (it.t === "s" ? "서술형" : ["어휘", "어법", "독해"].includes(it.lv) ? it.lv : ["어휘", "영영풀이"].includes(it.k) ? "어휘" : it.k === "어법" ? "어법" : "독해");
-export const areaOf = (it, mode) => (mode === "lvl" ? lvlArea(it) : it.t === "s" ? "서술형" : AREAS_ALL.includes(it.d) ? it.d : KIND_AREA[it.k] || (/^서술형/.test(it.k || "") ? "서술형" : "대의파악"));
+/* auto = AI가 시험지·해설지를 보고 정한 영역 이름(g, 선생님이 고칠 수 있음). 없으면 어휘·어법·독해로 */
+export const gArea = it => (it.t === "s" && !it.g ? "서술형" : String(it.g || "").trim().slice(0, 12) || lvlArea(it));
+export const rxOf = a => RX[a] || RX[/서술/.test(a) ? "서술형" : /듣기|Listening/i.test(a) ? "듣기" : /어휘|단어|Vocab/i.test(a) ? "어휘" : /어법|문법|Grammar/i.test(a) ? "어법"
+  : /빈칸/.test(a) ? "빈칸추론" : /순서|삽입|간접|흐름/.test(a) ? "간접쓰기" : /장문/.test(a) ? "장문독해" : /세부|일치|도표|실용/.test(a) ? "세부정보" : /대의|주제|요지|제목/.test(a) ? "대의파악" : "독해"];
+export const areaOf = (it, mode) => (mode === "auto" ? gArea(it) : mode === "lvl" ? lvlArea(it) : it.t === "s" ? "서술형" : AREAS_ALL.includes(it.d) ? it.d : KIND_AREA[it.k] || (/^서술형/.test(it.k || "") ? "서술형" : "대의파악"));
 
 /* 영역별 학습 처방 (선생님 문구 그대로) */
 export const RX = {
@@ -158,7 +162,7 @@ export async function reportData(exam, sheets, student, cls) {
     prevAreas = T.areasOf(p.rows);
   }
   trend.push({ id: exam.id, title: exam.title, day: exam.day, pct: S.total ? Math.round(me.score / S.total * 100) : 0, score: me.score, total: S.total, rank: me.rank, n: S.n, cur: true });
-  const areas = (cfg.areaMode === "lvl" ? AREAS_LVL : AREAS_ALL).filter(a => mine[a]).map(a => { const m = mine[a], c = S.clsAreas[a], pv = prevAreas && prevAreas[a];
+  const areas = (cfg.areaMode === "auto" ? [...new Set(me.rows.map(r => r.area))] : cfg.areaMode === "lvl" ? AREAS_LVL : AREAS_ALL).filter(a => mine[a]).map(a => { const m = mine[a], c = S.clsAreas[a], pv = prevAreas && prevAreas[a];
     const pct = r1(pct1(m.got, m.max)), cl = c && c.max ? r1(pct1(c.got, c.max)) : null;
     return { a, n: m.n, ok: m.ok, got: r1(m.got), max: r1(m.max), pct, cls: cl, gap: cl == null ? null : r1(pct - cl), delta: pv && pv.max ? r1(pct - pct1(pv.got, pv.max)) : null }; });
   // 강점/약점: 절대 정답률 기준, 동점이면 반평균 격차
@@ -174,7 +178,7 @@ export async function reportData(exam, sheets, student, cls) {
     grade: g, rank: me.rank, n: S.n, avg: S.avg, max: S.max, min: S.min,
     allRank, allN, allAvg, topPct: allN ? (allRank / allN * 100).toFixed(1) : "0.0",
     areas, strong, weak, items, wrong, trend,
-    rx: weak.map(a => ({ a: a.a, pct: a.pct, gap: a.gap, head: (RX[a.a] || RX["대의파악"])[0], list: (RX[a.a] || RX["대의파악"])[1] })),
+    rx: weak.map(a => ({ a: a.a, pct: a.pct, gap: a.gap, head: rxOf(a.a)[0], list: rxOf(a.a)[1] })),
     comment: me.sh.comment || {}
   };
   d.template = templateComment(d);
