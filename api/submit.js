@@ -5,7 +5,11 @@ import { createHash } from "node:crypto";
    앱이 채점에서 틀린 주관식만 보냄. 같은 질문은 표(syn_judge)에 저장해 다시 묻지 않음 */
 const JUDGE_SYS = `너는 고등학교 영어 시험 채점관이다. 학생이 쓴 주관식 답이 해설지 정답과 글자는 다르지만 '정답으로 인정할 만한지' 판정한다.
 종류별 기준:
-- meaning: 영어 단어(word)의 우리말 뜻. 학생 뜻이 그 단어의 뜻으로 통하면(유의어·비슷한 우리말·품사 표현 차이 정도) 인정. 다른 뜻·반대 뜻·너무 막연한 말은 불인정.
+- meaning: 영어 단어(word)의 우리말 뜻. 뜻이 여러 개인 단어는 그중 하나만 맞게 써도 인정. 학생 뜻이 그 단어의 뜻으로 통하면(유의어·비슷한 우리말) 인정. 다른 뜻·반대 뜻·너무 막연한 말은 불인정.
+  품사가 다르면 불인정: expected에 [동]/[명]/[형]/[부] 표시가 있으면 그 품사로 쓴 뜻만 인정(품사가 여러 개면 그중 하나면 됨). 예) sensitive=[형] 민감한 → '민감성' 불인정, persuade=[동] 설득하다 → '설득' 불인정. 형용사 뜻을 '~하다/~한'으로 쓴 차이(중요한/중요하다)나 동사 어미 차이(설득하다/설득시키다)는 같은 품사로 본다.
+- chunk: 직독직해. 영어 문장(context) 속 끊어 읽은 덩어리(word)를 학생이 우리말로 옮긴 답. expected = 모범 해석(여러 개면 /로 구분), meaning = 이 덩어리의 채점 포인트.
+  인정: 덩어리의 핵심 뜻과 구문이 맞으면 인정 — 어순·조사·어미·존댓말·띄어쓰기·맞춤법 차이, 자연스러운 의역, 낱말을 같은 뜻의 다른 말로 바꾼 것, 주어 'you'를 '너/당신/우리'로 쓰거나 생략한 것 모두 인정.
+  불인정: 덩어리 안의 핵심 낱말을 빠뜨리거나 뜻을 틀림, 채점 포인트의 구문을 틀림(수식 방향을 거꾸로, 접속사·전치사 뜻을 틀림, 예: out of를 '~밖으로', since를 '~때문에'), 다른 덩어리 내용만 씀, 내용이 없거나 무의미함.
 - synonym: 표제어(word)의 영어 유의어. 학생 단어가 그 뜻(meaning)에서 표제어와 바꿔 쓸 수 있는 유의어면 인정. 철자가 틀려 다른 단어가 되면 불인정, 사소한 오타 하나(1글자)는 인정.
 - blank: 지문 빈칸. 학생 말을 빈칸에 넣었을 때 문법이 맞고 정답과 뜻이 같으면 인정(유의어 인정). 품사·어형이 문장에 맞지 않으면 불인정.
 - fix: 틀린 밑줄(wrong)을 고쳐 쓰는 문제. 학생이 고친 말을 문장에 넣었을 때 (1) 원래의 오류가 고쳐졌고 (2) 문법이 맞고 (3) 문맥상 정답(expected)과 같은 뜻이면 인정. 어휘 문제는 정답의 유의어 인정(반의어·엉뚱한 뜻 불인정). 어법 문제는 어법 포인트가 바르게 고쳐져야만 인정. 원래 틀린 말을 그대로 두거나 뜻을 바꾸면 불인정.
@@ -22,7 +26,7 @@ async function judge(items) {
   const T = (v, n) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, n);
   const list = (Array.isArray(items) ? items : []).slice(0, 60).map((x, i) => ({ i, kind: T(x.kind, 10), word: T(x.word, 60), meaning: T(x.meaning, 80),
     context: T(x.context, 400), wrong: T(x.wrong, 300), expected: T(x.expected, 300), answer: T(x.answer, 300) })).filter(x => x.answer && x.expected);
-  const keyOf = x => { const h = createHash("sha256"); h.update([(x.kind === "tffix" || x.kind === "ulmean") ? x.kind + "@v2" : x.kind, x.word, x.meaning, x.context, x.wrong, x.expected, x.answer.toLowerCase()].join("\u0001")); return h.digest("hex"); };
+  const keyOf = x => { const h = createHash("sha256"); h.update([(x.kind === "tffix" || x.kind === "ulmean" || x.kind === "meaning") ? x.kind + "@v2" : x.kind, x.word, x.meaning, x.context, x.wrong, x.expected, x.answer.toLowerCase()].join("\u0001")); return h.digest("hex"); };
   const keys = list.map(keyOf), out = {};
   if (keys.length) for (const r of await sql`select k, ok, why from syn_judge where k = any(${keys})`) out[r.k] = r;
   const need = list.filter((x, j) => !out[keys[j]]);
