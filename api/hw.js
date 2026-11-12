@@ -28,7 +28,7 @@ const cleanLink = v => { if (!v || typeof v !== "object") return null;
   const map = o => Object.fromEntries(Object.entries(o && typeof o === "object" ? o : {}).slice(0, 60).map(([k, x]) => [id(k), S(x, 30)]));
   return { units, parts, min: Math.max(1, Math.min(100, Math.round(Number(v.min) || 80))), from: DAY(v.from) || "", lab: map(v.lab), pl: map(v.pl) }; };
 // 🧩 세부미션: 글자 목록(최대 8개, 60자) / 해낸 미션 번호 목록
-const cleanMs = v => { const a = (Array.isArray(v) ? v : []).map(x => S(x, 60)).filter(Boolean).slice(0, 8); return a.length ? a : null; };
+const cleanMs = v => { const a = (Array.isArray(v) ? v : []).map(x => S(x, 150)).filter(Boolean).slice(0, 8); return a.length ? a : null; };
 const cleanDone = v => Array.isArray(v) ? [...new Set(v.map(x => Math.round(Number(x))).filter(x => Number.isFinite(x) && x >= 0 && x < 8))].sort((a, b) => a - b) : null;
 const cleanTpl = v => (Array.isArray(v) ? v : []).slice(0, 20).map(t => ({ name: S(t && t.name, 30), kw: (Array.isArray(t && t.kw) ? t.kw : []).map(x => S(x, 30)).filter(Boolean).slice(0, 20),
   ms: cleanMs(t && t.ms) || [], app: !!(t && t.app) })).filter(t => t.name && t.ms.length);
