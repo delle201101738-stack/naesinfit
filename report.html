@@ -192,6 +192,7 @@ h2.s{margin:26px 0 11px;font-size:15px;font-weight:800;letter-spacing:-.01em;dis
 .area .arow b{color:var(--no);font-family:'Archivo',sans-serif} .area .arow small{color:var(--ink-3);font-family:'Archivo',sans-serif}
 .area .atip{margin-top:8px;background:var(--surface-2);border-radius:10px;padding:8px 11px;font-size:12px;line-height:1.65;color:var(--ink-2)}
 .hwc{padding:14px 16px}
+.vdt{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:800;border-radius:7px;padding:2px 7px}.vdt.pass{background:var(--ok-soft);color:var(--ok)}.vdt.part{background:var(--warn-soft);color:var(--warn)}.vdt.full{background:var(--no-soft);color:var(--no)}
 .head1{margin-top:12px;background:var(--surface);border-radius:16px;box-shadow:var(--sh);padding:14px 16px;border-left:5px solid var(--pri)}
 .head1 span{display:block;font-size:11.5px;font-weight:800;color:var(--pri)} .head1 span small{font-weight:600;color:var(--ink-3)}
 .head1 b{display:block;margin-top:4px;font-size:16.5px;font-weight:800;line-height:1.5;letter-spacing:-.01em;outline:none}
@@ -368,6 +369,10 @@ async function load(name){
   MF=cr.ok?await cr.json():{books:[]};
   return mr.json();
 }
+/* 🎯 단원별 통과 기준 (content/index.json 단원의 verdict) — {파트:{wrong:[통과까지 틀린 수, 부분재시까지]} 또는 {pct:[통과 %, 부분재시 %]}} */
+function vrule(u, part, c, t){ const R=u&&u.verdict&&u.verdict[part]; if(!R||t==null||c==null||!+t) return null;
+  const k=R.wrong?((t-c)<=R.wrong[0]?"pass":(t-c)<=R.wrong[1]?"part":"full"):((c/t*100)>=R.pct[0]?"pass":(c/t*100)>=R.pct[1]?"part":"full");
+  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R}; }
 function unitByBook(book, uid){
   if(uid) for(const b of (MF.books||[])) for(const u of (b.units||[]))      // 저장된 단원 id가 있으면 그게 정답
     if(u.id===String(uid).replace(/ak$/,"")) return {b,u};
@@ -807,9 +812,9 @@ async function render(D){
     o.t+=x.t;o.c+=x.c;o.s+=x.s||0;o.ps+=(x.p!=null?x.p:Math.round(x.c/x.t*100))*(x.s||1);});
   const tests=PARTORDER.concat(Object.keys(best).filter(k=>!PARTORDER.includes(k))).filter(k=>best[k]).map(k=>{
     const dec=v=>!Number.isInteger(+v), rp=(v,one)=>one?Math.round(v*10)/10:Math.round(v);   // 동형모고는 소수점 점수 그대로(86.8)
-    const b=best[k], me=rp(b.r*100,dec(b.c)), cl=clsP[k];
+    const b=best[k], me=rp(b.r*100,dec(b.c)), cl=clsP[k], vd=vrule(mu&&mu.u,k,b.c,b.t);
     const cls=(cl&&cl.t&&cl.s>=3)?rp(cl.ps/cl.s,dec(cl.ps)||dec(b.c)):null;   // 반평균은 3명 이상일 때만
-    return {...b, me, cls, cn:cl?cl.s:0, d:cls===null?null:Math.round((me-cls)*10)/10};
+    return {...b, me, cls, vd, cn:cl?cl.s:0, d:cls===null?null:Math.round((me-cls)*10)/10};
   });
   const T={t:tests.reduce((s,x)=>s+x.t,0), c:Math.round(tests.reduce((s,x)=>s+x.c,0)*10)/10};
   const score=T.t?Math.round(T.c/T.t*100):0, grade=gradeOf(score);
@@ -959,7 +964,7 @@ async function render(D){
     ${CMP?`<div class="sum">${TD} 시험 합계 — <b>${esc(D.student)} ${CMP.me}%</b> · 반평균 ${CMP.cl}% <span class="dt ${CMP.me>=CMP.cl?"up":"down"}">${CMP.me>=CMP.cl?"▲ ":"▼ "}${Math.abs(CMP.me-CMP.cl)}점</span></div>`:""}
     ${tests.map(p=>`
     <div class="cg">
-      <div class="cn"><b>${esc(p.name)}</b><small>${p.c}/${p.t}개 맞힘</small>
+      <div class="cn"><b>${esc(p.name)}</b><small>${p.c}/${p.t}개 맞힘</small>${p.vd?`<span class="vdt ${p.vd.k}">${p.vd.e} ${p.vd.n}</span>`:""}
         ${p.d===null?"":`<span class="dt ${p.d>=0?"up":"down"}">반평균보다 ${p.d>=0?"▲ ":"▼ "}${Math.abs(p.d)}점</span>`}</div>
       <div class="cr"><span class="who">${esc(D.student.replace(/[A-Za-z0-9]+$/,""))}</span><span class="tr"><i class="me ${p.me>=85?"":p.me>=75?"warn":"bad"}" style="width:${Math.max(p.me,3)}%"></i></span><em>${p.me}%</em></div>
       ${p.cls===null?""

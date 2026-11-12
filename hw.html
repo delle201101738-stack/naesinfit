@@ -132,6 +132,7 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .gall{font-size:11px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:7px;padding:4px 7px}
 .gall:hover{color:var(--ok)}
 .gcell{min-width:128px}
+.vdt{display:block;margin-top:3px;font-size:11.5px;font-weight:800;border-radius:7px;padding:2px 6px}.vdt.pass{background:var(--ok-soft);color:var(--ok)}.vdt.part{background:var(--warn-soft);color:var(--warn)}.vdt.full{background:var(--no-soft);color:var(--no)}
 .grid .gh.wide{min-width:200px;max-width:240px}
 .grid .gh .ghm{display:block;margin:2px 0 6px;font-size:11px;line-height:1.4;color:var(--ink-2);text-align:left}
 .grid .gh .ghm i{display:block;font-style:normal;margin-top:2px}
@@ -583,7 +584,7 @@ function dayTests(s, d){   // 그날 시험: 파트마다 최고 기록 (재시�
   const best={}; d=d||VD;
   rowsOfMem(s).filter(x=>x.day===d && x.scope!=="재시험" && !/^오답노트/.test(x.part_name||"")).forEach(x=>{
     const k=x.book+"|"+x.part, r=x.total?x.correct/x.total:0;
-    if(!best[k]||r>best[k].r) best[k]={k,book:x.book,part:x.part,name:x.part_name,t:x.total,c:x.correct,r}; });
+    if(!best[k]||r>best[k].r) best[k]={k,book:x.book,part:x.part,name:x.part_name,t:x.total,c:x.correct,r,uid:x.unit_id}; });
   return Object.values(best);
 }
 function testHTML(cls, mem, items){
@@ -604,7 +605,8 @@ function testHTML(cls, mem, items){
     <tbody>${mem.map(s=>{ const v=per[s], t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
       const ob=odd(s);
       return `<tr><td class="stk"><b>${esc(s)}</b>${ob?`<span class="warn" title="반 대부분과 다른 교재: ${esc([...new Set(ob)].join(", "))}">⚠ 다른 교재</span>`:""}</td>${cols.map(col=>{ const x=v.find(y=>y.k===col.k);
-        return `<td class="tc">${x?`<span class="tp ${pc(Math.round(x.r*100))}">${Math.round(x.r*100)}%</span><small>${x.c}/${x.t}</small>`:`<span class="na">미응시</span>`}</td>`; }).join("")}
+        const vd=x&&vrule(unitOf(x.uid),x.part,x.c,x.t);
+        return `<td class="tc">${x?`<span class="tp ${pc(Math.round(x.r*100))}">${Math.round(x.r*100)}%</span><small>${x.c}/${x.t}</small>${vd?`<span class="vdt ${vd.k}">${vd.e} ${vd.n}</span>`:""}`:`<span class="na">미응시</span>`}</td>`; }).join("")}
         <td class="tc">${t?`<span class="tp ${pc(Math.round(c/t*100))}">${Math.round(c/t*100)}%</span><small>${v.length}개</small>`:`<span class="na">—</span>`}</td></tr>`; }).join("")}</tbody>
     <tfoot><tr><td class="stk">반평균</td>${cols.map(c=>{ const a=colAvg(c); return `<td class="tc">${a?(a.p!=null?`<b>${a.p}%</b><small>${a.n}명</small>`:`<small>${a.n}명뿐 · 평균 생략</small>`):""}</td>`; }).join("")}<td></td></tr></tfoot>
   </table></div>`;
@@ -1095,6 +1097,11 @@ function oneLine(s, items, chk){
   return out.length?out.join(" · "):"오늘 기록 없음";
 }
 /* 🏫 반(학교)별 시험범위 체크 — 학생 앱 교재 목록에 체크한 단원만 '내 학교 시험범위'로 보임 */
+/* 🎯 단원별 통과 기준 (content/index.json 단원의 verdict) — {파트:{wrong:[통과까지 틀린 수, 부분재시까지]} 또는 {pct:[통과 %, 부분재시 %]}} */
+function vrule(u, part, c, t){ const R=u&&u.verdict&&u.verdict[part]; if(!R||t==null||c==null||!+t) return null;
+  const k=R.wrong?((t-c)<=R.wrong[0]?"pass":(t-c)<=R.wrong[1]?"part":"full"):((c/t*100)>=R.pct[0]?"pass":(c/t*100)>=R.pct[1]?"part":"full");
+  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R}; }
+const unitOf=uid=>{ if(!MANI||!uid) return null; for(const b of MANI.books||[]) for(const u of b.units||[]) if(u.id===uid) return u; return null; };
 let MANI=null;
 async function manifest(){ if(MANI) return MANI; const r=await fetch("content/index.json",{cache:"no-store"}); MANI=await r.json(); return MANI; }
 manifest().then(()=>{ try{ if(DB) render(); }catch(e){} }).catch(()=>{});

@@ -892,10 +892,14 @@ let S=(()=>{try{const r=JSON.parse(localStorage.getItem(KEY));return Object.assi
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
 const VD_PASS=90, VD_PART=75;
 const ARR_PASS=85;   // 영작(타이핑) 통과 점수
-const VERDICT = pct => pct>=VD_PASS ? {k:"pass", n:"통과",        e:"✓"}
+/* 🎯 단원별 통과 기준 (content/index.json 단원의 verdict) — {파트:{wrong:[통과까지 틀린 수, 부분재시까지]} 또는 {pct:[통과 %, 부분재시 %]}} */
+function vrule(u, part, c, t){ const R=u&&u.verdict&&u.verdict[part]; if(!R||t==null||c==null||!+t) return null;
+  const k=R.wrong?((t-c)<=R.wrong[0]?"pass":(t-c)<=R.wrong[1]?"part":"full"):((c/t*100)>=R.pct[0]?"pass":(c/t*100)>=R.pct[1]?"part":"full");
+  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R}; }
+const VERDICT = (pct,part,c,t) => (part&&vrule(UNIT,part,c,t)) || (pct>=VD_PASS ? {k:"pass", n:"통과",        e:"✓"}
                      : pct>=VD_PART ? {k:"part", n:"부분 재시험", e:"◐"}
-                                    : {k:"full", n:"전체 재시험", e:"↻"};
-const vdPill = pct => { const v=VERDICT(pct); return `<span class="vd ${v.k}">${v.e} ${v.n}</span>`; };
+                                    : {k:"full", n:"전체 재시험", e:"↻"});
+const vdPill = (pct,part,c,t) => { const v=VERDICT(pct,part,c,t); return `<span class="vd ${v.k}">${v.e} ${v.n}</span>`; };
 const lv=()=>Math.floor(S.exp/100)+1;
 const tier=()=>lv()>=7?"플래티넘":lv()>=5?"골드":lv()>=3?"실버":"브론즈";
 
@@ -1228,7 +1232,7 @@ function renderHome(){
       <span style="flex:1"><span class="t">${labelOf(p.id)}</span><span class="s">${subOf(p.id)} · <span class="num">${tp}개 채점</span></span></span>
       ${b?`<span style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none">
              <span class="num" style="font-size:13px;font-weight:800;color:var(--ink-2)">${b.pct}%</span>
-             ${vdPill(b.pct)}</span>`:""}
+             ${vdPill(b.pct,p.id,b.done,b.total)}</span>`:""}
       ${svg("chev","go")}
     </button>`;}).join("");
 
@@ -1356,7 +1360,7 @@ function renderSetup(){
       </div>
       ${b?`<div class="prog-track"><i style="width:${b.pct}%"></i></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:12px;color:var(--ink-3)">
-        <span>최고 기록 ${vdPill(b.pct)}</span><span class="num" style="font-weight:700;color:var(--accent)">${b.pct}% (${b.done}/${b.total})</span></div>`:""}
+        <span>최고 기록 ${vdPill(b.pct,sel.part,b.done,b.total)}</span><span class="num" style="font-weight:700;color:var(--accent)">${b.pct}% (${b.done}/${b.total})</span></div>`:""}
     </div>
 
     ${!hasScopes()?"":`<div class="sec" style="margin:24px 0 10px"><h2>시험 범위</h2>
@@ -1417,7 +1421,7 @@ function renderSetup(){
   /* 오답 있으면 '틀린 것만 다시' 버튼 (부분 재시험 동선) */
   const wn0=wrongCount(sel.part), we=wrongCount(sel.part,true), wn=wn0||we, wb=$("#setup-wrong"), bb=bestOf()[sel.part];
   wb.dataset.ever = wn0 ? "" : "1";
-  const fullV = !!bb && VERDICT(bb.pct).k==="full";
+  const fullV = !!bb && VERDICT(bb.pct,sel.part,bb.done,bb.total).k==="full";
   const OUTL="flex:1;background:var(--surface);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)";
   wb.textContent= wn0 ? `틀린 것만 다시 · ${wn0}개` : `틀렸던 문제 다시 · ${we}개`;
   wb.style.cssText = !wn ? "flex:1;display:none" : (fullV ? OUTL : "flex:1");
@@ -2470,7 +2474,7 @@ function tally(){
 }
 function showResult(){
   const part=Q.part, {t,c,pct}=tally();
-  const V=VERDICT(pct);
+  const V=VERDICT(pct, Q.review?null:part, c, t);
   const secs=Math.floor((Date.now()-Q.t0)/1000);
   const r=58, cc=2*Math.PI*r;
   const col=pct>=80?"var(--ok)":pct>=60?"var(--accent)":"var(--no)";
@@ -2481,7 +2485,8 @@ function showResult(){
         stroke-dasharray="${cc}" stroke-dashoffset="${cc*(1-pct/100)}" style="transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)"/>
     </svg><div class="val"><b>${pct}<span style="font-size:18px">%</span></b><span>정답률</span></div></div>
     <div style="margin-top:14px"><span class="vd vd-big ${V.k}">${V.e} ${V.n}</span></div>
-    <div class="score-msg">${V.k==="pass"?"기준(90점) 넘겼어요. 이 파트는 통과!"
+    <div class="score-msg">${V.R?(V.R.wrong?`틀린 개수 ${t-c}개 · ${V.R.wrong[0]}개까지 통과 · ${V.R.wrong[1]}개까지 부분재시 · 그 이상 통재시`:`${V.R.pct[0]}점 이상 통과 · ${V.R.pct[1]}점 이상 부분재시 · 그 아래 통재시`)
+      :V.k==="pass"?"기준(90점) 넘겼어요. 이 파트는 통과!"
       :V.k==="part"?"조금만 더예요 · 틀린 문항만 다시 풀면 통과":"기준(75점) 미만이라 처음부터 다시 풀어야 해요"}</div>
     <div class="score-sub num">${Q.review?"오답노트":labelOf(part)} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
     <div class="gain">⚡ +${10+c*2} XP</div>
