@@ -10,13 +10,15 @@ async function snapshot() {
   const [classes, members, items, checks, students, views, attend] = await Promise.all([
     sql`select id, name, created_at, exam_date, exam_name, units from hw_classes order by right(name, 1), name`,
     sql`select class_id, student, focus from hw_members order by student`,
-    sql`select id, class_id, day, title, memo, created_at, link from hw_items order by day desc, id desc limit 1500`,
-    sql`select item_id, student, status, score, memo, checked_at, auto from hw_checks`,
+    sql`select id, class_id, day, title, memo, created_at, link, missions from hw_items order by day desc, id desc limit 1500`,
+    sql`select item_id, student, status, score, memo, checked_at, auto, ms from hw_checks`,
     sql`select student, count(*)::int as n, max(created_at) as last, max(class_name) as cls from attempts group by student order by student`,
     sql`select student, day, first_at, last_at, n from report_views where last_at > now() - interval '60 days'`,
     sql`select class_id, day, student, status, memo from hw_attend where day >= to_char(now() - interval '120 days', 'YYYY-MM-DD')`
   ]);
-  return { ok: true, classes, members, items, checks, students: students.map(r => r.student), stu: students, views, attend };
+  const [tp] = await sql`select v from hw_meta where k = 'mission_tpl'`;
+  let tpl = null; try { tpl = tp ? JSON.parse(tp.v) : null; } catch (e) { tpl = null; }
+  return { ok: true, classes, members, items, checks, students: students.map(r => r.student), stu: students, views, attend, tpl };
 }
 
 const cleanLink = v => { if (!v || typeof v !== "object") return null;
@@ -25,6 +27,11 @@ const cleanLink = v => { if (!v || typeof v !== "object") return null;
   if (!units.length || !parts.length) return null;
   const map = o => Object.fromEntries(Object.entries(o && typeof o === "object" ? o : {}).slice(0, 60).map(([k, x]) => [id(k), S(x, 30)]));
   return { units, parts, min: Math.max(1, Math.min(100, Math.round(Number(v.min) || 80))), from: DAY(v.from) || "", lab: map(v.lab), pl: map(v.pl) }; };
+// 🧩 세부미션: 글자 목록(최대 8개, 60자) / 해낸 미션 번호 목록
+const cleanMs = v => { const a = (Array.isArray(v) ? v : []).map(x => S(x, 60)).filter(Boolean).slice(0, 8); return a.length ? a : null; };
+const cleanDone = v => Array.isArray(v) ? [...new Set(v.map(x => Math.round(Number(x))).filter(x => Number.isFinite(x) && x >= 0 && x < 8))].sort((a, b) => a - b) : null;
+const cleanTpl = v => (Array.isArray(v) ? v : []).slice(0, 20).map(t => ({ name: S(t && t.name, 30), kw: (Array.isArray(t && t.kw) ? t.kw : []).map(x => S(x, 30)).filter(Boolean).slice(0, 20),
+  ms: cleanMs(t && t.ms) || [], app: !!(t && t.app) })).filter(t => t.name && t.ms.length);
 const paperId = s => { let h = 5381; for (const ch of String(s).replace(/\s+/g, "")) h = ((h * 33) ^ ch.codePointAt(0)) >>> 0; return h.toString(36); };
 
 export default async function handler(req, res) {
@@ -90,7 +97,8 @@ export default async function handler(req, res) {
         const cid = Number(b.class_id) || 0, day = DAY(b.day), title = S(b.title, 120);
         if (!cid || !day || !title) return res.status(400).json({ error: "반·날짜·숙제 내용을 모두 넣어 주세요" });
         const lk = cleanLink(b.link);
-        const [r] = await sql`insert into hw_items (class_id, day, title, memo, link) values (${cid}, ${day}, ${title}, ${S(b.memo, 600)}, ${lk ? JSON.stringify(lk) : null}::jsonb) returning id`;
+        const ms = cleanMs(b.missions);
+        const [r] = await sql`insert into hw_items (class_id, day, title, memo, link, missions) values (${cid}, ${day}, ${title}, ${S(b.memo, 600)}, ${lk ? JSON.stringify(lk) : null}::jsonb, ${ms ? JSON.stringify(ms) : null}::jsonb) returning id`;
         if (lk) await syncAuto().catch(e => console.error("[hw auto]", e));
         out = { ok: true, id: r.id }; break;
       }
@@ -98,6 +106,13 @@ export default async function handler(req, res) {
         const day = DAY(b.day), title = S(b.title, 120);
         if (!id || !day || !title) return res.status(400).json({ error: "날짜·숙제 내용을 넣어 주세요" });
         await sql`update hw_items set day = ${day}, title = ${title}, memo = ${S(b.memo, 600)} where id = ${id}`;
+        if (b.missions !== undefined) { const ms = cleanMs(b.missions);   // 미션을 바꾸면 범위를 벗어난 체크 번호는 정리
+          const rm = Number.isInteger(b.msRemove) ? b.msRemove : -1;   // 중간 미션을 빼면 뒤 번호를 한 칸씩 당김
+          if (rm >= 0) await sql`update hw_checks set ms = (select coalesce(jsonb_agg(case when (x)::int > ${rm} then (x)::int - 1 else (x)::int end), '[]'::jsonb) from jsonb_array_elements(ms) x where (x)::int <> ${rm}) where item_id = ${id} and ms is not null`;
+          await sql`update hw_items set missions = ${ms ? JSON.stringify(ms) : null}::jsonb where id = ${id}`;
+          await sql`update hw_checks set ms = (select coalesce(jsonb_agg(x), '[]'::jsonb) from jsonb_array_elements(ms) x where (x)::int < ${ms ? ms.length : 0}) where item_id = ${id} and ms is not null`;
+          if (ms) await sql`update hw_checks set status = case when jsonb_array_length(ms) >= ${ms.length} then 'done' when jsonb_array_length(ms) > 0 then 'part' else status end
+                            where item_id = ${id} and ms is not null and status in ('done', 'part')`; }   // 미션 수가 바뀌면 완료/일부 다시 계산
         await syncAuto().catch(e => console.error("[hw auto]", e)); break;
       }
       case "item.delete": {
@@ -110,10 +125,21 @@ export default async function handler(req, res) {
         if (!iid || !st) return res.status(400).json({ error: "숙제·학생이 없습니다" });
         if (!STATUS.has(status)) { await sql`delete from hw_checks where item_id = ${iid} and student = ${st}`; break; }
         const sc = b.score === "" || b.score == null || !Number.isFinite(+b.score) ? null : Math.max(0, Math.min(100, Math.round(+b.score)));
-        await sql`insert into hw_checks (item_id, student, status, score, memo, checked_at)
+        const dn = cleanDone(b.ms);
+        if (dn) await sql`insert into hw_checks (item_id, student, status, score, memo, ms, checked_at)
+                  values (${iid}, ${st}, ${status}, ${sc}, ${S(b.memo, 300)}, ${JSON.stringify(dn)}::jsonb, now())
+                  on conflict (item_id, student) do update
+                  set status = excluded.status, score = excluded.score, memo = excluded.memo, ms = excluded.ms, auto = false, checked_at = now()`;
+        else await sql`insert into hw_checks (item_id, student, status, score, memo, checked_at)
                   values (${iid}, ${st}, ${status}, ${sc}, ${S(b.memo, 300)}, now())
                   on conflict (item_id, student) do update
                   set status = excluded.status, score = excluded.score, memo = excluded.memo, auto = false, checked_at = now()`;
+        break;
+      }
+      case "tpl.save": {      // 🧩 세부미션 템플릿 (선생님이 고친 것) · reset이면 기본값으로
+        if (b.reset) await sql`delete from hw_meta where k = 'mission_tpl'`;
+        else { const t = cleanTpl(b.tpl); if (!t.length) return res.status(400).json({ error: "템플릿이 비었어요" });
+          await sql`insert into hw_meta (k, v) values ('mission_tpl', ${JSON.stringify(t)}) on conflict (k) do update set v = excluded.v`; }
         break;
       }
       case "attend.set": {      // 출결 한 명 (status 비우면 지움)

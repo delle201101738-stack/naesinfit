@@ -5,6 +5,11 @@ import { PNAME } from "./_pname.js";
 import { ensureMock, reportData, loadExam } from "./_mock.js";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// 🧩 세부미션: 검사한 숙제만 '세부미션 2/3 (못 한 것: …)'
+const jarr = v => { try { return Array.isArray(v) ? v : v ? JSON.parse(v) : []; } catch (e) { return []; } };
+const msTxt = h => { const m = jarr(h.missions); if (!m.length || !h.status || h.status === "skip") return "";
+  const d = new Set(jarr(h.ms).map(Number)), miss = m.filter((_, i) => !d.has(i));
+  return ` · 세부미션 ${m.length - miss.length}/${m.length}${miss.length ? ` (못 한 것: ${esc(miss.join(", "))})` : ""}`; };
 const kday = v => new Date(new Date(v).getTime() + 9 * 3600e3).toISOString().slice(0, 10);   // 한국 날짜
 const bk = b => String(b || "").replace(/\s*올킬\s*$/, "").trim();
 const isRe = x => x.scope === "재시험" || /^오답노트/.test(x.part_name || "");
@@ -33,7 +38,7 @@ async function build(student, dayQ, range) {
   const rows = await sql`select id, book, part, part_name, scope, total, coalesce(score, correct) as correct, created_at
                          from attempts where student = ${student} order by created_at desc limit 1000`;
   const hw = await sql`
-    select i.id, i.day, i.title, i.memo, c.name as class_name, k.status, k.score, k.memo as cmemo,
+    select i.id, i.day, i.title, i.memo, i.missions, c.name as class_name, k.status, k.score, k.memo as cmemo, k.ms,
            (select count(*)::int from hw_members m2 where m2.class_id = i.class_id) as n,
            (select count(*)::int from hw_checks k2 where k2.item_id = i.id and k2.status = 'done') as nd
     from hw_members m join hw_items i on i.class_id = m.class_id join hw_classes c on c.id = m.class_id
@@ -118,7 +123,7 @@ async function build(student, dayQ, range) {
     L.push(`<li>틀린 문제 다시 풀기: ${retake.length ? `${retake.length}회 (마지막 ${Math.round(retake[0].correct / Math.max(1, retake[0].total) * 100)}%)` : "아직 안 함"}</li></ul>`);
     if (S.hw.length) {
       L.push(`<h2>숙제</h2><ul>`);
-      S.hw.forEach(h => L.push(`<li>${ST[h.status] || "⏺ 검사 전"} — ${esc(h.title)}${h.score != null ? ` · ${h.score}점` : ""}${h.cmemo ? ` · 선생님 메모: ${esc(h.cmemo)}` : ""}</li>`));
+      S.hw.forEach(h => L.push(`<li>${ST[h.status] || "⏺ 검사 전"} — ${esc(h.title)}${h.score != null ? ` · ${h.score}점` : ""}${msTxt(h)}${h.cmemo ? ` · 선생님 메모: ${esc(h.cmemo)}` : ""}</li>`));
       L.push(`</ul>`);
     }
     if (S.tests.length) {

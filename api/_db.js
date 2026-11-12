@@ -66,6 +66,9 @@ export async function ensure() {
   // 🔗 앱 테스트 연결 숙제: link = {units:[단원], parts:[파트], min:기준%, from:'YYYY-MM-DD', lab:{단원:이름}, pl:{파트:이름}} · auto = 자동 검사 칸
   await sql`alter table hw_items add column if not exists link jsonb`;
   await sql`alter table hw_checks add column if not exists auto boolean not null default false`;
+  // 🧩 숙제 세부미션: hw_items.missions = ["단어 암기", …] · hw_checks.ms = 학생이 해낸 미션 번호 [0, 2]
+  await sql`alter table hw_items add column if not exists missions jsonb`;
+  await sql`alter table hw_checks add column if not exists ms jsonb`;
   // 📖 학생 앱 단어 공부칸: 외운 단어 수
   await sql`create table if not exists vstudy (
       student text not null, unit_id text not null, known int not null default 0, total int not null default 0,
