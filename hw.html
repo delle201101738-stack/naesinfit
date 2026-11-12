@@ -135,6 +135,7 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .gc{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 6px;border-radius:10px;background:var(--surface-2);font-size:15px;font-weight:800;color:var(--ink-3);border:1.5px dashed var(--line-2)}
 .gc span{font-size:12px}
 /* 🧩 세부미션 */
+.hw-h .t .msl{white-space:normal;margin-top:3px}.hw-h .t .msl i{display:block;font-style:normal;line-height:1.55}
 .msb{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
 .msb .mb{min-width:24px;height:22px;padding:0 5px;border-radius:7px;font-size:11.5px;font-weight:800;background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line-2)}
 .msb .mb.on{background:var(--ok);color:#fff;border-color:var(--ok)}
@@ -142,7 +143,8 @@ textarea.fld{min-height:64px;resize:vertical;line-height:1.55}
 .msed{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 12px;margin:8px 0 4px;background:var(--surface-2);border-radius:12px}
 .msed>b{font-size:12.5px;margin-right:2px}
 .mchip{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line-2);border-radius:9px;padding:3px 4px 3px 8px;font-size:12px;font-weight:800;color:var(--accent)}
-.mchip input{border:0;background:transparent;font-size:12.5px;color:var(--ink);width:9.5em;min-width:0;padding:3px 2px}
+.mchip input{border:0;background:transparent;font-size:12.5px;color:var(--ink);width:auto;max-width:100%;min-width:0;padding:3px 2px}
+.mchip{max-width:100%}
 .mchip button{font-size:11px;color:var(--ink-3);padding:2px 5px;border-radius:6px}
 .mchip button:hover{color:var(--no)}
 [data-tedit]{cursor:text}
@@ -294,7 +296,7 @@ function tplFor(title, link){ const L=TPL(), t=String(title||"").toLowerCase();
   return L.find(x=>!x.app&&(x.kw||[]).some(k=>k&&t.includes(String(k).toLowerCase()))) || L.find(x=>!(x.kw||[]).length) || L[L.length-1]; }
 const msOf=it=>jarr(it&&it.missions);
 const msDone=k=>new Set(jarr(k&&k.ms).map(Number));
-const MS_AUTO=()=>{ try{ return localStorage.getItem("hw.msauto")!=="0"; }catch(e){ return true; } };
+const MS_AUTO=()=>{ try{ return localStorage.getItem("hw.msauto2")==="1"; }catch(e){ return false; } };   // 아래 줄이 없는 숙제에 템플릿 미션 넣기 (기본 끔)
 function msBtns(it, s, k){ const m=msOf(it); if(!m.length) return ""; const d=msDone(k);
   return `<span class="msb">${m.map((x,i)=>`<button class="mb${d.has(i)?" on":""}" data-mt="${it.id}" data-ms="${esc(s)}" data-mi="${i}" title="${esc(x)}">${CIRC[i]}</button>`).join("")}</span>`; }
 const msStatus=(n,k,cur)=>k>=n?"done":k>0?"part":(cur&&(String(cur.memo||"").trim()||cur.score!=null))?"none":"";
@@ -365,7 +367,7 @@ function linkHTML(){
 }
 /* 🧩 세부미션 편집 (숙제 펼친 곳) */
 function msEdHTML(it){ const m=msOf(it), t=tplFor(it.title, it.link);
-  return `<div class="msed"><b>🧩 세부미션</b>${m.map((x,i)=>`<span class="mchip">${CIRC[i]}<input data-mse="${it.id}" data-i="${i}" value="${esc(x)}"><button data-msx="${it.id}" data-i="${i}" title="이 미션 빼기">✕</button></span>`).join("")||`<span style="font-size:12px;color:var(--ink-3)">아직 없어요</span>`}
+  return `<div class="msed"><b>🧩 세부미션</b>${m.map((x,i)=>`<span class="mchip">${CIRC[i]}<input data-mse="${it.id}" data-i="${i}" value="${esc(x)}" size="${Math.min(46,Math.max(8,String(x).length+2))}"><button data-msx="${it.id}" data-i="${i}" title="이 미션 빼기">✕</button></span>`).join("")||`<span style="font-size:12px;color:var(--ink-3)">아직 없어요</span>`}
     ${m.length<8?`<button class="btn sm" data-msadd="${it.id}">+ 미션</button>`:""}<button class="btn sm" data-msre="${it.id}">'${esc(t.name)}' 템플릿으로 ${m.length?"다시 ":""}채우기</button>
     <span style="flex-basis:100%;font-size:11.5px;color:var(--ink-3)">학생 이름 아래 ①②③을 누르면 해낸 미션이 체크되고, 전부 = ✅완료 · 일부 = 🟡일부로 자동 표시돼요. 학부모 리포트에 미션별 ✓/✗가 보여요.</span></div>`; }
 async function saveMs(id, list, extra){ const it=DB.items.find(i=>+i.id===+id); if(!it) return;
@@ -386,15 +388,27 @@ function tplRead(){ return [...document.querySelectorAll("#tplbox .tplrow")].map
   const g=f=>r.querySelector(`[data-tf="${f}"]`).value;
   return {name:g("name").trim(), app:!!base.app, kw:g("kw").split(/[,，]/).map(x=>x.trim()).filter(Boolean), ms:g("ms").split(/\n/).map(x=>x.replace(/^\s*([①-⑧]|\d+[).]|[-•·])\s*/,"").trim()).filter(Boolean).slice(0,8)}; }); }
 /* 숙제 입력 칸 해석: 번호 줄 = 숙제 하나, 번호 없는 줄 = 위 숙제의 메모 */
-function parseHw(text){ const lines=String(text||"").split(/\n/).map(x=>x.trim()).filter(Boolean);
-  const NUM=/^(\d+[).]|[①-⑳]|[-•·▶])/; let list=[];
-  if(lines.some(l=>NUM.test(l))){ lines.forEach(l=>{ if(NUM.test(l)||!list.length) list.push({title:l,memo:[]}); else list[list.length-1].memo.push(l); }); }
-  else list=lines.map(l=>({title:l,memo:[]}));
-  list.forEach(x=>{ const t=x.title.replace(/^(\d+[).]|[①-⑳]|[-•·▶])\s*/,"").trim(); if(t) x.title=t; });   // '1) 워크북' → '워크북' (번호는 제목에서 뺌)
+function parseHw(text){
+  /* 숙제 입력 해석 — 맨 앞 번호 줄(예: '1)')이 숙제 제목, 그 아래 줄은 모두 그 숙제의 🧩 세부미션.
+     아래 줄이 '1. 2.'처럼 다른 번호이거나, 들여 썼거나, '(크레용)'처럼 괄호로 시작해도 미션.
+     번호가 하나도 없으면: 들여 쓰지 않은 줄 = 숙제, 들여 쓴 줄 = 위 숙제의 미션 */
+  const raw=String(text||"").split(/\n/).filter(l=>l.trim());
+  const kind=t=>/^\d+\s*\)/.test(t)?"p":/^\d+\s*\./.test(t)?"d":/^[①-⑳]/.test(t)?"c":/^[-•·▶]/.test(t)?"b":"";
+  const first=raw.find(l=>!/^\s/.test(l)&&kind(l.trim())), top=first?kind(first.trim()):"";
+  const head=t=>t.replace(/^(\d+\s*[).]|[①-⑳]|[-•·▶])\s*/,"").trim()||t;
+  const mis=t=>t.replace(/^[(\[](할\s*일\s*목록|할\s*일|세부\s*미션|미션|to\s*do)[)\]]\s*:?\s*/i,"").replace(/^(\d+\s*[).]|[①-⑳]|[-•·▶])\s*/,"").trim();
+  const list=[];
+  raw.forEach(l=>{ const t=l.trim(), ind=/^\s/.test(l);
+    const isTop=top?(!ind&&kind(t)===top):!ind;
+    if(isTop||!list.length) list.push({title:head(t),ms:[]});
+    else { const m=mis(t); if(m) list[list.length-1].ms.push(m); } });
   return list; }
+const msFor=(x,auto)=>x.ms.length?x.ms.slice(0,8):auto?tplFor(x.title).ms.slice():[];   // 직접 쓴 미션이 먼저, 없으면 (켰을 때만) 템플릿
 function hwPreview(){ const box=$("#hw-prev"), ta=$("#hw-title"); if(!box||!ta||ta.tagName!=="TEXTAREA") return;
-  const ck=$("#hw-msauto"), list=parseHw(ta.value);
-  box.innerHTML=(!list.length||(ck&&!ck.checked))?"":list.map(x=>{ const t=tplFor(x.title); return `<div>• ${esc(x.title)} → <em>🧩 ${esc(t.name)}</em> ${t.ms.map((m,i)=>CIRC[i]+" "+esc(m)).join(" ")}</div>`; }).join("")+`<div style="font-size:11.5px;color:var(--ink-3)">미션은 숙제를 낸 뒤 숙제를 펼쳐서 바꿀 수 있어요</div>`; }
+  const list=parseHw(ta.value), auto=MS_AUTO();
+  box.innerHTML=!list.length?"":`<div style="font-size:11.5px;font-weight:800;color:var(--ink-3);margin-bottom:2px">이렇게 들어가요 · 숙제 ${list.length}개</div>`+list.map((x,k)=>{ const m=msFor(x,auto);
+    return `<div style="margin-top:${k?6:0}px"><b>${k+1}. ${esc(x.title)}</b>${m.length?m.map((y,i)=>`<div style="padding-left:14px">${CIRC[i]} ${esc(y)}${!x.ms.length?` <span style="color:var(--ink-3);font-size:11px">(템플릿)</span>`:""}</div>`).join(""):`<span style="color:var(--ink-3);font-size:11.5px"> — 세부미션 없음 (완료·일부만 체크)</span>`}</div>`; }).join("")
+    +(list.some(x=>x.ms.length>8)?`<div style="color:var(--no);font-size:11.5px">세부미션은 숙제 하나에 8개까지만 들어가요</div>`:""); }
 async function addLinked(){
   const day=$("#hw-day").value; if(!day){ toast("검사 날짜를 넣어 주세요"); return; }
   const books=MANI.books||[], bk=books.find(b=>b.id===LK.book)||{units:[]}, us=(bk.units||[]).filter(u=>LK.units.includes(u.id));
@@ -441,10 +455,10 @@ function render0(){
   <div class="card" style="padding:16px 18px">
     <div class="row"><input class="fld" type="date" id="hw-day" value="${EDIT?EDIT.day:today()}" style="width:170px">
       ${EDIT?`<input class="fld" id="hw-title" value="${esc(EDIT.title)}" style="flex:1;min-width:200px">`
-        :`<textarea class="fld" id="hw-title" rows="3" placeholder="숙제를 한 줄에 하나씩 (여러 개 한 번에)&#10;1) 워크북 3과 p.12–15&#10;   대충하면 다시 시킵니다  ← 번호 없는 줄은 위 숙제의 메모로&#10;2) 단어 3과 30개 뜻 쓰기" style="flex:1;min-width:200px;min-height:84px"></textarea>`}</div>
+        :`<textarea class="fld" id="hw-title" rows="6" placeholder="1) 단어 DAY 1-2 셀프테스트&#10;2) 구문 비법 워크북 1~6번&#10;   1. 검은펜으로 끊어읽고 직독직해   ← 숙제 아래 줄은 모두 세부미션&#10;   2. 막히는 부분 형광펜 + 몰랐던 단어 적기&#10;3) 월간지 1~10번&#10;   (크레용) 10문제 풀고 헷갈린 지문 5개 선정" style="flex:1;min-width:200px;min-height:84px"></textarea>`}</div>
     <textarea class="fld" id="hw-memo" placeholder="(선택) 공통 메모 · 자세한 범위 (예: 다음 수업 시작 전 검사)" style="margin-top:8px">${EDIT?esc(EDIT.memo):""}</textarea>
     ${EDIT?"":`<div class="hwprev" id="hw-prev"></div>`}
-    <div class="row" style="margin-top:8px;justify-content:flex-end">${EDIT?"":`<label style="font-size:13px;color:var(--ink-2);margin-right:auto"><input type="checkbox" id="hw-msauto"${MS_AUTO()?" checked":""}> 🧩 세부미션 자동으로 넣기</label>`}${EDIT?`<button class="btn" id="hw-cancel">취소</button><button class="btn pri" id="hw-save">수정 저장</button>`:`<button class="btn pri" id="hw-add">숙제 추가</button>`}</div>
+    <div class="row" style="margin-top:8px;justify-content:flex-end">${EDIT?"":`<label style="font-size:13px;color:var(--ink-2);margin-right:auto"><input type="checkbox" id="hw-msauto"${MS_AUTO()?" checked":""}> 아래 줄이 없는 숙제엔 🧩 템플릿 미션 넣기</label>`}${EDIT?`<button class="btn" id="hw-cancel">취소</button><button class="btn pri" id="hw-save">수정 저장</button>`:`<button class="btn pri" id="hw-add">숙제 추가</button>`}</div>
   </div>
   ${EDIT?"":linkHTML()}
   ${EDIT?"":tplHTML()}
@@ -456,7 +470,7 @@ function render0(){
     const grp=ix===0||items[ix-1].day!==it.day ? `<div class="row" style="justify-content:space-between;margin:${ix?16:4}px 2px 6px"><b style="font-size:13.5px">${fmtD(it.day)} 숙제 ${items.filter(x=>x.day===it.day).length}개</b><button class="btn sm" data-delday="${it.day}" style="color:var(--no)">🗑 이 날짜 숙제 모두 삭제</button></div>` : "";
     return grp+`<div class="card hw">
       <div class="hw-h" data-open="${it.id}"><span class="d">${fmtD(it.day)}</span>
-        <span class="t"><b data-tedit="${it.id}" title="눌러서 제목 고치기">${esc(it.title)}<i class="pen">✏️</i></b>${it.memo?`<span>${esc(it.memo)}</span>`:""}${msOf(it).length?`<span>🧩 ${msOf(it).map((x,i)=>CIRC[i]+" "+esc(x)).join(" · ")}</span>`:""}</span>
+        <span class="t"><b data-tedit="${it.id}" title="눌러서 제목 고치기">${esc(it.title)}<i class="pen">✏️</i></b>${it.memo?`<span>${esc(it.memo)}</span>`:""}${msOf(it).length?`<span class="msl">${msOf(it).map((x,i)=>`<i>${CIRC[i]} ${esc(x)}</i>`).join("")}</span>`:""}</span>
         <span class="stat"><b>완료 ${o.done}</b> · 일부 ${o.part} · 안 함 ${o.none}${o.no?` · <span style="color:var(--accent)">미검사 ${o.no}</span>`:""}</span>
         <button class="btn sm" data-del="${it.id}" title="이 숙제 삭제" style="color:var(--no);flex:none">🗑</button>
         <span style="color:var(--ink-3)">${open?"▲":"▼"}</span></div>
@@ -502,7 +516,7 @@ function gridHTML(mem, items, chk){
     </div><div hidden>${cols.map(it=>`<span data-cc="${it.id}"></span>`).join("")}</div>
     <div class="row" style="margin-top:10px">${cols.filter(it=>!it.link).map(it=>`<button class="btn sm" data-gall="${it.id}">${esc(it.title.slice(0,12))} · 미검사 → 완료</button>`).join("")}</div>`;
   return head+`<div class="card scroll"><table class="grid">
-    <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b data-tedit="${it.id}" title="눌러서 제목 고치기${it.memo?" · "+esc(it.memo):""}">${esc(it.title)}<i class="pen">✏️</i></b>${msOf(it).length?`<span style="display:block;font-size:11px;color:var(--ink-3);margin-bottom:4px" title="${esc(msOf(it).map((x,i)=>CIRC[i]+" "+x).join("\n"))}">🧩 ${msOf(it).map((x,i)=>CIRC[i]+" "+esc(x)).join(" ")}</span>`:""}${it.link?`<span style="display:block;font-size:11px;color:var(--accent);font-weight:700">🔗 자동 검사 · ${(typeof it.link==="string"?JSON.parse(it.link):it.link).min||80}점↑</span>`:""}
+    <thead><tr><th class="stk">학생</th>${cols.map(it=>`<th class="gh"><span class="gd">${fmtD(it.day)}</span><b data-tedit="${it.id}" title="눌러서 제목 고치기${it.memo?" · "+esc(it.memo):""}">${esc(it.title)}<i class="pen">✏️</i></b>${msOf(it).length?`<span style="display:block;font-size:11px;color:var(--ink-3);margin-bottom:4px;cursor:help" title="${esc(msOf(it).map((x,i)=>CIRC[i]+" "+x).join("\n"))}">🧩 세부미션 ${msOf(it).length}개</span>`:""}${it.link?`<span style="display:block;font-size:11px;color:var(--accent);font-weight:700">🔗 자동 검사 · ${(typeof it.link==="string"?JSON.parse(it.link):it.link).min||80}점↑</span>`:""}
       ${it.link?"":`<button class="gall" data-gall="${it.id}">미검사 → 완료</button>`}<button class="gall" data-del="${it.id}" style="color:var(--no)">🗑 삭제</button></th>`).join("")}<th class="gh">완료</th></tr></thead>
     <tbody>${mem.map(s=>`<tr><td class="stk"><b>${esc(s)}</b><span data-bell="${esc(s)}"></span><a href="report?student=${encodeURIComponent(s)}${GR.mode==="day"?`&day=${GR.day}`:""}" target="_blank" rel="noopener">리포트</a><button class="cpy" data-tcopy="${esc(s)}" data-tday="${GR.mode==="day"?GR.day:""}">학부모 링크 복사</button></td>
       ${cols.map(it=>cell(it,s)).join("")}<td class="rr" data-rr="${esc(s)}"></td></tr>`).join("")}</tbody>
@@ -1196,8 +1210,8 @@ document.addEventListener("click",async e=>{
     const body={day:$("#hw-day").value,title:$("#hw-title").value,memo:$("#hw-memo").value};
     if(!body.day||!body.title.trim()){ toast("날짜와 숙제 내용을 넣어 주세요"); return; }
     if(EDIT){ await act({action:"item.update",id:EDIT.id,...body},"숙제를 고쳤어요"); EDIT=null; render(); }
-    else { const list=parseHw(body.title), titles=list, auto=MS_AUTO();   // 번호 줄 = 숙제 하나, 번호 없는 줄 = 위 숙제의 메모
-      try{ for(const x of list) await api({action:"item.create",class_id:CUR,day:body.day,title:x.title,memo:[...x.memo,body.memo].filter(Boolean).join(" · "),...(auto?{missions:tplFor(x.title).ms}:{})}); }catch(err){ alert(err.message); }
+    else { const list=parseHw(body.title), titles=list, auto=MS_AUTO();   // 번호 줄 = 숙제 제목, 그 아래 줄 = 🧩 세부미션
+      try{ for(const x of list){ const m=msFor(x,auto); await api({action:"item.create",class_id:CUR,day:body.day,title:x.title,memo:body.memo||"",...(m.length?{missions:m}:{})}); } }catch(err){ alert(err.message); }
       GR.mode="day"; GR.day=body.day; localStorage.setItem("hw.gmode","day");
       await load(); render(); toast(`숙제 ${titles.length}개를 냈어요 · 아래 표에서 바로 검사하세요`); }
     return; }
@@ -1220,7 +1234,7 @@ document.addEventListener("click",async e=>{
 document.addEventListener("change",async e=>{
   if(e.target.id==="lk-book"){ LK.book=e.target.value; LK.units=[]; LK.parts=[]; render(); return; }
   if(e.target.id==="lk-each"){ LK.each=e.target.checked; return; }
-  if(e.target.id==="hw-msauto"){ try{ localStorage.setItem("hw.msauto",e.target.checked?"1":"0"); }catch(err){} hwPreview(); return; }
+  if(e.target.id==="hw-msauto"){ try{ localStorage.setItem("hw.msauto2",e.target.checked?"1":"0"); }catch(err){} hwPreview(); return; }
   const mse=e.target.closest&&e.target.closest("[data-mse]"); if(mse){ const id=mse.dataset.mse;
     const list=[...document.querySelectorAll(`[data-mse="${id}"]`)].map(x=>x.value.trim()); if(list.some(x=>!x)){ toast("빈 미션은 ✕로 빼 주세요"); return; }
     await saveMs(id,list); return; }
