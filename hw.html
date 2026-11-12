@@ -287,7 +287,7 @@ async function act(body,msg){ try{ const j=await api(body); await load(); render
 
 function render(){ render0(); gridStats(); paintAlerts(); }
 /* ── 🔗 앱 테스트 연결 숙제: 학생이 앱에서 본 점수로 서버가 자동 검사 (직접 고친 칸은 그대로) ── */
-const PN={vmc:"뜻 고르기",vmcr:"단어 고르기",wmean:"단어 뜻 쓰기",wsyn:"유의어 고르기",wsynw:"유의어 쓰기",wdef:"영영풀이",dfa:"영영풀이 매칭",dfb:"영영풀이 정오",
+const PN={dtv:"구문 단어",dtr:"직독직해",vmc:"뜻 고르기",vmcr:"단어 고르기",wmean:"단어 뜻 쓰기",wsyn:"유의어 고르기",wsynw:"유의어 쓰기",wdef:"영영풀이",dfa:"영영풀이 매칭",dfb:"영영풀이 정오",
   vocab:"어휘 선택",gram:"어법 선택",word:"통변형 기본",word2:"통변형 심화",fix:"어법 고치기",fixg:"통변형 어법",fixv:"통변형 어휘",tf:"내용일치 TF",choice:"독해",sjt:"영문선지",
   gbbw:"어법 비법 ①",gbb:"어법 비법 ②",vbbw:"어휘 비법 ①",vbb:"어휘 비법 ②",order:"순서",insert:"삽입",arrange:"단어배열",mwrite:"중요 문장 영작",write:"영작",twrite:"주제문 영작",cloze:"빈칸",
   vdc1:"단어 동형 객관식 1",vdc2:"단어 동형 객관식 2",vdm1:"단어 동형 모고 1",vdm2:"단어 동형 모고 2",vdm3:"단어 동형 모고 3",vdt1:"동형모고 30",vdt2:"예문변형 동형모고 30",vds:"스페셜 변형"};
