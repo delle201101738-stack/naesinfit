@@ -53,7 +53,7 @@ export default async function handler(req, res) {
     await syncAuto().catch(e => console.error("[report auto]", e));
     const hw = await sql`
       select i.id, i.day, i.title, i.memo, i.missions, c.name as class_name,
-             k.status, k.score, k.memo as cmemo, k.ms,
+             k.status, k.score, k.memo as cmemo, k.ms, k.auto,
              (select count(*)::int from hw_members m2 where m2.class_id = i.class_id) as n,
              (select count(*)::int from hw_checks k2 where k2.item_id = i.id and k2.status = 'done') as nd,
              (select count(*)::int from hw_checks k3 where k3.item_id = i.id and k3.status <> 'skip') as nc

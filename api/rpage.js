@@ -7,6 +7,9 @@ import { ensureMock, reportData, loadExam } from "./_mock.js";
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 // 🧩 세부미션: 검사한 숙제만 '세부미션 2/3 (못 한 것: …)'
 const jarr = v => { try { return Array.isArray(v) ? v : v ? JSON.parse(v) : []; } catch (e) { return []; } };
+const hwCred = h => { if (!h || !h.status || h.status === "skip") return null; if (h.status === "done") return 1; if (h.status !== "part") return 0;   // 일부 = 미션 비율 → 앱 점수 % → 0.5
+  const m = jarr(h.missions).length, d = jarr(h.ms).length; if (m && d) return Math.min(1, d / m);
+  if (h.auto && h.score != null) return Math.max(0, Math.min(1, h.score / 100)); return 0.5; };
 const msTxt = h => { const m = jarr(h.missions); if (!m.length || !h.status || h.status === "skip") return "";
   const d = new Set(jarr(h.ms).map(Number)), miss = m.filter((_, i) => !d.has(i));
   return ` · 세부미션 ${m.length - miss.length}/${m.length}${miss.length ? ` (못 한 것: ${esc(miss.join(", "))})` : ""}`; };
@@ -24,7 +27,7 @@ function daySummary(rows, hw, d) {
     if (!best[k] || r > best[k].r) best[k] = { book: bk(x.book), part: x.part, name: x.part_name, t: x.total, c: x.correct, r };
   });
   const v = Object.values(best), t = v.reduce((a, x) => a + x.t, 0), c = v.reduce((a, x) => a + x.c, 0);
-  const hs = hw.filter(h => h.day === d), hc = hs.filter(h => h.status && h.status !== "skip"), hd = hc.filter(h => h.status === "done").length;
+  const hs = hw.filter(h => h.day === d), hc = hs.filter(h => h.status && h.status !== "skip"), hd = Math.round(hc.reduce((a, h) => a + (hwCred(h) || 0), 0) * 10) / 10;
   return { d, tests: v, tp: t ? Math.round(c / t * 100) : null, t, c, hw: hs, hc: hc.length, hd, hp: hc.length ? Math.round(hd / hc.length * 100) : null };
 }
 
@@ -38,7 +41,7 @@ async function build(student, dayQ, range) {
   const rows = await sql`select id, book, part, part_name, scope, total, coalesce(score, correct) as correct, created_at
                          from attempts where student = ${student} order by created_at desc limit 1000`;
   const hw = await sql`
-    select i.id, i.day, i.title, i.memo, i.missions, c.name as class_name, k.status, k.score, k.memo as cmemo, k.ms,
+    select i.id, i.day, i.title, i.memo, i.missions, c.name as class_name, k.status, k.score, k.memo as cmemo, k.ms, k.auto,
            (select count(*)::int from hw_members m2 where m2.class_id = i.class_id) as n,
            (select count(*)::int from hw_checks k2 where k2.item_id = i.id and k2.status = 'done') as nd
     from hw_members m join hw_items i on i.class_id = m.class_id join hw_classes c on c.id = m.class_id
@@ -72,7 +75,7 @@ async function build(student, dayQ, range) {
     const n = range === "week" ? 7 : 30, from = dPlus(day, -(n - 1));
     const ds = [...new Set(rows.map(r => kday(r.created_at)).concat(hw.map(h => h.day), att.map(a => a.day)))].filter(d => d >= from && d <= day).sort();
     const H = ds.map(d => daySummary(rows, hw, d));
-    const hc = H.reduce((a, x) => a + x.hc, 0), hd = H.reduce((a, x) => a + x.hd, 0), t = H.reduce((a, x) => a + x.t, 0), c = H.reduce((a, x) => a + x.c, 0);
+    const hc = H.reduce((a, x) => a + x.hc, 0), hd = Math.round(H.reduce((a, x) => a + x.hd, 0) * 10) / 10, t = H.reduce((a, x) => a + x.t, 0), c = H.reduce((a, x) => a + x.c, 0);
     const re = rows.filter(r => isRe(r) && kday(r.created_at) >= from && kday(r.created_at) <= day).length;
     const nt = notes.find(x => x.day === day && x.kind === range);
     L.push(`<h1>${esc(student)} · ${range === "week" ? "주간" : "월간"} 학습리포트 (${fmt(from)} ~ ${fmt(day)})</h1>`);
