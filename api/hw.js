@@ -136,6 +136,16 @@ export default async function handler(req, res) {
                   set status = excluded.status, score = excluded.score, memo = excluded.memo, auto = false, checked_at = now()`;
         break;
       }
+      case "attempt.fix": {   // 다시 채점: 시험 기록의 맞힌 수·문항 기록 고치기 (점수는 올리기만 — 내려가지 않음)
+        const aid = Number(b.id) || 0, det = Array.isArray(b.detail) ? b.detail : null;
+        if (!aid || !det) return res.status(400).json({ error: "기록·문항이 없습니다" });
+        const [a] = await sql`select total, correct from attempts where id = ${aid}`;
+        if (!a) return res.status(404).json({ error: "기록이 없습니다" });
+        const nc = Math.max(0, Math.min(a.total, Math.round(Number(b.correct))));
+        if (!Number.isFinite(nc) || nc < a.correct) return res.status(400).json({ error: "점수는 올리기만 할 수 있어요" });
+        await sql`update attempts set correct = ${nc}, pct = ${a.total ? Math.round(nc / a.total * 100) : 0}, detail = ${JSON.stringify(det).slice(0, 200000)}::jsonb where id = ${aid}`;
+        out = { ok: true, id: aid, correct: nc }; break;
+      }
       case "tpl.save": {      // 🧩 세부미션 템플릿 (선생님이 고친 것) · reset이면 기본값으로
         if (b.reset) await sql`delete from hw_meta where k = 'mission_tpl'`;
         else { const t = cleanTpl(b.tpl); if (!t.length) return res.status(400).json({ error: "템플릿이 비었어요" });
