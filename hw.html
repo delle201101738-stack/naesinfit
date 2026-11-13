@@ -309,6 +309,13 @@ function msRows(it, s, k){ const m=msOf(it); if(!m.length) return ""; const d=ms
   return `<span class="msr">${m.map((x,i)=>`<button class="mb${d.has(i)?" on":""}" data-mt="${it.id}" data-ms="${esc(s)}" data-mi="${i}"><b>${d.has(i)?"✓":CIRC[i]}</b>${esc(x)}</button>`).join("")}</span>`; }
 function msBtns(it, s, k){ const m=msOf(it); if(!m.length) return ""; const d=msDone(k);
   return `<span class="msb">${m.map((x,i)=>`<button class="mb${d.has(i)?" on":""}" data-mt="${it.id}" data-ms="${esc(s)}" data-mi="${i}" title="${esc(x)}">${CIRC[i]}</button>`).join("")}</span>`; }
+/* 🧮 숙제 점수 칸: 완료 1 · 안 함 0 · 일부 = 해낸 세부미션 비율(미션 없으면 앱 점수 %, 그것도 없으면 0.5) — 일부만 해도 0%로 나가지 않게 */
+const hwCred=(k,it)=>{ if(!k||!k.status||k.status==="skip") return null; if(k.status==="done") return 1; if(k.status!=="part") return 0;
+  const m=msOf(it).length, d=jarr(k.ms).length; if(m&&d) return Math.min(1,d/m);
+  if(k.auto&&k.score!=null) return Math.max(0,Math.min(1,k.score/100)); return 0.5; };
+const credSum=(ks,its)=>ks.reduce((a,k,j)=>{ const c=hwCred(k,its[j]); return c==null?a:a+c; },0);
+const fmtN=v=>Number.isInteger(v)?String(v):(Math.round(v*10)/10).toString();
+const itemById=id=>DB.items.find(i=>+i.id===+id);
 const msStatus=(n,k,cur)=>k>=n?"done":k>0?"part":(cur&&(String(cur.memo||"").trim()||cur.score!=null))?"none":"";
 function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),1700);}
 async function api(body){
@@ -538,8 +545,8 @@ function gridStats(){
   const mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student);
   const cols=[...document.querySelectorAll("[data-cc]")].map(e=>+e.dataset.cc);
   document.querySelectorAll("[data-rr]").forEach(e=>{ const s=e.dataset.rr; const v=cols.map(i=>chk[i+"|"+s]).filter(k=>k&&k.status!=="skip");
-    const d=v.filter(k=>k.status==="done").length, n=cols.filter(i=>!chk[i+"|"+s]||chk[i+"|"+s].status!=="skip").length;
-    e.innerHTML=`<b>${d}</b>/${n}`; e.className="rr"+(n&&d===n?" all":""); });
+    const d=cols.reduce((a,i)=>{ const c=hwCred(chk[i+"|"+s],itemById(i)); return c==null?a:a+c; },0), n=cols.filter(i=>!chk[i+"|"+s]||chk[i+"|"+s].status!=="skip").length;
+    e.innerHTML=`<b>${fmtN(d)}</b>/${n}`; e.className="rr"+(n&&d>=n?" all":""); });
   document.querySelectorAll("[data-cc]").forEach(e=>{ const i=+e.dataset.cc; const v=mem.map(s=>chk[i+"|"+s]);
     const d=v.filter(k=>k&&k.status==="done").length, no=v.filter(k=>!k).length;
     e.innerHTML=`<b>${d}</b>/${mem.length}${no?`<small>미검사 ${no}</small>`:""}`; });
@@ -614,7 +621,7 @@ function testHTML(cls, mem, items){
 /* 학생 한 명의 하루 요약 + 바로 전 학습일 */
 function dayStat(s, d, items, chk){
   const v=dayTests(s,d), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
-  const ks=items.filter(i=>i.day===d).map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip"), hd=ks.filter(k=>k.status==="done").length;
+  const di=items.filter(i=>i.day===d), all=di.map(i=>chk[i.id+"|"+s]), ks=all.filter(k=>k&&k.status!=="skip"), hd=credSum(all,di);
   return {tp:t?Math.round(c/t*100):null, hp:ks.length?Math.round(hd/ks.length*100):null};
 }
 function prevStat(s, items, chk){
@@ -629,7 +636,7 @@ function sendHTML(cls, mem, items, chk){
   if(!RES) return `<div class="card empty">기록을 불러오는 중…</div>`;
   const its=items.filter(i=>i.day===VD);
   const ICN={done:"✅",part:"🟡",none:"❌",skip:"➖"};
-  const rows=mem.map(s=>{ const ks=its.map(i=>chk[i.id+"|"+s]), cc=ks.filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
+  const rows=mem.map(s=>{ const ks=its.map(i=>chk[i.id+"|"+s]), cc=ks.filter(k=>k&&k.status!=="skip"), d=fmtN(credSum(ks,its));
     const v=dayTests(s), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
     return {s, hw:its.length?{d,n:cc.length,icons:ks.map(k=>k?ICN[k.status]:"⏺").join("")}:null, ts:v.length?{n:v.length,p:Math.round(c/t*100)}:null,
       url:`report?student=${encodeURIComponent(s)}&day=${VD}`, cur:dayStat(s,VD,items,chk), prev:prevStat(s,items,chk)}; });
@@ -1089,7 +1096,7 @@ async function tokensFor(names){
 }
 const parentUrl=(tok,d)=>`${location.origin}/r/${tok}${d?`?day=${d}`:""}`;
 function oneLine(s, items, chk){
-  const its=items.filter(i=>i.day===VD), cc=its.map(i=>chk[i.id+"|"+s]).filter(k=>k&&k.status!=="skip"), d=cc.filter(k=>k.status==="done").length;
+  const its=items.filter(i=>i.day===VD), all=its.map(i=>chk[i.id+"|"+s]), cc=all.filter(k=>k&&k.status!=="skip"), d=fmtN(credSum(all,its));
   const st=dayStat(s,VD,items,chk), pv=prevStat(s,items,chk), out=[];
   const at=attRec(s,VD); if(at&&at.status!=="on") out.push(ATTN[at.status]+(at.memo?`(${at.memo})`:""));
   if(cc.length) out.push(`숙제 ${d}/${cc.length}`);

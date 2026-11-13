@@ -299,6 +299,11 @@ details.more[open]>summary{border-bottom:1px solid var(--line);margin-bottom:6px
 <script>
 /* 🧩 숙제 세부미션 — 검사한 숙제는 미션마다 ✓/✗, 검사 전이면 할 일 목록만 */
 const jarrR=v=>{ try{ return Array.isArray(v)?v:v?JSON.parse(v):[]; }catch(e){ return []; } };
+const hwCredR=h=>{ if(!h||!h.status||h.status==="skip") return null; if(h.status==="done") return 1; if(h.status!=="part") return 0;   // 일부 = 해낸 미션 비율 → 앱 점수 % → 0.5
+  const m=jarrR(h.missions).length, d=jarrR(h.ms).length; if(m&&d) return Math.min(1,d/m);
+  if(h.auto&&h.score!=null) return Math.max(0,Math.min(1,h.score/100)); return 0.5; };
+const credR=list=>list.reduce((a,h)=>{ const c=hwCredR(h); return c==null?a:a+c; },0);
+const fmtNR=v=>Number.isInteger(v)?String(v):(Math.round(v*10)/10).toString();
 function msHTML(h){ const m=jarrR(h.missions); if(!m.length) return "";
   const chk=!!h.status&&h.status!=="skip", d=new Set(jarrR(h.ms).map(Number));
   return `<div class="hms">${m.map((x,i)=>`<span class="${chk?(d.has(i)?"y":"n"):""}">${chk?(d.has(i)?"✓":"✗"):"①②③④⑤⑥⑦⑧"[i]} ${String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}</span>`).join("")}</div>`; }
@@ -515,9 +520,9 @@ function analyzeAreas(items,SI){
 const HWS={done:["✅","완료","ok"],part:["🟡","일부","warn"],none:["❌","안 함","no"],skip:["➖","면제","mute"]};
 function hwBlock(HW, day, TD){
   const todays=HW.filter(h=>h.day===day);
-  const chk=todays.filter(h=>h.status&&h.status!=="skip"), td=chk.filter(h=>h.status==="done").length;
+  const chk=todays.filter(h=>h.status&&h.status!=="skip"), td=credR(chk);
   const rec=HW.filter(h=>h.day<=day&&h.status&&h.status!=="skip").slice(0,10);
-  const rd=rec.filter(h=>h.status==="done").length, rp=rec.length?Math.round(rd/rec.length*100):null;
+  const rd=credR(rec), rp=rec.length?Math.round(rd/rec.length*100):null;
   const prev=HW.filter(h=>h.day<day).slice(0,6);
   if(!todays.length&&!rec.length) return null;
   const item=h=>{ const st=HWS[h.status]||["⏺","미검사","mute"];
@@ -530,11 +535,11 @@ function hwBlock(HW, day, TD){
   const html=`<h2 class="s">📚 ${TD} 숙제 검사</h2>
   <div class="card hwc">
     ${todays.length?`<div class="hbig ${lv}">
-      <div class="hbn"><b>${chk.length?td:"—"}</b><span>/ ${tot}</span></div>
+      <div class="hbn"><b>${chk.length?fmtNR(td):"—"}</b><span>/ ${tot}</span></div>
       <div class="hbt"><b>${chk.length?(pct>=100?"숙제 다 해 왔어요 👏":pct>=50?"숙제가 조금 남았어요":"숙제가 많이 남았어요"):"아직 검사 전이에요"}</b>
         <div class="hbar"><i style="width:${pct||0}%"></i></div>
         <small>${TD} 숙제 완료율 ${pct!==null?pct+"%":"—"}${rp!==null?` · 최근 숙제 ${rec.length}개 완료율 <b>${rp}%</b>`:""}</small></div>
-    </div>`:`<div class="hsum">${TD} 검사한 숙제 없음${rp!==null?` · 최근 숙제 완료율 <b>${rp}%</b> <small>(${rd}/${rec.length})</small>`:""}</div>`}
+    </div>`:`<div class="hsum">${TD} 검사한 숙제 없음${rp!==null?` · 최근 숙제 완료율 <b>${rp}%</b> <small>(${fmtNR(rd)}/${rec.length})</small>`:""}</div>`}
     ${miss.length?`<div class="hredo"><b>📌 다음 수업 전까지 마무리할 숙제 ${miss.length}개</b>${miss.map(h=>`<div>${h.status==="part"?"🟡":"❌"} ${esc(h.title)}${h.cmemo?` <span>— ${esc(h.cmemo)}</span>`:""}</div>`).join("")}</div>`:""}
     ${todays.map(item).join("")}
     ${prev.length?`<div class="hh">지난 숙제</div>${prev.map(h=>{const st=HWS[h.status]||["⏺","미검사"];
@@ -544,7 +549,7 @@ function hwBlock(HW, day, TD){
   if(todays.length){
     if(!chk.length) c=`📚 <b>숙제</b> — ${TD} 숙제 ${todays.length}개는 아직 검사 전이에요.`;
     else {
-      c=`📚 <b>숙제 ${td}/${chk.length} 완료 (${pct}%)</b> — `;
+      c=`📚 <b>숙제 ${fmtNR(td)}/${chk.length} 완료 (${pct}%)</b> — `;
       if(miss.length) c+=miss.map(h=>`<b>${esc(h.title)}</b>${josa(h.title,"은","는")} ${h.status==="part"?"일부만 했어요":"아직 못 했어요"}${h.cmemo?` (${esc(h.cmemo)})`:""}.`).join(" ")
         +` 다음 수업 전까지 <b>${miss.length}개를 마무리</b>할 수 있게 집에서도 한 번 챙겨 주세요.`;
       else c+="숙제를 빠짐없이 해 왔어요 👏 이 성실함이 점수로 이어져요.";
@@ -564,7 +569,7 @@ function cumulative(D, upto){
     const best={}; RA.filter(x=>dkey(x.created_at)===d&&!isRe(x)).forEach(x=>{ const k=x.book+"|"+x.part, r=x.total?x.correct/x.total:0;
       if(!best[k]||r>best[k].r) best[k]={t:x.total,c:x.correct,r,book:x.book,part:x.part}; });
     const v=Object.values(best), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
-    const hs=HW.filter(h=>h.day===d&&h.status&&h.status!=="skip"), hd=hs.filter(h=>h.status==="done").length;
+    const hs=HW.filter(h=>h.day===d&&h.status&&h.status!=="skip"), hd=credR(hs);
     // 반평균: 그날 이 학생이 본 시험과 같은 시험(같은 과·파트·날)을 본 학생 3명 이상일 때, 문항 수 가중 평균
     let ct=0, cs=0; v.forEach(x=>{ const cl=CLSIDX[x.book+"|"+x.part+"|"+d]; if(cl&&cl.s>=3){ ct+=x.t; cs+=(cl.p!=null?cl.p:Math.round(cl.c/cl.t*100))*x.t; } });
     // 반 숙제 완료율: 그날 숙제들의 반 전체 완료 ÷ 검사한 칸
@@ -592,7 +597,7 @@ function cumHTML(CUM, day, name){
   const rows=L.slice().reverse().map((x,i,arr)=>{ const pv=arr.slice(i+1);
     const pt=pv.find(y=>y.tp!==null), ph=pv.find(y=>y.hp!==null);
     return `<tr${x.d===day?` class="cur"`:""}><td><b>${x.d.slice(5).replace("-",".")}</b>${x.at&&ATT[x.at]?` <span title="${ATT[x.at][1]}">${ATT[x.at][0]}</span>`:""}${x.d===day?` <em>이날</em>`:""}</td>
-      <td>${x.hc?`<b>${x.hd}/${x.hc}</b> <small>${x.hp}%</small> ${arrow(ph&&x.hp!==null?x.hp-ph.hp:null)}${x.hcls!=null?`<div class="cv">반평균 ${x.hcls}%</div>`:""}`:x.hn?`<small>미검사</small>`:`<small>—</small>`}</td>
+      <td>${x.hc?`<b>${fmtNR(x.hd)}/${x.hc}</b> <small>${x.hp}%</small> ${arrow(ph&&x.hp!==null?x.hp-ph.hp:null)}${x.hcls!=null?`<div class="cv">반평균 ${x.hcls}%</div>`:""}`:x.hn?`<small>미검사</small>`:`<small>—</small>`}</td>
       <td>${x.tp!==null?`<b>${x.tp}%</b> <small>${x.tn}개 · ${esc(x.books.join(", "))}</small> ${arrow(pt?x.tp-pt.tp:null)}${x.tc!=null?`<div class="cv">반평균 ${x.tc}% <span class="${x.tp>=x.tc?"up":"down"}">${x.tp>=x.tc?"▲":"▼"} ${Math.abs(x.tp-x.tc)}점</span></div>`:""}`:`<small>—</small>`}</td></tr>`; }).join("");
   return `<h2 class="s">📈 ${esc(name)} 누적 기록 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(최근 ${L.length}번 학습일 · 날짜별로 따로 계산)</span></h2>
   <div class="card cum">
@@ -719,7 +724,7 @@ function renderRange(D){
   const KIND=VIEW, NOTE=(D.notes||[]).find(x=>x.day===end&&x.kind===KIND);
   const autoHead=[hc?`숙제 완료율 ${Math.round(hd/hc*100)}%`:null, tp!==null?`시험 평균 ${tp}%`:null, parts[0]?`${parts[0].name} 가장 잘함`:null].filter(Boolean).join(" · ")||"이번 기간 기록이에요";
   const autoNote=[`${esc(D.student)} 이번 ${VIEW==="week"?"주":"달"} ${CUMa.length}일 공부했어요.`+(AR.length?` 출결은 정시 ${AR.filter(a=>a.status==="on").length}번${AR.filter(a=>a.status==="late").length?` · 지각 ${AR.filter(a=>a.status==="late").length}번`:""}${AR.filter(a=>a.status==="absent").length?` · 결석 ${AR.filter(a=>a.status==="absent").length}번`:""}이에요.`:""),
-    hc?`📚 숙제 ${hc}개 중 <b>${hd}개</b>를 해 왔어요 (${Math.round(hd/hc*100)}%).`:"",
+    hc?`📚 숙제 ${hc}개 중 <b>${fmtNR(hd)}개</b>를 해 왔어요 (${Math.round(hd/hc*100)}%).`:"",
     tp!==null?`📝 시험 평균 정답률은 <b>${tp}%</b>예요.${parts.length>1?` 가장 잘한 건 <b>${esc(parts[0].name)}</b>(${parts[0].p}%), 더 연습할 건 <b>${esc(parts[parts.length-1].name)}</b>(${parts[parts.length-1].p}%)예요.`:""}`:"",
     re?`🔁 틀린 문제 다시 풀기를 ${re}번 했어요.`:"🔁 틀린 문제 다시 풀기를 아직 안 했어요 — 오답노트로 한 번씩 꼭 다시 풀게 해 주세요."].filter(Boolean).join("<br><br>");
   CURURL=urlFor({day:end});
@@ -732,7 +737,7 @@ function renderRange(D){
   ${headHTML(NOTE&&NOTE.headline||autoHead, !!D.teacher, !!(NOTE&&NOTE.headline))}
   <div class="hero"><div class="chips" style="margin-top:0">
     <div class="chip"><i>📅 공부한 날</i><b>${CUMa.length}일</b></div>
-    <div class="chip"><i>📚 숙제 완료</i><b>${hc?`${hd}/${hc}`:"—"}</b></div>
+    <div class="chip"><i>📚 숙제 완료</i><b>${hc?`${fmtNR(hd)}/${hc}`:"—"}</b></div>
     <div class="chip"><i>📝 시험 평균</i><b>${tp!==null?tp+"%":"—"}</b></div>
     <div class="chip"><i>🔁 다시 풀기</i><b>${re}회</b></div>
     ${AR.length?`<div class="chip"><i>🕘 출결</i><b style="font-size:14px;line-height:1.5">정시 ${ak("on")} · 지각 ${ak("late")}<br>결석 ${ak("absent")}${ak("etc")?` · 기타 ${ak("etc")}`:""}</b></div>`:""}
