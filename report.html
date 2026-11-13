@@ -529,16 +529,17 @@ function hwBlock(HW, day, TD){
     return `<div class="hi ${st[2]}"><span class="hs">${st[0]} ${st[1]}</span>
       <div class="hb"><b>${esc(h.title)}</b><small>${esc(h.class_name||"")}${h.memo?` · ${esc(h.memo)}`:""}</small>${msHTML(h)}${h.cmemo?`<p>📝 ${esc(h.cmemo)}</p>`:""}</div>
       <span class="hn">${h.score!=null?`<b>${h.score}점</b>`:""}${h.n?`<small>반 완료 ${h.nd}/${h.n}</small>`:""}</span></div>`; };
-  const tot=chk.length||todays.length, pct=chk.length?Math.round(td/chk.length*100):null;
+  // 분모 = 그날 숙제 전부(면제 제외) · 아직 검사 안 한 숙제는 '검사 전'으로 따로 보여 줌 (예전: 검사한 개수만 분모 → 숙제 3개인데 0/1)
+  const tot=todays.filter(h=>h.status!=="skip").length||todays.length, un=todays.filter(h=>!h.status).length, pct=chk.length?Math.round(td/chk.length*100):null;
   const miss=chk.filter(h=>h.status!=="done");
   const lv=pct===null?"mute":pct>=100?"ok":pct>=50?"warn":"no";
   const html=`<h2 class="s">📚 ${TD} 숙제 검사</h2>
   <div class="card hwc">
     ${todays.length?`<div class="hbig ${lv}">
-      <div class="hbn"><b>${chk.length?fmtNR(td):"—"}</b><span>/ ${tot}</span></div>
+      <div class="hbn"><b>${chk.length?fmtNR(td):"—"}</b><span>/ ${tot}</span>${un&&chk.length?`<small style="display:block;font-size:11px;color:var(--ink-3);margin-top:2px">검사 전 ${un}개</small>`:""}</div>
       <div class="hbt"><b>${chk.length?(pct>=100?"숙제 다 해 왔어요 👏":pct>=50?"숙제가 조금 남았어요":"숙제가 많이 남았어요"):"아직 검사 전이에요"}</b>
         <div class="hbar"><i style="width:${pct||0}%"></i></div>
-        <small>${TD} 숙제 완료율 ${pct!==null?pct+"%":"—"}${rp!==null?` · 최근 숙제 ${rec.length}개 완료율 <b>${rp}%</b>`:""}</small></div>
+        <small>${TD} 숙제 완료율 ${pct!==null?pct+"%":"—"}${un&&chk.length?` (검사한 ${chk.length}개 기준 · ${un}개는 검사 전)`:""}${rp!==null?` · 최근 숙제 ${rec.length}개 완료율 <b>${rp}%</b>`:""}</small></div>
     </div>`:`<div class="hsum">${TD} 검사한 숙제 없음${rp!==null?` · 최근 숙제 완료율 <b>${rp}%</b> <small>(${fmtNR(rd)}/${rec.length})</small>`:""}</div>`}
     ${miss.length?`<div class="hredo"><b>📌 다음 수업 전까지 마무리할 숙제 ${miss.length}개</b>${miss.map(h=>`<div>${h.status==="part"?"🟡":"❌"} ${esc(h.title)}${h.cmemo?` <span>— ${esc(h.cmemo)}</span>`:""}</div>`).join("")}</div>`:""}
     ${todays.map(item).join("")}
@@ -549,14 +550,14 @@ function hwBlock(HW, day, TD){
   if(todays.length){
     if(!chk.length) c=`📚 <b>숙제</b> — ${TD} 숙제 ${todays.length}개는 아직 검사 전이에요.`;
     else {
-      c=`📚 <b>숙제 ${fmtNR(td)}/${chk.length} 완료 (${pct}%)</b> — `;
+      c=`📚 <b>숙제 ${fmtNR(td)}/${tot} 완료${un?"":` (${pct}%)`}</b>${un?` (${un}개는 아직 검사 전)`:""} — `;
       if(miss.length) c+=miss.map(h=>`<b>${esc(h.title)}</b>${josa(h.title,"은","는")} ${h.status==="part"?"일부만 했어요":"아직 못 했어요"}${h.cmemo?` (${esc(h.cmemo)})`:""}.`).join(" ")
         +` 다음 수업 전까지 <b>${miss.length}개를 마무리</b>할 수 있게 집에서도 한 번 챙겨 주세요.`;
       else c+="숙제를 빠짐없이 해 왔어요 👏 이 성실함이 점수로 이어져요.";
     }
   }
   if(rp!==null&&rec.length>=3) c+=(c?" ":"📚 <b>숙제</b> — ")+(rp>=90?`최근 숙제 완료율 <b>${rp}%</b>로 아주 성실해요.`:rp>=70?`최근 숙제 완료율은 <b>${rp}%</b>예요.`:`최근 숙제 완료율은 <b>${rp}%</b>예요 — 숙제 습관을 함께 잡아 갈게요.`);
-  return {html, cmt:c, chip:todays.length?`${td}/${chk.length||todays.length}`:null, td, tot, pct, chk:chk.length, miss, rp};
+  return {html, cmt:c, chip:todays.length?`${fmtNR(td)}/${tot}`:null, td, tot, pct, chk:chk.length, miss, rp};
 }
 /* ── 누적 기록: 학습일마다 숙제 완료율 + 시험 정답률 (모든 과) + 반평균 ── */
 let CLSIDX={};

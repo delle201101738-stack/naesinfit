@@ -638,7 +638,7 @@ function sendHTML(cls, mem, items, chk){
   const ICN={done:"✅",part:"🟡",none:"❌",skip:"➖"};
   const rows=mem.map(s=>{ const ks=its.map(i=>chk[i.id+"|"+s]), cc=ks.filter(k=>k&&k.status!=="skip"), d=fmtN(credSum(ks,its));
     const v=dayTests(s), t=v.reduce((a,x)=>a+x.t,0), c=v.reduce((a,x)=>a+x.c,0);
-    return {s, hw:its.length?{d,n:cc.length,icons:ks.map(k=>k?ICN[k.status]:"⏺").join("")}:null, ts:v.length?{n:v.length,p:Math.round(c/t*100)}:null,
+    return {s, hw:its.length?{d,n:cc.length,tot:ks.filter(k=>!k||k.status!=="skip").length,un:ks.filter(k=>!k).length,icons:ks.map(k=>k?ICN[k.status]:"⏺").join("")}:null, ts:v.length?{n:v.length,p:Math.round(c/t*100)}:null,
       url:`report?student=${encodeURIComponent(s)}&day=${VD}`, cur:dayStat(s,VD,items,chk), prev:prevStat(s,items,chk)}; });
   const has=rows.filter(r=>r.hw||r.ts);
   return `<div class="sec"><h2>${esc(cls.name)} · ${fmtD(VD)} 숙제+테스트 리포트 보내기</h2><span class="note">학생마다 비밀 링크(이름으로는 못 열어요) · 복사해서 카톡에 바로 붙여넣으세요</span></div>`+dayChips(mem, items)+`
@@ -648,7 +648,7 @@ function sendHTML(cls, mem, items, chk){
   <div class="card scroll"><table class="snd">
     <thead><tr><th>학생</th><th>📚 숙제</th><th>📝 테스트</th><th>📈 지난 학습일 대비</th><th>👀 학부모 열람</th><th></th></tr></thead>
     <tbody>${rows.map(r=>`<tr${r.hw||r.ts?"":` class="dim"`}><td><b>${esc(r.s)}</b><span data-bell="${esc(r.s)}"></span></td>
-      <td>${r.hw?`<span class="ic">${r.hw.icons}</span> ${r.hw.n?`<b>${r.hw.d}/${r.hw.n}</b>`:`<span class="na">미검사</span>`}`:`<span class="na">숙제 없음</span>`}</td>
+      <td>${r.hw?`<span class="ic">${r.hw.icons}</span> ${r.hw.n?`<b>${r.hw.d}/${r.hw.tot}</b>${r.hw.un?` <small class="na">검사 전 ${r.hw.un}</small>`:""}`:`<span class="na">미검사</span>`}`:`<span class="na">숙제 없음</span>`}</td>
       <td>${r.ts?`${r.ts.n}개 · <b class="tp ${r.ts.p>=85?"hi":r.ts.p>=75?"mid":"lo"}">${r.ts.p}%</b>`:`<span class="na">미응시</span>`}</td>
       <td class="dlt">${r.prev.ph&&r.cur.hp!==null?`숙제 ${arr(r.cur.hp-r.prev.ph.v)}점`:""}${r.prev.pt&&r.cur.tp!==null?` 시험 ${arr(r.cur.tp-r.prev.pt.v)}점 <small>(${fmtD(r.prev.pt.d)} ${r.prev.pt.v}%)</small>`:""}${!(r.prev.ph&&r.cur.hp!==null)&&!(r.prev.pt&&r.cur.tp!==null)?`<span class="na">—</span>`:""}</td>
       <td>${seenHTML(r.s)}</td>
@@ -1099,7 +1099,7 @@ function oneLine(s, items, chk){
   const its=items.filter(i=>i.day===VD), all=its.map(i=>chk[i.id+"|"+s]), cc=all.filter(k=>k&&k.status!=="skip"), d=fmtN(credSum(all,its));
   const st=dayStat(s,VD,items,chk), pv=prevStat(s,items,chk), out=[];
   const at=attRec(s,VD); if(at&&at.status!=="on") out.push(ATTN[at.status]+(at.memo?`(${at.memo})`:""));
-  if(cc.length) out.push(`숙제 ${d}/${cc.length}`);
+  if(cc.length){ const tot=all.filter(k=>!k||k.status!=="skip").length, un=all.filter(k=>!k).length; out.push(`숙제 ${d}/${tot}${un?` (검사 전 ${un})`:""}`); }
   if(st.tp!==null){ const dv=pv.pt?st.tp-pv.pt.v:null; out.push(`시험 ${st.tp}%${dv===null?"":dv>0?` ▲${dv}점`:dv<0?` ▼${-dv}점`:" (지난번과 같음)"}`); }
   return out.length?out.join(" · "):"오늘 기록 없음";
 }
