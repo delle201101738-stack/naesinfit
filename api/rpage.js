@@ -121,7 +121,8 @@ async function build(student, dayQ, range) {
   } else {
     L.push(`<h2>요약</h2><ul>`);
     if (attTxt(day)) L.push(`<li>출결: ${attTxt(day)}</li>`);
-    L.push(`<li>숙제: ${S.hw.length ? (S.hc ? `${S.hd}/${S.hc} 완료` : `${S.hw.length}개 · 아직 검사 전`) : "없음"}${ph && S.hp !== null ? ` (지난번 ${ph.hp}% → 이번 ${S.hp}%)` : ""}</li>`);
+    const hwTot = S.hw.filter(h => h.status !== "skip").length, hwUn = S.hw.filter(h => !h.status).length;
+    L.push(`<li>숙제: ${S.hw.length ? (S.hc ? `${S.hd}/${hwTot} 완료${hwUn ? ` (${hwUn}개는 아직 검사 전)` : ""}` : `${S.hw.length}개 · 아직 검사 전`) : "없음"}${ph && S.hp !== null ? ` (지난번 ${ph.hp}% → 이번 ${S.hp}%)` : ""}</li>`);
     L.push(`<li>시험: ${S.tests.length ? `${S.tests.length}개 · 정답률 ${S.tp}%` : "없음"}${pt && S.tp !== null ? ` · 지난 학습일(${fmt(pt.d)})보다 ${pt2(S.tp - pt.tp)}` : ""}</li>`);
     L.push(`<li>틀린 문제 다시 풀기: ${retake.length ? `${retake.length}회 (마지막 ${Math.round(retake[0].correct / Math.max(1, retake[0].total) * 100)}%)` : "아직 안 함"}</li></ul>`);
     if (S.hw.length) {
@@ -144,7 +145,7 @@ async function build(student, dayQ, range) {
     H8.forEach(x => L.push(`<tr><td>${fmt(x.d)}</td><td>${x.hc ? `${x.hd}/${x.hc}` : x.hw.length ? "검사 전" : "—"}</td><td>${x.tp !== null ? `${x.tp}% (${x.tests.length}개)` : "—"}</td></tr>`));
     L.push(`</table>`);
   }
-  const desc = [attTxt(day).replace(/ \(.*\)$/, "").replace("✅ ", ""), S.hw.length ? (S.hc ? `숙제 ${S.hd}/${S.hc} 완료` : `숙제 ${S.hw.length}개`) : "",
+  const desc = [attTxt(day).replace(/ \(.*\)$/, "").replace("✅ ", ""), S.hw.length ? (S.hc ? `숙제 ${S.hd}/${S.hw.filter(h => h.status !== "skip").length} 완료` : `숙제 ${S.hw.length}개`) : "",
                 S.tests.length ? `시험 정답률 ${S.tp}%` : "",
                 (pt && S.tp !== null) ? `지난번보다 ${pt2(S.tp - pt.tp)}` : "",
                 dday !== null ? `시험 D-${dday}` : ""].filter(Boolean).join(" · ") || "숙제·테스트 결과";
