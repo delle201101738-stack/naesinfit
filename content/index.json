@@ -699,6 +699,21 @@
      "labels": {}
     },
     {
+     "id": "v2610a",
+     "no": "21–24번",
+     "title": "금옥여고판 · 본교재 단어 TEST",
+     "file": "content/v2610a.json",
+     "pts": {
+      "wmean": 70,
+      "wsyn": 15,
+      "wdef": 18,
+      "dfa": 5,
+      "dfb": 2
+     },
+     "total": 110,
+     "labels": {}
+    },
+    {
      "id": "m2610a2",
      "no": "29–33번",
      "title": "구일고판 · 올킬+통변형",
@@ -844,9 +859,9 @@
      "title": "올킬+통변형",
      "file": "content/m2609c1.json",
      "pts": {
-      "wmean": 75,
-      "wsyn": 5,
-      "wdef": 10,
+      "wmean": 45,
+      "wsyn": 3,
+      "wdef": 6,
       "word": 59,
       "word2": 59,
       "cloze": 15,
@@ -855,7 +870,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 313,
+     "total": 277,
      "labels": {}
     },
     {
@@ -884,9 +899,9 @@
      "title": "올킬+통변형",
      "file": "content/m2609c3.json",
      "pts": {
-      "wmean": 71,
-      "wsyn": 5,
-      "wdef": 10,
+      "wmean": 57,
+      "wsyn": 4,
+      "wdef": 8,
       "word": 63,
       "word2": 63,
       "cloze": 15,
@@ -895,7 +910,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 317,
+     "total": 300,
      "labels": {}
     },
     {
@@ -904,8 +919,8 @@
      "title": "올킬+통변형",
      "file": "content/m2609c4.json",
      "pts": {
-      "wmean": 47,
-      "wsyn": 5,
+      "wmean": 30,
+      "wsyn": 3,
       "word": 34,
       "word2": 34,
       "cloze": 9,
@@ -914,7 +929,20 @@
       "order": 6,
       "insert": 6
      },
-     "total": 183,
+     "total": 164,
+     "labels": {}
+    },
+    {
+     "id": "v2609k",
+     "no": "21·32·36·38·39번",
+     "title": "금옥여고판 · 본교재 단어 TEST",
+     "file": "content/v2609k.json",
+     "pts": {
+      "wmean": 71,
+      "wsyn": 5,
+      "wdef": 8
+     },
+     "total": 84,
      "labels": {}
     }
    ]
@@ -1683,11 +1711,8 @@
    "m2610b1",
    "m2610b2",
    "m2610b3",
-   "m2610a1",
-   "m2609c1",
-   "m2609c2",
-   "m2609c3",
-   "m2609c4"
+   "v2610a",
+   "v2609k"
   ],
   "경인고1": [
    "ce2ne03",
