@@ -682,6 +682,11 @@
      "title": "구일고판 · 올킬+통변형",
      "file": "content/m2610a1.json",
      "pts": {
+      "wmean": 87,
+      "wsyn": 19,
+      "wdef": 22,
+      "dfa": 7,
+      "dfb": 4,
       "word": 70,
       "word2": 70,
       "cloze": 15,
@@ -690,7 +695,7 @@
       "order": 10,
       "insert": 8
      },
-     "total": 243,
+     "total": 382,
      "labels": {}
     },
     {
@@ -699,6 +704,11 @@
      "title": "구일고판 · 올킬+통변형",
      "file": "content/m2610a2.json",
      "pts": {
+      "wmean": 95,
+      "wsyn": 15,
+      "wdef": 30,
+      "dfa": 5,
+      "dfb": 3,
       "word": 74,
       "word2": 74,
       "cloze": 15,
@@ -707,7 +717,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 253,
+     "total": 401,
      "labels": {}
     },
     {
@@ -716,6 +726,11 @@
      "title": "구일고판 · 올킬+통변형",
      "file": "content/m2610a3.json",
      "pts": {
+      "wmean": 85,
+      "wsyn": 15,
+      "wdef": 26,
+      "dfa": 5,
+      "dfb": 2,
       "word": 67,
       "word2": 67,
       "cloze": 15,
@@ -724,7 +739,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 239,
+     "total": 372,
      "labels": {}
     },
     {
@@ -733,6 +748,11 @@
      "title": "구일고판 · 올킬+통변형",
      "file": "content/m2610a4.json",
      "pts": {
+      "wmean": 64,
+      "wsyn": 11,
+      "wdef": 12,
+      "dfa": 3,
+      "dfb": 1,
       "word": 45,
       "word2": 45,
       "cloze": 9,
@@ -741,7 +761,7 @@
       "order": 6,
       "insert": 6
      },
-     "total": 153,
+     "total": 244,
      "labels": {}
     },
     {
@@ -750,6 +770,11 @@
      "title": "금옥여고·신도림고판 · 올킬+통변형",
      "file": "content/m2610b1.json",
      "pts": {
+      "wmean": 95,
+      "wsyn": 15,
+      "wdef": 30,
+      "dfa": 5,
+      "dfb": 3,
       "word": 64,
       "word2": 64,
       "cloze": 15,
@@ -758,7 +783,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 233,
+     "total": 381,
      "labels": {}
     },
     {
@@ -767,6 +792,11 @@
      "title": "금옥여고·신도림고판 · 올킬+통변형",
      "file": "content/m2610b2.json",
      "pts": {
+      "wmean": 85,
+      "wsyn": 15,
+      "wdef": 26,
+      "dfa": 5,
+      "dfb": 2,
       "word": 70,
       "word2": 70,
       "cloze": 15,
@@ -775,7 +805,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 245,
+     "total": 378,
      "labels": {}
     },
     {
@@ -784,6 +814,11 @@
      "title": "금옥여고·신도림고판 · 올킬+통변형",
      "file": "content/m2610b3.json",
      "pts": {
+      "wmean": 64,
+      "wsyn": 11,
+      "wdef": 12,
+      "dfa": 3,
+      "dfb": 1,
       "word": 43,
       "word2": 43,
       "cloze": 9,
@@ -792,67 +827,7 @@
       "order": 6,
       "insert": 6
      },
-     "total": 149,
-     "labels": {}
-    },
-    {
-     "id": "v2610a",
-     "no": "21–24번 단어",
-     "title": "본교재 단어 TEST · 금옥여고",
-     "file": "content/v2610a.json",
-     "pts": {
-      "wmean": 70,
-      "wsyn": 15,
-      "wdef": 18,
-      "dfa": 5,
-      "dfb": 2
-     },
-     "total": 110,
-     "labels": {}
-    },
-    {
-     "id": "v2610b",
-     "no": "29–33번 단어",
-     "title": "본교재 단어 TEST · 신도림고·금옥여고",
-     "file": "content/v2610b.json",
-     "pts": {
-      "wmean": 95,
-      "wsyn": 15,
-      "wdef": 30,
-      "dfa": 5,
-      "dfb": 3
-     },
-     "total": 148,
-     "labels": {}
-    },
-    {
-     "id": "v2610c",
-     "no": "34–38번 단어",
-     "title": "본교재 단어 TEST · 신도림고·금옥여고",
-     "file": "content/v2610c.json",
-     "pts": {
-      "wmean": 85,
-      "wsyn": 15,
-      "wdef": 26,
-      "dfa": 5,
-      "dfb": 2
-     },
-     "total": 133,
-     "labels": {}
-    },
-    {
-     "id": "v2610d",
-     "no": "39–41번 단어",
-     "title": "본교재 단어 TEST · 신도림고·금옥여고",
-     "file": "content/v2610d.json",
-     "pts": {
-      "wmean": 64,
-      "wsyn": 11,
-      "wdef": 12,
-      "dfa": 3,
-      "dfb": 1
-     },
-     "total": 91,
+     "total": 240,
      "labels": {}
     }
    ]
@@ -869,6 +844,9 @@
      "title": "올킬+통변형",
      "file": "content/m2609c1.json",
      "pts": {
+      "wmean": 75,
+      "wsyn": 5,
+      "wdef": 10,
       "word": 59,
       "word2": 59,
       "cloze": 15,
@@ -877,7 +855,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 223,
+     "total": 313,
      "labels": {}
     },
     {
@@ -886,6 +864,9 @@
      "title": "올킬+통변형",
      "file": "content/m2609c2.json",
      "pts": {
+      "wmean": 81,
+      "wsyn": 5,
+      "wdef": 10,
       "word": 61,
       "word2": 61,
       "cloze": 15,
@@ -894,7 +875,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 227,
+     "total": 323,
      "labels": {}
     },
     {
@@ -903,6 +884,9 @@
      "title": "올킬+통변형",
      "file": "content/m2609c3.json",
      "pts": {
+      "wmean": 71,
+      "wsyn": 5,
+      "wdef": 10,
       "word": 63,
       "word2": 63,
       "cloze": 15,
@@ -911,7 +895,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 231,
+     "total": 317,
      "labels": {}
     },
     {
@@ -920,6 +904,8 @@
      "title": "올킬+통변형",
      "file": "content/m2609c4.json",
      "pts": {
+      "wmean": 47,
+      "wsyn": 5,
       "word": 34,
       "word2": 34,
       "cloze": 9,
@@ -928,59 +914,7 @@
       "order": 6,
       "insert": 6
      },
-     "total": 131,
-     "labels": {}
-    },
-    {
-     "id": "v2609k",
-     "no": "21·32·36·38·39번 단어",
-     "title": "본교재 단어 TEST · 금옥여고",
-     "file": "content/v2609k.json",
-     "pts": {
-      "wmean": 71,
-      "wsyn": 5,
-      "wdef": 8
-     },
-     "total": 84,
-     "labels": {}
-    },
-    {
-     "id": "v2609r1",
-     "no": "21·22·24·29·30번 단어",
-     "title": "본교재 단어 TEST · 구로고",
-     "file": "content/v2609r1.json",
-     "pts": {
-      "wmean": 78,
-      "wsyn": 5,
-      "wdef": 10
-     },
-     "total": 93,
-     "labels": {}
-    },
-    {
-     "id": "v2609r2",
-     "no": "31–34·36번 단어",
-     "title": "본교재 단어 TEST · 구로고",
-     "file": "content/v2609r2.json",
-     "pts": {
-      "wmean": 76,
-      "wsyn": 5,
-      "wdef": 10
-     },
-     "total": 91,
-     "labels": {}
-    },
-    {
-     "id": "v2609r3",
-     "no": "37–40번 단어",
-     "title": "본교재 단어 TEST · 구로고",
-     "file": "content/v2609r3.json",
-     "pts": {
-      "wmean": 59,
-      "wsyn": 5,
-      "wdef": 4
-     },
-     "total": 68,
+     "total": 183,
      "labels": {}
     }
    ]
@@ -1065,6 +999,11 @@
      "title": "영등포여고판 · 올킬+통변형",
      "file": "content/m2510y1.json",
      "pts": {
+      "wmean": 84,
+      "wsyn": 25,
+      "wdef": 34,
+      "dfa": 5,
+      "dfb": 2,
       "word": 58,
       "word2": 58,
       "cloze": 15,
@@ -1073,7 +1012,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 221,
+     "total": 371,
      "labels": {}
     },
     {
@@ -1082,6 +1021,11 @@
      "title": "영등포여고판 · 올킬+통변형",
      "file": "content/m2510y2.json",
      "pts": {
+      "wmean": 87,
+      "wsyn": 23,
+      "wdef": 36,
+      "dfa": 5,
+      "dfb": 3,
       "word": 55,
       "word2": 55,
       "cloze": 15,
@@ -1090,7 +1034,7 @@
       "order": 10,
       "insert": 10
      },
-     "total": 215,
+     "total": 369,
      "labels": {}
     },
     {
@@ -1099,6 +1043,11 @@
      "title": "영등포여고판 · 올킬+통변형",
      "file": "content/m2510y3.json",
      "pts": {
+      "wmean": 45,
+      "wsyn": 12,
+      "wdef": 20,
+      "dfa": 3,
+      "dfb": 2,
       "word": 42,
       "word2": 42,
       "cloze": 9,
@@ -1107,52 +1056,7 @@
       "order": 6,
       "insert": 6
      },
-     "total": 147,
-     "labels": {}
-    },
-    {
-     "id": "v2510y1",
-     "no": "21–24·29번 단어",
-     "title": "본교재 단어 TEST · 영등포여고",
-     "file": "content/v2510y1.json",
-     "pts": {
-      "wmean": 84,
-      "wsyn": 25,
-      "wdef": 34,
-      "dfa": 5,
-      "dfb": 2
-     },
-     "total": 150,
-     "labels": {}
-    },
-    {
-     "id": "v2510y2",
-     "no": "30–34번 단어",
-     "title": "본교재 단어 TEST · 영등포여고",
-     "file": "content/v2510y2.json",
-     "pts": {
-      "wmean": 87,
-      "wsyn": 23,
-      "wdef": 36,
-      "dfa": 5,
-      "dfb": 3
-     },
-     "total": 154,
-     "labels": {}
-    },
-    {
-     "id": "v2510y3",
-     "no": "36·39·40번 단어",
-     "title": "본교재 단어 TEST · 영등포여고",
-     "file": "content/v2510y3.json",
-     "pts": {
-      "wmean": 45,
-      "wsyn": 12,
-      "wdef": 20,
-      "dfa": 3,
-      "dfb": 2
-     },
-     "total": 82,
+     "total": 229,
      "labels": {}
     }
    ]
@@ -1169,6 +1073,11 @@
      "title": "영등포여고 · 올킬+통변형",
      "file": "content/m2211y.json",
      "pts": {
+      "wmean": 101,
+      "wsyn": 40,
+      "wdef": 30,
+      "dfa": 7,
+      "dfb": 3,
       "word": 90,
       "word2": 90,
       "cloze": 18,
@@ -1177,37 +1086,7 @@
       "order": 12,
       "insert": 12
      },
-     "total": 306,
-     "labels": {}
-    },
-    {
-     "id": "v2211y1",
-     "no": "30–34번 단어",
-     "title": "본교재 단어 TEST · 영등포여고",
-     "file": "content/v2211y1.json",
-     "pts": {
-      "wmean": 89,
-      "wsyn": 34,
-      "wdef": 26,
-      "dfa": 6,
-      "dfb": 2
-     },
-     "total": 157,
-     "labels": {}
-    },
-    {
-     "id": "v2211y2",
-     "no": "35번 단어",
-     "title": "본교재 단어 TEST · 영등포여고",
-     "file": "content/v2211y2.json",
-     "pts": {
-      "wmean": 12,
-      "wsyn": 6,
-      "wdef": 4,
-      "dfa": 1,
-      "dfb": 1
-     },
-     "total": 24,
+     "total": 487,
      "labels": {}
     }
    ]
@@ -1768,10 +1647,7 @@
    "m2609c1",
    "m2609c2",
    "m2609c3",
-   "m2609c4",
-   "v2609r1",
-   "v2609r2",
-   "v2609r3"
+   "m2609c4"
   ],
   "구일고2": [
    "e2cjs06",
@@ -1791,10 +1667,7 @@
    "e2ybm05",
    "m2610b1",
    "m2610b2",
-   "m2610b3",
-   "v2610b",
-   "v2610c",
-   "v2610d"
+   "m2610b3"
   ],
   "영등포여고2": [
    "e2cjk02",
@@ -1802,12 +1675,7 @@
    "m2510y1",
    "m2510y2",
    "m2510y3",
-   "m2211y",
-   "v2510y1",
-   "v2510y2",
-   "v2510y3",
-   "v2211y1",
-   "v2211y2"
+   "m2211y"
   ],
   "금옥여고2": [
    "gwybmk06",
@@ -1815,11 +1683,11 @@
    "m2610b1",
    "m2610b2",
    "m2610b3",
-   "v2610a",
-   "v2610b",
-   "v2610c",
-   "v2610d",
-   "v2609k"
+   "m2610a1",
+   "m2609c1",
+   "m2609c2",
+   "m2609c3",
+   "m2609c4"
   ],
   "경인고1": [
    "ce2ne03",
