@@ -1,0 +1,288 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "35번 지문",
+   "rows": [
+    {
+     "n": 90,
+     "w": "tricky",
+     "ko": "까다로운"
+    },
+    {
+     "n": 91,
+     "w": "elusive",
+     "ko": "파악하기 어려운"
+    },
+    {
+     "n": 92,
+     "w": "envy",
+     "ko": "질투, 시기"
+    },
+    {
+     "n": 93,
+     "w": "discern",
+     "ko": "알아차리다, 분별하다"
+    },
+    {
+     "n": 94,
+     "w": "motivate",
+     "ko": "동기를 부여하다, 유발하다"
+    },
+    {
+     "n": 95,
+     "w": "entail",
+     "ko": "수반하다"
+    },
+    {
+     "n": 96,
+     "w": "admission",
+     "ko": "인정, 시인"
+    },
+    {
+     "n": 97,
+     "w": "inferior",
+     "ko": "열등한"
+    },
+    {
+     "n": 98,
+     "w": "initial",
+     "ko": "처음의, 최초의"
+    },
+    {
+     "n": 99,
+     "w": "disguise",
+     "ko": "위장하다, 숨기다"
+    },
+    {
+     "n": 100,
+     "w": "distribution",
+     "ko": "분배"
+    },
+    {
+     "n": 101,
+     "w": "resentment",
+     "ko": "분개"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST② 1세트",
+   "opts": [
+    "involve",
+    "dodge",
+    "increasingly",
+    "prompt",
+    "separate",
+    "bankrupt",
+    "alike",
+    "aural",
+    "weaken",
+    "confession",
+    "extract",
+    "fear",
+    "parameter",
+    "dimension",
+    "reconcile",
+    "hallmark",
+    "regarding",
+    "dim",
+    "brighten",
+    "steadily"
+   ],
+   "rows": [
+    {
+     "n": 6,
+     "w": "motivate",
+     "ans": 3
+    },
+    {
+     "n": 12,
+     "w": "entail",
+     "ans": 0
+    },
+    {
+     "n": 18,
+     "w": "admission",
+     "ans": 9
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 2세트",
+   "opts": [
+    "harmful",
+    "notable",
+    "successive",
+    "ascertain",
+    "mask",
+    "funding",
+    "opening",
+    "evenly",
+    "disagreeable",
+    "anomaly",
+    "discriminate",
+    "base",
+    "adjustment",
+    "title",
+    "brackets",
+    "intake",
+    "subordinate",
+    "doubt",
+    "occurrence",
+    "misleadingly"
+   ],
+   "rows": [
+    {
+     "n": 4,
+     "w": "inferior",
+     "ans": 16
+    },
+    {
+     "n": 10,
+     "w": "initial",
+     "ans": 6
+    },
+    {
+     "n": 16,
+     "w": "disguise",
+     "ans": 4
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 02",
+   "en": "the way in which something is shared or divided among a group of people",
+   "ko": "분배",
+   "hw": "distribution",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "allocation",
+   "synAlt": [],
+   "sp": "≒ a _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 07",
+   "en": "a feeling of anger because you think you have been treated unfairly by someone",
+   "ko": "분개",
+   "hw": "resentment",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "bitterness",
+   "synAlt": [],
+   "sp": "≒ b _ _ _ _ _ _ _ _ _"
+  }
+ ],
+ "dfa": [
+  {
+   "sec": "본문",
+   "no": "Part A",
+   "opts": [
+    "dependent",
+    "election",
+    "liberal",
+    "purchasable",
+    "testify",
+    "coat",
+    "optical",
+    "debt",
+    "intimidate",
+    "countershading",
+    "refresh",
+    "tricky",
+    "absorb",
+    "discard",
+    "underlie",
+    "connectedness",
+    "violate",
+    "statistics",
+    "insufficiently",
+    "genome"
+   ],
+   "rows": [
+    {
+     "n": 6,
+     "w": "difficult to deal with or understand because it needs care and skill",
+     "ans": 11
+    }
+   ]
+  }
+ ],
+ "dfb": [
+  {
+   "sec": "본문",
+   "no": "Part B 07",
+   "tag": "영영풀이 Part B 7번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "gargle : to move liquid around in your mouth and throat without swallowing it, usually to clean them",
+    "ignorance : a lack of information or understanding about something that a person ought to know",
+    "gravity : the natural force that pulls objects toward the earth or toward other large bodies in space",
+    "break away from : to leave or stop following a usual pattern, group, or way of doing things",
+    "elusive : very easy to notice, describe, and understand, even at the very first glance"
+   ],
+   "ans": 4,
+   "ex": "정답 ⑤ elusive (파악하기 어려운) — 제시된 풀이가 틀렸어요. 바른 풀이: difficult to describe, understand, find, or remember because it seems to escape you"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+  "dfa": "영영풀이 시험지 Part A 매칭",
+  "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
+ },
+ "subs": {
+  "wmean": "35번 표제어 12개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 6개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 2문항 (교재 단어 TEST ③)",
+  "dfa": "영영풀이 1개 → 보기 A~T 단어 고르기",
+  "dfb": "단어–영영풀이 연결이 옳지 않은 것 1문항"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요.",
+  "dfa": "교재 영영풀이 시험지 Part A와 같아요. 영영풀이를 읽고 알맞은 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 교재 그대로예요.",
+  "dfb": "교재 영영풀이 시험지 Part B와 같아요. 단어와 영영풀이의 <b>연결이 옳지 않은 것</b>을 고릅니다."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef",
+  "dfa",
+  "dfb"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 35번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  },
+  {
+   "t": "영영풀이 시험지 (교재 그대로)",
+   "parts": [
+    "dfa",
+    "dfb"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "35번"
+ },
+ "src": "[본교재] 영여고2 헤이즐_s꼼꼼내신.pdf"
+}

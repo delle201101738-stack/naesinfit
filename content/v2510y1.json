@@ -1,0 +1,1013 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "21번 지문",
+   "rows": [
+    {
+     "n": 102,
+     "w": "coat",
+     "ko": "(표면에) 묻히다, 바르다"
+    },
+    {
+     "n": 103,
+     "w": "swab",
+     "ko": "면봉"
+    },
+    {
+     "n": 104,
+     "w": "gargle",
+     "ko": "(물로) 입안을 헹구다"
+    },
+    {
+     "n": 105,
+     "w": "thoroughly",
+     "ko": "철저히, 완전히"
+    },
+    {
+     "n": 106,
+     "w": "reveal",
+     "ko": "드러내다"
+    },
+    {
+     "n": 107,
+     "w": "preference",
+     "ko": "선호, 기호"
+    },
+    {
+     "n": 108,
+     "w": "disorder",
+     "ko": "장애, 질환"
+    },
+    {
+     "n": 109,
+     "w": "incidence",
+     "ko": "발생률, (발생) 정도"
+    },
+    {
+     "n": 110,
+     "w": "alcoholism",
+     "ko": "알코올 중독"
+    },
+    {
+     "n": 111,
+     "w": "liquor",
+     "ko": "술, 독주"
+    },
+    {
+     "n": 112,
+     "w": "conversely",
+     "ko": "반대로"
+    },
+    {
+     "n": 113,
+     "w": "nutritious",
+     "ko": "영양가 높은"
+    },
+    {
+     "n": 114,
+     "w": "mildly",
+     "ko": "약간, 가볍게"
+    },
+    {
+     "n": 115,
+     "w": "deprive",
+     "ko": "(deprive A of B) A에게서 B를 빼앗다"
+    },
+    {
+     "n": 116,
+     "w": "glamorous",
+     "ko": "화려한, 매력적인"
+    },
+    {
+     "n": 117,
+     "w": "destiny",
+     "ko": "운명"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "22번 지문",
+   "rows": [
+    {
+     "n": 118,
+     "w": "testify",
+     "ko": "(testify to) 입증하다, 증언하다"
+    },
+    {
+     "n": 119,
+     "w": "embrace",
+     "ko": "(기꺼이) 받아들임, 수용"
+    },
+    {
+     "n": 120,
+     "w": "ignorance",
+     "ko": "무지"
+    },
+    {
+     "n": 121,
+     "w": "arguably",
+     "ko": "거의 틀림없이, 아마도"
+    },
+    {
+     "n": 122,
+     "w": "suppose",
+     "ko": "가정하다, 생각하다"
+    },
+    {
+     "n": 123,
+     "w": "scenario",
+     "ko": "(가상의) 상황, 시나리오"
+    },
+    {
+     "n": 124,
+     "w": "bother",
+     "ko": "애써 ~하다, 수고하다"
+    },
+    {
+     "n": 125,
+     "w": "coincide",
+     "ko": "(coincide with) 동시에 일어나다"
+    },
+    {
+     "n": 126,
+     "w": "liberation",
+     "ko": "해방"
+    },
+    {
+     "n": 127,
+     "w": "curiosity",
+     "ko": "호기심"
+    },
+    {
+     "n": 128,
+     "w": "questionable",
+     "ko": "의심스러운"
+    },
+    {
+     "n": 129,
+     "w": "attribute",
+     "ko": "속성, 특성"
+    },
+    {
+     "n": 130,
+     "w": "philosophical",
+     "ko": "철학적인"
+    },
+    {
+     "n": 131,
+     "w": "framework",
+     "ko": "틀, 체계"
+    },
+    {
+     "n": 132,
+     "w": "methodology",
+     "ko": "방법론"
+    },
+    {
+     "n": 133,
+     "w": "hypothesis",
+     "ko": "가설"
+    },
+    {
+     "n": 134,
+     "w": "astronomer",
+     "ko": "천문학자"
+    },
+    {
+     "n": 135,
+     "w": "fruitless",
+     "ko": "헛된, 성과 없는"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "23번 지문",
+   "rows": [
+    {
+     "n": 136,
+     "w": "discard",
+     "ko": "버리다, 폐기하다"
+    },
+    {
+     "n": 137,
+     "w": "replace",
+     "ko": "대체하다"
+    },
+    {
+     "n": 138,
+     "w": "vast",
+     "ko": "방대한, 막대한"
+    },
+    {
+     "n": 139,
+     "w": "gravity",
+     "ko": "중력"
+    },
+    {
+     "n": 140,
+     "w": "prediction",
+     "ko": "예측"
+    },
+    {
+     "n": 141,
+     "w": "observation",
+     "ko": "관측 (결과), 관찰"
+    },
+    {
+     "n": 142,
+     "w": "discrepancy",
+     "ko": "불일치"
+    },
+    {
+     "n": 143,
+     "w": "relativity",
+     "ko": "상대성 (이론)"
+    },
+    {
+     "n": 144,
+     "w": "acceptance",
+     "ko": "인정, 수용"
+    },
+    {
+     "n": 145,
+     "w": "broad",
+     "ko": "폭넓은, 포괄적인"
+    },
+    {
+     "n": 146,
+     "w": "seek",
+     "ko": "찾다, 추구하다"
+    },
+    {
+     "n": 147,
+     "w": "realm",
+     "ko": "영역, 범위"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "24번 지문",
+   "rows": [
+    {
+     "n": 148,
+     "w": "refresh",
+     "ko": "상쾌하게 하다, 새롭게 하다"
+    },
+    {
+     "n": 149,
+     "w": "recharge",
+     "ko": "재충전하다"
+    },
+    {
+     "n": 150,
+     "w": "underestimate",
+     "ko": "과소평가하다"
+    },
+    {
+     "n": 151,
+     "w": "break away from",
+     "ko": "~에서 벗어나다"
+    },
+    {
+     "n": 152,
+     "w": "routine",
+     "ko": "일상, 판에 박힌 일"
+    },
+    {
+     "n": 153,
+     "w": "stimulate",
+     "ko": "자극하다"
+    },
+    {
+     "n": 154,
+     "w": "cognitive",
+     "ko": "인지의"
+    },
+    {
+     "n": 155,
+     "w": "enhance",
+     "ko": "높이다, 향상시키다"
+    },
+    {
+     "n": 156,
+     "w": "productivity",
+     "ko": "생산성"
+    },
+    {
+     "n": 157,
+     "w": "agile",
+     "ko": "민첩한"
+    },
+    {
+     "n": 158,
+     "w": "alert",
+     "ko": "기민한, 정신이 초롱초롱한"
+    },
+    {
+     "n": 159,
+     "w": "oasis",
+     "ko": "오아시스, (휴식의) 안식처"
+    },
+    {
+     "n": 160,
+     "w": "strategic",
+     "ko": "전략적인"
+    },
+    {
+     "n": 161,
+     "w": "boost",
+     "ko": "증대시키다, 북돋우다"
+    },
+    {
+     "n": 162,
+     "w": "capability",
+     "ko": "능력"
+    },
+    {
+     "n": 163,
+     "w": "ensure",
+     "ko": "보장하다"
+    },
+    {
+     "n": 164,
+     "w": "work wonders",
+     "ko": "놀라운 효과를 내다"
+    },
+    {
+     "n": 165,
+     "w": "non-dominant",
+     "ko": "주로 쓰지 않는(손)"
+    },
+    {
+     "n": 166,
+     "w": "activate",
+     "ko": "활성화하다"
+    },
+    {
+     "n": 167,
+     "w": "pathway",
+     "ko": "(신경) 경로"
+    },
+    {
+     "n": 168,
+     "w": "engage",
+     "ko": "사용하다, 작동시키다"
+    },
+    {
+     "n": 169,
+     "w": "flexibility",
+     "ko": "유연성"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "29번 지문",
+   "rows": [
+    {
+     "n": 170,
+     "w": "genome",
+     "ko": "유전체"
+    },
+    {
+     "n": 171,
+     "w": "represent",
+     "ko": "나타내다, ~에 해당하다"
+    },
+    {
+     "n": 172,
+     "w": "prospect",
+     "ko": "전망, 장래"
+    },
+    {
+     "n": 173,
+     "w": "disrupt",
+     "ko": "망가뜨리다, 방해하다"
+    },
+    {
+     "n": 174,
+     "w": "sequence",
+     "ko": "서열, 순서"
+    },
+    {
+     "n": 175,
+     "w": "perpetuate",
+     "ko": "영속시키다"
+    },
+    {
+     "n": 176,
+     "w": "alter",
+     "ko": "변경하다, 바꾸다"
+    },
+    {
+     "n": 177,
+     "w": "likelihood",
+     "ko": "가능성"
+    },
+    {
+     "n": 178,
+     "w": "reproduce",
+     "ko": "번식하다, 복제하다"
+    },
+    {
+     "n": 179,
+     "w": "neutral",
+     "ko": "중립적인, 영향이 없는"
+    },
+    {
+     "n": 180,
+     "w": "progeny",
+     "ko": "자손"
+    },
+    {
+     "n": 181,
+     "w": "mutation",
+     "ko": "돌연변이"
+    },
+    {
+     "n": 182,
+     "w": "evolve",
+     "ko": "진화하다"
+    },
+    {
+     "n": 183,
+     "w": "genetic",
+     "ko": "유전의, 유전적인"
+    },
+    {
+     "n": 184,
+     "w": "specification",
+     "ko": "특성, 명세"
+    },
+    {
+     "n": 185,
+     "w": "exploit",
+     "ko": "활용하다, 이용하다"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST② 1세트",
+   "opts": [
+    "regimen",
+    "conservation",
+    "developed",
+    "magnifier",
+    "soul",
+    "unity",
+    "integrate",
+    "rule",
+    "forecast",
+    "presume",
+    "prolong",
+    "examination",
+    "exposure",
+    "recognize",
+    "series",
+    "fully",
+    "arouse",
+    "conceivably",
+    "disclose",
+    "concurrently"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "thoroughly",
+     "ans": 15
+    },
+    {
+     "n": 2,
+     "w": "arguably",
+     "ans": 17
+    },
+    {
+     "n": 3,
+     "w": "prediction",
+     "ans": 8
+    },
+    {
+     "n": 4,
+     "w": "routine",
+     "ans": 0
+    },
+    {
+     "n": 5,
+     "w": "sequence",
+     "ans": 14
+    },
+    {
+     "n": 14,
+     "w": "reveal",
+     "ans": 18
+    },
+    {
+     "n": 15,
+     "w": "suppose",
+     "ans": 9
+    },
+    {
+     "n": 16,
+     "w": "observation",
+     "ans": 11
+    },
+    {
+     "n": 17,
+     "w": "stimulate",
+     "ans": 16
+    },
+    {
+     "n": 18,
+     "w": "perpetuate",
+     "ans": 10
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 2세트",
+   "opts": [
+    "regulate",
+    "fondness",
+    "custom",
+    "ailment",
+    "situation",
+    "microbe",
+    "disliked",
+    "intellectual",
+    "relate",
+    "whirl",
+    "liquid",
+    "survey",
+    "mastery",
+    "emphasize",
+    "concede",
+    "odds",
+    "actually",
+    "outdatedness",
+    "inconsistency",
+    "undertake"
+   ],
+   "rows": [
+    {
+     "n": 7,
+     "w": "preference",
+     "ans": 1
+    },
+    {
+     "n": 8,
+     "w": "scenario",
+     "ans": 4
+    },
+    {
+     "n": 9,
+     "w": "discrepancy",
+     "ans": 18
+    },
+    {
+     "n": 10,
+     "w": "cognitive",
+     "ans": 7
+    },
+    {
+     "n": 11,
+     "w": "likelihood",
+     "ans": 15
+    },
+    {
+     "n": 20,
+     "w": "disorder",
+     "ans": 3
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 3세트",
+   "opts": [
+    "compilation",
+    "wide",
+    "trouble",
+    "frequency",
+    "improve",
+    "removal",
+    "categorization",
+    "efficiency",
+    "system",
+    "approval",
+    "concur",
+    "substantial",
+    "compartment",
+    "sway",
+    "harmless",
+    "prosperity",
+    "lofty",
+    "expand",
+    "technical",
+    "breed"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "bother",
+     "ans": 2
+    },
+    {
+     "n": 2,
+     "w": "acceptance",
+     "ans": 9
+    },
+    {
+     "n": 3,
+     "w": "enhance",
+     "ans": 4
+    },
+    {
+     "n": 4,
+     "w": "reproduce",
+     "ans": 19
+    },
+    {
+     "n": 13,
+     "w": "incidence",
+     "ans": 3
+    },
+    {
+     "n": 14,
+     "w": "coincide",
+     "ans": 10
+    },
+    {
+     "n": 15,
+     "w": "broad",
+     "ans": 1
+    },
+    {
+     "n": 16,
+     "w": "productivity",
+     "ans": 7
+    },
+    {
+     "n": 17,
+     "w": "neutral",
+     "ans": 14
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 06",
+   "en": "a medical condition in which someone cannot stop drinking strong drinks such as beer or wine",
+   "ko": "알코올 중독",
+   "hw": "alcoholism",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "drunkenness",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 07",
+   "en": "the act of setting someone or something free from control, limits, or a situation of restriction",
+   "ko": "해방",
+   "hw": "liberation",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "freedom",
+   "synAlt": [],
+   "sp": "≒ f _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 08",
+   "en": "a particular area of activity, knowledge, or interest that has its own limits and features",
+   "ko": "영역, 범위",
+   "hw": "realm",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "domain",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 09",
+   "en": "fully awake and able to notice things and react quickly to what is happening",
+   "ko": "기민한, 정신이 초롱초롱한",
+   "hw": "alert",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "attentive",
+   "synAlt": [],
+   "sp": "≒ a _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 10",
+   "en": "the young animals, plants, or cells that are produced by a living thing; its descendants",
+   "ko": "자손",
+   "hw": "progeny",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "offspring",
+   "synAlt": [],
+   "sp": "≒ o _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 04",
+   "en": "a strong drink such as whisky that can make people drunk if they have too much",
+   "ko": "술, 독주",
+   "hw": "liquor",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "spirits",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 05",
+   "en": "a strong desire to know or learn about something new, unusual, or not yet understood",
+   "ko": "호기심",
+   "hw": "curiosity",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "inquisitiveness",
+   "synAlt": [],
+   "sp": "≒ i _ _ _ _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 06",
+   "en": "a pleasant, peaceful place or period that offers relief from a busy or difficult situation",
+   "ko": "오아시스, (휴식의) 안식처",
+   "hw": "oasis",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "haven",
+   "synAlt": [],
+   "sp": "≒ h _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 07",
+   "en": "a change in the genetic structure of a living thing that can be passed on to its young",
+   "ko": "돌연변이",
+   "hw": "mutation",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "variation",
+   "synAlt": [],
+   "sp": "≒ v _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 14",
+   "en": "used to introduce an idea that is the reverse of or opposite to the one just mentioned",
+   "ko": "반대로",
+   "hw": "conversely",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "inversely",
+   "synAlt": [],
+   "sp": "≒ i _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 15",
+   "en": "not certain to be good, true, or honest, so that people may have serious doubts about it",
+   "ko": "의심스러운",
+   "hw": "questionable",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "dubious",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 01",
+   "en": "carefully planned in order to achieve a particular goal or gain an advantage in a situation",
+   "ko": "전략적인",
+   "hw": "strategic",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "calculated",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 02",
+   "en": "to change gradually over many generations so that a kind of living thing becomes better suited to survive",
+   "ko": "진화하다",
+   "hw": "evolve",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "develop",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 09",
+   "en": "containing many of the substances that your body needs in order to stay healthy and grow",
+   "ko": "영양가 높은",
+   "hw": "nutritious",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "nourishing",
+   "synAlt": [],
+   "sp": "≒ n _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 10",
+   "en": "a quality or feature that is regarded as a natural or typical part of someone or something",
+   "ko": "속성, 특성",
+   "hw": "attribute",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "trait",
+   "synAlt": [],
+   "sp": "≒ t _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 11",
+   "en": "to help something increase, improve, or become more successful than it was before",
+   "ko": "증대시키다, 북돋우다",
+   "hw": "boost",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "raise",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 12",
+   "en": "relating to the units in cells that are passed from parents to children and control their features",
+   "ko": "유전의, 유전적인",
+   "hw": "genetic",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "hereditary",
+   "synAlt": [],
+   "sp": "≒ h _ _ _ _ _ _ _ _ _"
+  }
+ ],
+ "dfa": [
+  {
+   "sec": "본문",
+   "no": "Part A",
+   "opts": [
+    "dependent",
+    "election",
+    "liberal",
+    "purchasable",
+    "testify",
+    "coat",
+    "optical",
+    "debt",
+    "intimidate",
+    "countershading",
+    "refresh",
+    "tricky",
+    "absorb",
+    "discard",
+    "underlie",
+    "connectedness",
+    "violate",
+    "statistics",
+    "insufficiently",
+    "genome"
+   ],
+   "rows": [
+    {
+     "n": 7,
+     "w": "to cover the surface of something with a thin layer of a substance such as salt or paint",
+     "ans": 5
+    },
+    {
+     "n": 8,
+     "w": "to show or prove clearly that something is true or that something exists",
+     "ans": 4
+    },
+    {
+     "n": 9,
+     "w": "to get rid of something because it is no longer useful, wanted, or correct",
+     "ans": 13
+    },
+    {
+     "n": 10,
+     "w": "to make someone feel less tired or hot and give them more energy again",
+     "ans": 10
+    },
+    {
+     "n": 11,
+     "w": "the complete set of genetic information that is found inside a living thing or a cell",
+     "ans": 19
+    }
+   ]
+  }
+ ],
+ "dfb": [
+  {
+   "sec": "본문",
+   "no": "Part B 03",
+   "tag": "영영풀이 Part B 3번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "recharge : to get back your strength and energy after a period of hard work or stress",
+    "prospect : the chances of future success or of something good happening to a person or thing",
+    "equality : the situation in which people have the same rights, chances, and treatment as everyone else",
+    "systematic : done according to a fixed plan or careful order, with each step organized in advance",
+    "underestimate : to think that something is far bigger, stronger, or more important than it actually is"
+   ],
+   "ans": 4,
+   "ex": "정답 ⑤ underestimate (과소평가하다) — 제시된 풀이가 틀렸어요. 바른 풀이: to think that something is smaller, weaker, or less important than it really is"
+  },
+  {
+   "sec": "본문",
+   "no": "Part B 09",
+   "tag": "영영풀이 Part B 9번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "permanence : the state of lasting for a very long time or for ever without changing",
+    "mute : to keep your feelings or opinions to yourself instead of expressing them openly",
+    "get rid of : to throw away or take away something that you do not want or need anymore",
+    "agile : moving or thinking slowly and with great difficulty, especially when reacting to change",
+    "sustain : to make something continue over a period of time without becoming weaker or stopping"
+   ],
+   "ans": 3,
+   "ex": "정답 ④ agile (민첩한) — 제시된 풀이가 틀렸어요. 바른 풀이: able to move or think quickly and easily, reacting well to new situations"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+  "dfa": "영영풀이 시험지 Part A 매칭",
+  "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
+ },
+ "subs": {
+  "wmean": "21–24·29번 표제어 84개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 25개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 17문항 (교재 단어 TEST ③)",
+  "dfa": "영영풀이 5개 → 보기 A~T 단어 고르기",
+  "dfb": "단어–영영풀이 연결이 옳지 않은 것 2문항"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요.",
+  "dfa": "교재 영영풀이 시험지 Part A와 같아요. 영영풀이를 읽고 알맞은 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 교재 그대로예요.",
+  "dfb": "교재 영영풀이 시험지 Part B와 같아요. 단어와 영영풀이의 <b>연결이 옳지 않은 것</b>을 고릅니다."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef",
+  "dfa",
+  "dfb"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 21–24·29번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  },
+  {
+   "t": "영영풀이 시험지 (교재 그대로)",
+   "parts": [
+    "dfa",
+    "dfb"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "21–24·29번"
+ },
+ "src": "[본교재] 영여고2 헤이즐_s꼼꼼내신.pdf"
+}

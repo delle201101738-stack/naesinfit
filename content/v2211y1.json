@@ -1,0 +1,1012 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "30번 지문",
+   "rows": [
+    {
+     "n": 1,
+     "w": "countershading",
+     "ko": "카운터셰이딩(명암역위형 보호색)"
+    },
+    {
+     "n": 2,
+     "w": "optical",
+     "ko": "시각적인"
+    },
+    {
+     "n": 3,
+     "w": "flatten",
+     "ko": "평평하게 하다"
+    },
+    {
+     "n": 4,
+     "w": "camouflage",
+     "ko": "위장"
+    },
+    {
+     "n": 5,
+     "w": "illuminate",
+     "ko": "비추다"
+    },
+    {
+     "n": 6,
+     "w": "gradually",
+     "ko": "점차"
+    },
+    {
+     "n": 7,
+     "w": "shade",
+     "ko": "음영이 지다, 그늘지게 하다"
+    },
+    {
+     "n": 8,
+     "w": "depth",
+     "ko": "입체감, 깊이"
+    },
+    {
+     "n": 9,
+     "w": "distinguish",
+     "ko": "식별하다, 구별하다"
+    },
+    {
+     "n": 10,
+     "w": "uniformly",
+     "ko": "균일하게"
+    },
+    {
+     "n": 11,
+     "w": "substrate",
+     "ko": "밑바탕, 기질"
+    },
+    {
+     "n": 12,
+     "w": "belly",
+     "ko": "배, 복부"
+    },
+    {
+     "n": 13,
+     "w": "blend in",
+     "ko": "(blend in with) ~ 와 섞여 들다"
+    },
+    {
+     "n": 14,
+     "w": "coloration",
+     "ko": "배색, 체색"
+    },
+    {
+     "n": 15,
+     "w": "impression",
+     "ko": "인상"
+    },
+    {
+     "n": 16,
+     "w": "organism",
+     "ko": "유기체, 생물"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "31번 지문",
+   "rows": [
+    {
+     "n": 17,
+     "w": "violate",
+     "ko": "어기다, 벗어나다"
+    },
+    {
+     "n": 18,
+     "w": "expectation",
+     "ko": "예상, 기대"
+    },
+    {
+     "n": 19,
+     "w": "fundamental",
+     "ko": "근본적인"
+    },
+    {
+     "n": 20,
+     "w": "driver",
+     "ko": "동인, 원동력"
+    },
+    {
+     "n": 21,
+     "w": "identical",
+     "ko": "똑같은, 동일한"
+    },
+    {
+     "n": 22,
+     "w": "note",
+     "ko": "음, 음표"
+    },
+    {
+     "n": 23,
+     "w": "draw out",
+     "ko": "끌어내다"
+    },
+    {
+     "n": 24,
+     "w": "auditory",
+     "ko": "청각의"
+    },
+    {
+     "n": 25,
+     "w": "progressively",
+     "ko": "점진적으로"
+    },
+    {
+     "n": 26,
+     "w": "adaptation",
+     "ko": "적응"
+    },
+    {
+     "n": 27,
+     "w": "deceptively",
+     "ko": "겉보기와 달리"
+    },
+    {
+     "n": 28,
+     "w": "phenomenon",
+     "ko": "현상 (pl. phenomena)"
+    },
+    {
+     "n": 29,
+     "w": "anticipate",
+     "ko": "예상하다"
+    },
+    {
+     "n": 30,
+     "w": "primary",
+     "ko": "일차의, 주요한"
+    },
+    {
+     "n": 31,
+     "w": "cortex",
+     "ko": "(대뇌) 피질"
+    },
+    {
+     "n": 32,
+     "w": "fade away",
+     "ko": "점차 사라지다"
+    },
+    {
+     "n": 33,
+     "w": "neuron",
+     "ko": "뉴런, 신경 세포"
+    },
+    {
+     "n": 34,
+     "w": "vigorously",
+     "ko": "힘차게, 활발하게"
+    },
+    {
+     "n": 35,
+     "w": "fire",
+     "ko": "(뉴런이) 발화하다"
+    },
+    {
+     "n": 36,
+     "w": "repetition",
+     "ko": "반복"
+    },
+    {
+     "n": 37,
+     "w": "predictable",
+     "ko": "예측 가능한"
+    },
+    {
+     "n": 38,
+     "w": "alternate",
+     "ko": "번갈아 일어나다"
+    },
+    {
+     "n": 39,
+     "w": "trigger",
+     "ko": "일으키다, 유발하다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "32번 지문",
+   "rows": [
+    {
+     "n": 40,
+     "w": "connectedness",
+     "ko": "연결성"
+    },
+    {
+     "n": 41,
+     "w": "vulnerable",
+     "ko": "취약한"
+    },
+    {
+     "n": 42,
+     "w": "infection",
+     "ko": "감염"
+    },
+    {
+     "n": 43,
+     "w": "borrower",
+     "ko": "차용자, 채무자"
+    },
+    {
+     "n": 44,
+     "w": "insurer",
+     "ko": "보험사"
+    },
+    {
+     "n": 45,
+     "w": "characteristic",
+     "ko": "특징"
+    },
+    {
+     "n": 46,
+     "w": "when it comes to",
+     "ko": "~에 관해서라면"
+    },
+    {
+     "n": 47,
+     "w": "occur",
+     "ko": "일어나다, 발생하다"
+    },
+    {
+     "n": 48,
+     "w": "insolvent",
+     "ko": "지급 불능의, 파산한"
+    },
+    {
+     "n": 49,
+     "w": "investment",
+     "ko": "투자"
+    },
+    {
+     "n": 50,
+     "w": "uncertainty",
+     "ko": "불확실성"
+    },
+    {
+     "n": 51,
+     "w": "damaging",
+     "ko": "해로운"
+    },
+    {
+     "n": 52,
+     "w": "cascading",
+     "ko": "연쇄적인"
+    },
+    {
+     "n": 53,
+     "w": "collective",
+     "ko": "집단적인"
+    },
+    {
+     "n": 54,
+     "w": "pull out",
+     "ko": "(돈을) 인출하다, 빼내다"
+    },
+    {
+     "n": 55,
+     "w": "distress",
+     "ko": "(경제적) 곤경, 고통"
+    },
+    {
+     "n": 56,
+     "w": "self-fulfilling",
+     "ko": "자기 실현적인"
+    },
+    {
+     "n": 57,
+     "w": "troublesome",
+     "ko": "골치 아픈"
+    },
+    {
+     "n": 58,
+     "w": "aspect",
+     "ko": "측면"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "33번 지문",
+   "rows": [
+    {
+     "n": 59,
+     "w": "abstract",
+     "ko": "추상적인"
+    },
+    {
+     "n": 60,
+     "w": "debt",
+     "ko": "빚, 부채"
+    },
+    {
+     "n": 61,
+     "w": "contend",
+     "ko": "(contend with) ~ 와 씨름하다, 상대하다"
+    },
+    {
+     "n": 62,
+     "w": "freezing",
+     "ko": "몹시 추운"
+    },
+    {
+     "n": 63,
+     "w": "make peace with",
+     "ko": "~와 화해하다, ~을 받아들이다"
+    },
+    {
+     "n": 64,
+     "w": "sidestep",
+     "ko": "피하다, 회피하다"
+    },
+    {
+     "n": 65,
+     "w": "dread",
+     "ko": "두려워하다"
+    },
+    {
+     "n": 66,
+     "w": "statement",
+     "ko": "(금융 거래) 내역서"
+    },
+    {
+     "n": 67,
+     "w": "parentheses",
+     "ko": "괄호"
+    },
+    {
+     "n": 68,
+     "w": "designation",
+     "ko": "명칭"
+    },
+    {
+     "n": 69,
+     "w": "exception",
+     "ko": "예외"
+    },
+    {
+     "n": 70,
+     "w": "folk",
+     "ko": "(folks) 사람들"
+    },
+    {
+     "n": 71,
+     "w": "unpleasant",
+     "ko": "불쾌한"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "34번 지문",
+   "rows": [
+    {
+     "n": 72,
+     "w": "insufficiently",
+     "ko": "불충분하게"
+    },
+    {
+     "n": 73,
+     "w": "homogeneous",
+     "ko": "동질적인"
+    },
+    {
+     "n": 74,
+     "w": "suitable",
+     "ko": "적합한"
+    },
+    {
+     "n": 75,
+     "w": "confounding factor",
+     "ko": "교란 변수"
+    },
+    {
+     "n": 76,
+     "w": "undermine",
+     "ko": "약화시키다"
+    },
+    {
+     "n": 77,
+     "w": "sound",
+     "ko": "타당한, 건전한"
+    },
+    {
+     "n": 78,
+     "w": "causal",
+     "ko": "인과적인"
+    },
+    {
+     "n": 79,
+     "w": "epidemiological",
+     "ko": "역학의"
+    },
+    {
+     "n": 80,
+     "w": "survey",
+     "ko": "조사"
+    },
+    {
+     "n": 81,
+     "w": "variable",
+     "ko": "변수"
+    },
+    {
+     "n": 82,
+     "w": "isolate",
+     "ko": "분리하다"
+    },
+    {
+     "n": 83,
+     "w": "determine",
+     "ko": "밝히다, 알아내다"
+    },
+    {
+     "n": 84,
+     "w": "consumption",
+     "ko": "섭취, 소비"
+    },
+    {
+     "n": 85,
+     "w": "significant",
+     "ko": "상당한, 중요한"
+    },
+    {
+     "n": 86,
+     "w": "correlation",
+     "ko": "상관관계"
+    },
+    {
+     "n": 87,
+     "w": "coronary",
+     "ko": "관상 동맥의"
+    },
+    {
+     "n": 88,
+     "w": "correct for",
+     "ko": "~을 보정하다"
+    },
+    {
+     "n": 89,
+     "w": "reliability",
+     "ko": "신뢰성"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST② 1세트",
+   "opts": [
+    "involve",
+    "dodge",
+    "increasingly",
+    "prompt",
+    "separate",
+    "bankrupt",
+    "alike",
+    "aural",
+    "weaken",
+    "confession",
+    "extract",
+    "fear",
+    "parameter",
+    "dimension",
+    "reconcile",
+    "hallmark",
+    "regarding",
+    "dim",
+    "brighten",
+    "steadily"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "illuminate",
+     "ans": 18
+    },
+    {
+     "n": 2,
+     "w": "identical",
+     "ans": 6
+    },
+    {
+     "n": 3,
+     "w": "characteristic",
+     "ans": 15
+    },
+    {
+     "n": 4,
+     "w": "make peace with",
+     "ans": 14
+    },
+    {
+     "n": 5,
+     "w": "undermine",
+     "ans": 8
+    },
+    {
+     "n": 7,
+     "w": "gradually",
+     "ans": 19
+    },
+    {
+     "n": 8,
+     "w": "draw out",
+     "ans": 10
+    },
+    {
+     "n": 9,
+     "w": "when it comes to",
+     "ans": 16
+    },
+    {
+     "n": 10,
+     "w": "sidestep",
+     "ans": 1
+    },
+    {
+     "n": 11,
+     "w": "variable",
+     "ans": 12
+    },
+    {
+     "n": 13,
+     "w": "shade",
+     "ans": 17
+    },
+    {
+     "n": 14,
+     "w": "auditory",
+     "ans": 7
+    },
+    {
+     "n": 15,
+     "w": "insolvent",
+     "ans": 5
+    },
+    {
+     "n": 16,
+     "w": "dread",
+     "ans": 11
+    },
+    {
+     "n": 17,
+     "w": "isolate",
+     "ans": 4
+    },
+    {
+     "n": 19,
+     "w": "depth",
+     "ans": 13
+    },
+    {
+     "n": 20,
+     "w": "progressively",
+     "ans": 2
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 2세트",
+   "opts": [
+    "harmful",
+    "notable",
+    "successive",
+    "ascertain",
+    "mask",
+    "funding",
+    "opening",
+    "evenly",
+    "disagreeable",
+    "anomaly",
+    "discriminate",
+    "base",
+    "adjustment",
+    "title",
+    "brackets",
+    "intake",
+    "subordinate",
+    "doubt",
+    "occurrence",
+    "misleadingly"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "investment",
+     "ans": 5
+    },
+    {
+     "n": 2,
+     "w": "parentheses",
+     "ans": 14
+    },
+    {
+     "n": 3,
+     "w": "determine",
+     "ans": 3
+    },
+    {
+     "n": 5,
+     "w": "distinguish",
+     "ans": 10
+    },
+    {
+     "n": 6,
+     "w": "adaptation",
+     "ans": 12
+    },
+    {
+     "n": 7,
+     "w": "uncertainty",
+     "ans": 17
+    },
+    {
+     "n": 8,
+     "w": "designation",
+     "ans": 13
+    },
+    {
+     "n": 9,
+     "w": "consumption",
+     "ans": 15
+    },
+    {
+     "n": 11,
+     "w": "uniformly",
+     "ans": 7
+    },
+    {
+     "n": 12,
+     "w": "deceptively",
+     "ans": 19
+    },
+    {
+     "n": 13,
+     "w": "damaging",
+     "ans": 0
+    },
+    {
+     "n": 14,
+     "w": "exception",
+     "ans": 9
+    },
+    {
+     "n": 15,
+     "w": "significant",
+     "ans": 1
+    },
+    {
+     "n": 17,
+     "w": "substrate",
+     "ans": 11
+    },
+    {
+     "n": 18,
+     "w": "phenomenon",
+     "ans": 18
+    },
+    {
+     "n": 19,
+     "w": "cascading",
+     "ans": 2
+    },
+    {
+     "n": 20,
+     "w": "unpleasant",
+     "ans": 8
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 01",
+   "en": "a connection between two things in which a change in one tends to match changes in the other",
+   "ko": "상관관계",
+   "hw": "correlation",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "relationship",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 03",
+   "en": "the front part of an animal’s body between the chest and the legs, often facing downward",
+   "ko": "배, 복부",
+   "hw": "belly",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "abdomen",
+   "synAlt": [],
+   "sp": "≒ a _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 04",
+   "en": "to expect something to happen and often to prepare for it before it actually happens",
+   "ko": "예상하다",
+   "hw": "anticipate",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "foresee",
+   "synAlt": [],
+   "sp": "≒ f _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 05",
+   "en": "shared, felt, or done by all the members of a group of people together",
+   "ko": "집단적인",
+   "hw": "collective",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "communal",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 06",
+   "en": "relating to the blood vessels that carry blood to the heart muscle",
+   "ko": "관상 동맥의",
+   "hw": "coronary",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "cardiac",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 08",
+   "en": "to look so similar to the surroundings that it is difficult to notice or see",
+   "ko": "(blend in with) ~와 섞여 들다",
+   "hw": "blend in",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "merge",
+   "synAlt": [],
+   "sp": "≒ m _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 09",
+   "en": "first in order or most basic, especially as the earliest stage of processing something",
+   "ko": "일차의, 주요한",
+   "hw": "primary",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "principal",
+   "synAlt": [],
+   "sp": "≒ p _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 10",
+   "en": "to take money away from a bank or business where it had been kept or invested",
+   "ko": "(돈을) 인출하다, 빼내다",
+   "hw": "pull out",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "withdraw",
+   "synAlt": [],
+   "sp": "≒ w _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 11",
+   "en": "to change a calculation or result to remove the effect of something that could mislead you",
+   "ko": "~을 보정하다",
+   "hw": "correct for",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "compensate",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 12",
+   "en": "the pattern or arrangement of shades and tones on the skin, fur, or feathers of animals",
+   "ko": "배색, 체색",
+   "hw": "coloration",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "pigmentation",
+   "synAlt": [],
+   "sp": "≒ p _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 13",
+   "en": "to slowly become weaker or less noticeable over time until it finally disappears completely",
+   "ko": "점차 사라지다",
+   "hw": "fade away",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "vanish",
+   "synAlt": [],
+   "sp": "≒ v _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 14",
+   "en": "a situation of serious difficulty, especially a lack of money or resources needed to survive",
+   "ko": "(경제적) 곤경, 고통",
+   "hw": "distress",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "hardship",
+   "synAlt": [],
+   "sp": "≒ h _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 15",
+   "en": "the quality of being trustworthy or of performing consistently well over time",
+   "ko": "신뢰성",
+   "hw": "reliability",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "dependability",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _ _ _ _ _ _ _ _"
+  }
+ ],
+ "dfa": [
+  {
+   "sec": "본문",
+   "no": "Part A",
+   "opts": [
+    "dependent",
+    "election",
+    "liberal",
+    "purchasable",
+    "testify",
+    "coat",
+    "optical",
+    "debt",
+    "intimidate",
+    "countershading",
+    "refresh",
+    "tricky",
+    "absorb",
+    "discard",
+    "underlie",
+    "connectedness",
+    "violate",
+    "statistics",
+    "insufficiently",
+    "genome"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "a pattern in which an animal’s back is darker than its belly, helping it hide",
+     "ans": 9
+    },
+    {
+     "n": 2,
+     "w": "to go against or fail to match a rule, agreement, or what someone expects",
+     "ans": 16
+    },
+    {
+     "n": 3,
+     "w": "the state of being closely joined or linked with other people, groups, or systems",
+     "ans": 15
+    },
+    {
+     "n": 4,
+     "w": "a sum of money that someone owes to another person or organization and must pay back",
+     "ans": 7
+    },
+    {
+     "n": 5,
+     "w": "not to a degree or in an amount that is large or good enough for a purpose",
+     "ans": 18
+    },
+    {
+     "n": 20,
+     "w": "relating to sight, light, or the way objects appear to the eyes",
+     "ans": 6
+    }
+   ]
+  }
+ ],
+ "dfb": [
+  {
+   "sec": "본문",
+   "no": "Part B 02",
+   "tag": "영영풀이 Part B 2번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "vulnerable : strong enough to resist harm, damage, or attack from almost anything around it",
+    "envy : the unhappy feeling of wanting something that another person has, such as success or possessions",
+    "swab : a small piece of soft cotton on a stick used for cleaning or applying something to the body",
+    "embrace : the willing and eager acceptance of an idea, belief, or situation that is new to you",
+    "vast : extremely large in amount, size, or range, often more than people can easily imagine"
+   ],
+   "ans": 0,
+   "ex": "정답 ① vulnerable (취약한) — 제시된 풀이가 틀렸어요. 바른 풀이: easily hurt, damaged, or affected by something harmful, either physically, emotionally, or financially"
+  },
+  {
+   "sec": "본문",
+   "no": "Part B 04",
+   "tag": "영영풀이 Part B 4번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "perspective : a particular way of thinking about or looking at a subject, problem, or situation",
+    "abstract : existing as a physical object that you can easily see, hold, and touch with your hands",
+    "symbolize : to be a sign or image that stands for an idea, quality, or feeling",
+    "campaign : a series of planned activities intended to win votes or achieve a political or social goal",
+    "take in : to bring something such as food, water, or air into the body"
+   ],
+   "ans": 1,
+   "ex": "정답 ② abstract (추상적인) — 제시된 풀이가 틀렸어요. 바른 풀이: existing as an idea or thought rather than as a physical object you can see or touch"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+  "dfa": "영영풀이 시험지 Part A 매칭",
+  "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
+ },
+ "subs": {
+  "wmean": "30–34번 표제어 89개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 34개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 13문항 (교재 단어 TEST ③)",
+  "dfa": "영영풀이 6개 → 보기 A~T 단어 고르기",
+  "dfb": "단어–영영풀이 연결이 옳지 않은 것 2문항"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요.",
+  "dfa": "교재 영영풀이 시험지 Part A와 같아요. 영영풀이를 읽고 알맞은 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 교재 그대로예요.",
+  "dfb": "교재 영영풀이 시험지 Part B와 같아요. 단어와 영영풀이의 <b>연결이 옳지 않은 것</b>을 고릅니다."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef",
+  "dfa",
+  "dfb"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 30–34번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  },
+  {
+   "t": "영영풀이 시험지 (교재 그대로)",
+   "parts": [
+    "dfa",
+    "dfb"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "30–34번"
+ },
+ "src": "[본교재] 영여고2 헤이즐_s꼼꼼내신.pdf"
+}

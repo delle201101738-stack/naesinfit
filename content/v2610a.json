@@ -1,0 +1,791 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "21번 지문",
+   "rows": [
+    {
+     "n": 18,
+     "w": "lend",
+     "ko": "빌려주다"
+    },
+    {
+     "n": 19,
+     "w": "worldview",
+     "ko": "세계관"
+    },
+    {
+     "n": 20,
+     "w": "perception",
+     "ko": "인식, 지각"
+    },
+    {
+     "n": 21,
+     "w": "interest rate",
+     "ko": "이자율"
+    },
+    {
+     "n": 22,
+     "w": "reflect",
+     "ko": "반영하다"
+    },
+    {
+     "n": 23,
+     "w": "repay",
+     "ko": "(돈을) 갚다, 상환하다"
+    },
+    {
+     "n": 24,
+     "w": "opportunity cost",
+     "ko": "기회비용"
+    },
+    {
+     "n": 25,
+     "w": "term",
+     "ko": "기간"
+    },
+    {
+     "n": 26,
+     "w": "loan",
+     "ko": "대출(금)"
+    },
+    {
+     "n": 27,
+     "w": "by definition",
+     "ko": "정의상, 당연히"
+    },
+    {
+     "n": 28,
+     "w": "unknowable",
+     "ko": "알 수 없는"
+    },
+    {
+     "n": 29,
+     "w": "worthwhile",
+     "ko": "가치 있는, 할 보람이 있는"
+    },
+    {
+     "n": 30,
+     "w": "lender",
+     "ko": "빌려주는 사람, 대출 기관"
+    },
+    {
+     "n": 31,
+     "w": "borrower",
+     "ko": "빌리는 사람, 차용인"
+    },
+    {
+     "n": 32,
+     "w": "factor in",
+     "ko": "~을 감안하다, 계산에 넣다"
+    },
+    {
+     "n": 33,
+     "w": "put it another way",
+     "ko": "달리 말하면"
+    },
+    {
+     "n": 34,
+     "w": "a bird in the hand is worth two in the bush",
+     "ko": "손안의 새 한 마리가 덤불 속 두 마리보다 낫다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "22번 지문",
+   "rows": [
+    {
+     "n": 35,
+     "w": "increasingly",
+     "ko": "점점 더"
+    },
+    {
+     "n": 36,
+     "w": "ethical",
+     "ko": "윤리적인"
+    },
+    {
+     "n": 37,
+     "w": "consideration",
+     "ko": "고려 사항"
+    },
+    {
+     "n": 38,
+     "w": "awareness",
+     "ko": "인식, 의식"
+    },
+    {
+     "n": 39,
+     "w": "sustainability",
+     "ko": "지속 가능성"
+    },
+    {
+     "n": 40,
+     "w": "call upon",
+     "ko": "요구하다, 요청하다"
+    },
+    {
+     "n": 41,
+     "w": "address",
+     "ko": "(문제를) 다루다, 처리하다"
+    },
+    {
+     "n": 42,
+     "w": "justice",
+     "ko": "정의, 공정"
+    },
+    {
+     "n": 43,
+     "w": "consumerism",
+     "ko": "소비주의"
+    },
+    {
+     "n": 44,
+     "w": "platform",
+     "ko": "(의견 표현의) 장, 발판"
+    },
+    {
+     "n": 45,
+     "w": "influence",
+     "ko": "영향을 미치다"
+    },
+    {
+     "n": 46,
+     "w": "promote",
+     "ko": "홍보하다, 촉진하다"
+    },
+    {
+     "n": 47,
+     "w": "sustainable",
+     "ko": "지속 가능한"
+    },
+    {
+     "n": 48,
+     "w": "cause",
+     "ko": "대의(명분)"
+    },
+    {
+     "n": 49,
+     "w": "raise awareness",
+     "ko": "인식을 높이다"
+    },
+    {
+     "n": 50,
+     "w": "ensure",
+     "ko": "보장하다"
+    },
+    {
+     "n": 51,
+     "w": "align with",
+     "ko": "~와 일치하다, 부합하다"
+    },
+    {
+     "n": 52,
+     "w": "principle",
+     "ko": "원칙, 신념"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "23번 지문",
+   "rows": [
+    {
+     "n": 53,
+     "w": "cephalopod",
+     "ko": "두족류 동물"
+    },
+    {
+     "n": 54,
+     "w": "neurobiology",
+     "ko": "신경 생물학"
+    },
+    {
+     "n": 55,
+     "w": "roughly",
+     "ko": "대략"
+    },
+    {
+     "n": 56,
+     "w": "neuron",
+     "ko": "뉴런, 신경 세포"
+    },
+    {
+     "n": 57,
+     "w": "distribute",
+     "ko": "분포시키다, 퍼뜨리다"
+    },
+    {
+     "n": 58,
+     "w": "concentrate",
+     "ko": "집중시키다, 모으다"
+    },
+    {
+     "n": 59,
+     "w": "sensory",
+     "ko": "감각의"
+    },
+    {
+     "n": 60,
+     "w": "input",
+     "ko": "입력, 투입 정보"
+    },
+    {
+     "n": 61,
+     "w": "locally",
+     "ko": "국소적으로, 그 자리에서"
+    },
+    {
+     "n": 62,
+     "w": "extension",
+     "ko": "연장(선), 확장된 부분"
+    },
+    {
+     "n": 63,
+     "w": "nervous system",
+     "ko": "신경계"
+    },
+    {
+     "n": 64,
+     "w": "interact",
+     "ko": "상호 작용하다"
+    },
+    {
+     "n": 65,
+     "w": "sucker",
+     "ko": "빨판"
+    },
+    {
+     "n": 66,
+     "w": "line",
+     "ko": "~을 따라 늘어서다"
+    },
+    {
+     "n": 67,
+     "w": "grip",
+     "ko": "붙잡는 힘, 꽉 쥠"
+    },
+    {
+     "n": 68,
+     "w": "detect",
+     "ko": "탐지하다, 감지하다"
+    },
+    {
+     "n": 69,
+     "w": "in practical terms",
+     "ko": "실질적으로 말해서"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "24번 지문",
+   "rows": [
+    {
+     "n": 70,
+     "w": "consistent",
+     "ko": "일관된"
+    },
+    {
+     "n": 71,
+     "w": "meet A as B",
+     "ko": "A에게 B로 다가오다(느껴지다)"
+    },
+    {
+     "n": 72,
+     "w": "justify",
+     "ko": "정당화하다"
+    },
+    {
+     "n": 73,
+     "w": "slavery",
+     "ko": "노예 제도"
+    },
+    {
+     "n": 74,
+     "w": "era",
+     "ko": "시대"
+    },
+    {
+     "n": 75,
+     "w": "privilege",
+     "ko": "특권"
+    },
+    {
+     "n": 76,
+     "w": "contemplation",
+     "ko": "사유, 숙고"
+    },
+    {
+     "n": 77,
+     "w": "worthy",
+     "ko": "~할 만한 자격이 있는"
+    },
+    {
+     "n": 78,
+     "w": "assertion",
+     "ko": "주장"
+    },
+    {
+     "n": 79,
+     "w": "oddly",
+     "ko": "이상하게"
+    },
+    {
+     "n": 80,
+     "w": "self-serving",
+     "ko": "자기 잇속만 차리는"
+    },
+    {
+     "n": 81,
+     "w": "flourishing",
+     "ko": "번영, 번성"
+    },
+    {
+     "n": 82,
+     "w": "inclusive",
+     "ko": "포용적인, 모두를 포함하는"
+    },
+    {
+     "n": 83,
+     "w": "indicator",
+     "ko": "척도, 지표"
+    },
+    {
+     "n": 84,
+     "w": "elite",
+     "ko": "엘리트 계층"
+    },
+    {
+     "n": 85,
+     "w": "tend to",
+     "ko": "~하는 경향이 있다"
+    },
+    {
+     "n": 86,
+     "w": "for all",
+     "ko": "~에도 불구하고"
+    },
+    {
+     "n": 87,
+     "w": "flawed",
+     "ko": "결함이 있는"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST② 1세트",
+   "opts": [
+    "humanity",
+    "fundamentally",
+    "sufficiently",
+    "devoted",
+    "inquisitiveness",
+    "refund",
+    "contact",
+    "establish",
+    "reduce",
+    "derive",
+    "annoyance",
+    "contradictory",
+    "strike",
+    "harvest",
+    "malleability",
+    "byword",
+    "spread",
+    "sonic",
+    "engagement",
+    "viability"
+   ],
+   "rows": [
+    {
+     "n": 4,
+     "w": "repay",
+     "ans": 5
+    },
+    {
+     "n": 5,
+     "w": "sustainability",
+     "ans": 19
+    },
+    {
+     "n": 6,
+     "w": "distribute",
+     "ans": 16
+    },
+    {
+     "n": 7,
+     "w": "meet A as B",
+     "ans": 12
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 2세트",
+   "opts": [
+    "extremely",
+    "credit",
+    "original",
+    "undergo",
+    "urge",
+    "period",
+    "extravagant",
+    "examine",
+    "advantage",
+    "aural",
+    "denote",
+    "gather",
+    "coincide",
+    "spread",
+    "venture",
+    "manufacturing",
+    "safe",
+    "emerge",
+    "vary",
+    "have"
+   ],
+   "rows": [
+    {
+     "n": 2,
+     "w": "term",
+     "ans": 5
+    },
+    {
+     "n": 3,
+     "w": "call upon",
+     "ans": 4
+    },
+    {
+     "n": 4,
+     "w": "concentrate",
+     "ans": 11
+    },
+    {
+     "n": 5,
+     "w": "privilege",
+     "ans": 8
+    },
+    {
+     "n": 20,
+     "w": "loan",
+     "ans": 1
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 3세트",
+   "opts": [
+    "route",
+    "reveal",
+    "ability",
+    "perceptual",
+    "inactive",
+    "characteristic",
+    "enterprise",
+    "reflection",
+    "thus",
+    "tackle",
+    "fairness",
+    "records",
+    "undermine",
+    "promote",
+    "data",
+    "heater",
+    "inherently",
+    "desperate",
+    "separation",
+    "exploit"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "address",
+     "ans": 9
+    },
+    {
+     "n": 2,
+     "w": "sensory",
+     "ans": 3
+    },
+    {
+     "n": 3,
+     "w": "contemplation",
+     "ans": 7
+    },
+    {
+     "n": 18,
+     "w": "by definition",
+     "ans": 16
+    },
+    {
+     "n": 19,
+     "w": "justice",
+     "ans": 10
+    },
+    {
+     "n": 20,
+     "w": "input",
+     "ans": 14
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 01",
+   "en": "a statement that someone strongly says is true, though it may not be supported by proof",
+   "ko": "주장",
+   "hw": "assertion",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "claim",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 01",
+   "en": "impossible for people to find out or understand, no matter how much they study or try",
+   "ko": "알 수 없는",
+   "hw": "unknowable",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "unpredictable",
+   "synAlt": [],
+   "sp": "≒ u _ _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 02",
+   "en": "the idea or habit of buying and using goods and services, often in large amounts",
+   "ko": "소비주의",
+   "hw": "consumerism",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "materialism",
+   "synAlt": [],
+   "sp": "≒ m _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 03",
+   "en": "in or at a particular nearby place or part rather than in a central or wider area",
+   "ko": "국소적으로, 그 자리에서",
+   "hw": "locally",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "regionally",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 04",
+   "en": "in a way that is unusual or different from what people would normally expect to happen",
+   "ko": "이상하게",
+   "hw": "oddly",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "strangely",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 04",
+   "en": "good or useful enough to be worth the time, money, or effort that is spent on it",
+   "ko": "가치 있는, 할 보람이 있는",
+   "hw": "worthwhile",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "valuable",
+   "synAlt": [],
+   "sp": "≒ v _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 05",
+   "en": "a place, situation, or media channel that gives someone the chance to share opinions with many people",
+   "ko": "(의견 표현의) 장, 발판",
+   "hw": "platform",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "stage",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 06",
+   "en": "a part that is added to something or reaches out from it so that it becomes larger",
+   "ko": "연장(선), 확장된 부분",
+   "hw": "extension",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "expansion",
+   "synAlt": [],
+   "sp": "≒ e _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 07",
+   "en": "done or said mainly to bring benefits to yourself rather than to help other people fairly",
+   "ko": "자기 잇속만 차리는",
+   "hw": "self-serving",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "selfish",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _ _ _"
+  }
+ ],
+ "dfa": [
+  {
+   "sec": "본문",
+   "no": "Part A",
+   "opts": [
+    "crucial",
+    "historian",
+    "infectious",
+    "pace",
+    "setting",
+    "nonverbal",
+    "reflect",
+    "cephalopod",
+    "inform",
+    "possibility",
+    "ongoing",
+    "survival",
+    "evolve",
+    "unite",
+    "reappraisal",
+    "increasingly",
+    "lend",
+    "embrace",
+    "consistent",
+    "alter"
+   ],
+   "rows": [
+    {
+     "n": 2,
+     "w": "to give money or an object to someone for a time, expecting that it will be returned later",
+     "ans": 16
+    },
+    {
+     "n": 3,
+     "w": "more and more as time passes, so that something becomes greater in amount or degree",
+     "ans": 15
+    },
+    {
+     "n": 4,
+     "w": "a sea animal such as an octopus or squid that has a large head and several long arms",
+     "ans": 7
+    },
+    {
+     "n": 5,
+     "w": "always behaving, thinking, or happening in the same way so that there are no contradictions",
+     "ans": 18
+    },
+    {
+     "n": 20,
+     "w": "to show or express the real nature, effects, or features of something in a clear way",
+     "ans": 6
+    }
+   ]
+  }
+ ],
+ "dfb": [
+  {
+   "sec": "본문",
+   "no": "Part B 21",
+   "tag": "영영풀이 Part B 21번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "ethical : relating to beliefs about what is right and wrong, and following good principles of behavior",
+    "neurobiology : the scientific study of the brain, nerves, and the way the nervous system works in living things",
+    "justify : to give reasons showing that a decision or action is clearly wrong and should be punished",
+    "hurdle : a problem or difficulty that must be dealt with before a person can make further progress",
+    "dominance : the fact of being more powerful, important, or noticeable than other things of the same kind"
+   ],
+   "ans": 2,
+   "ex": "정답 ③ justify (정당화하다) — 제시된 풀이가 틀렸어요. 바른 풀이: to give good reasons that show a decision, action, or idea is right, fair, or acceptable"
+  },
+  {
+   "sec": "본문",
+   "no": "Part B 28",
+   "tag": "영영풀이 Part B 28번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "perception : the act of ignoring something completely so that you have no idea about it at all",
+    "awareness : knowledge or understanding that a particular situation, problem, or fact exists and matters",
+    "neuron : a cell that carries electrical and chemical messages between the brain and other parts of the body",
+    "era : a long period of history that has particular features, events, or ideas that make it different",
+    "demographically : in a way that relates to the study of population size, births, deaths, and age groups"
+   ],
+   "ans": 0,
+   "ex": "정답 ① perception (인식, 지각) — 제시된 풀이가 틀렸어요. 바른 풀이: the way a person notices, thinks about, or understands something based on what they see or feel"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+  "dfa": "영영풀이 시험지 Part A 매칭",
+  "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
+ },
+ "subs": {
+  "wmean": "21–24번 표제어 70개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 15개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 9문항 (교재 단어 TEST ③)",
+  "dfa": "영영풀이 5개 → 보기 A~T 단어 고르기",
+  "dfb": "단어–영영풀이 연결이 옳지 않은 것 2문항"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요.",
+  "dfa": "교재 영영풀이 시험지 Part A와 같아요. 영영풀이를 읽고 알맞은 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 교재 그대로예요.",
+  "dfb": "교재 영영풀이 시험지 Part B와 같아요. 단어와 영영풀이의 <b>연결이 옳지 않은 것</b>을 고릅니다."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef",
+  "dfa",
+  "dfb"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 21–24번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  },
+  {
+   "t": "영영풀이 시험지 (교재 그대로)",
+   "parts": [
+    "dfa",
+    "dfb"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "21–24번"
+ },
+ "src": "[본교재]헤이즐_s꼼꼼내신_고26년10월 모고.pdf"
+}

@@ -1,0 +1,574 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "21번 지문",
+   "rows": [
+    {
+     "n": 14,
+     "w": "agenda",
+     "ko": "안건, 의제"
+    },
+    {
+     "n": 15,
+     "w": "circulate",
+     "ko": "배포하다, 회람시키다"
+    },
+    {
+     "n": 16,
+     "w": "trunk",
+     "ko": "나무의 몸통"
+    },
+    {
+     "n": 17,
+     "w": "expectation",
+     "ko": "기대, 예상"
+    },
+    {
+     "n": 18,
+     "w": "linear",
+     "ko": "직선적인, 순차적인"
+    },
+    {
+     "n": 19,
+     "w": "priority",
+     "ko": "우선 사항"
+    },
+    {
+     "n": 20,
+     "w": "craft",
+     "ko": "공들여 만들다"
+    },
+    {
+     "n": 21,
+     "w": "branch",
+     "ko": "갈라져 나가다"
+    },
+    {
+     "n": 22,
+     "w": "sprout",
+     "ko": "돋아나다, 싹트다"
+    },
+    {
+     "n": 23,
+     "w": "urgent",
+     "ko": "긴급한"
+    },
+    {
+     "n": 24,
+     "w": "timely",
+     "ko": "시의적절한"
+    },
+    {
+     "n": 25,
+     "w": "productive",
+     "ko": "생산적인"
+    },
+    {
+     "n": 26,
+     "w": "unpredictable",
+     "ko": "예측할 수 없는"
+    },
+    {
+     "n": 27,
+     "w": "capitalize",
+     "ko": "활용하다, 이용하다"
+    },
+    {
+     "n": 28,
+     "w": "interruption",
+     "ko": "방해, 중단"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "22번 지문",
+   "rows": [
+    {
+     "n": 29,
+     "w": "ingest",
+     "ko": "섭취하다, 받아들이다"
+    },
+    {
+     "n": 30,
+     "w": "alert",
+     "ko": "알림, 경보"
+    },
+    {
+     "n": 31,
+     "w": "submit",
+     "ko": "제출하다"
+    },
+    {
+     "n": 32,
+     "w": "overload",
+     "ko": "과부하를 주다"
+    },
+    {
+     "n": 33,
+     "w": "digest",
+     "ko": "소화하다"
+    },
+    {
+     "n": 34,
+     "w": "virtual",
+     "ko": "가상의"
+    },
+    {
+     "n": 35,
+     "w": "divert",
+     "ko": "다른 데로 돌리다"
+    },
+    {
+     "n": 36,
+     "w": "physical",
+     "ko": "물리적인, 신체의"
+    },
+    {
+     "n": 37,
+     "w": "skilled",
+     "ko": "능숙한"
+    },
+    {
+     "n": 38,
+     "w": "half-hearted",
+     "ko": "성의 없는, 건성인"
+    },
+    {
+     "n": 39,
+     "w": "shorthand",
+     "ko": "축약된, 속기의"
+    },
+    {
+     "n": 40,
+     "w": "hurriedly",
+     "ko": "서둘러"
+    },
+    {
+     "n": 41,
+     "w": "clarify",
+     "ko": "명확히 하다"
+    },
+    {
+     "n": 42,
+     "w": "indigestion",
+     "ko": "소화불량"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "24번 지문",
+   "rows": [
+    {
+     "n": 60,
+     "w": "progressive",
+     "ko": "진보적인"
+    },
+    {
+     "n": 61,
+     "w": "librarian",
+     "ko": "사서"
+    },
+    {
+     "n": 62,
+     "w": "curriculum",
+     "ko": "교육과정"
+    },
+    {
+     "n": 63,
+     "w": "literacy",
+     "ko": "문해력"
+    },
+    {
+     "n": 64,
+     "w": "architecture",
+     "ko": "구조, 설계"
+    },
+    {
+     "n": 65,
+     "w": "deliberately",
+     "ko": "의도적으로"
+    },
+    {
+     "n": 66,
+     "w": "distract",
+     "ko": "주의를 흩뜨리다"
+    },
+    {
+     "n": 67,
+     "w": "provoke",
+     "ko": "자극하다, 유발하다"
+    },
+    {
+     "n": 68,
+     "w": "credibility",
+     "ko": "신뢰성"
+    },
+    {
+     "n": 69,
+     "w": "clickbait",
+     "ko": "낚시성 콘텐츠"
+    },
+    {
+     "n": 70,
+     "w": "algorithm",
+     "ko": "알고리즘"
+    },
+    {
+     "n": 71,
+     "w": "fragmentation",
+     "ko": "분절화, 파편화"
+    },
+    {
+     "n": 72,
+     "w": "unpack",
+     "ko": "낱낱이 분석하다"
+    },
+    {
+     "n": 73,
+     "w": "notification",
+     "ko": "알림"
+    },
+    {
+     "n": 74,
+     "w": "motive",
+     "ko": "동기"
+    },
+    {
+     "n": 75,
+     "w": "passive",
+     "ko": "수동적인"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "29번 지문",
+   "rows": [
+    {
+     "n": 76,
+     "w": "capitalism",
+     "ko": "자본주의"
+    },
+    {
+     "n": 77,
+     "w": "nexus",
+     "ko": "관계망, 결합점"
+    },
+    {
+     "n": 78,
+     "w": "potentially",
+     "ko": "잠재적으로"
+    },
+    {
+     "n": 79,
+     "w": "reproduce",
+     "ko": "재생산하다"
+    },
+    {
+     "n": 80,
+     "w": "expensive",
+     "ko": "비싼, 비용이 드는"
+    },
+    {
+     "n": 81,
+     "w": "freeze",
+     "ko": "동결하다"
+    },
+    {
+     "n": 82,
+     "w": "inequality",
+     "ko": "불평등"
+    },
+    {
+     "n": 83,
+     "w": "crisis",
+     "ko": "위기"
+    },
+    {
+     "n": 84,
+     "w": "populist",
+     "ko": "포퓰리즘적인, 대중영합적인"
+    },
+    {
+     "n": 85,
+     "w": "dignity",
+     "ko": "존엄, 품위"
+    },
+    {
+     "n": 86,
+     "w": "labor",
+     "ko": "노동"
+    },
+    {
+     "n": 87,
+     "w": "abundantly",
+     "ko": "풍부하게"
+    },
+    {
+     "n": 88,
+     "w": "frontier",
+     "ko": "변경, 개척지"
+    },
+    {
+     "n": 89,
+     "w": "seize",
+     "ko": "장악하다, 빼앗다"
+    },
+    {
+     "n": 90,
+     "w": "forcefully",
+     "ko": "강제로, 강력하게"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "30번 지문",
+   "rows": [
+    {
+     "n": 91,
+     "w": "cheat",
+     "ko": "속이다, 부정행위를 하다"
+    },
+    {
+     "n": 92,
+     "w": "purchase",
+     "ko": "구매하다"
+    },
+    {
+     "n": 93,
+     "w": "license",
+     "ko": "허가하다, 면허를 주다"
+    },
+    {
+     "n": 94,
+     "w": "morally",
+     "ko": "도덕적으로"
+    },
+    {
+     "n": 95,
+     "w": "deed",
+     "ko": "행위, 행동"
+    },
+    {
+     "n": 96,
+     "w": "observe",
+     "ko": "관찰하다"
+    },
+    {
+     "n": 97,
+     "w": "cooperation",
+     "ko": "협력"
+    },
+    {
+     "n": 98,
+     "w": "remind",
+     "ko": "상기시키다"
+    },
+    {
+     "n": 99,
+     "w": "harmful",
+     "ko": "해로운"
+    },
+    {
+     "n": 100,
+     "w": "guilt",
+     "ko": "죄책감"
+    },
+    {
+     "n": 101,
+     "w": "compensate",
+     "ko": "보상하다, 벌충하다"
+    },
+    {
+     "n": 102,
+     "w": "restore",
+     "ko": "회복시키다, 되돌리다"
+    },
+    {
+     "n": 103,
+     "w": "inclined",
+     "ko": "~하는 경향이 있는"
+    },
+    {
+     "n": 104,
+     "w": "escape",
+     "ko": "벗어나다, 탈출하다"
+    },
+    {
+     "n": 105,
+     "w": "inconsistency",
+     "ko": "불일치, 모순"
+    },
+    {
+     "n": 106,
+     "w": "evaluation",
+     "ko": "평가"
+    },
+    {
+     "n": 107,
+     "w": "petition",
+     "ko": "청원서, 탄원서"
+    },
+    {
+     "n": 108,
+     "w": "evidence",
+     "ko": "증거"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST②",
+   "opts": [
+    "institutional",
+    "communitarian",
+    "contribute",
+    "respect",
+    "splintering",
+    "prompt",
+    "stem",
+    "breeding",
+    "continue",
+    "shake",
+    "flowing",
+    "walker",
+    "avoid",
+    "model",
+    "advantage",
+    "psychological",
+    "evident",
+    "explain",
+    "basic"
+   ],
+   "rows": [
+    {
+     "n": 4,
+     "w": "trunk",
+     "ans": 6
+    },
+    {
+     "n": 5,
+     "w": "clarify",
+     "ans": 17
+    },
+    {
+     "n": 7,
+     "w": "fragmentation",
+     "ans": 4
+    },
+    {
+     "n": 8,
+     "w": "dignity",
+     "ans": 3
+    },
+    {
+     "n": 9,
+     "w": "escape",
+     "ans": 12
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 02",
+   "en": "to send or pass something around so that many people can see it",
+   "ko": "",
+   "hw": "circulate",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "distribute",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 03",
+   "en": "to change food in the stomach so that the body can use it",
+   "ko": "",
+   "hw": "digest",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "absorb",
+   "synAlt": [],
+   "sp": "≒ a _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 05",
+   "en": "to take someone's attention away from what they are trying to do",
+   "ko": "",
+   "hw": "distract",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "divert",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 06",
+   "en": "a connected group of things or the central link that joins them all together",
+   "ko": "",
+   "hw": "nexus",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "network",
+   "synAlt": [],
+   "sp": "≒ n _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 07",
+   "en": "to bring something back to the good condition that it had before",
+   "ko": "",
+   "hw": "restore",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "recover",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _ _ _"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어"
+ },
+ "subs": {
+  "wmean": "21·22·24·29·30번 표제어 78개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 5개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 5문항 (교재 단어 TEST ③)"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이를 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 21·22·24·29·30번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "21·22·24·29·30번"
+ },
+ "src": "[고2][본교재]2026_9월 고2 내신교재_fin-복사.pdf"
+}

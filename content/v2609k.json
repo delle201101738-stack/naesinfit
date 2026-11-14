@@ -1,0 +1,528 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "21번 지문",
+   "rows": [
+    {
+     "n": 14,
+     "w": "agenda",
+     "ko": "안건, 의제"
+    },
+    {
+     "n": 15,
+     "w": "circulate",
+     "ko": "배포하다, 회람시키다"
+    },
+    {
+     "n": 16,
+     "w": "trunk",
+     "ko": "나무의 몸통"
+    },
+    {
+     "n": 17,
+     "w": "expectation",
+     "ko": "기대, 예상"
+    },
+    {
+     "n": 18,
+     "w": "linear",
+     "ko": "직선적인, 순차적인"
+    },
+    {
+     "n": 19,
+     "w": "priority",
+     "ko": "우선 사항"
+    },
+    {
+     "n": 20,
+     "w": "craft",
+     "ko": "공들여 만들다"
+    },
+    {
+     "n": 21,
+     "w": "branch",
+     "ko": "갈라져 나가다"
+    },
+    {
+     "n": 22,
+     "w": "sprout",
+     "ko": "돋아나다, 싹트다"
+    },
+    {
+     "n": 23,
+     "w": "urgent",
+     "ko": "긴급한"
+    },
+    {
+     "n": 24,
+     "w": "timely",
+     "ko": "시의적절한"
+    },
+    {
+     "n": 25,
+     "w": "productive",
+     "ko": "생산적인"
+    },
+    {
+     "n": 26,
+     "w": "unpredictable",
+     "ko": "예측할 수 없는"
+    },
+    {
+     "n": 27,
+     "w": "capitalize",
+     "ko": "활용하다, 이용하다"
+    },
+    {
+     "n": 28,
+     "w": "interruption",
+     "ko": "방해, 중단"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "32번 지문",
+   "rows": [
+    {
+     "n": 127,
+     "w": "cognitive",
+     "ko": "인지의, 인식의"
+    },
+    {
+     "n": 128,
+     "w": "motivation",
+     "ko": "동기, 동기 부여"
+    },
+    {
+     "n": 129,
+     "w": "fundamental",
+     "ko": "근본적인, 기본적인"
+    },
+    {
+     "n": 130,
+     "w": "predict",
+     "ko": "예측하다"
+    },
+    {
+     "n": 131,
+     "w": "uncertainty",
+     "ko": "불확실성"
+    },
+    {
+     "n": 132,
+     "w": "admission",
+     "ko": "입학 허가"
+    },
+    {
+     "n": 133,
+     "w": "lounge",
+     "ko": "휴게실, 라운지"
+    },
+    {
+     "n": 134,
+     "w": "problematic",
+     "ko": "문제가 있는"
+    },
+    {
+     "n": 135,
+     "w": "closet",
+     "ko": "벽장, 옷장"
+    },
+    {
+     "n": 136,
+     "w": "private",
+     "ko": "개인의, 사적인"
+    },
+    {
+     "n": 137,
+     "w": "resident",
+     "ko": "거주자"
+    },
+    {
+     "n": 138,
+     "w": "stable",
+     "ko": "안정된"
+    },
+    {
+     "n": 139,
+     "w": "niche",
+     "ko": "적합한 자리, 자기 자리"
+    },
+    {
+     "n": 140,
+     "w": "membership",
+     "ko": "구성원 자격, 소속"
+    },
+    {
+     "n": 141,
+     "w": "lack",
+     "ko": "결여하다, ~이 없다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "36번 지문",
+   "rows": [
+    {
+     "n": 188,
+     "w": "surroundings",
+     "ko": "환경, 주변"
+    },
+    {
+     "n": 189,
+     "w": "forage",
+     "ko": "먹이를 찾아다니다"
+    },
+    {
+     "n": 190,
+     "w": "predator",
+     "ko": "포식자"
+    },
+    {
+     "n": 191,
+     "w": "determinant",
+     "ko": "결정 요인"
+    },
+    {
+     "n": 192,
+     "w": "reproductive",
+     "ko": "번식의"
+    },
+    {
+     "n": 193,
+     "w": "offspring",
+     "ko": "자손, 새끼"
+    },
+    {
+     "n": 194,
+     "w": "remarkable",
+     "ko": "놀라운"
+    },
+    {
+     "n": 195,
+     "w": "establish",
+     "ko": "확립하다, 잡다"
+    },
+    {
+     "n": 196,
+     "w": "territory",
+     "ko": "영역, 세력권"
+    },
+    {
+     "n": 197,
+     "w": "preferentially",
+     "ko": "우선적으로"
+    },
+    {
+     "n": 198,
+     "w": "nourishment",
+     "ko": "영양분"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "38번 지문",
+   "rows": [
+    {
+     "n": 213,
+     "w": "distinction",
+     "ko": "구별, 차이"
+    },
+    {
+     "n": 214,
+     "w": "density",
+     "ko": "밀도"
+    },
+    {
+     "n": 215,
+     "w": "crowding",
+     "ko": "혼잡함"
+    },
+    {
+     "n": 216,
+     "w": "sensory",
+     "ko": "감각의"
+    },
+    {
+     "n": 217,
+     "w": "anxiety",
+     "ko": "불안"
+    },
+    {
+     "n": 218,
+     "w": "neutral",
+     "ko": "중립적인"
+    },
+    {
+     "n": 219,
+     "w": "invariably",
+     "ko": "언제나, 예외 없이"
+    },
+    {
+     "n": 220,
+     "w": "intensify",
+     "ko": "강화되다, 심해지다"
+    },
+    {
+     "n": 221,
+     "w": "enhance",
+     "ko": "높이다, 향상시키다"
+    },
+    {
+     "n": 222,
+     "w": "dread",
+     "ko": "두려워하다"
+    },
+    {
+     "n": 223,
+     "w": "accentuate",
+     "ko": "두드러지게 하다"
+    },
+    {
+     "n": 224,
+     "w": "dominant",
+     "ko": "지배적인"
+    },
+    {
+     "n": 225,
+     "w": "aggressive",
+     "ko": "공격적인"
+    },
+    {
+     "n": 226,
+     "w": "pedestrian",
+     "ko": "보행자"
+    },
+    {
+     "n": 227,
+     "w": "defuse",
+     "ko": "완화하다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "39번 지문",
+   "rows": [
+    {
+     "n": 228,
+     "w": "exclusion",
+     "ko": "배제, 따돌림"
+    },
+    {
+     "n": 229,
+     "w": "ignore",
+     "ko": "무시하다"
+    },
+    {
+     "n": 230,
+     "w": "organizational",
+     "ko": "조직의"
+    },
+    {
+     "n": 231,
+     "w": "precaution",
+     "ko": "예방책, 대비책"
+    },
+    {
+     "n": 232,
+     "w": "regarding",
+     "ko": "~에 관하여"
+    },
+    {
+     "n": 233,
+     "w": "react",
+     "ko": "반응하다"
+    },
+    {
+     "n": 234,
+     "w": "strengthen",
+     "ko": "강화하다"
+    },
+    {
+     "n": 235,
+     "w": "threaten",
+     "ko": "위협하다"
+    },
+    {
+     "n": 236,
+     "w": "belonging",
+     "ko": "소속감"
+    },
+    {
+     "n": 237,
+     "w": "self-respect",
+     "ko": "자존감"
+    },
+    {
+     "n": 238,
+     "w": "likelihood",
+     "ko": "가능성"
+    },
+    {
+     "n": 239,
+     "w": "adapt",
+     "ko": "적응하다"
+    },
+    {
+     "n": 240,
+     "w": "contribution",
+     "ko": "기여, 이바지"
+    },
+    {
+     "n": 241,
+     "w": "performance",
+     "ko": "수행 성과, 실적"
+    },
+    {
+     "n": 242,
+     "w": "employee",
+     "ko": "직원"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST②",
+   "opts": [
+    "institutional",
+    "communitarian",
+    "respect",
+    "contribute",
+    "respect",
+    "splintering",
+    "prompt",
+    "stem",
+    "breeding",
+    "continue",
+    "shake",
+    "flowing",
+    "walker",
+    "avoid",
+    "model",
+    "advantage",
+    "psychological",
+    "evident",
+    "explain",
+    "basic"
+   ],
+   "rows": [
+    {
+     "n": 4,
+     "w": "trunk",
+     "ans": 7
+    },
+    {
+     "n": 11,
+     "w": "fundamental",
+     "ans": 19
+    },
+    {
+     "n": 15,
+     "w": "reproductive",
+     "ans": 8
+    },
+    {
+     "n": 17,
+     "w": "pedestrian",
+     "ans": 12
+    },
+    {
+     "n": 18,
+     "w": "organizational",
+     "ans": 0
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 02",
+   "en": "to send or pass something around so that many people can see it",
+   "ko": "",
+   "hw": "circulate",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "distribute",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 09",
+   "en": "relating to the mental process of knowing, thinking, and understanding things",
+   "ko": "",
+   "hw": "cognitive",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "mental",
+   "synAlt": [],
+   "sp": "≒ m _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 13",
+   "en": "the food and other substances that living things need in order to grow well",
+   "ko": "",
+   "hw": "nourishment",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "nutrition",
+   "synAlt": [],
+   "sp": "≒ n _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 15",
+   "en": "behaving in an angry or violent way towards other people without good reason",
+   "ko": "",
+   "hw": "aggressive",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "hostile",
+   "synAlt": [],
+   "sp": "≒ h _ _ _ _ _ _"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어"
+ },
+ "subs": {
+  "wmean": "21·32·36·38·39번 표제어 71개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 5개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 4문항 (교재 단어 TEST ③)"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이를 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 21·32·36·38·39번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "21·32·36·38·39번"
+ },
+ "src": "[고2][본교재]2026_9월 고2 내신교재_fin-복사.pdf"
+}

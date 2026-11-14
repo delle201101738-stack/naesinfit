@@ -1,0 +1,647 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "36번 지문",
+   "rows": [
+    {
+     "n": 273,
+     "w": "take in",
+     "ko": "섭취하다, 받아들이다"
+    },
+    {
+     "n": 274,
+     "w": "function",
+     "ko": "기능하다, 작동하다"
+    },
+    {
+     "n": 275,
+     "w": "get rid of",
+     "ko": "~을 제거하다"
+    },
+    {
+     "n": 276,
+     "w": "absorb",
+     "ko": "흡수하다"
+    },
+    {
+     "n": 277,
+     "w": "pile",
+     "ko": "더미"
+    },
+    {
+     "n": 278,
+     "w": "principle",
+     "ko": "원리"
+    },
+    {
+     "n": 279,
+     "w": "apply to",
+     "ko": "~에 적용되다"
+    },
+    {
+     "n": 280,
+     "w": "fluid",
+     "ko": "체액, 액체"
+    },
+    {
+     "n": 281,
+     "w": "swell",
+     "ko": "(swell up) 부풀어 오르다"
+    },
+    {
+     "n": 282,
+     "w": "dehydrate",
+     "ko": "탈수되다"
+    },
+    {
+     "n": 283,
+     "w": "shrink",
+     "ko": "줄어들다, 쪼그라들다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "39번 지문",
+   "rows": [
+    {
+     "n": 284,
+     "w": "be tied to",
+     "ko": "~와 결부되다, 묶여 있다"
+    },
+    {
+     "n": 285,
+     "w": "supply",
+     "ko": "공급하다"
+    },
+    {
+     "n": 286,
+     "w": "dependent",
+     "ko": "의존하는, 좌우되는"
+    },
+    {
+     "n": 287,
+     "w": "demand",
+     "ko": "수요"
+    },
+    {
+     "n": 288,
+     "w": "sustain",
+     "ko": "지속시키다"
+    },
+    {
+     "n": 289,
+     "w": "incorporate",
+     "ko": "포함하다, 통합하다"
+    },
+    {
+     "n": 290,
+     "w": "inevitable",
+     "ko": "불가피한"
+    },
+    {
+     "n": 291,
+     "w": "obsolescence",
+     "ko": "노후화, 구식이 됨"
+    },
+    {
+     "n": 292,
+     "w": "prioritize",
+     "ko": "우선시하다"
+    },
+    {
+     "n": 293,
+     "w": "elimination",
+     "ko": "제거"
+    },
+    {
+     "n": 294,
+     "w": "remanufacture",
+     "ko": "재제조하다"
+    },
+    {
+     "n": 295,
+     "w": "lease out",
+     "ko": "임대하다"
+    },
+    {
+     "n": 296,
+     "w": "transition",
+     "ko": "이전, 전환"
+    },
+    {
+     "n": 297,
+     "w": "ownership",
+     "ko": "소유(권)"
+    },
+    {
+     "n": 298,
+     "w": "maintenance",
+     "ko": "유지 (관리), 보수"
+    },
+    {
+     "n": 299,
+     "w": "long-lasting",
+     "ko": "오래가는"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "40번 지문",
+   "rows": [
+    {
+     "n": 300,
+     "w": "purchasable",
+     "ko": "구매 가능한"
+    },
+    {
+     "n": 301,
+     "w": "consistent",
+     "ko": "일정한, 한결같은"
+    },
+    {
+     "n": 302,
+     "w": "cement",
+     "ko": "굳히다, 공고히 하다"
+    },
+    {
+     "n": 303,
+     "w": "artificial",
+     "ko": "인위적인"
+    },
+    {
+     "n": 304,
+     "w": "psyche",
+     "ko": "정신, 마음"
+    },
+    {
+     "n": 305,
+     "w": "acknowledge",
+     "ko": "인정하다"
+    },
+    {
+     "n": 306,
+     "w": "adjust",
+     "ko": "(adjust for) 맞추다, 조정하다"
+    },
+    {
+     "n": 307,
+     "w": "wobble",
+     "ko": "흔들리다"
+    },
+    {
+     "n": 308,
+     "w": "spin",
+     "ko": "회전, 자전"
+    },
+    {
+     "n": 309,
+     "w": "climatic",
+     "ko": "기후의"
+    },
+    {
+     "n": 310,
+     "w": "dramatically",
+     "ko": "극적으로"
+    },
+    {
+     "n": 311,
+     "w": "rotation",
+     "ko": "자전, 회전"
+    },
+    {
+     "n": 312,
+     "w": "drag",
+     "ko": "(운동을 늦추는) 저항력, 제동"
+    },
+    {
+     "n": 313,
+     "w": "disturb",
+     "ko": "흐트러뜨리다, 방해하다"
+    },
+    {
+     "n": 314,
+     "w": "slice",
+     "ko": "조각, 부분"
+    },
+    {
+     "n": 315,
+     "w": "yield",
+     "ko": "굴복하다"
+    },
+    {
+     "n": 316,
+     "w": "modification",
+     "ko": "수정, 변경"
+    },
+    {
+     "n": 317,
+     "w": "stick to",
+     "ko": "~을 고수하다"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST② 1세트",
+   "opts": [
+    "regimen",
+    "conservation",
+    "developed",
+    "magnifier",
+    "soul",
+    "unity",
+    "integrate",
+    "rule",
+    "forecast",
+    "presume",
+    "prolong",
+    "examination",
+    "exposure",
+    "recognize",
+    "series",
+    "fully",
+    "arouse",
+    "conceivably",
+    "disclose",
+    "concurrently"
+   ],
+   "rows": [
+    {
+     "n": 11,
+     "w": "principle",
+     "ans": 7
+    },
+    {
+     "n": 12,
+     "w": "incorporate",
+     "ans": 6
+    },
+    {
+     "n": 13,
+     "w": "psyche",
+     "ans": 4
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 2세트",
+   "opts": [
+    "regulate",
+    "fondness",
+    "custom",
+    "ailment",
+    "situation",
+    "microbe",
+    "disliked",
+    "intellectual",
+    "relate",
+    "whirl",
+    "liquid",
+    "survey",
+    "mastery",
+    "emphasize",
+    "concede",
+    "odds",
+    "actually",
+    "outdatedness",
+    "inconsistency",
+    "undertake"
+   ],
+   "rows": [
+    {
+     "n": 4,
+     "w": "apply to",
+     "ans": 8
+    },
+    {
+     "n": 5,
+     "w": "obsolescence",
+     "ans": 17
+    },
+    {
+     "n": 6,
+     "w": "acknowledge",
+     "ans": 14
+    },
+    {
+     "n": 17,
+     "w": "fluid",
+     "ans": 10
+    },
+    {
+     "n": 18,
+     "w": "prioritize",
+     "ans": 13
+    },
+    {
+     "n": 19,
+     "w": "adjust",
+     "ans": 0
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 3세트",
+   "opts": [
+    "compilation",
+    "wide",
+    "trouble",
+    "frequency",
+    "improve",
+    "removal",
+    "categorization",
+    "efficiency",
+    "system",
+    "approval",
+    "concur",
+    "substantial",
+    "compartment",
+    "sway",
+    "harmless",
+    "prosperity",
+    "lofty",
+    "expand",
+    "technical",
+    "breed"
+   ],
+   "rows": [
+    {
+     "n": 10,
+     "w": "swell",
+     "ans": 17
+    },
+    {
+     "n": 11,
+     "w": "elimination",
+     "ans": 5
+    },
+    {
+     "n": 12,
+     "w": "wobble",
+     "ans": 13
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 03",
+   "en": "to lose a large amount of water from the body so that it cannot work normally",
+   "ko": "탈수되다",
+   "hw": "dehydrate",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "parch",
+   "synAlt": [],
+   "sp": "≒ p _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 04",
+   "en": "to take apart a used product, repair or replace its parts, and make it work like new",
+   "ko": "재제조하다",
+   "hw": "remanufacture",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "rebuild",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 05",
+   "en": "relating to the general weather conditions that are usual in a particular area or period",
+   "ko": "기후의",
+   "hw": "climatic",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "meteorological",
+   "synAlt": [],
+   "sp": "≒ m _ _ _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 01",
+   "en": "to become smaller in size or amount, often because water or air has been lost",
+   "ko": "줄어들다, 쪼그라들다",
+   "hw": "shrink",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "contract",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 02",
+   "en": "to let someone use something such as a building or product in exchange for regular payments",
+   "ko": "임대하다",
+   "hw": "lease out",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "rent",
+   "synAlt": [],
+   "sp": "≒ r _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 03",
+   "en": "in a sudden and very noticeable way, causing a big and surprising change",
+   "ko": "극적으로",
+   "hw": "dramatically",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "sharply",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 12",
+   "en": "the process of changing from one state, form, or system to another over time",
+   "ko": "이전, 전환",
+   "hw": "transition",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "shift",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 13",
+   "en": "the action of turning around a central point, such as a planet turning on its axis",
+   "ko": "자전, 회전",
+   "hw": "rotation",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "revolution",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 07",
+   "en": "the legal right to have, use, and control something such as land, a house, or goods",
+   "ko": "소유(권)",
+   "hw": "ownership",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "possession",
+   "synAlt": [],
+   "sp": "≒ p _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 08",
+   "en": "a force that slows down something that is moving by pulling against its motion",
+   "ko": "(운동을 늦추는) 저항력, 제동",
+   "hw": "drag",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "resistance",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _ _ _ _ _ _"
+  }
+ ],
+ "dfa": [
+  {
+   "sec": "본문",
+   "no": "Part A",
+   "opts": [
+    "dependent",
+    "election",
+    "liberal",
+    "purchasable",
+    "testify",
+    "coat",
+    "optical",
+    "debt",
+    "intimidate",
+    "countershading",
+    "refresh",
+    "tricky",
+    "absorb",
+    "discard",
+    "underlie",
+    "connectedness",
+    "violate",
+    "statistics",
+    "insufficiently",
+    "genome"
+   ],
+   "rows": [
+    {
+     "n": 17,
+     "w": "to take in a liquid or gas gradually through a surface, like a dry cloth does",
+     "ans": 12
+    },
+    {
+     "n": 18,
+     "w": "needing or being decided by something else in order to exist, work, or change",
+     "ans": 0
+    },
+    {
+     "n": 19,
+     "w": "able to be bought with money, like goods that are sold in a shop",
+     "ans": 3
+    }
+   ]
+  }
+ ],
+ "dfb": [
+  {
+   "sec": "본문",
+   "no": "Part B 01",
+   "tag": "영영풀이 Part B 1번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "expectation : a strong belief about what will happen or how something will turn out in the future",
+    "infection : the process of a disease or a harmful influence passing from one person or thing to another",
+    "inevitable : able to be easily stopped or avoided if people take a few simple steps in advance",
+    "contend : to have to deal with a difficult problem or situation that causes trouble",
+    "homogeneous : made up of parts or members that are all of the same kind or very alike"
+   ],
+   "ans": 2,
+   "ex": "정답 ③ inevitable (불가피한) — 제시된 풀이가 틀렸어요. 바른 풀이: certain to happen and impossible to stop or prevent, no matter what people do"
+  },
+  {
+   "sec": "본문",
+   "no": "Part B 05",
+   "tag": "영영풀이 Part B 5번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "be tied to : to be closely linked with something so that a change in one affects the other",
+    "cement : to make a belief, idea, or relationship firmer and stronger so that it is hard to change",
+    "flatten : to make something look smooth and even, without any raised or hollow parts",
+    "consistent : changing often and behaving in a different way each time, so it is hard to predict",
+    "fundamental : forming the most important and basic part of something, on which other parts depend"
+   ],
+   "ans": 3,
+   "ex": "정답 ④ consistent (일정한, 한결같은) — 제시된 풀이가 틀렸어요. 바른 풀이: always behaving or happening in the same way, without changing over a period of time"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+  "dfa": "영영풀이 시험지 Part A 매칭",
+  "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
+ },
+ "subs": {
+  "wmean": "36·39·40번 표제어 45개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 12개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 10문항 (교재 단어 TEST ③)",
+  "dfa": "영영풀이 3개 → 보기 A~T 단어 고르기",
+  "dfb": "단어–영영풀이 연결이 옳지 않은 것 2문항"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요.",
+  "dfa": "교재 영영풀이 시험지 Part A와 같아요. 영영풀이를 읽고 알맞은 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 교재 그대로예요.",
+  "dfb": "교재 영영풀이 시험지 Part B와 같아요. 단어와 영영풀이의 <b>연결이 옳지 않은 것</b>을 고릅니다."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef",
+  "dfa",
+  "dfb"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 36·39·40번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  },
+  {
+   "t": "영영풀이 시험지 (교재 그대로)",
+   "parts": [
+    "dfa",
+    "dfb"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "36·39·40번"
+ },
+ "src": "[본교재] 영여고2 헤이즐_s꼼꼼내신.pdf"
+}

@@ -1,0 +1,438 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "37번 지문",
+   "rows": [
+    {
+     "n": 199,
+     "w": "manifestation",
+     "ko": "표현, 발현"
+    },
+    {
+     "n": 200,
+     "w": "acquisition",
+     "ko": "습득"
+    },
+    {
+     "n": 201,
+     "w": "competent",
+     "ko": "유능한"
+    },
+    {
+     "n": 202,
+     "w": "situational",
+     "ko": "상황의"
+    },
+    {
+     "n": 203,
+     "w": "explicit",
+     "ko": "명시적인"
+    },
+    {
+     "n": 204,
+     "w": "implicit",
+     "ko": "암시적인"
+    },
+    {
+     "n": 205,
+     "w": "categorical",
+     "ko": "단정적인"
+    },
+    {
+     "n": 206,
+     "w": "assumption",
+     "ko": "가정, 전제"
+    },
+    {
+     "n": 207,
+     "w": "interdependence",
+     "ko": "상호의존"
+    },
+    {
+     "n": 208,
+     "w": "collectivist",
+     "ko": "집단주의자"
+    },
+    {
+     "n": 209,
+     "w": "ambiguous",
+     "ko": "모호한"
+    },
+    {
+     "n": 210,
+     "w": "phenomenon",
+     "ko": "현상"
+    },
+    {
+     "n": 211,
+     "w": "equivalent",
+     "ko": "대응어, 동등한 것"
+    },
+    {
+     "n": 212,
+     "w": "attribute",
+     "ko": "속성, 특성"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "38번 지문",
+   "rows": [
+    {
+     "n": 213,
+     "w": "distinction",
+     "ko": "구별, 차이"
+    },
+    {
+     "n": 214,
+     "w": "density",
+     "ko": "밀도"
+    },
+    {
+     "n": 215,
+     "w": "crowding",
+     "ko": "혼잡함"
+    },
+    {
+     "n": 216,
+     "w": "sensory",
+     "ko": "감각의"
+    },
+    {
+     "n": 217,
+     "w": "anxiety",
+     "ko": "불안"
+    },
+    {
+     "n": 218,
+     "w": "neutral",
+     "ko": "중립적인"
+    },
+    {
+     "n": 219,
+     "w": "invariably",
+     "ko": "언제나, 예외 없이"
+    },
+    {
+     "n": 220,
+     "w": "intensify",
+     "ko": "강화되다, 심해지다"
+    },
+    {
+     "n": 221,
+     "w": "enhance",
+     "ko": "높이다, 향상시키다"
+    },
+    {
+     "n": 222,
+     "w": "dread",
+     "ko": "두려워하다"
+    },
+    {
+     "n": 223,
+     "w": "accentuate",
+     "ko": "두드러지게 하다"
+    },
+    {
+     "n": 224,
+     "w": "dominant",
+     "ko": "지배적인"
+    },
+    {
+     "n": 225,
+     "w": "aggressive",
+     "ko": "공격적인"
+    },
+    {
+     "n": 226,
+     "w": "pedestrian",
+     "ko": "보행자"
+    },
+    {
+     "n": 227,
+     "w": "defuse",
+     "ko": "완화하다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "39번 지문",
+   "rows": [
+    {
+     "n": 228,
+     "w": "exclusion",
+     "ko": "배제, 따돌림"
+    },
+    {
+     "n": 229,
+     "w": "ignore",
+     "ko": "무시하다"
+    },
+    {
+     "n": 230,
+     "w": "organizational",
+     "ko": "조직의"
+    },
+    {
+     "n": 231,
+     "w": "precaution",
+     "ko": "예방책, 대비책"
+    },
+    {
+     "n": 232,
+     "w": "regarding",
+     "ko": "~에 관하여"
+    },
+    {
+     "n": 233,
+     "w": "react",
+     "ko": "반응하다"
+    },
+    {
+     "n": 234,
+     "w": "strengthen",
+     "ko": "강화하다"
+    },
+    {
+     "n": 235,
+     "w": "threaten",
+     "ko": "위협하다"
+    },
+    {
+     "n": 236,
+     "w": "belonging",
+     "ko": "소속감"
+    },
+    {
+     "n": 237,
+     "w": "self-respect",
+     "ko": "자존감"
+    },
+    {
+     "n": 238,
+     "w": "likelihood",
+     "ko": "가능성"
+    },
+    {
+     "n": 239,
+     "w": "adapt",
+     "ko": "적응하다"
+    },
+    {
+     "n": 240,
+     "w": "contribution",
+     "ko": "기여, 이바지"
+    },
+    {
+     "n": 241,
+     "w": "performance",
+     "ko": "수행 성과, 실적"
+    },
+    {
+     "n": 242,
+     "w": "employee",
+     "ko": "직원"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "40번 지문",
+   "rows": [
+    {
+     "n": 243,
+     "w": "retain",
+     "ko": "유지하다, 간직하다"
+    },
+    {
+     "n": 244,
+     "w": "preference",
+     "ko": "선호"
+    },
+    {
+     "n": 245,
+     "w": "perpetuate",
+     "ko": "지속시키다"
+    },
+    {
+     "n": 246,
+     "w": "accordingly",
+     "ko": "그에 맞게"
+    },
+    {
+     "n": 247,
+     "w": "motivate",
+     "ko": "동기를 부여하다"
+    },
+    {
+     "n": 248,
+     "w": "subject",
+     "ko": "피험자"
+    },
+    {
+     "n": 249,
+     "w": "donate",
+     "ko": "기부하다"
+    },
+    {
+     "n": 250,
+     "w": "charity",
+     "ko": "자선단체"
+    },
+    {
+     "n": 251,
+     "w": "earnings",
+     "ko": "수입, 소득"
+    },
+    {
+     "n": 252,
+     "w": "instruct",
+     "ko": "지시하다"
+    },
+    {
+     "n": 253,
+     "w": "recall",
+     "ko": "회상하다"
+    },
+    {
+     "n": 254,
+     "w": "significantly",
+     "ko": "상당히"
+    },
+    {
+     "n": 255,
+     "w": "purely",
+     "ko": "순전히, 오로지"
+    },
+    {
+     "n": 256,
+     "w": "appearance",
+     "ko": "겉모습, 외양"
+    },
+    {
+     "n": 257,
+     "w": "generous",
+     "ko": "관대한, 후한"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST②",
+   "opts": [
+    "institutional",
+    "communitarian",
+    "respect",
+    "contribute",
+    "respect",
+    "splintering",
+    "prompt",
+    "stem",
+    "breeding",
+    "continue",
+    "shake",
+    "flowing",
+    "walker",
+    "avoid",
+    "model",
+    "advantage",
+    "psychological",
+    "evident",
+    "explain",
+    "basic"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "perpetuate",
+     "ans": 9
+    },
+    {
+     "n": 16,
+     "w": "collectivist",
+     "ans": 1
+    },
+    {
+     "n": 17,
+     "w": "pedestrian",
+     "ans": 12
+    },
+    {
+     "n": 18,
+     "w": "organizational",
+     "ans": 0
+    },
+    {
+     "n": 19,
+     "w": "donate",
+     "ans": 3
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 14",
+   "en": "a quality or feature that someone or something has as part of its nature",
+   "ko": "",
+   "hw": "attribute",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "characteristic",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 15",
+   "en": "behaving in an angry or violent way towards other people without good reason",
+   "ko": "",
+   "hw": "aggressive",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "hostile",
+   "synAlt": [],
+   "sp": "≒ h _ _ _ _ _ _"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어"
+ },
+ "subs": {
+  "wmean": "37–40번 표제어 59개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 5개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 2문항 (교재 단어 TEST ③)"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이를 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 37–40번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "37–40번"
+ },
+ "src": "[고2][본교재]2026_9월 고2 내신교재_fin-복사.pdf"
+}

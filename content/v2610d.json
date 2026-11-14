@@ -1,0 +1,671 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "39번 지문",
+   "rows": [
+    {
+     "n": 268,
+     "w": "historian",
+     "ko": "역사학자"
+    },
+    {
+     "n": 269,
+     "w": "draw from",
+     "ko": "~을 가져와 쓰다, 끌어내다"
+    },
+    {
+     "n": 270,
+     "w": "primary source",
+     "ko": "원자료, 1차 자료"
+    },
+    {
+     "n": 271,
+     "w": "ordinary",
+     "ko": "평범한"
+    },
+    {
+     "n": 272,
+     "w": "lack",
+     "ko": "부족하다, 없다"
+    },
+    {
+     "n": 273,
+     "w": "substantial",
+     "ko": "상당한, 풍부한"
+    },
+    {
+     "n": 274,
+     "w": "documentation",
+     "ko": "문서 기록, 문서"
+    },
+    {
+     "n": 275,
+     "w": "archive",
+     "ko": "기록 보관소"
+    },
+    {
+     "n": 276,
+     "w": "preserve",
+     "ko": "보존하다"
+    },
+    {
+     "n": 277,
+     "w": "bias",
+     "ko": "편향, 편견"
+    },
+    {
+     "n": 278,
+     "w": "textual",
+     "ko": "텍스트의, 문서의"
+    },
+    {
+     "n": 279,
+     "w": "analyze",
+     "ko": "분석하다"
+    },
+    {
+     "n": 280,
+     "w": "take ~ at face value",
+     "ko": "~을 액면 그대로 받아들이다"
+    },
+    {
+     "n": 281,
+     "w": "against the grain",
+     "ko": "일반적인 방식과 다르게"
+    },
+    {
+     "n": 282,
+     "w": "slaveowner",
+     "ko": "노예 소유주"
+    },
+    {
+     "n": 283,
+     "w": "interruption",
+     "ko": "단절, 중단"
+    },
+    {
+     "n": 284,
+     "w": "rumor",
+     "ko": "소문"
+    },
+    {
+     "n": 285,
+     "w": "enslaved",
+     "ko": "노예가 된"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "40번 지문",
+   "rows": [
+    {
+     "n": 286,
+     "w": "evolve",
+     "ko": "진화시키다, 발달시키다"
+    },
+    {
+     "n": 287,
+     "w": "specialized",
+     "ko": "특화된, 전문화된"
+    },
+    {
+     "n": 288,
+     "w": "dedicated to",
+     "ko": "~에 사용되는, 전념하는"
+    },
+    {
+     "n": 289,
+     "w": "echolocation",
+     "ko": "반향 정위"
+    },
+    {
+     "n": 290,
+     "w": "acoustic",
+     "ko": "음향의, 청각의"
+    },
+    {
+     "n": 291,
+     "w": "auditory",
+     "ko": "청각의"
+    },
+    {
+     "n": 292,
+     "w": "pathway",
+     "ko": "경로"
+    },
+    {
+     "n": 293,
+     "w": "transmit",
+     "ko": "전달하다, 전송하다"
+    },
+    {
+     "n": 294,
+     "w": "cortex",
+     "ko": "피질"
+    },
+    {
+     "n": 295,
+     "w": "responsible for",
+     "ko": "~을 담당하는"
+    },
+    {
+     "n": 296,
+     "w": "mammal",
+     "ko": "포유류"
+    },
+    {
+     "n": 297,
+     "w": "distinct",
+     "ko": "별개의, 구별되는"
+    },
+    {
+     "n": 298,
+     "w": "frequency",
+     "ko": "주파수"
+    },
+    {
+     "n": 299,
+     "w": "intensity",
+     "ko": "강도"
+    },
+    {
+     "n": 300,
+     "w": "echo",
+     "ko": "메아리, 반사파"
+    },
+    {
+     "n": 301,
+     "w": "in parallel",
+     "ko": "병렬로, 동시에"
+    },
+    {
+     "n": 302,
+     "w": "sequentially",
+     "ko": "순차적으로"
+    },
+    {
+     "n": 303,
+     "w": "assembly line",
+     "ko": "조립 라인"
+    },
+    {
+     "n": 304,
+     "w": "cognitive load",
+     "ko": "인지 부하"
+    },
+    {
+     "n": 305,
+     "w": "simultaneously",
+     "ko": "동시에"
+    },
+    {
+     "n": 306,
+     "w": "enable",
+     "ko": "가능하게 하다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "41번 지문",
+   "rows": [
+    {
+     "n": 307,
+     "w": "crucial",
+     "ko": "중요한, 결정적인"
+    },
+    {
+     "n": 308,
+     "w": "boredom",
+     "ko": "무료함, 지루함"
+    },
+    {
+     "n": 309,
+     "w": "despair",
+     "ko": "낙담, 절망"
+    },
+    {
+     "n": 310,
+     "w": "irritation",
+     "ko": "짜증"
+    },
+    {
+     "n": 311,
+     "w": "adequately",
+     "ko": "적절하게, 충분히"
+    },
+    {
+     "n": 312,
+     "w": "arise",
+     "ko": "생기다, 발생하다"
+    },
+    {
+     "n": 313,
+     "w": "idle",
+     "ko": "아무것도 안 하는, 한가한"
+    },
+    {
+     "n": 314,
+     "w": "imply",
+     "ko": "암시하다"
+    },
+    {
+     "n": 315,
+     "w": "on one's hands",
+     "ko": "(시간 등을) 주체 못 하게 가진"
+    },
+    {
+     "n": 316,
+     "w": "troubling",
+     "ko": "문제를 일으키는, 괴로운"
+    },
+    {
+     "n": 317,
+     "w": "indulgence",
+     "ko": "탐닉, 방종"
+    },
+    {
+     "n": 318,
+     "w": "pastime",
+     "ko": "취미, 소일거리"
+    },
+    {
+     "n": 319,
+     "w": "perceive",
+     "ko": "인식하다, 여기다"
+    },
+    {
+     "n": 320,
+     "w": "luxury",
+     "ko": "사치, 호사"
+    },
+    {
+     "n": 321,
+     "w": "manifest",
+     "ko": "나타나다, 드러나다"
+    },
+    {
+     "n": 322,
+     "w": "inactive",
+     "ko": "할 일이 없는, 활동하지 않는"
+    },
+    {
+     "n": 323,
+     "w": "comprehend",
+     "ko": "이해하다"
+    },
+    {
+     "n": 324,
+     "w": "hazardous",
+     "ko": "위험한"
+    },
+    {
+     "n": 325,
+     "w": "unavailable",
+     "ko": "손에 넣을 수 없는, 이용할 수 없는"
+    },
+    {
+     "n": 326,
+     "w": "paramount",
+     "ko": "가장 중요한"
+    },
+    {
+     "n": 327,
+     "w": "profound",
+     "ko": "심오한, 깊은"
+    },
+    {
+     "n": 328,
+     "w": "self-reflection",
+     "ko": "자기 성찰"
+    },
+    {
+     "n": 329,
+     "w": "unproductive",
+     "ko": "비생산적인"
+    },
+    {
+     "n": 330,
+     "w": "constructive",
+     "ko": "건설적인"
+    },
+    {
+     "n": 331,
+     "w": "regard",
+     "ko": "여기다, 간주하다"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST② 1세트",
+   "opts": [
+    "humanity",
+    "fundamentally",
+    "sufficiently",
+    "devoted",
+    "inquisitiveness",
+    "refund",
+    "contact",
+    "establish",
+    "reduce",
+    "derive",
+    "annoyance",
+    "contradictory",
+    "strike",
+    "harvest",
+    "malleability",
+    "byword",
+    "spread",
+    "sonic",
+    "engagement",
+    "viability"
+   ],
+   "rows": [
+    {
+     "n": 1,
+     "w": "dedicated to",
+     "ans": 3
+    },
+    {
+     "n": 2,
+     "w": "irritation",
+     "ans": 10
+    },
+    {
+     "n": 18,
+     "w": "draw from",
+     "ans": 9
+    },
+    {
+     "n": 19,
+     "w": "acoustic",
+     "ans": 17
+    },
+    {
+     "n": 20,
+     "w": "adequately",
+     "ans": 2
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 2세트",
+   "opts": [
+    "extremely",
+    "credit",
+    "original",
+    "undergo",
+    "urge",
+    "period",
+    "extravagant",
+    "examine",
+    "advantage",
+    "aural",
+    "denote",
+    "gather",
+    "coincide",
+    "spread",
+    "venture",
+    "manufacturing",
+    "safe",
+    "emerge",
+    "vary",
+    "have"
+   ],
+   "rows": [
+    {
+     "n": 16,
+     "w": "primary source",
+     "ans": 2
+    },
+    {
+     "n": 17,
+     "w": "auditory",
+     "ans": 9
+    },
+    {
+     "n": 18,
+     "w": "arise",
+     "ans": 17
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 3세트",
+   "opts": [
+    "route",
+    "reveal",
+    "ability",
+    "perceptual",
+    "inactive",
+    "characteristic",
+    "enterprise",
+    "reflection",
+    "thus",
+    "tackle",
+    "fairness",
+    "records",
+    "undermine",
+    "promote",
+    "data",
+    "heater",
+    "inherently",
+    "desperate",
+    "separation",
+    "exploit"
+   ],
+   "rows": [
+    {
+     "n": 14,
+     "w": "documentation",
+     "ans": 11
+    },
+    {
+     "n": 15,
+     "w": "pathway",
+     "ans": 0
+    },
+    {
+     "n": 16,
+     "w": "idle",
+     "ans": 4
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 12",
+   "en": "a place where historical papers and records are kept so that people can study them later",
+   "ko": "기록 보관소",
+   "hw": "archive",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "repository",
+   "synAlt": [],
+   "sp": "≒ r _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 13",
+   "en": "to send or pass signals, messages, or information from one place or person to another",
+   "ko": "전달하다, 전송하다",
+   "hw": "transmit",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "convey",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 14",
+   "en": "to express an idea in an indirect way without saying it directly or in clear words",
+   "ko": "암시하다",
+   "hw": "imply",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "suggest",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 15",
+   "en": "to keep something safe from harm or decay so that it continues to exist for a long time",
+   "ko": "보존하다",
+   "hw": "preserve",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "conserve",
+   "synAlt": [],
+   "sp": "≒ c _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 01",
+   "en": "the number of times a sound wave or signal vibrates in a particular period of time",
+   "ko": "주파수",
+   "hw": "frequency",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "pitch",
+   "synAlt": [],
+   "sp": "≒ p _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 02",
+   "en": "causing worry, anxiety, or problems, so that it makes people feel uneasy or upset",
+   "ko": "문제를 일으키는, 괴로운",
+   "hw": "troubling",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "disturbing",
+   "synAlt": [],
+   "sp": "≒ d _ _ _ _ _ _ _ _ _"
+  }
+ ],
+ "dfa": [
+  {
+   "sec": "본문",
+   "no": "Part A",
+   "opts": [
+    "crucial",
+    "historian",
+    "infectious",
+    "pace",
+    "setting",
+    "nonverbal",
+    "reflect",
+    "cephalopod",
+    "inform",
+    "possibility",
+    "ongoing",
+    "survival",
+    "evolve",
+    "unite",
+    "reappraisal",
+    "increasingly",
+    "lend",
+    "embrace",
+    "consistent",
+    "alter"
+   ],
+   "rows": [
+    {
+     "n": 16,
+     "w": "a person who studies, writes about, or is an expert in the events of the past",
+     "ans": 1
+    },
+    {
+     "n": 17,
+     "w": "to develop gradually over a long time, especially through natural changes passed down generations",
+     "ans": 12
+    },
+    {
+     "n": 18,
+     "w": "extremely important because it has a great effect on what happens in a situation",
+     "ans": 0
+    }
+   ]
+  }
+ ],
+ "dfb": [
+  {
+   "sec": "본문",
+   "no": "Part B 23",
+   "tag": "영영풀이 Part B 23번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "objectively : in a way that is based on facts rather than on personal feelings, opinions, or wishes",
+    "avenue : a way or method of reaching a goal or of dealing with a particular problem",
+    "criterion : a standard or rule that is used for judging, measuring, or deciding about something",
+    "ordinary : not special or different in any way, but usual and like most other people or things",
+    "specialized : designed to be used for many general purposes rather than for one particular task or job"
+   ],
+   "ans": 4,
+   "ex": "정답 ⑤ specialized (특화된, 전문화된) — 제시된 풀이가 틀렸어요. 바른 풀이: designed or trained for one particular purpose or task rather than for many different uses"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+  "dfa": "영영풀이 시험지 Part A 매칭",
+  "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
+ },
+ "subs": {
+  "wmean": "39–41번 표제어 64개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 11개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 6문항 (교재 단어 TEST ③)",
+  "dfa": "영영풀이 3개 → 보기 A~T 단어 고르기",
+  "dfb": "단어–영영풀이 연결이 옳지 않은 것 1문항"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요.",
+  "dfa": "교재 영영풀이 시험지 Part A와 같아요. 영영풀이를 읽고 알맞은 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 교재 그대로예요.",
+  "dfb": "교재 영영풀이 시험지 Part B와 같아요. 단어와 영영풀이의 <b>연결이 옳지 않은 것</b>을 고릅니다."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef",
+  "dfa",
+  "dfb"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 39–41번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  },
+  {
+   "t": "영영풀이 시험지 (교재 그대로)",
+   "parts": [
+    "dfa",
+    "dfb"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "39–41번"
+ },
+ "src": "[본교재]헤이즐_s꼼꼼내신_고26년10월 모고.pdf"
+}

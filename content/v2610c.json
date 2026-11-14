@@ -1,0 +1,920 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "34번 지문",
+   "rows": [
+    {
+     "n": 183,
+     "w": "alter",
+     "ko": "변화시키다, 바꾸다"
+    },
+    {
+     "n": 184,
+     "w": "go viral",
+     "ko": "입소문이 나다, 급속히 퍼지다"
+    },
+    {
+     "n": 185,
+     "w": "household term",
+     "ko": "일상적인 용어"
+    },
+    {
+     "n": 186,
+     "w": "household",
+     "ko": "가정, 가구"
+    },
+    {
+     "n": 187,
+     "w": "countless",
+     "ko": "셀 수 없이 많은"
+    },
+    {
+     "n": 188,
+     "w": "vulnerable",
+     "ko": "취약한"
+    },
+    {
+     "n": 189,
+     "w": "thereby",
+     "ko": "그로 인해, 그렇게 함으로써"
+    },
+    {
+     "n": 190,
+     "w": "buffer",
+     "ko": "보호하다, 완충하다"
+    },
+    {
+     "n": 191,
+     "w": "digitization",
+     "ko": "디지털화"
+    },
+    {
+     "n": 192,
+     "w": "enormously",
+     "ko": "엄청나게"
+    },
+    {
+     "n": 193,
+     "w": "autonomously",
+     "ko": "자율적으로"
+    },
+    {
+     "n": 194,
+     "w": "give rise to",
+     "ko": "~을 초래하다, 낳다"
+    },
+    {
+     "n": 195,
+     "w": "infinite",
+     "ko": "무한한"
+    },
+    {
+     "n": 196,
+     "w": "breakdown",
+     "ko": "고장, 붕괴"
+    },
+    {
+     "n": 197,
+     "w": "interdependence",
+     "ko": "상호 의존성"
+    },
+    {
+     "n": 198,
+     "w": "breeding ground",
+     "ko": "온상"
+    },
+    {
+     "n": 199,
+     "w": "bump up against",
+     "ko": "~와 부딪치다"
+    },
+    {
+     "n": 200,
+     "w": "vulnerability",
+     "ko": "취약성"
+    },
+    {
+     "n": 201,
+     "w": "interconnectedness",
+     "ko": "상호 연결성"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "35번 지문",
+   "rows": [
+    {
+     "n": 202,
+     "w": "infectious",
+     "ko": "전염성의"
+    },
+    {
+     "n": 203,
+     "w": "breakthrough",
+     "ko": "획기적 발전, 돌파구"
+    },
+    {
+     "n": 204,
+     "w": "smallpox",
+     "ko": "천연두"
+    },
+    {
+     "n": 205,
+     "w": "deadly",
+     "ko": "치명적인"
+    },
+    {
+     "n": 206,
+     "w": "exposure",
+     "ko": "노출"
+    },
+    {
+     "n": 207,
+     "w": "cowpox",
+     "ko": "우두"
+    },
+    {
+     "n": 208,
+     "w": "harmless",
+     "ko": "무해한"
+    },
+    {
+     "n": 209,
+     "w": "contribute",
+     "ko": "기여하다"
+    },
+    {
+     "n": 210,
+     "w": "burden",
+     "ko": "부담, 짐"
+    },
+    {
+     "n": 211,
+     "w": "bacterial",
+     "ko": "세균성의"
+    },
+    {
+     "n": 212,
+     "w": "elimination",
+     "ko": "퇴치, 제거"
+    },
+    {
+     "n": 213,
+     "w": "hygiene",
+     "ko": "위생"
+    },
+    {
+     "n": 214,
+     "w": "therapy",
+     "ko": "치료(법)"
+    },
+    {
+     "n": 215,
+     "w": "chronic",
+     "ko": "만성적인"
+    },
+    {
+     "n": 216,
+     "w": "manageable",
+     "ko": "관리 가능한"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "36번 지문",
+   "rows": [
+    {
+     "n": 217,
+     "w": "embrace",
+     "ko": "수용하다, 받아들이다"
+    },
+    {
+     "n": 218,
+     "w": "objectively",
+     "ko": "객관적으로"
+    },
+    {
+     "n": 219,
+     "w": "interface",
+     "ko": "인터페이스, 접속 화면"
+    },
+    {
+     "n": 220,
+     "w": "observation",
+     "ko": "관찰 (결과)"
+    },
+    {
+     "n": 221,
+     "w": "interaction",
+     "ko": "상호 작용"
+    },
+    {
+     "n": 222,
+     "w": "incredibly",
+     "ko": "엄청나게, 믿을 수 없을 정도로"
+    },
+    {
+     "n": 223,
+     "w": "usability",
+     "ko": "사용성, 사용 편의성"
+    },
+    {
+     "n": 224,
+     "w": "uncover",
+     "ko": "밝혀내다, 드러내다"
+    },
+    {
+     "n": 225,
+     "w": "preference",
+     "ko": "선호(하는 것)"
+    },
+    {
+     "n": 226,
+     "w": "participant",
+     "ko": "참가자"
+    },
+    {
+     "n": 227,
+     "w": "engage in",
+     "ko": "~에 참여하다"
+    },
+    {
+     "n": 228,
+     "w": "realistic",
+     "ko": "현실적인, 실제적인"
+    },
+    {
+     "n": 229,
+     "w": "subsequent",
+     "ko": "차후의, 그 다음의"
+    },
+    {
+     "n": 230,
+     "w": "revision",
+     "ko": "수정, 개정"
+    },
+    {
+     "n": 231,
+     "w": "finding",
+     "ko": "발견(한 것), 결과"
+    },
+    {
+     "n": 232,
+     "w": "representative",
+     "ko": "대표적인, 전형적인"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "37번 지문",
+   "rows": [
+    {
+     "n": 233,
+     "w": "reappraisal",
+     "ko": "재평가"
+    },
+    {
+     "n": 234,
+     "w": "avenue",
+     "ko": "방법, 수단"
+    },
+    {
+     "n": 235,
+     "w": "regulate",
+     "ko": "조절하다, 통제하다"
+    },
+    {
+     "n": 236,
+     "w": "transform",
+     "ko": "변화시키다, 변형시키다"
+    },
+    {
+     "n": 237,
+     "w": "at one's root",
+     "ko": "본질적으로, 근원에서"
+    },
+    {
+     "n": 238,
+     "w": "go through",
+     "ko": "겪다"
+    },
+    {
+     "n": 239,
+     "w": "divorce",
+     "ko": "이혼"
+    },
+    {
+     "n": 240,
+     "w": "adverse",
+     "ko": "부정적인, 불리한"
+    },
+    {
+     "n": 241,
+     "w": "construe",
+     "ko": "해석하다"
+    },
+    {
+     "n": 242,
+     "w": "overpowering",
+     "ko": "강렬한, 압도적인"
+    },
+    {
+     "n": 243,
+     "w": "mark",
+     "ko": "흔적을 남기다"
+    },
+    {
+     "n": 244,
+     "w": "alternatively",
+     "ko": "그 대신에, 이와 달리"
+    },
+    {
+     "n": 245,
+     "w": "in the long run",
+     "ko": "장기적으로"
+    },
+    {
+     "n": 246,
+     "w": "outcome",
+     "ko": "결과"
+    },
+    {
+     "n": 247,
+     "w": "construal",
+     "ko": "해석"
+    },
+    {
+     "n": 248,
+     "w": "intense",
+     "ko": "강렬한"
+    },
+    {
+     "n": 249,
+     "w": "crucially",
+     "ko": "결정적으로, 중요하게"
+    },
+    {
+     "n": 250,
+     "w": "gratitude",
+     "ko": "감사"
+    },
+    {
+     "n": 251,
+     "w": "illustrate",
+     "ko": "보여 주다, 설명하다"
+    },
+    {
+     "n": 252,
+     "w": "accumulate",
+     "ko": "축적되다"
+    },
+    {
+     "n": 253,
+     "w": "psychological",
+     "ko": "심리적인"
+    },
+    {
+     "n": 254,
+     "w": "resilience",
+     "ko": "회복 탄력성"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "38번 지문",
+   "rows": [
+    {
+     "n": 255,
+     "w": "criterion",
+     "ko": "기준"
+    },
+    {
+     "n": 256,
+     "w": "benchmark",
+     "ko": "지표, 기준점"
+    },
+    {
+     "n": 257,
+     "w": "guideline",
+     "ko": "지침"
+    },
+    {
+     "n": 258,
+     "w": "inform",
+     "ko": "알려 주다"
+    },
+    {
+     "n": 259,
+     "w": "crop",
+     "ko": "작물"
+    },
+    {
+     "n": 260,
+     "w": "industrial",
+     "ko": "산업용의"
+    },
+    {
+     "n": 261,
+     "w": "boiler",
+     "ko": "보일러"
+    },
+    {
+     "n": 262,
+     "w": "utilize",
+     "ko": "활용하다, 이용하다"
+    },
+    {
+     "n": 263,
+     "w": "one size fits all",
+     "ko": "일률적인, 획일적인"
+    },
+    {
+     "n": 264,
+     "w": "diverse",
+     "ko": "다양한"
+    },
+    {
+     "n": 265,
+     "w": "generator",
+     "ko": "발전기"
+    },
+    {
+     "n": 266,
+     "w": "tap",
+     "ko": "수도꼭지"
+    },
+    {
+     "n": 267,
+     "w": "dependent on",
+     "ko": "~에 따라 (달라지는)"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST② 1세트",
+   "opts": [
+    "humanity",
+    "fundamentally",
+    "sufficiently",
+    "devoted",
+    "inquisitiveness",
+    "refund",
+    "contact",
+    "establish",
+    "reduce",
+    "derive",
+    "annoyance",
+    "contradictory",
+    "strike",
+    "harvest",
+    "malleability",
+    "byword",
+    "spread",
+    "sonic",
+    "engagement",
+    "viability"
+   ],
+   "rows": [
+    {
+     "n": 13,
+     "w": "household term",
+     "ans": 15
+    },
+    {
+     "n": 14,
+     "w": "exposure",
+     "ans": 6
+    },
+    {
+     "n": 15,
+     "w": "interaction",
+     "ans": 18
+    },
+    {
+     "n": 16,
+     "w": "at one's root",
+     "ans": 1
+    },
+    {
+     "n": 17,
+     "w": "crop",
+     "ans": 13
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 2세트",
+   "opts": [
+    "extremely",
+    "credit",
+    "original",
+    "undergo",
+    "urge",
+    "period",
+    "extravagant",
+    "examine",
+    "advantage",
+    "aural",
+    "denote",
+    "gather",
+    "coincide",
+    "spread",
+    "venture",
+    "manufacturing",
+    "safe",
+    "emerge",
+    "vary",
+    "have"
+   ],
+   "rows": [
+    {
+     "n": 11,
+     "w": "go viral",
+     "ans": 13
+    },
+    {
+     "n": 12,
+     "w": "harmless",
+     "ans": 16
+    },
+    {
+     "n": 13,
+     "w": "incredibly",
+     "ans": 0
+    },
+    {
+     "n": 14,
+     "w": "go through",
+     "ans": 3
+    },
+    {
+     "n": 15,
+     "w": "industrial",
+     "ans": 15
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "TEST② 3세트",
+   "opts": [
+    "route",
+    "reveal",
+    "ability",
+    "perceptual",
+    "inactive",
+    "characteristic",
+    "enterprise",
+    "reflection",
+    "thus",
+    "tackle",
+    "fairness",
+    "records",
+    "undermine",
+    "promote",
+    "data",
+    "heater",
+    "inherently",
+    "desperate",
+    "separation",
+    "exploit"
+   ],
+   "rows": [
+    {
+     "n": 9,
+     "w": "thereby",
+     "ans": 8
+    },
+    {
+     "n": 10,
+     "w": "contribute",
+     "ans": 13
+    },
+    {
+     "n": 11,
+     "w": "uncover",
+     "ans": 1
+    },
+    {
+     "n": 12,
+     "w": "divorce",
+     "ans": 18
+    },
+    {
+     "n": 13,
+     "w": "boiler",
+     "ans": 15
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 07",
+   "en": "to protect something from harmful effects by placing something between it and the danger",
+   "ko": "보호하다, 완충하다",
+   "hw": "buffer",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "shield",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 08",
+   "en": "a serious problem, duty, or cost that causes worry or difficulty for a person or group",
+   "ko": "부담, 짐",
+   "hw": "burden",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "load",
+   "synAlt": [],
+   "sp": "≒ l _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 09",
+   "en": "a person who takes part in an activity, event, study, or competition with other people",
+   "ko": "참가자",
+   "hw": "participant",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "attendee",
+   "synAlt": [],
+   "sp": "≒ a _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 10",
+   "en": "to understand the meaning of an action, event, or statement in a particular way",
+   "ko": "해석하다",
+   "hw": "construe",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "interpret",
+   "synAlt": [],
+   "sp": "≒ i _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 1세트 11",
+   "en": "meant to suit everyone in exactly the same way, without being adjusted for individual differences",
+   "ko": "일률적인, 획일적인",
+   "hw": "one size fits all",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "uniform",
+   "synAlt": [],
+   "sp": "≒ u _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 10",
+   "en": "to a very great degree or extent, much more than what is usual or expected",
+   "ko": "엄청나게",
+   "hw": "enormously",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "immensely",
+   "synAlt": [],
+   "sp": "≒ i _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 11",
+   "en": "caused by or relating to tiny living things that can enter the body and make people sick",
+   "ko": "세균성의",
+   "hw": "bacterial",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "microbial",
+   "synAlt": [],
+   "sp": "≒ m _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 12",
+   "en": "to take part in an activity or become involved in it in an active way",
+   "ko": "~에 참여하다",
+   "hw": "engage in",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "participate",
+   "synAlt": [],
+   "sp": "≒ p _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 13",
+   "en": "so strong or intense that it is very difficult to control, resist, or deal with",
+   "ko": "강렬한, 압도적인",
+   "hw": "overpowering",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "overwhelming",
+   "synAlt": [],
+   "sp": "≒ o _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 2세트 14",
+   "en": "including many different types of people or things that are not like one another",
+   "ko": "다양한",
+   "hw": "diverse",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "various",
+   "synAlt": [],
+   "sp": "≒ v _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 13",
+   "en": "in a way that operates or decides by itself without being controlled by people or other systems",
+   "ko": "자율적으로",
+   "hw": "autonomously",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "independently",
+   "synAlt": [],
+   "sp": "≒ i _ _ _ _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 14",
+   "en": "the practice of keeping yourself and your surroundings clean in order to prevent illness and disease",
+   "ko": "위생",
+   "hw": "hygiene",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "sanitation",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _ _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 3세트 15",
+   "en": "similar to real life and the situations people actually face, rather than imagined or ideal",
+   "ko": "현실적인, 실제적인",
+   "hw": "realistic",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "lifelike",
+   "synAlt": [],
+   "sp": "≒ l _ _ _ _ _ _ _"
+  }
+ ],
+ "dfa": [
+  {
+   "sec": "본문",
+   "no": "Part A",
+   "opts": [
+    "crucial",
+    "historian",
+    "infectious",
+    "pace",
+    "setting",
+    "nonverbal",
+    "reflect",
+    "cephalopod",
+    "inform",
+    "possibility",
+    "ongoing",
+    "survival",
+    "evolve",
+    "unite",
+    "reappraisal",
+    "increasingly",
+    "lend",
+    "embrace",
+    "consistent",
+    "alter"
+   ],
+   "rows": [
+    {
+     "n": 11,
+     "w": "to make something different in some way while keeping its basic form or nature",
+     "ans": 19
+    },
+    {
+     "n": 12,
+     "w": "able to pass from one person or animal to another, usually by germs, air, or touch",
+     "ans": 2
+    },
+    {
+     "n": 13,
+     "w": "to accept an idea, belief, or change willingly and with enthusiasm rather than resisting it",
+     "ans": 17
+    },
+    {
+     "n": 14,
+     "w": "the act of thinking again about a situation in a new way and judging it differently",
+     "ans": 14
+    },
+    {
+     "n": 15,
+     "w": "to tell someone facts or details about something so that they know about it clearly",
+     "ans": 8
+    }
+   ]
+  }
+ ],
+ "dfb": [
+  {
+   "sec": "본문",
+   "no": "Part B 26",
+   "tag": "영영풀이 Part B 26번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "sequence : a set of events, stages, or actions that follow one another in a particular order",
+    "countless : so few in number that every single one can easily be counted on one hand",
+    "smallpox : a dangerous disease that spreads easily, causes fever, and leaves marks on the skin",
+    "interface : the way a computer program or device presents information and allows people to use it",
+    "regulate : to control the level, amount, or strength of something so that it stays balanced or proper"
+   ],
+   "ans": 1,
+   "ex": "정답 ② countless (셀 수 없이 많은) — 제시된 풀이가 틀렸어요. 바른 풀이: so many that it is impossible or very hard to know the exact number of them"
+  },
+  {
+   "sec": "본문",
+   "no": "Part B 30",
+   "tag": "영영풀이 Part B 30번",
+   "stem": "단어와 영영풀이의 연결이 옳지 않은 것은?",
+   "psg": "",
+   "body": "",
+   "ul": "",
+   "opt": [
+    "deadly : able to cause death, especially quickly, so that it is extremely dangerous to living things",
+    "observation : the act of watching something carefully, or a fact or remark learned from watching closely",
+    "transform : to keep the form or nature of something exactly the same without allowing any change at all",
+    "guideline : a piece of official advice about how something should be done or what level is acceptable",
+    "substantial : large in amount, size, or importance, so that it is clearly worth noticing or counting"
+   ],
+   "ans": 2,
+   "ex": "정답 ③ transform (변화시키다, 변형시키다) — 제시된 풀이가 틀렸어요. 바른 풀이: to change the form, nature, or appearance of something completely so that it becomes different"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어",
+  "dfa": "영영풀이 시험지 Part A 매칭",
+  "dfb": "영영풀이 시험지 Part B 옳지 않은 연결"
+ },
+ "subs": {
+  "wmean": "34–38번 표제어 85개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 15개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 13문항 (교재 단어 TEST ③)",
+  "dfa": "영영풀이 5개 → 보기 A~T 단어 고르기",
+  "dfb": "단어–영영풀이 연결이 옳지 않은 것 2문항"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이와 우리말 뜻을 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요.",
+  "dfa": "교재 영영풀이 시험지 Part A와 같아요. 영영풀이를 읽고 알맞은 단어를 <b>보기 A~T</b>에서 고릅니다. 보기는 교재 그대로예요.",
+  "dfb": "교재 영영풀이 시험지 Part B와 같아요. 단어와 영영풀이의 <b>연결이 옳지 않은 것</b>을 고릅니다."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef",
+  "dfa",
+  "dfb"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 34–38번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  },
+  {
+   "t": "영영풀이 시험지 (교재 그대로)",
+   "parts": [
+    "dfa",
+    "dfb"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "34–38번"
+ },
+ "src": "[본교재]헤이즐_s꼼꼼내신_고26년10월 모고.pdf"
+}

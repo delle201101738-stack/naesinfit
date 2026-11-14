@@ -794,6 +794,66 @@
      },
      "total": 149,
      "labels": {}
+    },
+    {
+     "id": "v2610a",
+     "no": "21–24번 단어",
+     "title": "본교재 단어 TEST · 금옥여고",
+     "file": "content/v2610a.json",
+     "pts": {
+      "wmean": 70,
+      "wsyn": 15,
+      "wdef": 18,
+      "dfa": 5,
+      "dfb": 2
+     },
+     "total": 110,
+     "labels": {}
+    },
+    {
+     "id": "v2610b",
+     "no": "29–33번 단어",
+     "title": "본교재 단어 TEST · 신도림고·금옥여고",
+     "file": "content/v2610b.json",
+     "pts": {
+      "wmean": 95,
+      "wsyn": 15,
+      "wdef": 30,
+      "dfa": 5,
+      "dfb": 3
+     },
+     "total": 148,
+     "labels": {}
+    },
+    {
+     "id": "v2610c",
+     "no": "34–38번 단어",
+     "title": "본교재 단어 TEST · 신도림고·금옥여고",
+     "file": "content/v2610c.json",
+     "pts": {
+      "wmean": 85,
+      "wsyn": 15,
+      "wdef": 26,
+      "dfa": 5,
+      "dfb": 2
+     },
+     "total": 133,
+     "labels": {}
+    },
+    {
+     "id": "v2610d",
+     "no": "39–41번 단어",
+     "title": "본교재 단어 TEST · 신도림고·금옥여고",
+     "file": "content/v2610d.json",
+     "pts": {
+      "wmean": 64,
+      "wsyn": 11,
+      "wdef": 12,
+      "dfa": 3,
+      "dfb": 1
+     },
+     "total": 91,
+     "labels": {}
     }
    ]
   },
@@ -869,6 +929,58 @@
       "insert": 6
      },
      "total": 131,
+     "labels": {}
+    },
+    {
+     "id": "v2609k",
+     "no": "21·32·36·38·39번 단어",
+     "title": "본교재 단어 TEST · 금옥여고",
+     "file": "content/v2609k.json",
+     "pts": {
+      "wmean": 71,
+      "wsyn": 5,
+      "wdef": 8
+     },
+     "total": 84,
+     "labels": {}
+    },
+    {
+     "id": "v2609r1",
+     "no": "21·22·24·29·30번 단어",
+     "title": "본교재 단어 TEST · 구로고",
+     "file": "content/v2609r1.json",
+     "pts": {
+      "wmean": 78,
+      "wsyn": 5,
+      "wdef": 10
+     },
+     "total": 93,
+     "labels": {}
+    },
+    {
+     "id": "v2609r2",
+     "no": "31–34·36번 단어",
+     "title": "본교재 단어 TEST · 구로고",
+     "file": "content/v2609r2.json",
+     "pts": {
+      "wmean": 76,
+      "wsyn": 5,
+      "wdef": 10
+     },
+     "total": 91,
+     "labels": {}
+    },
+    {
+     "id": "v2609r3",
+     "no": "37–40번 단어",
+     "title": "본교재 단어 TEST · 구로고",
+     "file": "content/v2609r3.json",
+     "pts": {
+      "wmean": 59,
+      "wsyn": 5,
+      "wdef": 4
+     },
+     "total": 68,
      "labels": {}
     }
    ]
@@ -997,6 +1109,51 @@
      },
      "total": 147,
      "labels": {}
+    },
+    {
+     "id": "v2510y1",
+     "no": "21–24·29번 단어",
+     "title": "본교재 단어 TEST · 영등포여고",
+     "file": "content/v2510y1.json",
+     "pts": {
+      "wmean": 84,
+      "wsyn": 25,
+      "wdef": 34,
+      "dfa": 5,
+      "dfb": 2
+     },
+     "total": 150,
+     "labels": {}
+    },
+    {
+     "id": "v2510y2",
+     "no": "30–34번 단어",
+     "title": "본교재 단어 TEST · 영등포여고",
+     "file": "content/v2510y2.json",
+     "pts": {
+      "wmean": 87,
+      "wsyn": 23,
+      "wdef": 36,
+      "dfa": 5,
+      "dfb": 3
+     },
+     "total": 154,
+     "labels": {}
+    },
+    {
+     "id": "v2510y3",
+     "no": "36·39·40번 단어",
+     "title": "본교재 단어 TEST · 영등포여고",
+     "file": "content/v2510y3.json",
+     "pts": {
+      "wmean": 45,
+      "wsyn": 12,
+      "wdef": 20,
+      "dfa": 3,
+      "dfb": 2
+     },
+     "total": 82,
+     "labels": {}
     }
    ]
   },
@@ -1021,6 +1178,36 @@
       "insert": 12
      },
      "total": 306,
+     "labels": {}
+    },
+    {
+     "id": "v2211y1",
+     "no": "30–34번 단어",
+     "title": "본교재 단어 TEST · 영등포여고",
+     "file": "content/v2211y1.json",
+     "pts": {
+      "wmean": 89,
+      "wsyn": 34,
+      "wdef": 26,
+      "dfa": 6,
+      "dfb": 2
+     },
+     "total": 157,
+     "labels": {}
+    },
+    {
+     "id": "v2211y2",
+     "no": "35번 단어",
+     "title": "본교재 단어 TEST · 영등포여고",
+     "file": "content/v2211y2.json",
+     "pts": {
+      "wmean": 12,
+      "wsyn": 6,
+      "wdef": 4,
+      "dfa": 1,
+      "dfb": 1
+     },
+     "total": 24,
      "labels": {}
     }
    ]
@@ -1581,7 +1768,10 @@
    "m2609c1",
    "m2609c2",
    "m2609c3",
-   "m2609c4"
+   "m2609c4",
+   "v2609r1",
+   "v2609r2",
+   "v2609r3"
   ],
   "구일고2": [
    "e2cjs06",
@@ -1601,7 +1791,10 @@
    "e2ybm05",
    "m2610b1",
    "m2610b2",
-   "m2610b3"
+   "m2610b3",
+   "v2610b",
+   "v2610c",
+   "v2610d"
   ],
   "영등포여고2": [
    "e2cjk02",
@@ -1609,14 +1802,24 @@
    "m2510y1",
    "m2510y2",
    "m2510y3",
-   "m2211y"
+   "m2211y",
+   "v2510y1",
+   "v2510y2",
+   "v2510y3",
+   "v2211y1",
+   "v2211y2"
   ],
   "금옥여고2": [
    "gwybmk06",
    "gwybmk06h",
    "m2610b1",
    "m2610b2",
-   "m2610b3"
+   "m2610b3",
+   "v2610a",
+   "v2610b",
+   "v2610c",
+   "v2610d",
+   "v2609k"
   ],
   "경인고1": [
    "ce2ne03",

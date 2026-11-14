@@ -1,0 +1,564 @@
+{
+ "wmean": [
+  {
+   "sec": "본문",
+   "no": "31번 지문",
+   "rows": [
+    {
+     "n": 109,
+     "w": "geography",
+     "ko": "지리, 지리적 배치"
+    },
+    {
+     "n": 110,
+     "w": "unclear",
+     "ko": "불분명한"
+    },
+    {
+     "n": 111,
+     "w": "phase",
+     "ko": "상(相), 단계"
+    },
+    {
+     "n": 112,
+     "w": "transition",
+     "ko": "이행하다, 바뀌다"
+    },
+    {
+     "n": 113,
+     "w": "molecule",
+     "ko": "분자"
+    },
+    {
+     "n": 114,
+     "w": "loosen",
+     "ko": "느슨해지다, 풀리다"
+    },
+    {
+     "n": 115,
+     "w": "vibrate",
+     "ko": "진동하다"
+    },
+    {
+     "n": 116,
+     "w": "particle",
+     "ko": "입자"
+    },
+    {
+     "n": 117,
+     "w": "velocity",
+     "ko": "속도"
+    },
+    {
+     "n": 118,
+     "w": "flux",
+     "ko": "유동, 끊임없는 변화"
+    },
+    {
+     "n": 119,
+     "w": "stability",
+     "ko": "안정, 안정성"
+    },
+    {
+     "n": 120,
+     "w": "complexity",
+     "ko": "복잡성"
+    },
+    {
+     "n": 121,
+     "w": "settle",
+     "ko": "정착하다"
+    },
+    {
+     "n": 122,
+     "w": "permanently",
+     "ko": "영구적으로"
+    },
+    {
+     "n": 123,
+     "w": "nomad",
+     "ko": "유목민"
+    },
+    {
+     "n": 124,
+     "w": "migratory",
+     "ko": "이주하는"
+    },
+    {
+     "n": 125,
+     "w": "demographic",
+     "ko": "인구 집단"
+    },
+    {
+     "n": 126,
+     "w": "diverse",
+     "ko": "다양한"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "32번 지문",
+   "rows": [
+    {
+     "n": 127,
+     "w": "cognitive",
+     "ko": "인지의, 인식의"
+    },
+    {
+     "n": 128,
+     "w": "motivation",
+     "ko": "동기, 동기 부여"
+    },
+    {
+     "n": 129,
+     "w": "fundamental",
+     "ko": "근본적인, 기본적인"
+    },
+    {
+     "n": 130,
+     "w": "predict",
+     "ko": "예측하다"
+    },
+    {
+     "n": 131,
+     "w": "uncertainty",
+     "ko": "불확실성"
+    },
+    {
+     "n": 132,
+     "w": "admission",
+     "ko": "입학 허가"
+    },
+    {
+     "n": 133,
+     "w": "lounge",
+     "ko": "휴게실, 라운지"
+    },
+    {
+     "n": 134,
+     "w": "problematic",
+     "ko": "문제가 있는"
+    },
+    {
+     "n": 135,
+     "w": "closet",
+     "ko": "벽장, 옷장"
+    },
+    {
+     "n": 136,
+     "w": "private",
+     "ko": "개인의, 사적인"
+    },
+    {
+     "n": 137,
+     "w": "resident",
+     "ko": "거주자"
+    },
+    {
+     "n": 138,
+     "w": "stable",
+     "ko": "안정된"
+    },
+    {
+     "n": 139,
+     "w": "niche",
+     "ko": "적합한 자리, 자기 자리"
+    },
+    {
+     "n": 140,
+     "w": "membership",
+     "ko": "구성원 자격, 소속"
+    },
+    {
+     "n": 141,
+     "w": "lack",
+     "ko": "결여하다, ~이 없다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "33번 지문",
+   "rows": [
+    {
+     "n": 142,
+     "w": "psychological",
+     "ko": "심리학의, 심리적인"
+    },
+    {
+     "n": 143,
+     "w": "grieve",
+     "ko": "애도하다, 슬퍼하다"
+    },
+    {
+     "n": 144,
+     "w": "collective",
+     "ko": "집단적인"
+    },
+    {
+     "n": 145,
+     "w": "grief",
+     "ko": "비탄, 애도"
+    },
+    {
+     "n": 146,
+     "w": "dynamic",
+     "ko": "역동적인"
+    },
+    {
+     "n": 147,
+     "w": "consciousness",
+     "ko": "의식"
+    },
+    {
+     "n": 148,
+     "w": "vulnerability",
+     "ko": "취약성"
+    },
+    {
+     "n": 149,
+     "w": "transience",
+     "ko": "덧없음, 일시성"
+    },
+    {
+     "n": 150,
+     "w": "mortality",
+     "ko": "죽음, 필멸성"
+    },
+    {
+     "n": 151,
+     "w": "repair",
+     "ko": "회복시키다, 복구하다"
+    },
+    {
+     "n": 152,
+     "w": "honour",
+     "ko": "기리다, 존중하다"
+    },
+    {
+     "n": 153,
+     "w": "diminishment",
+     "ko": "축소, 감소"
+    },
+    {
+     "n": 154,
+     "w": "devotion",
+     "ko": "헌신"
+    },
+    {
+     "n": 155,
+     "w": "compassion",
+     "ko": "연민, 동정심"
+    },
+    {
+     "n": 156,
+     "w": "commitment",
+     "ko": "헌신, 전념"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "34번 지문",
+   "rows": [
+    {
+     "n": 157,
+     "w": "obvious",
+     "ko": "명백한, 뻔한"
+    },
+    {
+     "n": 158,
+     "w": "aspect",
+     "ko": "측면"
+    },
+    {
+     "n": 159,
+     "w": "accumulate",
+     "ko": "축적되다, 쌓이다"
+    },
+    {
+     "n": 160,
+     "w": "apparent",
+     "ko": "뚜렷한, 눈에 띄는"
+    },
+    {
+     "n": 161,
+     "w": "medium",
+     "ko": "매체, 수단"
+    },
+    {
+     "n": 162,
+     "w": "subtle",
+     "ko": "미묘한, 감지하기 힘든"
+    },
+    {
+     "n": 163,
+     "w": "revolutionize",
+     "ko": "혁명을 일으키다"
+    },
+    {
+     "n": 164,
+     "w": "preparation",
+     "ko": "준비"
+    },
+    {
+     "n": 165,
+     "w": "liberating",
+     "ko": "해방시켜 주는"
+    },
+    {
+     "n": 166,
+     "w": "tend",
+     "ko": "~하는 경향이 있다"
+    },
+    {
+     "n": 167,
+     "w": "implication",
+     "ko": "함의, 영향"
+    },
+    {
+     "n": 168,
+     "w": "convenience",
+     "ko": "편리함"
+    },
+    {
+     "n": 169,
+     "w": "overlook",
+     "ko": "간과하다"
+    },
+    {
+     "n": 170,
+     "w": "luxury",
+     "ko": "사치, 호사"
+    },
+    {
+     "n": 171,
+     "w": "occasion",
+     "ko": "특별한 때, 행사"
+    },
+    {
+     "n": 172,
+     "w": "anticipate",
+     "ko": "예상하다"
+    },
+    {
+     "n": 173,
+     "w": "foresee",
+     "ko": "예견하다"
+    }
+   ]
+  },
+  {
+   "sec": "본문",
+   "no": "36번 지문",
+   "rows": [
+    {
+     "n": 188,
+     "w": "surroundings",
+     "ko": "환경, 주변"
+    },
+    {
+     "n": 189,
+     "w": "forage",
+     "ko": "먹이를 찾아다니다"
+    },
+    {
+     "n": 190,
+     "w": "predator",
+     "ko": "포식자"
+    },
+    {
+     "n": 191,
+     "w": "determinant",
+     "ko": "결정 요인"
+    },
+    {
+     "n": 192,
+     "w": "reproductive",
+     "ko": "번식의"
+    },
+    {
+     "n": 193,
+     "w": "offspring",
+     "ko": "자손, 새끼"
+    },
+    {
+     "n": 194,
+     "w": "remarkable",
+     "ko": "놀라운"
+    },
+    {
+     "n": 195,
+     "w": "establish",
+     "ko": "확립하다, 잡다"
+    },
+    {
+     "n": 196,
+     "w": "territory",
+     "ko": "영역, 세력권"
+    },
+    {
+     "n": 197,
+     "w": "preferentially",
+     "ko": "우선적으로"
+    },
+    {
+     "n": 198,
+     "w": "nourishment",
+     "ko": "영양분"
+    }
+   ]
+  }
+ ],
+ "wsyn": [
+  {
+   "sec": "본문",
+   "no": "TEST②",
+   "opts": [
+    "institutional",
+    "communitarian",
+    "respect",
+    "contribute",
+    "splintering",
+    "prompt",
+    "stem",
+    "breeding",
+    "continue",
+    "shake",
+    "flowing",
+    "walker",
+    "avoid",
+    "model",
+    "advantage",
+    "psychological",
+    "evident",
+    "explain",
+    "basic"
+   ],
+   "rows": [
+    {
+     "n": 10,
+     "w": "vibrate",
+     "ans": 9
+    },
+    {
+     "n": 11,
+     "w": "fundamental",
+     "ans": 18
+    },
+    {
+     "n": 12,
+     "w": "honour",
+     "ans": 2
+    },
+    {
+     "n": 13,
+     "w": "obvious",
+     "ans": 16
+    },
+    {
+     "n": 15,
+     "w": "reproductive",
+     "ans": 7
+    }
+   ]
+  }
+ ],
+ "wdef": [
+  {
+   "sec": "본문",
+   "no": "TEST③ 08",
+   "en": "one of the stages or states that something passes through while changing",
+   "ko": "",
+   "hw": "phase",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "stage",
+   "synAlt": [],
+   "sp": "≒ s _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 09",
+   "en": "relating to the mental process of knowing, thinking, and understanding things",
+   "ko": "",
+   "hw": "cognitive",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "mental",
+   "synAlt": [],
+   "sp": "≒ m _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 10",
+   "en": "always changing and full of energy rather than fixed and still",
+   "ko": "",
+   "hw": "dynamic",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "active",
+   "synAlt": [],
+   "sp": "≒ a _ _ _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 11",
+   "en": "to gradually increase in amount or number over a period of time",
+   "ko": "",
+   "hw": "accumulate",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "pile",
+   "synAlt": [],
+   "sp": "≒ p _ _ _"
+  },
+  {
+   "sec": "본문",
+   "no": "TEST③ 13",
+   "en": "the food and other substances that living things need in order to grow well",
+   "ko": "",
+   "hw": "nourishment",
+   "hwAlt": [],
+   "hp": "",
+   "syn": "nutrition",
+   "synAlt": [],
+   "sp": "≒ n _ _ _ _ _ _ _ _"
+  }
+ ],
+ "labels": {
+  "wmean": "단어 TEST ① 우리말 뜻 쓰기",
+  "wsyn": "단어 TEST ② 유의어 매칭",
+  "wdef": "단어 TEST ③ 영영 → 표제어·유의어"
+ },
+ "subs": {
+  "wmean": "31–34·36번 표제어 76개 → 우리말 뜻 (교재 단어 TEST ①)",
+  "wsyn": "표제어 5개 ↔ 유의어 A~T (교재 단어 TEST ②)",
+  "wdef": "영영풀이 보고 표제어 + 유의어 5문항 (교재 단어 TEST ③)"
+ },
+ "howto": {
+  "wmean": "교재 단어 TEST ①과 같아요. 지문별 표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 하나만 써도 정답이에요.",
+  "wsyn": "교재 단어 TEST ②와 같아요. 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 보기는 교재 그대로라 이번 범위에 없는 단어도 섞여 있어요.",
+  "wdef": "교재 단어 TEST ③과 같아요. 영영풀이를 보고 <b>표제어</b>를 쓰고, 첫 철자 힌트에 맞춰 <b>유의어</b>를 씁니다. 두 칸이 따로 채점돼요."
+ },
+ "porder": [
+  "wmean",
+  "wsyn",
+  "wdef"
+ ],
+ "groups": [
+  {
+   "t": "단어 TEST · 31–34·36번 (교재 그대로)",
+   "parts": [
+    "wmean",
+    "wsyn",
+    "wdef"
+   ]
+  }
+ ],
+ "secLabels": {
+  "본문": "31–34·36번"
+ },
+ "src": "[고2][본교재]2026_9월 고2 내신교재_fin-복사.pdf"
+}
