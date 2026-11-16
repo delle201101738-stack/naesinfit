@@ -12,7 +12,8 @@ const JUDGE_SYS = `너는 고등학교 영어 시험 채점관이다. 학생이 
   인정(전부 정답): 조사·어미·어순·시제·존댓말·주어(너/당신/우리) 차이, 품사 꼴 차이(~하는 것/~하기 위해/~할/~한다/~하는), 직역투·어색한 우리말·문장 일부만 매끄럽지 않은 것, 맞춤법·띄어쓰기·오타, 가벼운 낱말(관사·대명사·부사·접속어·things) 생략, 덩어리 안 내용어 중 일부(절반 정도까지) 빠짐, 앞뒤 덩어리 말이 섞임,
     비슷한 뜻·가까운 뜻의 다른 낱말(뉘앙스가 조금 달라도): 불편함/불안함, 산업/상업, 원자력/핵/핵융합, 발전/혁신/진보/개발/장점, 위험/손상/피해/영향, 본질/기준/본연/성격, 기술/능력/스킬, 쌓다/배우다/기르다, 모음/수집/더미/모으는 것, 처음에/첫번째로/먼저, 필수적이다/꼭 필요하다/중요하다, 직접/스스로, 휴식/쉬는 시간, 일정/계획/스케줄, 미루다/늦추다, 벗어나게 하다/멀어지게 하다/방해하다, 전략적인/계획적인, 적절한/알맞은, 진행 중인/계속되는, 불필요하다/부당하다/필요 없다.
   불인정은 아래 경우만: (1) 핵심 내용어를 완전히 엉뚱한 뜻으로 씀(뜻이 전혀 다른 낱말, 예: instinct→제한, essential→본능적/충분하다, accompany→극복하다, destroying→폭발하는) (2) 뜻이 반대가 되거나 덩어리의 핵심 기능어 뜻이 틀림(out of→밖으로/대신에/제외하고, since(~이후로)→때문에, therefore→게다가/그러나, not only→~이 아닌, without→~와 함께) (3) 덩어리의 내용어가 거의 다 빠지고 한 단어만 씀(예: provide examples→'제공한다', can accompany technological advances→'할 수 있다') (4) 무응답·의미 없는 글자·'...'.
-  chunk는 애매하면 무조건 인정한다.
+  예) '상업혁명 이후에'(산업 혁명 이후로)·'핵융합 에너지와 농업과 같은 분야들에서'·'환경의 손상과 사람의 건강도'·'기술 혁신'·'불안함 때문에' → 모두 인정.
+  chunk는 애매하면 무조건 인정한다. 이유(why)에 '비슷'·'허용'·'통함'을 쓸 상황이면 ok는 반드시 true다.
 - meaningL: 예비고1 단어 시험. 영어 단어(word)의 우리말 뜻. ★ 너그럽게 채점한다(선생님 기준: "비슷하게 썼으면 맞다").
   인정: 교재 뜻 중 하나와 같거나 비슷한 뜻·가까운 뜻(뉘앙스가 조금 달라도 같은 방향이면 인정, 예: instance→예시·예를 들어, donate→후원하다, routine→일정·일과·습관, empathy→동정·동정심, term→시간(기간), profit→혜택, investigate→알아내다·살펴보다, current→최근의, spread→뿌리다, coincidence→동시유발, collapse→무너뜨리다·파괴되다, issue→사건·주제, quality→좋은 점), 1~2글자 오타·맞춤법 틀림(묘하하다, 기구하다, 평형의, 위치하아), 어미 차이(~하다/~시키다/~되다, 중요한/중요하다).
   품사 규칙: expected에 [동]/[명]/[형]/[부] 표시가 있으면 그 품사 중 하나로 쓴 뜻만 인정. 명사↔동사(흡수/흡수하다, 설득/설득하다)처럼 품사가 분명히 다르면 불인정. 단, 명사 뜻에 '~의'를 붙인 꼴(고대/고대의)과 형용사·관형 꼴 차이(실제의/실제적인)는 같은 품사로 본다.
@@ -34,7 +35,7 @@ async function judge(items) {
   const T = (v, n) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, n);
   const list = (Array.isArray(items) ? items : []).slice(0, 60).map((x, i) => ({ i, kind: T(x.kind, 10), word: T(x.word, 60), meaning: T(x.meaning, 80),
     context: T(x.context, 400), wrong: T(x.wrong, 300), expected: T(x.expected, 300), answer: T(x.answer, 300) })).filter(x => x.answer && x.expected);
-  const keyOf = x => { const h = createHash("sha256"); h.update([(x.kind === "tffix" || x.kind === "ulmean" || x.kind === "meaning") ? x.kind + "@v2" : x.kind === "chunk" ? "chunk@v4" : x.kind === "meaningL" ? "meaningL@v1" : x.kind, x.word, x.meaning, x.context, x.wrong, x.expected, x.answer.toLowerCase()].join("\u0001")); return h.digest("hex"); };
+  const keyOf = x => { const h = createHash("sha256"); h.update([(x.kind === "tffix" || x.kind === "ulmean" || x.kind === "meaning") ? x.kind + "@v2" : x.kind === "chunk" ? "chunk@v5" : x.kind === "meaningL" ? "meaningL@v1" : x.kind, x.word, x.meaning, x.context, x.wrong, x.expected, x.answer.toLowerCase()].join("\u0001")); return h.digest("hex"); };
   const keys = list.map(keyOf), out = {};
   if (keys.length) for (const r of await sql`select k, ok, why from syn_judge where k = any(${keys})`) out[r.k] = r;
   const need = list.filter((x, j) => !out[keys[j]]);
