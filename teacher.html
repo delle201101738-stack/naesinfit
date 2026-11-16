@@ -423,11 +423,20 @@ const biOf=label=>{ const i=unitsAll().findIndex(x=>x.label===label); return i>=
 const bookOf=bi=>{ if(bi===OTHER) return {label:OTHER,id:""}; const x=unitsAll()[+bi]; return x?{label:x.label,id:x.id}:{label:OTHER,id:""}; };
 const shortBook=bi=>{ if(bi===OTHER) return "교재 무관"; const x=unitsAll()[+bi]; return x?`${x.b.publisher.replace(/\(.*\)/,"")} ${x.u.no}`:"교재 무관"; };
 function newCol(name){ return {k:"c"+(++CK), bi:PF.bi, name:name||"", total:"", orig:null, have:{}}; }
+/* 📝 예비고1 데일리테스트(dt 단원): 영역 4칸(어휘·구문 단어·직독직해·어법)을 앱 시험과 같은 영역으로 저장 → 총점·반 석차에 반영 */
+const DTP=[["wmean","A 어휘"],["dtv","B 구문 단어"],["dtr","C 직독직해"],["dtg","D 어법"]];
+const isDtBi=bi=>bi!==OTHER&&!!unitsAll()[+bi]&&/^dt/.test(unitsAll()[+bi].id);
+function dtCols(bi){ const x=unitsAll()[+bi]; if(!x) return; const P=x.u.pts||{};
+  DTP.filter(([p])=>P[p]).forEach(([p,nm])=>{ if(COLS.some(c=>c.part===p&&c.bi===bi)) return;
+    const empty=COLS.find(c=>!c.orig&&!c.name&&!Object.keys(PD).some(k=>k.startsWith(c.k+"|")));
+    const c=empty||newCol(""); c.bi=bi; c.name=nm; c.total=String(P[p]); c.part=p; if(!empty) COLS.push(c); }); }
 function loadCols(){   // 이 반 · 이날 이미 넣은 지필 시험 → 칸으로
   const ms=new Set(membersOf(PF.cid)), g={};
   paperRows().forEach(r=>{ if(!ms.has(r.student)||dKST(r.created_at)!==PF.day) return;
-    const k=r.book+"\u0001"+r.part_name, o=g[k]=g[k]||{book:r.book,name:r.part_name.replace(/^지필 · /,""),total:r.total,have:{}}; o.have[r.student]=r.correct; });
-  COLS=Object.values(g).map(o=>({k:"c"+(++CK), bi:biOf(o.book), name:o.name, total:String(o.total), orig:{book:o.book,name:o.name,total:o.total}, have:o.have}));
+    const dp=/^(wmean|dtv|dtr|dtg)$/.test(r.part)?r.part:"";
+    const k=r.book+"\u0001"+r.part_name, o=g[k]=g[k]||{book:r.book,name:r.part_name.replace(/^지필 · /,"").replace(/ \(지필\)$/,""),total:r.total,part:dp,have:{}}; o.have[r.student]=r.correct; });
+  COLS=Object.values(g).map(o=>({k:"c"+(++CK), bi:biOf(o.book), name:o.name, total:String(o.total), part:o.part, orig:{book:o.book,name:o.name,total:o.total,part:o.part}, have:o.have}));
+  if(isDtBi(PF.bi)) dtCols(PF.bi);
   if(!COLS.length) COLS=[newCol("")];
   PD={};
 }
@@ -454,6 +463,7 @@ function drawPaper(){
     <div class="full"><label>새 시험 칸의 기본 교재 · 과 <span style="font-weight:500">(온라인 시험과 같은 과면 같은 리포트에 같이 나와요 · 칸마다 바꿀 수 있어요)</span></label>
       <select id="p-book">${bookOpts(PF.bi)}</select></div>
   </div>
+  ${isDtBi(PF.bi)?`<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2,#f4f3f8);font-size:12.5px;line-height:1.6">📝 <b>데일리테스트</b> — 앱으로 안 본 학생은 영역별 <b>맞힌 개수</b>를 넣으면 앱 시험과 똑같이 <b>총점(100점)·반 석차·누적</b>에 들어가요. <button class="btn" data-dtcols="1" style="padding:5px 10px;font-size:12px">＋ 4영역 칸 넣기</button></div>`:""}
   <div class="chips" style="margin-top:10px"><span style="font-size:12px;font-weight:700;color:var(--ink-3);align-self:center;margin-right:2px">시험 칸 추가</span>
     ${QUICK.map(t=>`<button data-padd="${t}">＋ ${t}</button>`).join("")}<button data-padd="">＋ 직접 입력</button></div>
   <div class="scroll pgrid-wrap" style="margin-top:12px"><table class="pgrid"><thead><tr><th class="pstk">학생</th>
@@ -498,7 +508,7 @@ $("#pdlg").addEventListener("change",e=>{
     if(pDirty()&&!confirm("저장 안 한 점수가 있어요. 버리고 바꿀까요?")){ e.target.value=id==="p-cls"?PF.cid:PF.day; return; }
     if(id==="p-cls"){ PF.cid=e.target.value; PF.bi=guessBook(PF.cid); } else PF.day=e.target.value||todayKST();
     loadCols(); drawPaper(); }
-  else if(id==="p-book"){ PF.bi=e.target.value; COLS.forEach(c=>{ if(!c.orig&&!c.name&&!Object.keys(PD).some(k=>k.startsWith(c.k+"|"))) c.bi=PF.bi; }); drawPaper(); }
+  else if(id==="p-book"){ PF.bi=e.target.value; COLS.forEach(c=>{ if(!c.orig&&!c.name&&!Object.keys(PD).some(k=>k.startsWith(c.k+"|"))) c.bi=PF.bi; }); if(isDtBi(PF.bi)) dtCols(PF.bi); drawPaper(); }
   else if(e.target.dataset.f==="bi"){ colOf(e.target.dataset.pcol).bi=e.target.value; }
 });
 $("#pdlg").addEventListener("input",e=>{ const t=e.target;
@@ -516,13 +526,14 @@ $("#pdlg").addEventListener("paste",e=>{ const t=e.target; if(!t.classList||!t.c
 async function paperPost(body){ const r=await fetch("/api/hw",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"paper.save",...body})});
   const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"저장하지 못했어요"); return j; }
 $("#pdlg").addEventListener("click",async e=>{
+  if(e.target.closest("[data-dtcols]")){ dtCols(PF.bi); drawPaper(); return; }
   const ad=e.target.closest("[data-padd]"); if(ad){ const nm=ad.dataset.padd;
     const empty=COLS.find(c=>!c.orig&&!c.name&&!Object.keys(PD).some(k=>k.startsWith(c.k+"|")));
     let tg; if(empty){ tg=empty; if(nm) tg.name=nm; } else { tg=newCol(nm); COLS.push(tg); }
     drawPaper(); const f=document.querySelector(`.${nm?"ptot":"pnm"}[data-pcol="${tg.k}"]`); if(f){ f.focus(); f.scrollIntoView({block:"nearest",inline:"nearest"}); } return; }
   const dl=e.target.closest("[data-pdel]"); if(dl){ const c=colOf(dl.dataset.pdel);
     if(c.orig){ if(!confirm(`'${c.orig.name}' 점수를 이 반·이날에서 모두 지울까요? (리포트에서도 빠져요)`)) return;
-      try{ await paperPost({day:PF.day, book:c.orig.book, unit_id:"", name:c.orig.name, total:c.orig.total, class_name:"", rows:membersOf(PF.cid).map(st=>({student:st,correct:null}))});
+      try{ await paperPost({day:PF.day, book:c.orig.book, unit_id:c.orig.part?bookOf(biOf(c.orig.book)).id:"", part:c.orig.part||"", name:c.orig.name, total:c.orig.total, class_name:"", rows:membersOf(PF.cid).map(st=>({student:st,correct:null}))});
         await load(); render(); }catch(err){ alert(err.message); return; } }
     Object.keys(PD).forEach(k=>{ if(k.startsWith(c.k+"|")) delete PD[k]; });
     COLS=COLS.filter(x=>x!==c); if(!COLS.length) COLS=[newCol("")]; drawPaper(); return; }
@@ -546,8 +557,9 @@ $("#pdlg").addEventListener("click",async e=>{
         msg.textContent=`저장 중… (${n+1}/${work.length}) ${c.name}`;
         const bk=bookOf(c.bi);
         if(c.orig&&(c.orig.name!==c.name||c.orig.book!==bk.label))   // 이름·교재를 바꾼 칸 → 예전 기록 지우고 새로
-          await paperPost({day:PF.day, book:c.orig.book, unit_id:"", name:c.orig.name, total:c.orig.total, class_name:"", rows:studs.map(st=>({student:st,correct:null}))});
-        const j=await paperPost({day:PF.day, book:bk.label, unit_id:bk.id, name:c.name, total:+c.total, class_name:cls?cls.name:"", rows:studs.map(st=>({student:st,correct:val(c,st)}))});
+          await paperPost({day:PF.day, book:c.orig.book, unit_id:c.orig.part?bookOf(biOf(c.orig.book)).id:"", part:c.orig.part||"", name:c.orig.name, total:c.orig.total, class_name:"", rows:studs.map(st=>({student:st,correct:null}))});
+        const dp=c.part&&/^dt/.test(bk.id)?c.part:"";
+        const j=await paperPost({day:PF.day, book:bk.label, unit_id:bk.id, part:dp, name:c.name, total:+c.total, class_name:cls?cls.name:"", rows:studs.map(st=>({student:st,correct:val(c,st)}))});
         saved+=j.saved; removed+=j.removed;
       }
       await load(); render(); loadCols(); drawPaper();
