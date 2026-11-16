@@ -1240,9 +1240,10 @@
     {
      "id": "m1510g1",
      "no": "20–24번",
-     "title": "올킬+통변형",
+     "title": "단어+올킬+통변형",
      "file": "content/m1510g1.json",
      "pts": {
+      "wmean": 99,
       "word": 64,
       "word2": 64,
       "cloze": 15,
@@ -1251,15 +1252,16 @@
       "order": 10,
       "insert": 10
      },
-     "total": 233,
+     "total": 332,
      "labels": {}
     },
     {
      "id": "m1510g2",
      "no": "29–33번",
-     "title": "올킬+통변형",
+     "title": "단어+올킬+통변형",
      "file": "content/m1510g2.json",
      "pts": {
+      "wmean": 107,
       "word": 68,
       "word2": 68,
       "cloze": 15,
@@ -1268,15 +1270,16 @@
       "order": 10,
       "insert": 10
      },
-     "total": 241,
+     "total": 348,
      "labels": {}
     },
     {
      "id": "m1510g3",
      "no": "34–38번",
-     "title": "올킬+통변형",
+     "title": "단어+올킬+통변형",
      "file": "content/m1510g3.json",
      "pts": {
+      "wmean": 78,
       "word": 68,
       "word2": 68,
       "cloze": 15,
@@ -1285,15 +1288,16 @@
       "order": 10,
       "insert": 10
      },
-     "total": 241,
+     "total": 319,
      "labels": {}
     },
     {
      "id": "m1510g4",
      "no": "39–42번",
-     "title": "올킬+통변형",
+     "title": "단어+올킬+통변형",
      "file": "content/m1510g4.json",
      "pts": {
+      "wmean": 60,
       "word": 47,
       "word2": 47,
       "cloze": 9,
@@ -1302,7 +1306,7 @@
       "order": 6,
       "insert": 6
      },
-     "total": 157,
+     "total": 217,
      "labels": {}
     }
    ]
