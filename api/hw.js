@@ -76,7 +76,10 @@ export default async function handler(req, res) {
       case "paper.save": {
         const day = DAY(b.day), book = S(b.book, 120), name = S(b.name, 40), total = Math.round(Number(b.total) || 0);
         if (!day || !book || !name || total < 1 || total > 1000) return res.status(400).json({ error: "날짜·교재·시험 이름·만점을 확인해 주세요" });
-        const part = "p_" + paperId(name), pname = "지필 · " + name, uid = S(b.unit_id, 20), cname = S(b.class_name, 40);
+        const uid = S(b.unit_id, 20), cname = S(b.class_name, 40);
+        // 📝 데일리테스트(dt 단원) 영역 칸은 앱 시험과 같은 영역 id로 저장 → 총점·반 석차에 같이 들어감
+        const dtp = /^dt/.test(uid) && ["wmean", "dtv", "dtr", "dtg"].includes(b.part) ? b.part : "";
+        const part = dtp || ("p_" + paperId(name)), pname = dtp ? name + " (지필)" : "지필 · " + name;
         const at = `${day}T12:00:00+09:00`;
         const rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 200);
         let saved = 0, removed = 0;
