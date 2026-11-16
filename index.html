@@ -3076,11 +3076,16 @@ function renderBooks(){
       + `<button class="chip${rs?"":" sel"}" data-rsch="*">📚 전체 교재</button>` : "";
   $("#books-grade").hidden = !!rs;
   if(rs){
-    const us=rangeOf(rs);
-    $("#books-subj").innerHTML="";
+    const usAll=rangeOf(rs), isMo=u=>subjOf(u.book)==="모의고사";
+    const both=usAll.some(isMo)&&usAll.some(u=>!isMo(u));
+    if(!both) S.rkind="";
+    const us=S.rkind==="mo"?usAll.filter(isMo):S.rkind==="tb"?usAll.filter(u=>!isMo(u)):usAll;
+    $("#books-subj").innerHTML = both
+      ? [["tb","📘 교과서 범위"],["mo","📝 모고 범위"],["","전체"]].map(([k,t])=>`<button class="chip${(S.rkind||"")===k?" sel":""}" data-rkind="${k}">${t}</button>`).join("")
+      : "";
     $("#s-books .top h1").textContent = `${rs} 시험범위`;
     $("#books-body").innerHTML = `<div class="acc open">
-      <div class="acc-h" style="cursor:default"><span>🏫 ${esc(rs)} 시험범위</span>
+      <div class="acc-h" style="cursor:default"><span>🏫 ${esc(rs)} ${S.rkind==="mo"?"모고 범위":S.rkind==="tb"?"교과서 범위":"시험범위"}</span>
         <span class="count num" style="margin-left:auto">${us.length}</span></div>
       <div class="acc-b"><div class="pub open"><div class="pub-b" style="padding:8px 16px 12px">
         ${us.map(u=>`
@@ -3129,6 +3134,7 @@ $("#books-sch").addEventListener("click",e=>{
   const v=b.dataset.rsch; S.rsch = (v==="*") ? "*" : (v===((S.cls&&S.cls.name)||"") ? "" : v); save(); renderBooks();
 });
 $("#books-subj").addEventListener("click",e=>{
+  const k=e.target.closest("[data-rkind]"); if(k){ S.rkind=k.dataset.rkind||""; save(); renderBooks(); return; }
   const b=e.target.closest("[data-subj]"); if(!b) return;
   S.subject=b.dataset.subj||""; save(); renderBooks();
 });
