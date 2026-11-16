@@ -611,6 +611,7 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
       <div class="bubble" id="hero-msg">파트를 하나 골라서 시작해 보자. 어휘 선택부터 순서대로 가는 걸 추천해 📘</div>
     </div></div>
 
+    <div class="pad" id="qpk-slot"></div>
     <div class="pad" id="resume-slot"></div>
 
     <div class="pad" style="margin-top:24px">
@@ -660,6 +661,14 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
       <p style="margin:0 0 16px;font-size:14px;color:var(--ink-2);line-height:1.65">학년을 고르면 그 학년 교재만 보여요.<br>나중에 마이에서 언제든 바꿀 수 있습니다.</p>
       <div class="stack gap12" id="grade-list"></div>
     </div>
+  </section>
+
+  <section class="screen" id="s-qpick">
+    <header class="top">
+      <button class="icon-btn" id="qpick-back" aria-label="뒤로" hidden><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <h1>오늘 뭐 할까?</h1><span></span>
+    </header>
+    <div class="pad" id="qpick-body" style="padding-top:14px;padding-bottom:24px"></div>
   </section>
 
   <section class="screen" id="s-books">
@@ -826,7 +835,8 @@ const PARTS=[
  {id:"vmc",   n:"⏱ 뜻 고르기",        s:"단어 보고 알맞은 뜻 고르기 · 제한시간", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
  {id:"vmcr",  n:"⏱ 단어 고르기",      s:"뜻 보고 알맞은 단어 고르기 · 제한시간", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문항"},
  {id:"dtv",   n:"구문 단어 뜻 고르기", s:"구문독해 단어 보고 알맞은 뜻 4지선다", c:"var(--cat-1)", b:"var(--cat-1-s)", k:"문항"},
- {id:"dtr",   n:"직독직해",          s:"끊어 읽은 덩어리마다 우리말로 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"}
+ {id:"dtr",   n:"직독직해",          s:"끊어 읽은 덩어리마다 우리말로 쓰기", c:"var(--cat-2)", b:"var(--cat-2-s)", k:"문장"},
+ {id:"dtg",   n:"어법 O/X 고치기",     s:"맞으면 O · 틀리면 X 하고 바르게 고쳐 쓰기", c:"var(--cat-3)", b:"var(--cat-3-s)", k:"문장"}
 ];
 const P = Object.fromEntries(PARTS.map(p=>[p.id,p]));
 const labelOf = id => (C&&C.labels&&C.labels[id]) || P[id].n;
@@ -848,7 +858,7 @@ function pts(part, it){
   if(part==="vocab"||part==="gram"||isClozeP(part)) return it.blanks.length;
   if(isSegP(part)) return it.seg.length;
   if(part==="tf") return it.st.length;
-  if(part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr") return it.rows.length;
+  if(part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr"||part==="dtg") return it.rows.length;
   if(part==="wdef") return 2;
   return 1;
 }
@@ -909,7 +919,7 @@ function go(id){
   $$(".screen").forEach(s=>s.classList.remove("on"));
   $("#s-"+id).classList.add("on"); window.scrollTo(0,0);
   const map={home:0,read:1,record:2,my:3};
-  $("#tabs").classList.toggle("hidden",["setup","quiz","result","login","books","grade","wrong"].includes(id));
+  $("#tabs").classList.toggle("hidden",["setup","quiz","result","login","books","grade","wrong","qpick"].includes(id));
   $$(".tab").forEach((t,i)=>t.classList.toggle("on",map[id]===i));
 }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -1072,7 +1082,7 @@ function subset(part, it, keep){
   if(isSegP(part))   return subSeg(it,keep);
   if(part==="tf")                   return subTF(it,keep);
   if(isClozeP(part))                return subCloze(it,keep);
-  if(part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
+  if(part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr"||part==="dtg") return Object.assign({}, it, {rows:keep.map(i=>it.rows[i]), _map:keep.slice()});
   if(part==="wdef")                 return Object.assign({}, it);
   return Object.assign({}, it, {_map:keep.slice()});
 }
@@ -1092,7 +1102,7 @@ const subLen = (part,it) =>
   (part==="vocab"||part==="gram"||isClozeP(part)) ? it.blanks.length :
   (isSegP(part))   ? it.seg.length :
   (part==="tf")                   ? it.st.length :
-  (part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr") ? it.rows.length :
+  (part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr"||part==="dtg") ? it.rows.length :
   (part==="wdef")                 ? 2 : 1;
 const wrongCount = (part, ever) => wrongItems(part, ever).reduce((s,it)=>s+pts(part,it),0);
 const wrongTotal = ever => livePARTS().reduce((s,p)=>s+wrongCount(p.id, ever),0);
@@ -1178,7 +1188,7 @@ function renderSmem0(el){
     <span style="flex:1;min-width:0"><b style="font-size:15px">문장암기</b><span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">${esc(sc)} 시험범위 교과서 본문 · 스크램블로 영작하기 · ⭐ 중요 문장만 따로</span></span>
     <span style="flex:none;color:var(--ink-3);font-size:18px">›</span></a>`:""; }
 function renderHome(){
-  renderSmem(); renderResume();
+  renderSmem(); renderResume(); renderQpkSlot();
   const q=qGet?qGet().length:0;
   $("#home-hi").innerHTML = (S.name?`${esc(S.name)}님`:"hazel_studylog")+(q?` · <span style="color:var(--cat-3);font-weight:700">미전송 ${q}건</span>`:"");
   $("#home-book-t").textContent = UNIT ? `${UNIT.book.subject} · ${UNIT.no}` : "교재 선택";
@@ -1442,6 +1452,7 @@ const HOWTO={
  choice:"지문을 바탕으로 한 <b>요약문 추론 · 추론 불가 · 함축 의미</b> 5지선다입니다. 정답 번호 하나를 고르세요.",
  mwrite:"원문 참조 없이, 각 지문의 <b>중요 문장</b>을 단어 배열 + <b>어형 변형</b>으로 완성합니다. 어법 포인트가 힌트로 붙어 있어요. "+ARR_PASS+"점 이상 + 어형 변형이 맞아야 정답.",
  dtv:"구문독해 문장에 나온 단어(구)를 보고 알맞은 <b>우리말 뜻</b>을 4개 중에서 고르세요.",
+ dtg:"문장마다 어법상 맞으면 <b>O</b>, 틀리면 <b>X</b>를 누르고 <b>틀린 부분 → 고친 말</b>을 씁니다(예: <b>go → goes</b>). 고친 말만 써도 돼요. X 문장은 고친 말까지 맞아야 정답이고, 문장마다 1점이에요. 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  dtr:"문장을 <b>끊어 읽은 덩어리(①②③…)</b>마다 우리말로 해석을 씁니다. <b>앞에서부터 덩어리 순서대로</b> 옮기면 돼요. 어순·조사·맞춤법은 조금 달라도 괜찮고, <b>핵심 뜻과 구문</b>(수식 방향·접속사 뜻 등)이 맞으면 정답이에요. 칸마다 1점이고, 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  wmean:"표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 그중 하나만 써도 되고, <b>뜻이 비슷한 말</b>도 정답이에요. 단, <b>품사</b>가 다르면 틀려요(예: preserve → 보존하다·지키다 ○ / 보존 ✕). 자동 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  wsyn:"왼쪽 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 같은 유의어는 한 번만 쓰여요.",
@@ -1526,6 +1537,7 @@ function blankAns(part,it){
   if(isClozeP(part)) return it.blanks.map(()=>"");
   if(isChoiceP(part)) return multiAns(it)?[]:null;
   if(part==="wmean"||part==="dtr") return it.rows.map(()=>"");
+  if(part==="dtg") return it.rows.map(()=>({ox:null,t:""}));
   if(isWsP(part)) return it.rows.map(()=>null);
   if(part==="wsynw") return it.rows.map(()=>"");
   if(part==="wdef") return ["",""];
@@ -1668,6 +1680,16 @@ function renderQ(){
       <div class="card" style="margin-top:12px;padding:6px 16px">${it.rows.map((r,i)=>`
         <div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="font-size:14px;line-height:1.5"><b style="color:var(--accent)">${esc(r.n)}</b> ${esc(r.w)}</div>
           <input class="cz-in" data-wm="${i}" value="${esc(a[i]||"")}" placeholder="우리말 해석" autocomplete="off" spellcheck="false" style="margin-top:6px;width:100%"></div>`).join("")}</div>`;
+  } else if(part==="dtg"){
+    body=`${tag}<p class="q-stem">${stemOf("어법상 맞으면 <b>O</b>, 틀리면 <b>X</b>를 누르고 <b>틀린 부분 → 고친 말</b>을 쓰세요.")}</p>
+      <div class="card" style="margin-top:14px;padding:6px 16px">${it.rows.map((r,i)=>{ const m=a[i]||{};
+        return `<div style="padding:12px 0;border-bottom:1px solid var(--line)">
+          <div style="font-size:14.5px;line-height:1.65"><b style="color:var(--accent);margin-right:6px">${esc(r.n)}</b>${esc(r.en)}</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="ord${m.ox==="O"?" on":""}" data-gx="${i}" data-v="O" style="flex:1;justify-content:center;margin:0">⭕ 맞음</button>
+            <button class="ord${m.ox==="X"?" on":""}" data-gx="${i}" data-v="X" style="flex:1;justify-content:center;margin:0">❌ 틀림</button></div>
+          ${m.ox==="X"?`<input class="cz-in" data-gt="${i}" value="${esc(m.t||"")}" placeholder="틀린 부분 → 고친 말 (예: go → goes)" autocomplete="off" spellcheck="false" autocapitalize="off" style="margin-top:8px;width:100%">`:""}
+        </div>`; }).join("")}</div>`;
   } else if(part==="dtv"){
     body=`${tag}<p class="q-stem">${esc(it.stem)}</p>
       <div class="tq-word" style="margin-top:14px">${esc(it.body)}</div>
@@ -2141,7 +2163,7 @@ function fixRows(it,a){
     `<div class="fixrow"><span class="lb">${s.L}</span><input data-fix="${i}" value="${esc(a[i].txt)}" placeholder="바르게 고쳐 쓰기 (문장째 써도 돼요)" autocomplete="off" spellcheck="false"></div>`:"").join("");
   return rows||`<div style="padding:12px 0;font-size:13px;color:var(--ink-3)">어색한 부분을 눌러 표시하세요</div>`;
 }
-const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef","dfa","dfb","vmc","vmcr","dtv","dtr"]);
+const WORD_PARTS=new Set(["wmean","wsyn","wsynw","wdef","dfa","dfb","vmc","vmcr","dtv","dtr","dtg"]);
 function syncCta(){
   qdelSync();
   const b=$("#quiz-cta"), last=Q.i===Q.items.length-1, p=Q.pl[Q.i], it=Q.items[Q.i], a=Q.ans[Q.i];
@@ -2212,6 +2234,10 @@ $("#quiz-body").addEventListener("click",e=>{
   const tf=e.target.closest("[data-tf]>button");
   if(tf){ a[+tf.parentNode.dataset.tf]=tf.dataset.v;
     Array.from(tf.parentNode.children).forEach(x=>x.classList.toggle("on",x===tf)); return; }
+  const gx=e.target.closest("[data-gx]");
+  if(gx){ const k=+gx.dataset.gx, m=a[k]||(a[k]={ox:null,t:""}); m.ox=gx.dataset.v; const y=window.scrollY; renderQ(); window.scrollTo(0,y);
+    if(m.ox==="X"){ const f=document.querySelector(`[data-gt="${k}"]`); if(f) f.focus({preventScroll:true}); }
+    return; }
   const chb=e.target.closest("[data-ch]");
   if(chb){ const v=+chb.dataset.ch;
     if(multiAns(it)){ const arr=Array.isArray(a)?a:(Q.ans[Q.i]=[]); const k=arr.indexOf(v);
@@ -2253,6 +2279,8 @@ $("#quiz-body").addEventListener("input",e=>{
   if(cz){ Q.ans[Q.i][+cz.dataset.cz]=cz.value; syncCta(); }
   const wm=e.target.closest("[data-wm]");
   if(wm){ Q.ans[Q.i][+wm.dataset.wm]=wm.value; }
+  const gt=e.target.closest("[data-gt]");
+  if(gt){ (Q.ans[Q.i][+gt.dataset.gt] ||= {ox:"X",t:""}).t=gt.value; }
   const tfx=e.target.closest("[data-tfx]");
   if(tfx){ dpOf(Q.i).fx[+tfx.dataset.tfx]=tfx.value; syncCta(); }
   const ulm=e.target.closest("[data-ulm]");
@@ -2389,6 +2417,12 @@ function grade(part,it,a,gi){
   } else if(part==="dtr"){
     it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
       d.push({ok:dtrMatch(mine,r), label:`${r.n} ${r.w}`, mine:mine||"무응답", right:r.ko, ex:[r.pt, i===it.rows.length-1?"전체 해석: "+it.ko:""].filter(Boolean).join(" · ")||undefined}); });
+  } else if(part==="dtg"){
+    it.rows.forEach((r,i)=>{ const m=a[i]||{}, t=String(m.t||"").trim();
+      const ok=r.ans==="O" ? m.ox==="O" : (m.ox==="X" && dtgMatch(t,r));
+      d.push({ok, label:`${r.n}`, q:r.en, self:r.ans==="X"&&m.ox==="X"&&!!t,
+        mine:m.ox==null?"무응답":m.ox==="O"?"O (맞음)":`X · ${t||"(고친 말 안 씀)"}`,
+        right:r.ans==="O"?"O (맞는 문장)":`X · ${r.wrong} → ${r.fix.slice(0,3).join(" / ")}`, ex:r.ex}); });
   } else if(isWsP(part)){
     it.rows.forEach((r,i)=>d.push({ok:a[i]===r.ans, label:part==="dfa"?`${r.n}. ${String(r.w).slice(0,40)}…`:r.w,
       mine:a[i]==null?"무응답":`${String.fromCharCode(65+a[i])} ${it.opts[a[i]]}`,
@@ -2411,6 +2445,10 @@ function grade(part,it,a,gi){
   }
   return d;
 }
+/* 어법 O/X 고치기: '틀린 말 → 고친 말'의 오른쪽(또는 쓴 말 전체)이 허용 답과 같으면 바로 정답, 나머지(문장 통째로 고쳐 쓴 것 등)는 AI 판정 */
+const dtgNorm=t=>String(t||"").toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/[^a-z' ]/g," ").replace(/\s+/g," ").trim();
+function dtgMatch(mine, r){ if(!mine) return false; const parts=String(mine).split(/→|->|=>|>|:|⇒/), right=dtgNorm(parts[parts.length-1]);
+  return !!right && r.fix.some(f=>dtgNorm(f)===right); }
 /* 직독직해 덩어리: 띄어쓰기·문장부호·물결(~)만 빼고 모범 해석/허용 답과 같으면 바로 정답, 나머지는 AI 판정 */
 const dtrNorm=t=>String(t||"").replace(/\([^)]*\)/g,"").replace(/[\s.,!?'"“”‘’~∼·…\-]/g,"");
 function dtrMatch(mine, r){ const m=dtrNorm(mine); if(!m) return false; return [r.ko].concat(r.koAlt||[]).some(x=>dtrNorm(x)===m); }
@@ -2422,6 +2460,8 @@ function aiCands(){
     const add=(j,o)=>{ if(d[j]&&!d[j].ok&&String(o.answer||"").trim()) C.push({i,j,...o}); };
     if(p==="wmean") it.rows.forEach((r,j)=>add(j,{kind:"meaning", word:r.w, expected:(r.kp?[r.kp]:[r.ko]).concat(r.koAlt||[]).slice(0,8).join(" / "), answer:a[j]}));
     else if(p==="dtr") it.rows.forEach((r,j)=>add(j,{kind:"chunk", word:r.w, context:T("문장: "+it.en+" | 전체 해석: "+(it.ko||""),400), meaning:r.pt||"", expected:[r.ko].concat(r.koAlt||[]).slice(0,5).join(" / "), answer:a[j]}));
+    else if(p==="dtg") it.rows.forEach((r,j)=>{ const m=a[j]||{}; if(r.ans!=="X"||m.ox!=="X") return;
+        add(j,{kind:"fix", context:T(r.en,400), wrong:r.wrong, expected:r.fix.slice(0,6).join(" / "), meaning:T("어법: "+r.ex,80), answer:m.t}); });
     else if(p==="wsynw") it.rows.forEach((r,j)=>add(j,{kind:"synonym", word:r.w, meaning:r.ko||"", expected:(r.ans||[r.syn].concat(r.alt||[])).filter(Boolean).join(", "), answer:a[j]}));
     else if(p==="wdef") add(1,{kind:"synonym", word:it.hw, meaning:T((it.en||"")+" / "+(it.ko||""),200), expected:[it.syn].concat(it.synAlt||[]).filter(Boolean).join(", "), answer:a[1]});
     else if(p==="cloze") it.blanks.forEach((b,j)=>{ const tx=String(it.text||it.body||""), k="«"+(j+1)+"»", at=tx.indexOf(k);
@@ -2594,7 +2634,7 @@ function ptLabel(part,it,j){
   if(isSegP(part)){ const s=it.seg[j]; return s?`(${s.L}) ${s.t}`:""; }
   if(part==="tf") return it.st[j]||"";
   if(isClozeP(part)||part==="vocab"||part==="gram") return `빈칸 (${j+1})`;
-  if(part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr") return (it.rows[j]||{}).w||"";
+  if(part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr"||part==="dtg") return (it.rows[j]||{}).w||"";
   if(part==="wdef") return j?"유의어 쓰기":"표제어 쓰기";
   return "";
 }
@@ -3033,6 +3073,56 @@ $("#books-subj").addEventListener("click",e=>{
   S.subject=b.dataset.subj||""; save(); renderBooks();
 });
 $("#books-grade").onclick=()=>{ renderGrades(); go("grade"); };
+/* ⚡ 빠른 선택: 내 반 시험범위에 '데일리 테스트'와 다른 교재(어휘를 봄 등)가 같이 있으면, 들어오자마자 '암기 vs 데일리테스트 응시'를 고르게 함 */
+const isDT = b => /데일리\s*테스트/.test(b.subject||"");
+function qpkGroups(){ const nm=(S.cls&&S.cls.name)||""; if(!nm) return null;
+  const us=rangeOf(nm); if(!us.length) return null;
+  const dt=us.filter(u=>isDT(u.book)), other=us.filter(u=>!isDT(u.book));
+  if(!dt.length || !other.length) return null;
+  dt.sort((a,b)=>String(b.id).localeCompare(String(a.id),"en",{numeric:true}));
+  return {dt, other}; }
+let QPM="";
+function renderQpick(mode){
+  const g=qpkGroups(); if(!g) return false; QPM=mode||"";
+  $("#qpick-back").hidden=!UNIT;
+  const books=[...new Set(g.other.map(u=>u.book))], bnm=b=>(b.publisher&&!/헤이즐/.test(b.publisher))?b.publisher:b.subject;
+  const vb=books.map(bnm).join(" · ");
+  const big=(m,emo,t,sub,col)=>`<button class="opt${QPM===m?" sel":""}" data-qm="${m}" style="padding:20px 16px;margin-bottom:10px">
+      <span class="ci" style="background:var(--${col}-s);color:var(--${col});font-size:22px">${emo}</span>
+      <span style="flex:1"><span class="t" style="font-size:17px">${t}</span><span class="s">${sub}</span></span>
+      <span class="radio"><i></i></span></button>`;
+  const uBtn=u=>`<button class="unit${UNIT&&UNIT.id===u.id?" sel":""}" data-qu="${esc(u.id)}"><span class="box">${svg("check")}</span>
+      <span class="u-n"><b>${esc(u.no)}</b>${u.title?` <span style="color:var(--ink-3);font-weight:500">${esc(u.title)}</span>`:""}</span></button>`;
+  let list="";
+  if(QPM==="dt") list=`<div class="sec" style="margin-top:6px"><h2>데일리테스트 응시</h2><span class="more">최신 회차가 맨 위</span></div>
+      <div class="card" style="padding:8px 16px">${g.dt.map((u,i)=>uBtn(u).replace("</b>",`</b>${i?"":` <span class="vd" style="font-size:11px;padding:2px 7px;margin-left:4px">NEW</span>`}`)).join("")}</div>`;
+  else if(QPM==="vb") list=books.map(b=>{ const us=g.other.filter(u=>u.book===b);
+      return `<div class="sec" style="margin-top:6px"><h2>${esc(bnm(b))} 암기</h2><span class="more">DAY를 고르세요</span></div>
+      <div class="card" style="padding:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${us.map(u=>`<button class="chip${UNIT&&UNIT.id===u.id?" sel":""}" data-qu="${esc(u.id)}" style="justify-content:center;padding:12px 4px;font-weight:700">${esc(u.no)}</button>`).join("")}</div>`; }).join("");
+  $("#qpick-body").innerHTML = big("vb","📖",`${esc(vb)} 암기`,`단어 외우기 · 셀프 테스트 · <span class="num">${g.other.length}개</span>`,"cat-1")
+    + big("dt","📝","데일리테스트 응시",`최신 ${esc(g.dt[0].no)} · <span class="num">${g.dt.length}회차</span>`,"cat-3")
+    + list
+    + `<p style="font-size:12.5px;color:var(--ink-3);margin:14px 4px 0;line-height:1.6">다른 교재는 <button id="qpick-all" style="color:var(--accent);font-weight:700">📚 시험범위 전체 보기</button></p>`;
+  return true; }
+function openQpick(mode){ if(renderQpick(mode)) go("qpick"); }
+$("#qpick-body").addEventListener("click",async e=>{
+  const m=e.target.closest("[data-qm]"); if(m){ renderQpick(m.dataset.qm); return; }
+  if(e.target.closest("#qpick-all")){ S.rsch=""; save(); renderBooks(); go("books"); return; }
+  const b=e.target.closest("[data-qu]"); if(!b) return;
+  const u=allUnits(true).find(x=>x.id===b.dataset.qu); if(!u) return;
+  toast("불러오는 중…");
+  try{ await loadUnit(u); S.grade=gradeOfBook(u.book); save(); sel={part:null,scope:curScope()}; renderHome(); renderMy(); go("home"); }
+  catch(err){ toast(err.message); }
+});
+$("#qpick-back").onclick=()=>{ renderHome(); go("home"); };
+function renderQpkSlot(){ const el=$("#qpk-slot"); if(!el) return; const g=qpkGroups();
+  if(!g){ el.innerHTML=""; el.style.marginTop=""; return; }
+  el.style.marginTop="16px";
+  el.innerHTML=`<div style="display:flex;gap:8px">
+    <button class="btn-sm" data-qopen="vb" style="flex:1;padding:12px 8px;font-weight:700">📖 ${esc([...new Set(g.other.map(u=>u.book))].map(b=>(b.publisher&&!/헤이즐/.test(b.publisher))?b.publisher:b.subject).join(" · "))} 암기</button>
+    <button class="btn-sm" data-qopen="dt" style="flex:1;padding:12px 8px;font-weight:700">📝 데일리테스트 응시</button></div>`; }
+$("#qpk-slot").addEventListener("click",e=>{ const b=e.target.closest("[data-qopen]"); if(b) openQpick(b.dataset.qopen); });
+const qpkFirst=()=>{ try{ if(sessionStorage.getItem("nf.qpk")) return false; sessionStorage.setItem("nf.qpk","1"); }catch(e){} return !!qpkGroups(); };
 $("#home-book").onclick=()=>{ if(S.rsch==="*") S.rsch=""; renderBooks(); go("books"); };
 
 /* ───── 이름 입력 ───── */
@@ -3087,7 +3177,8 @@ nameCta.onclick=async()=>{
   }
   if(nm!==nameIn.value.trim()) toast(`${nm}(으)로 들어왔어요`);
   S.name=nm; S.rsch=""; save(); renderMy();
-  if(!UNIT && curRangeSchool()){ renderBooks(); go("books"); }
+  if(qpkFirst()){ openQpick(); }
+  else if(!UNIT && curRangeSchool()){ renderBooks(); go("books"); }
   else if(!S.grade){ renderGrades(); go("grade"); }
   else if(!UNIT){ renderBooks(); go("books"); }
   else { renderHome(); go("home"); flushQueue(); }
@@ -3151,6 +3242,7 @@ applyTheme();
   if(S.cls && CLASSES && !CL.find(c=>+c.id===+S.cls.id)){ S.cls=null; save(); }   // 선생님이 지운 반
   if(!S.name){ openLogin(); }
   else if(CL.length && !S.cls){ openLogin(`${esc(S.name)}님, <b>내 학교·학년</b>을 고르고 이름을 확인해 주세요. 이름 뒤 영어·숫자는 빼고 써도 돼요.`); }
+  else if(qpkFirst()){ openQpick(); if(UNIT) flushQueue(); }
   else if(!UNIT && curRangeSchool()){ renderBooks(); go("books"); }
   else if(!S.grade){ renderGrades(); go("grade"); }
   else if(!UNIT){ renderBooks(); go("books"); }
