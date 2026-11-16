@@ -745,6 +745,7 @@ function renderRange(D){
     ${AR.length?`<div class="chip"><i>🕘 출결</i><b style="font-size:14px;line-height:1.5">정시 ${ak("on")} · 지각 ${ak("late")}<br>결석 ${ak("absent")}${ak("etc")?` · 기타 ${ak("etc")}`:""}</b></div>`:""}
     ${examChip(D,end)}
   </div></div>
+  ${dtHTML(D, null)}
   ${parts.length?`<h2 class="s">📝 시험 종류별 평균</h2><div class="card bars">${parts.map(p=>`
     <div class="bar" style="grid-template-columns:minmax(110px,170px) 1fr 52px"><span class="lb">${esc(p.name)}<br><span style="font-weight:600;color:var(--ink-3);font-size:11px">${p.n}회</span></span>
       <span class="tr"><i class="${p.p>=85?"":p.p>=75?"warn":"bad"}" style="width:${Math.max(p.p,7)}%"><u>${p.p}</u></i></span><span class="dt"></span></div>`).join("")}</div>`:""}
@@ -779,6 +780,43 @@ async function shareUrl(){
 }
 let TOKEN_OF="";
 const DAYI={}, CONT={};
+/* 📝 예비고1 데일리테스트 — 총점 · 반 석차 · 누적 (api/report의 dts: 회차마다 '처음 본 날' 기록) */
+const DT_PN={wmean:"어휘",dtv:"구문 단어",dtr:"직독직해",dtg:"어법"};
+const mfUnit=id=>{ for(const b of ((typeof MF!=="undefined"&&MF&&MF.books)||[])) for(const u of (b.units||[])) if(u.id===id) return u; return null; };
+function dtHTML(D, day){
+  const A=(D.dts||[]); if(!A.length) return "";
+  const cn=cnameOf(D), byU={}; A.forEach(x=>{ if(!byU[x.unit]||x.cls===cn) byU[x.unit]=x; });
+  const L=Object.values(byU).sort((a,b)=>a.unit.localeCompare(b.unit,"en",{numeric:true}));
+  const cur=(day&&L.filter(x=>x.day===day).pop())||L[L.length-1], prev=L[L.indexOf(cur)-1];
+  const u=mfUnit(cur.unit), PS=Object.entries(cur.parts||{}).sort((a,b)=>Object.keys(DT_PN).indexOf(a[0])-Object.keys(DT_PN).indexOf(b[0]));
+  const done=L.filter(x=>x.done), avg100=done.length?Math.round(done.reduce((n,x)=>n+x.p100,0)/done.length):null;
+  const d100=prev?cur.p100-prev.p100:null, dr=prev&&prev.done&&cur.done?prev.rank-cur.rank:null;
+  return `<h2 class="s">📝 데일리테스트 총점 · 반 석차</h2>
+  <div class="card" style="padding:18px">
+    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+      <div style="flex:1 1 180px"><div style="font-size:12.5px;font-weight:700;color:var(--ink-3)">${esc(cur.no)} · ${fmtDate(cur.day)}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--ink-3)">총점 (100점 만점)</div>
+        <div class="num" style="font-size:44px;font-weight:900;line-height:1.1;letter-spacing:-.02em">${cur.p100}<span style="font-size:19px;font-weight:800">점</span></div>
+        <div style="font-size:12.5px;color:var(--ink-3)">전체 ${cur.max}문항 중 ${cur.total}개 맞음 · ${Math.round((cur.max-cur.total)*10)/10}개 틀림${d100!=null?`<br>지난 회차보다 <b>${d100>0?"▲ "+d100+"점":d100<0?"▼ "+(-d100)+"점":"같음"}</b>`:""}</div></div>
+      <div style="flex:1 1 150px;text-align:center;padding:12px;border-radius:16px;background:var(--pri);color:#fff">
+        ${cur.done?`<div style="font-size:12.5px;font-weight:700;opacity:.85">🏆 ${esc(cur.cls)} 석차</div>
+        <div class="num" style="font-size:36px;font-weight:900;line-height:1.15">${cur.rank}<span style="font-size:16px">등</span> <span style="font-size:15px;opacity:.85">/ ${cur.n}명</span></div>
+        <div style="font-size:12px;opacity:.9">반 평균 ${cur.avg100!=null?cur.avg100:cur.avg}점${dr?` · 지난 회차보다 ${dr>0?dr+"계단 ▲":(-dr)+"계단 ▼"}`:""}</div>`
+        :`<div style="font-size:13px;font-weight:700">아직 모든 영역을 안 봐서<br>석차가 없어요</div>`}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:14px">${PS.map(([p,v])=>{ const V=u&&vrule(u,p,v.c,v.t);
+      return `<div style="padding:10px;border-radius:12px;background:var(--surface-2,#f4f3f8)"><div style="font-size:12px;font-weight:700;color:var(--ink-3)">${esc(DT_PN[p]||PNAME[p]||p)}</div>
+        <div class="num" style="font-size:22px;font-weight:900">${v.t?Math.round(v.c/v.t*100):0}<span style="font-size:13px">점</span></div>
+        <div style="font-size:12px;font-weight:700;color:${v.t-v.c?"var(--bad,#d9534f)":"var(--ok,#2e9e5b)"}">${v.t-v.c?`${Math.round((v.t-v.c)*10)/10}개 틀림`:"다 맞음"} <span style="color:var(--ink-3);font-weight:600">(${v.c}/${v.t})</span></div>
+        ${V?`<span class="vd ${V.k}" style="font-size:11px;margin-top:4px;display:inline-block">${V.e} ${V.n}</span>`:""}</div>`; }).join("")}</div>
+    ${L.length>1?`<div style="margin-top:16px;font-size:13px;font-weight:800">📈 누적 기록 <span style="font-weight:600;color:var(--ink-3);font-size:11.5px">(${L.length}회 · 평균 ${avg100!=null?avg100+"점":"—"} · 100점 만점)</span></div>
+    <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px">
+      <tr style="color:var(--ink-3);font-size:11.5px;text-align:left"><th style="padding:5px 4px">회차</th><th>날짜</th><th>총점</th><th>틀린 개수</th><th>반 석차</th><th>반 평균</th></tr>
+      ${L.slice().reverse().map(x=>`<tr style="border-top:1px solid var(--line,#eee)${x===cur?";font-weight:800":""}"><td style="padding:6px 4px">${esc(x.no)}</td><td>${esc(x.day.slice(5).replace("-","/"))}</td>
+        <td class="num">${x.p100}점</td><td class="num">${Math.round((x.max-x.total)*10)/10}개</td><td class="num">${x.done?`${x.rank}등/${x.n}명`:"—"}</td><td class="num">${x.avg100!=null?x.avg100+"점":"—"}</td></tr>`).join("")}
+    </table>`:""}
+  </div>`;
+}
 async function render(D){
   const HW=(D.hw||[]);
   if(VIEW==="week"||VIEW==="month") return renderRange(D);
@@ -962,6 +1000,8 @@ async function render(D){
       ${examChip(D,day)}
     </div>
   </div>
+
+  ${dtHTML(D, day)}
 
   ${HB?HB.html:""}
 

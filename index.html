@@ -1249,7 +1249,8 @@ function renderHome(){
     $("#part-list").innerHTML=`<button class="part-card" data-allgo="1" style="padding:18px 16px">
       <span class="ci" style="background:var(--accent);color:#fff;font-size:20px">📝</span>
       <span style="flex:1"><span class="t" style="font-size:16px">${esc((GH&&GH[0]&&GH[0].t)||"전체")} 응시</span>
-        <span class="s">${LP.map(p=>esc(labelOf(p.id).replace(/\s*\(.*\)\s*$/,""))).join(" → ")} · 이어서 한 번에 · <span class="num">${tp}개 채점</span></span></span>${svg("chev","go")}</button>
+        <span class="s">${LP.map(p=>esc(labelOf(p.id).replace(/\s*\(.*\)\s*$/,""))).join(" → ")} · 이어서 한 번에 · <span class="num">${tp}개 채점</span></span>
+        ${(S.dtr||{})[UNIT.id]?`<span style="display:block;margin-top:6px;font-size:13px;font-weight:800;color:var(--accent)">총점 ${S.dtr[UNIT.id].p100}점${S.dtr[UNIT.id].done?` · ${esc(S.dtr[UNIT.id].cls)} ${S.dtr[UNIT.id].rank}등 / ${S.dtr[UNIT.id].n}명`:""}</span>`:""}</span>${svg("chev","go")}</button>
       ${LP.some(p=>bestOf()[p.id])?`<div style="padding:4px 16px 12px">${LP.map(p=>{ const b=bestOf()[p.id]; return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px">
         <span style="flex:1;min-width:0;color:var(--ink-2)">${esc(labelOf(p.id))}</span>${b?`<span class="num" style="font-weight:800">${b.done}/${b.total}</span>${vdPill(b.pct,p.id,b.done,b.total)}`:`<span style="color:var(--ink-3)">아직</span>`}</div>`; }).join("")}</div>`:""}`;
   } else
@@ -2546,10 +2547,18 @@ function allSecs(){ return [...new Set(Q.pl)].map(p=>{ let t=0,c=0, idx=[];
     Q.detail.forEach((ds,i)=>{ if(Q.pl[i]!==p) return; idx.push(i); ds.forEach(x=>{t++; if(x.ok)c++;}); });
     const pct=t?Math.round(c/t*100):0; return {p,t,c,pct,idx,v:VERDICT(pct,p,c,t)}; }); }
 function allCardHTML(secs){ const L=allSecs(), stay=L.filter(x=>x.v.stay), fail=L.filter(x=>x.v.k!=="pass");
-  return `<div style="font-size:15px;font-weight:800;letter-spacing:-.01em">${esc(((C&&C.groups&&C.groups[0])||{}).t||"전체")} · 영역별 결과</div>
+  const TT=L.reduce((n,x)=>n+x.t,0), TC=L.reduce((n,x)=>n+x.c,0), P100=TT?Math.round(TC/TT*100):0;
+  return `<div style="font-size:15px;font-weight:800;letter-spacing:-.01em">${esc(((C&&C.groups&&C.groups[0])||{}).t||"전체")}</div>
+    <div style="margin-top:10px;padding:14px 12px;border-radius:16px;background:var(--surface-2)">
+      <div style="font-size:12.5px;font-weight:700;color:var(--ink-3)">총점 (100점 만점)</div>
+      <div class="num" style="font-size:46px;font-weight:900;line-height:1.1;letter-spacing:-.02em">${P100}<span style="font-size:20px;font-weight:800">점</span></div>
+      <div style="font-size:12.5px;color:var(--ink-3);margin-top:2px">전체 ${TT}문항 중 ${TC}개 맞음 · ${TT-TC}개 틀림</div>
+      <div id="dt-rank" style="margin-top:10px;font-size:15px;font-weight:800;color:var(--accent)">🏆 반 석차 불러오는 중…</div></div>
+    <div style="margin-top:14px;font-size:13.5px;font-weight:800;text-align:left">영역별 결과</div>
     <div style="margin-top:12px;text-align:left">${L.map(x=>`<div style="padding:10px 0;border-top:1px solid var(--line)">
       <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;min-width:0;font-size:14px;font-weight:700">${esc(labelOf(x.p))}</span>
-        <span class="num" style="font-size:15px;font-weight:800">${x.c}/${x.t}</span><span class="vd ${x.v.k}">${x.v.e} ${x.v.n}</span></div>
+        <span class="num" style="font-size:17px;font-weight:900">${x.pct}점</span><span class="vd ${x.v.k}">${x.v.e} ${x.v.n}</span></div>
+      <div style="font-size:12.5px;font-weight:700;color:${x.t-x.c?"var(--no)":"var(--ok)"};margin-top:2px">${x.t-x.c?`${x.t-x.c}개 틀림`:"다 맞음 👏"} <span style="color:var(--ink-3);font-weight:600">(${x.t}개 중 ${x.c}개 맞음)</span></div>
       <div style="font-size:12px;color:var(--ink-3);margin-top:3px">${esc(vrText(x.v,x.c,x.t))}</div></div>`).join("")}</div>
     ${stay.length?`<div style="margin-top:12px;padding:14px;border-radius:14px;background:var(--no-soft,#fdecec);color:var(--no);font-weight:800;font-size:17px">${STAY_MSG}
        <div style="font-size:12.5px;font-weight:600;margin-top:4px">${stay.map(x=>esc(labelOf(x.p).replace(/\s*\(.*\)\s*$/,""))+" "+x.v.n).join(" · ")}</div></div>`
@@ -2632,9 +2641,10 @@ function showResult(){
         return row; });
   if(!Q.sent && Q.all){
     Q.sent=true;
-    allSecs().forEach(x=>submitResult({student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
-      part:x.p, partName:labelOf(x.p), scope:"전체 한 번에", total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t)), detail:detOf(x.idx)}));
-  }
+    Promise.all(allSecs().map(x=>submitResult({student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
+      part:x.p, partName:labelOf(x.p), scope:"전체 한 번에", total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t)), detail:detOf(x.idx)})))
+      .then(()=>dtRankLoad(true)).catch(()=>dtRankLoad(true));
+  } else if(Q.all) dtRankLoad(false);
   if(!Q.sent){
     Q.sent=true;
     submitResult({
@@ -2652,6 +2662,16 @@ function showResult(){
     });
   }
 }
+/* 📝 데일리테스트 총점 반 석차 — 서버(api/mine?dtrank)가 반마다 '처음 본 날' 기록으로 계산 */
+const dtRankTxt=r=>!r?"":!r.done?"모든 영역을 다 봐야 반 석차가 나와요":`🏆 ${esc(r.cls)} <span class="num">${r.rank}등</span> / ${r.n}명 · 반 평균 ${r.avg100!=null?r.avg100:r.avg}점`;
+async function dtRankLoad(wait){ const el=()=>document.getElementById("dt-rank"); if(!UNIT||!S.name) return;
+  const cache=(S.dtr||{})[UNIT.id]; if(cache&&el()) el().innerHTML=dtRankTxt(cache);
+  if(qGet().length){ if(el()) el().innerHTML=cache?dtRankTxt(cache):"인터넷이 연결되면 반 석차가 보여요"; return; }
+  try{ const r=await (await fetch(`api/mine?dtrank=1&unit=${encodeURIComponent(UNIT.id)}&student=${encodeURIComponent(S.name)}`,{cache:"no-store"})).json();
+    const L=(r.dt||[]), me=L.find(x=>S.cls&&x.cls===S.cls.name)||L[0];
+    if(me){ (S.dtr ||= {})[UNIT.id]=me; save(); }
+    if(el()) el().innerHTML=me?dtRankTxt(me)+(me.total!==allSecs().reduce((n,x)=>n+x.c,0)?`<div style="font-size:12px;color:var(--ink-3);font-weight:600;margin-top:3px">석차는 처음 본 날 기록(${me.p100}점) 기준이에요</div>`:""):"아직 반 석차를 낼 수 없어요";
+  }catch(e){ if(el()) el().innerHTML=cache?dtRankTxt(cache):"반 석차를 불러오지 못했어요"; } }
 /* 직접 쓴 답(주관식)은 오타 등으로 틀렸을 때 학생이 '맞게 썼어요'로 정답 처리할 수 있음 — 고르기만 하는 문항은 제외 */
 const selfOK=(p,x)=>!!x.mine && x.mine!=="무응답" && String(x.mine).trim()!=="" && (!!x.self || /^(write|twrite|mwrite|wmean|wsynw|wdef|dtr)$/.test(p) || isClozeP(p) || (p==="arrange"&&S.arrMode==="type"));   // 통변형은 x.self(틀린 밑줄을 X하고 고쳐 쓴 경우)만
 $("#review-list").addEventListener("click",e=>{
