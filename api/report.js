@@ -1,5 +1,5 @@
 // 리포트용 집계 — 학생 본인 기록 + 전체 반평균 + 반복 오답
-import { sql, ensure, checkPin, syncAuto } from "./_db.js";
+import { sql, ensure, checkPin, syncAuto, dtStand } from "./_db.js";
 
 export default async function handler(req, res) {
   try {
@@ -69,7 +69,8 @@ export default async function handler(req, res) {
     const klass = await sql`select c.id, c.name, c.exam_date, c.exam_name from hw_members m join hw_classes c on c.id = m.class_id where m.student = ${student}`;
     const att = await sql`select a.day, a.status, a.memo, c.name as class_name from hw_attend a join hw_classes c on c.id = a.class_id
                           where a.student = ${student} order by a.day desc limit 200`;
-    const extra = { notes, klass, teacher, att };
+    const dts = await dtStand(student).catch(e => { console.error("[report dt]", e); return []; });   // 📝 데일리테스트 총점·반 석차 누적
+    const extra = { notes, klass, teacher, att, dts };
 
     if (!rows.length) return res.status(200).json({ ok: true, student, rows: [], cls: [], wrong: [], hw, days: 0, ...extra });
 

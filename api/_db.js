@@ -244,3 +244,49 @@ export function pinError(g) {
   if (g.why === "LOCKED") return `비밀번호를 여러 번 틀려서 잠겼어요. ${g.min || 15}분 뒤에 다시 해 주세요`;
   return g.left != null && g.left <= 3 ? `비밀번호가 맞지 않습니다 (${g.left}번 더 틀리면 15분 잠겨요)` : "비밀번호가 맞지 않습니다";
 }
+
+/* 📝 예비고1 데일리테스트 총점·반 석차 (누적)
+   회차(unit_id가 dt로 시작)마다 학생별 '처음 본 날'의 영역 최고 점수를 더함('맞게 썼어요' 정정 포함, 다른 날 재응시는 제외) — 재시험·오답노트는 빼고, 그 영역 전체 길이(가장 긴 total)로 본 기록만.
+   반(hw_members)마다 모든 영역을 본 학생끼리 석차(동점은 같은 등수). unitId를 주면 그 회차만. */
+export async function dtStand(student, unitId) {
+  const cls = await sql`select c.id, c.name from hw_members m join hw_classes c on c.id = m.class_id where m.student = ${student}`;
+  if (!cls.length) return [];
+  const ids = cls.map(c => Number(c.id));
+  const mem = await sql`select class_id, student from hw_members where class_id = any(${ids})`;
+  const names = [...new Set(mem.map(m => m.student).concat([student]))];
+  const rows = await sql`
+    with x as (
+      select student, unit_id, part, total, coalesce(score, correct)::float as c, created_at,
+             to_char(created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') as day,
+             max(total) over (partition by unit_id, part) as mt
+      from attempts
+      where unit_id like 'dt%' and scope <> '재시험' and part_name not like '오답노트%' and total > 0
+    ), f as (
+      select *, min(day) over (partition by student, unit_id, part) as fd from x where total = mt
+    )
+    select distinct on (student, unit_id, part) student, unit_id, part, total, c, created_at
+    from f where day = fd and student = any(${names})
+    order by student, unit_id, part, c desc, created_at asc`;
+  const R = rows.filter(r => !unitId || r.unit_id === unitId);
+  const parts = {}, me = {};
+  R.forEach(r => { (parts[r.unit_id] ||= {})[r.part] = r.total; });
+  const per = {};   // unit → student → {c, parts, at}
+  R.forEach(r => { const u = (per[r.unit_id] ||= {}), s = (u[r.student] ||= { c: 0, t: 0, n: 0, at: r.created_at, ps: {} });
+    s.c += r.c; s.t += r.total; s.n++; s.ps[r.part] = { c: Math.round(r.c * 10) / 10, t: r.total }; if (new Date(r.created_at) < new Date(s.at)) s.at = r.created_at; });
+  const out = [], r1 = v => Math.round(v * 10) / 10;
+  for (const u of Object.keys(per).sort()) {
+    const P = parts[u], np = Object.keys(P).length, max = Object.values(P).reduce((a, b) => a + b, 0), mine = per[u][student];
+    if (!mine) continue;
+    const done = mine.n === np;
+    for (const c of cls) {
+      const inC = new Set(mem.filter(m => +m.class_id === +c.id).map(m => m.student));
+      const L = Object.entries(per[u]).filter(([s, v]) => inC.has(s) && v.n === np).map(([s, v]) => v.c).sort((a, b) => b - a);
+      const rank = done ? L.filter(v => v > mine.c + 1e-9).length + 1 : null;
+      out.push({ unit: u, no: u.replace(/^dt/, "") + "회차", cls: c.name, total: r1(mine.c), max, p100: max ? Math.round(mine.c / max * 100) : 0,
+        done, rank, n: L.length, avg: L.length ? r1(L.reduce((a, b) => a + b, 0) / L.length) : null,
+        avg100: L.length && max ? Math.round(L.reduce((a, b) => a + b, 0) / L.length / max * 100) : null,
+        day: new Date(new Date(mine.at).getTime() + 9 * 3600e3).toISOString().slice(0, 10), parts: mine.ps });
+    }
+  }
+  return out;
+}

@@ -1,5 +1,5 @@
 // 학생 본인 기록 조회 — 이름으로만 조회합니다(비밀번호 없음).
-import { sql, ensure } from "./_db.js";
+import { sql, ensure, dtStand } from "./_db.js";
 
 export default async function handler(req, res) {
   try {
@@ -10,6 +10,11 @@ export default async function handler(req, res) {
     await ensure();
     res.setHeader("Cache-Control", "no-store");
 
+    // 📝 데일리테스트 총점·반 석차 (학생 본인 것만)
+    if (u.searchParams.get("dtrank")) {
+      const unit = (u.searchParams.get("unit") || "").trim().slice(0, 20);
+      return res.status(200).json({ ok: true, dt: await dtStand(student, unit || null) });
+    }
     if (id) {
       const [row] = await sql`
         select id, book, unit_id, part, part_name, scope, total, coalesce(score, correct) as correct, pct, secs, detail, created_at

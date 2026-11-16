@@ -1,6 +1,6 @@
 // 리포트 링크(/report?student=…)를 서버에서 미리 글로 채워 보냄
 // → 클로드·카톡 미리보기처럼 자바스크립트를 실행하지 않는 곳에서도 내용이 바로 읽힘
-import { sql, ensure } from "./_db.js";
+import { sql, ensure, dtStand } from "./_db.js";
 import { PNAME } from "./_pname.js";
 import { ensureMock, reportData, loadExam } from "./_mock.js";
 
@@ -116,6 +116,16 @@ async function build(student, dayQ, range) {
   L.push(`<h1>${esc(student)} · ${mm}.${dd}일자 학습리포트</h1>`);
   L.push(`<p>hazel_studylog · ${cls ? esc(cls) + " · " : ""}${fmt(day)} 기록만 담았습니다.</p>`);
   if (nt && nt.headline) L.push(`<p><b>선생님 한마디:</b> ${esc(nt.headline)}</p>`);
+  { // 📝 예비고1 데일리테스트 총점 · 반 석차 · 누적
+    const DT = await dtStand(student).catch(() => []), byU = {};
+    DT.forEach(x => { if (!byU[x.unit] || x.cls === cls) byU[x.unit] = x; });
+    const DL = Object.values(byU).sort((a, b) => a.unit.localeCompare(b.unit, "en", { numeric: true }));
+    if (DL.length) { const c = DL.filter(x => x.day === day).pop() || DL[DL.length - 1];
+      const PN = { wmean: "어휘", dtv: "구문 단어", dtr: "직독직해", dtg: "어법" }, r1 = v => Math.round(v * 10) / 10;
+      L.push(`<h2>데일리테스트 총점 · 반 석차</h2><p><b>${esc(c.no)} (${fmt(c.day)}) 총점 ${c.p100}점 (100점 만점, 전체 ${c.max}문항 중 ${r1(c.max - c.total)}개 틀림)</b>${c.done ? ` · <b>${esc(c.cls)} ${c.rank}등 / ${c.n}명</b> · 반 평균 ${c.avg100 ?? c.avg}점` : " · 아직 모든 영역을 안 봐서 석차 없음"}</p>`);
+      L.push(`<ul>${Object.keys(PN).filter(p => c.parts && c.parts[p]).map(p => { const v = c.parts[p]; return `<li>${PN[p]}: ${v.t ? Math.round(v.c / v.t * 100) : 0}점 · ${r1(v.t - v.c)}개 틀림 (${v.c}/${v.t})</li>`; }).join("")}</ul>`);
+      if (DL.length > 1) L.push(`<table border="1" cellpadding="4"><tr><th>회차</th><th>날짜</th><th>총점(100점)</th><th>틀린 개수</th><th>반 석차</th><th>반 평균</th></tr>${DL.slice().reverse().map(x => `<tr><td>${esc(x.no)}</td><td>${fmt(x.day)}</td><td>${x.p100}점</td><td>${r1(x.max - x.total)}개</td><td>${x.done ? `${x.rank}등/${x.n}명` : "—"}</td><td>${x.avg100 != null ? x.avg100 + "점" : "—"}</td></tr>`).join("")}</table>`);
+    } }
   if (!S.tests.length && !S.hw.length) {
     L.push(`<p><b>${fmt(day)}에는 시험·숙제 기록이 없습니다.</b>${attTxt(day) ? ` 출결: ${attTxt(day)}` : ""}</p>`);
   } else {
