@@ -449,6 +449,9 @@ const SUBTIP={
   "문맥 어휘 (반의어)":"밑줄 단어를 넣고 <b>앞뒤 문장과 흐름이 맞는지</b>(긍정↔부정) 확인하는 습관이 필요해요.",
   "문맥 어휘":"밑줄 단어를 넣고 <b>앞뒤 문장과 흐름이 맞는지</b> 확인하는 습관이 필요해요.",
   "유의어 환언":"본문 단어가 <b>다른 말로 바뀌어도 같은 뜻</b>이면 O — 유의어 목록을 같이 외우게 하세요.",
+  "구문 단어 뜻":"구문 지문에 나온 단어를 <b>문장째</b> 다시 읽으며 뜻을 확인하게 하세요 — 비슷한 모양 단어(stuff·staff 등)를 짝으로 구분.",
+  "직독직해":"끊어 읽은 <b>덩어리마다 핵심 단어 뜻</b>부터 잡고, 전치사·접속사(since, out of)의 뜻을 정확히 옮기게 하세요.",
+  "어법 O/X 고치기":"문장마다 <b>진짜 동사</b>를 먼저 찾고(동사가 없거나 두 개면 X), 틀린 곳은 이유까지 말로 설명하게 하세요.",
   "단어 뜻":"틀린 단어만 모아 <b>뜻 → 예문</b> 순서로 다시 외우고, 품사까지 같이 확인하게 하세요.",
   "유의어":"표제어와 <b>유의어를 짝으로</b> 외우게 하세요. 품사가 같은 유의어만 정답입니다.",
   "영영풀이":"영영풀이의 <b>핵심 동사·명사</b>에 밑줄 치고 표제어와 연결하게 하세요.",
@@ -480,6 +483,9 @@ function segIndex(C){
 function areaOf(x,SI){
   const p=x.part, ok=x.ok==="1";
   if(p==="wmean") return ["어휘","단어 뜻"];
+  if(p==="dtv") return ["어휘","구문 단어 뜻"];
+  if(p==="dtr") return ["독해","직독직해"];
+  if(p==="dtg"){ let sub=null; if(!ok&&x.r&&/→/.test(x.r)){ const [f,t]=x.r.split("→"); sub=CLS2SUB[classify(f,t,"")]; } return ["어법",sub||"어법 O/X 고치기"]; }
   if(p==="wsyn"||p==="wsynw") return ["어휘","유의어"];
   if(p==="wdef"||p==="dfa"||p==="dfb") return ["어휘","영영풀이"];
   if(/^vd(c1|c2|m1|m2|m3|w1|w2|s)$/.test(p)) return ["어휘","단어 동형 (예문 빈칸)"];
@@ -578,7 +584,7 @@ function cumulative(D, upto){
     const hall=HW.filter(h=>h.day===d&&h.nc), hn_=hall.reduce((a,h)=>a+(+h.nc||0),0), hdn=hall.reduce((a,h)=>a+(+h.nd||0),0);
     return {d, tp:t?Math.round(c/t*100):null, tn:v.length, books:[...new Set(v.map(x=>x.book.split(" · ").pop()))],
       tc:ct?Math.round(cs/ct):null, hcls:hn_>=3?Math.round(hdn/hn_*100):null,
-      hp:hs.length?Math.round(hd/hs.length*100):null, hd, hc:hs.length, hn:HW.filter(h=>h.day===d).length, at:(attOf(D,d)||{}).status||""};
+      hp:hs.length?Math.round(hd/hs.length*100):null, hd, hc:hs.length, hn:HW.filter(h=>h.day===d).length, hsk:HW.filter(h=>h.day===d&&h.status==='skip').length, at:(attOf(D,d)||{}).status||""};
   });
 }
 function cumDelta(CUM, day){
@@ -599,7 +605,7 @@ function cumHTML(CUM, day, name){
   const rows=L.slice().reverse().map((x,i,arr)=>{ const pv=arr.slice(i+1);
     const pt=pv.find(y=>y.tp!==null), ph=pv.find(y=>y.hp!==null);
     return `<tr${x.d===day?` class="cur"`:""}><td><b>${x.d.slice(5).replace("-",".")}</b>${x.at&&ATT[x.at]?` <span title="${ATT[x.at][1]}">${ATT[x.at][0]}</span>`:""}${x.d===day?` <em>이날</em>`:""}</td>
-      <td>${x.hc?`<b>${fmtNR(x.hd)}/${x.hc}</b> <small>${x.hp}%</small> ${arrow(ph&&x.hp!==null?x.hp-ph.hp:null)}${x.hcls!=null?`<div class="cv">반평균 ${x.hcls}%</div>`:""}`:x.hn?`<small>미검사</small>`:`<small>—</small>`}</td>
+      <td>${x.hc?`<b>${fmtNR(x.hd)}/${x.hc}</b> <small>${x.hp}%</small> ${arrow(ph&&x.hp!==null?x.hp-ph.hp:null)}${x.hcls!=null?`<div class="cv">반평균 ${x.hcls}%</div>`:""}`:x.hn?`<small>${x.hsk===x.hn?"면제":"미검사"}</small>`:`<small>—</small>`}</td>
       <td>${x.tp!==null?`<b>${x.tp}%</b> <small>${x.tn}개 · ${esc(x.books.join(", "))}</small> ${arrow(pt?x.tp-pt.tp:null)}${x.tc!=null?`<div class="cv">반평균 ${x.tc}% <span class="${x.tp>=x.tc?"up":"down"}">${x.tp>=x.tc?"▲":"▼"} ${Math.abs(x.tp-x.tc)}점</span></div>`:""}`:`<small>—</small>`}</td></tr>`; }).join("");
   return `<h2 class="s">📈 ${esc(name)} 누적 기록 <span style="font-size:11px;font-weight:600;color:var(--ink-3)">(최근 ${L.length}번 학습일 · 날짜별로 따로 계산)</span></h2>
   <div class="card cum">
@@ -790,18 +796,18 @@ function dtHTML(D, day){
   const cur=(day&&L.filter(x=>x.day===day).pop())||L[L.length-1], prev=L[L.indexOf(cur)-1];
   const u=mfUnit(cur.unit), PS=Object.entries(cur.parts||{}).sort((a,b)=>Object.keys(DT_PN).indexOf(a[0])-Object.keys(DT_PN).indexOf(b[0]));
   const done=L.filter(x=>x.done), avg100=done.length?Math.round(done.reduce((n,x)=>n+x.p100,0)/done.length):null;
-  const d100=prev?cur.p100-prev.p100:null, dr=prev&&prev.done&&cur.done?prev.rank-cur.rank:null;
+  const d100=prev&&prev.done&&cur.done?cur.p100-prev.p100:null, dr=prev&&prev.done&&cur.done?prev.rank-cur.rank:null;
   return `<h2 class="s">📝 데일리테스트 총점 · 반 석차</h2>
   <div class="card" style="padding:18px">
     <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
       <div style="flex:1 1 180px"><div style="font-size:12.5px;font-weight:700;color:var(--ink-3)">${esc(cur.no)} · ${fmtDate(cur.day)}</div>
         <div style="font-size:12px;font-weight:700;color:var(--ink-3)">총점 (100점 만점)</div>
-        <div class="num" style="font-size:44px;font-weight:900;line-height:1.1;letter-spacing:-.02em">${cur.p100}<span style="font-size:19px;font-weight:800">점</span></div>
-        <div style="font-size:12.5px;color:var(--ink-3)">전체 ${cur.max}문항 중 ${cur.total}개 맞음 · ${Math.round((cur.max-cur.total)*10)/10}개 틀림${d100!=null?`<br>지난 회차보다 <b>${d100>0?"▲ "+d100+"점":d100<0?"▼ "+(-d100)+"점":"같음"}</b>`:""}</div></div>
+        <div class="num" style="font-size:44px;font-weight:900;line-height:1.1;letter-spacing:-.02em">${cur.done?cur.p100:"—"}<span style="font-size:19px;font-weight:800">${cur.done?"점":""}</span></div>
+        <div style="font-size:12.5px;color:var(--ink-3)">${cur.done?`전체 ${cur.max}문항 중 ${cur.total}개 맞음 · ${Math.round((cur.max-cur.total)*10)/10}개 틀림`:`일부 영역만 봐서 총점이 없어요 (본 영역: ${PS.map(([p])=>esc(DT_PN[p]||PNAME[p]||p)).join("·")})`}${d100!=null?`<br>지난 회차보다 <b>${d100>0?"▲ "+d100+"점":d100<0?"▼ "+(-d100)+"점":"같음"}</b>`:""}</div></div>
       <div style="flex:1 1 150px;text-align:center;padding:12px;border-radius:16px;background:var(--pri);color:#fff">
         ${cur.done?`<div style="font-size:12.5px;font-weight:700;opacity:.85">🏆 ${esc(cur.cls)} 석차</div>
         <div class="num" style="font-size:36px;font-weight:900;line-height:1.15">${cur.rank}<span style="font-size:16px">등</span> <span style="font-size:15px;opacity:.85">/ ${cur.n}명</span></div>
-        <div style="font-size:12px;opacity:.9">반 평균 ${cur.avg100!=null?cur.avg100:cur.avg}점${dr?` · 지난 회차보다 ${dr>0?dr+"계단 ▲":(-dr)+"계단 ▼"}`:""}</div>`
+        <div style="font-size:12px;opacity:.9">반 평균 ${cur.avg100!=null?cur.avg100:cur.avg}점 <span style="opacity:.8">(전 영역 본 ${cur.n}명)</span>${dr?` · 지난 회차보다 ${dr>0?dr+"계단 ▲":(-dr)+"계단 ▼"}`:""}</div>`
         :`<div style="font-size:13px;font-weight:700">아직 모든 영역을 안 봐서<br>석차가 없어요</div>`}</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:14px">${PS.map(([p,v])=>{ const V=u&&vrule(u,p,v.c,v.t);
@@ -809,11 +815,11 @@ function dtHTML(D, day){
         <div class="num" style="font-size:22px;font-weight:900">${v.t?Math.round(v.c/v.t*100):0}<span style="font-size:13px">점</span></div>
         <div style="font-size:12px;font-weight:700;color:${v.t-v.c?"var(--bad,#d9534f)":"var(--ok,#2e9e5b)"}">${v.t-v.c?`${Math.round((v.t-v.c)*10)/10}개 틀림`:"다 맞음"} <span style="color:var(--ink-3);font-weight:600">(${v.c}/${v.t})</span></div>
         ${V?`<span class="vd ${V.k}" style="font-size:11px;margin-top:4px;display:inline-block">${V.e} ${V.n}</span>`:""}</div>`; }).join("")}</div>
-    ${L.length>1?`<div style="margin-top:16px;font-size:13px;font-weight:800">📈 누적 기록 <span style="font-weight:600;color:var(--ink-3);font-size:11.5px">(${L.length}회 · 평균 ${avg100!=null?avg100+"점":"—"} · 100점 만점)</span></div>
+    ${L.length>1?`<div style="margin-top:16px;font-size:13px;font-weight:800">📈 누적 기록 <span style="font-weight:600;color:var(--ink-3);font-size:11.5px">(${L.length}회${done.length<L.length?` · 전 영역 본 ${done.length}회`:""} · 평균 ${avg100!=null?avg100+"점":"—"} · 100점 만점)</span></div>
     <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px">
       <tr style="color:var(--ink-3);font-size:11.5px;text-align:left"><th style="padding:5px 4px">회차</th><th>날짜</th><th>총점</th><th>틀린 개수</th><th>반 석차</th><th>반 평균</th></tr>
       ${L.slice().reverse().map(x=>`<tr style="border-top:1px solid var(--line,#eee)${x===cur?";font-weight:800":""}"><td style="padding:6px 4px">${esc(x.no)}</td><td>${esc(x.day.slice(5).replace("-","/"))}</td>
-        <td class="num">${x.p100}점</td><td class="num">${Math.round((x.max-x.total)*10)/10}개</td><td class="num">${x.done?`${x.rank}등/${x.n}명`:"—"}</td><td class="num">${x.avg100!=null?x.avg100+"점":"—"}</td></tr>`).join("")}
+        <td class="num">${x.done?x.p100+"점":`<small>일부만 응시</small>`}</td><td class="num">${x.done?Math.round((x.max-x.total)*10)/10+"개":"—"}</td><td class="num">${x.done?`${x.rank}등/${x.n}명`:"—"}</td><td class="num">${x.avg100!=null?x.avg100+"점":"—"}</td></tr>`).join("")}
     </table>`:""}
   </div>`;
 }
@@ -915,7 +921,7 @@ async function render(D){
   if(attLine(D,day,TD)) cmt.push(attLine(D,day,TD));
   const HB=hwBlock(HW,day,TD);
   const CUM=cumulative(D, day), CD=cumDelta(CUM, day);
-  cmt.push(`${nm} ${TD} ${HB&&HB.chk?`숙제 <b>${HB.chk}개 중 ${HB.td}개</b>를 해 왔고, `:""}시험 <b>${tests.length}개</b>의 정답률은 <b>${score}%</b>예요.`
+  cmt.push(`${nm} ${TD} ${HB&&HB.chk?`숙제 <b>${HB.chk}개 중 ${fmtNR(HB.td)}개</b>를 해 왔고, `:""}시험 <b>${tests.length}개</b>의 정답률은 <b>${score}%</b>예요.`
     +(CD.dt!=null?(CD.dt>0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 <b>${CD.dt}점 올랐어요.</b>`:CD.dt<0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 ${-CD.dt}점 내려갔어요.`:` 지난 학습일과 시험 정답률이 같아요.`):"")
     +(CD.dh!=null?(CD.dh>0?` 숙제 완료율은 <b>${CD.dh}점 올랐어요.</b>`:CD.dh<0?` 숙제 완료율은 ${-CD.dh}점 떨어졌어요.`:` 숙제 완료율은 지난번과 같아요.`):"")
     +(CMP?` 반평균은 <b>${CMP.cl}%</b>로, ${CMP.me>=CMP.cl?`<b>${CMP.me-CMP.cl}점 높아요.</b>`:`${CMP.cl-CMP.me}점 낮아요.`}`:""));
@@ -984,11 +990,11 @@ async function render(D){
   <div class="hero">
     <div class="hero-in">
       <div class="duo">
-        <div class="grade"><i>📚 숙제</i><b>${HB&&HB.chk?`${HB.td}<small>/${HB.chk}</small>`:"—"}</b><span>${HB&&HB.pct!=null?`완료 ${HB.pct}%`:HB&&HB.tot?"검사 전":"숙제 없음"}</span></div>
+        <div class="grade"><i>📚 숙제</i><b>${HB&&HB.chk?`${fmtNR(HB.td)}<small>/${HB.chk}</small>`:"—"}</b><span>${HB&&HB.pct!=null?`완료 ${HB.pct}%`:HB&&HB.tot?"검사 전":"숙제 없음"}</span></div>
         <div class="grade"><i>📝 시험</i><b>${tests.length?grade:"—"}</b><span>정답률 ${tests.length?score+"%":"—"}</span></div>
       </div>
       <div>
-        <h1>${HB&&HB.tot?`숙제 <mark>${HB.chk?`${HB.td}/${HB.chk}`:"검사 전"}</mark> · `:""}${tests.length?`시험 <mark>${tests.length}개</mark> 정답률 ${score}%`:(RE.n?`${TD}은 틀린 문제 다시 풀기만 했어요`:`${TD}은 앱 시험 기록이 없어요`)}</h1>
+        <h1>${HB&&HB.tot?`숙제 <mark>${HB.chk?`${fmtNR(HB.td)}/${HB.chk}`:"검사 전"}</mark> · `:""}${tests.length?`시험 <mark>${tests.length}개</mark> 정답률 ${score}%`:(RE.n?`${TD}은 틀린 문제 다시 풀기만 했어요`:`${TD}은 앱 시험 기록이 없어요`)}</h1>
         <p>📅 <b>${fmtDate(day)} · ${esc(mainBook.split(" · ").pop())}</b> 기록만 담았어요${books.length>1?` (이날 다른 과 ${books.length-1}개는 위 칸에서 따로 봐요)`:""}.</p>
       </div>
     </div>
