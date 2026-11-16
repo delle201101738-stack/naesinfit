@@ -902,13 +902,18 @@ let S=(()=>{try{const r=JSON.parse(localStorage.getItem(KEY));return Object.assi
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
 const VD_PASS=90, VD_PART=75;
 const ARR_PASS=85;   // 영작(타이핑) 통과 점수
-/* 🎯 단원별 통과 기준 (content/index.json 단원의 verdict) — {파트:{wrong:[통과까지 틀린 수, 부분재시까지]} 또는 {pct:[통과 %, 부분재시 %]}} */
+/* 🎯 단원별 통과 기준 (content/index.json 단원의 verdict) — {파트:{wrong:[통과까지 틀린 수, 부분재시까지]} 또는 {pct:[통과 %, 부분재시 %]} 또는 {pf:PASS %}} · stay:true면 통재시/FAIL 때 '남아서 완료하세요' */
 function vrule(u, part, c, t){ const R=u&&u.verdict&&u.verdict[part]; if(!R||t==null||c==null||!+t) return null;
+  if(R.pf!=null){ const k=(c/t*100)>=R.pf?"pass":"full"; return {k, n:k==="pass"?"PASS":"FAIL", e:k==="pass"?"✓":"✕", R, stay:!!R.stay&&k==="full"}; }
   const k=R.wrong?((t-c)<=R.wrong[0]?"pass":(t-c)<=R.wrong[1]?"part":"full"):((c/t*100)>=R.pct[0]?"pass":(c/t*100)>=R.pct[1]?"part":"full");
-  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R}; }
+  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R, stay:!!R.stay&&k==="full"}; }
 const VERDICT = (pct,part,c,t) => (part&&vrule(UNIT,part,c,t)) || (pct>=VD_PASS ? {k:"pass", n:"통과",        e:"✓"}
                      : pct>=VD_PART ? {k:"part", n:"부분 재시험", e:"◐"}
                                     : {k:"full", n:"전체 재시험", e:"↻"});
+const vrText = (V,c,t) => !V||!V.R ? "" : V.R.pf!=null ? `정답률 ${Math.round(c/t*100)}% · ${V.R.pf}% 이상 PASS · 그 아래 FAIL`
+  : V.R.wrong ? `틀린 개수 ${t-c}개 · ${V.R.wrong[0]}개까지 통과 · ${V.R.wrong[1]}개까지 부분재시 · 그 이상 통재시`
+  : `${V.R.pct[0]}점 이상 통과 · ${V.R.pct[1]}점 이상 부분재시 · 그 아래 통재시`;
+const STAY_MSG = "🏫 남아서 완료하세요";
 const vdPill = (pct,part,c,t) => { const v=VERDICT(pct,part,c,t); return `<span class="vd ${v.k}">${v.e} ${v.n}</span>`; };
 const lv=()=>Math.floor(S.exp/100)+1;
 const tier=()=>lv()>=7?"플래티넘":lv()>=5?"골드":lv()>=3?"실버":"브론즈";
@@ -1201,7 +1206,11 @@ function renderHome(){
   $("#hero-bar").style.width=pct+"%";
   const LP=livePARTS(), tried=LP.filter(p=>bestOf()[p.id]).length;
   const allDone = tried===LP.length && LP.length>0;
-  $("#hero-vd").innerHTML = !tried ? ""
+  const aV=(C&&C.allInOne&&allDone)?LP.map(p=>{ const b=bestOf()[p.id]; return VERDICT(b.pct,p.id,b.done,b.total); }):null;
+  $("#hero-vd").innerHTML = aV ? (aV.some(v=>v.stay)?`<span class="vd full" style="background:rgba(255,255,255,.22);color:#fff">🏫 남아서 완료</span>`
+      :aV.every(v=>v.k==="pass")?`<span class="vd pass" style="background:rgba(255,255,255,.22);color:#fff">✓ 모두 통과</span>`
+      :`<span class="vd part" style="background:rgba(255,255,255,.22);color:#fff">◐ 일부 재시</span>`)
+    : !tried ? ""
     : allDone ? `<span class="vd ${VERDICT(pct).k}" style="background:rgba(255,255,255,.22);color:#fff">${VERDICT(pct).e} ${VERDICT(pct).n}</span>`
     : `<span class="vd" style="background:rgba(255,255,255,.18);color:#fff">진행 중 ${tried}/${LP.length}</span>`;
   const left=livePARTS().filter(p=>!bestOf()[p.id]);
@@ -1234,6 +1243,16 @@ function renderHome(){
       <span style="font-size:18px">🔢</span>
       <span style="flex:1;min-width:0"><b style="font-size:14px">홀수 번호만 풀기</b><span style="display:block;font-size:12px;color:var(--ink-3);margin-top:2px">${S.odd?"켜짐 · 통변형 밑줄, 40개 이상 단어 시험은 1·3·5…번만":"꺼짐 · 통변형 밑줄·단어(40개 이상) 모두 풀어요"}</span></span>
       <span style="flex:none;width:46px;height:28px;border-radius:14px;background:${S.odd?"var(--accent)":"var(--line-2)"};position:relative;transition:background .2s"><i style="position:absolute;top:3px;left:${S.odd?21:3}px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s"></i></span></div>`;
+  if(C&&C.allInOne){ const LP=livePARTS();
+    const tp=LP.reduce((n,p)=>n+itemsOfX(p.id,"all").reduce((t,i)=>t+pts(p.id,i),0),0);
+    $("#part-count").textContent=LP.length+"개 영역 · 한 번에";
+    $("#part-list").innerHTML=`<button class="part-card" data-allgo="1" style="padding:18px 16px">
+      <span class="ci" style="background:var(--accent);color:#fff;font-size:20px">📝</span>
+      <span style="flex:1"><span class="t" style="font-size:16px">${esc((GH&&GH[0]&&GH[0].t)||"전체")} 응시</span>
+        <span class="s">${LP.map(p=>esc(labelOf(p.id).replace(/\s*\(.*\)\s*$/,""))).join(" → ")} · 이어서 한 번에 · <span class="num">${tp}개 채점</span></span></span>${svg("chev","go")}</button>
+      ${LP.some(p=>bestOf()[p.id])?`<div style="padding:4px 16px 12px">${LP.map(p=>{ const b=bestOf()[p.id]; return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px">
+        <span style="flex:1;min-width:0;color:var(--ink-2)">${esc(labelOf(p.id))}</span>${b?`<span class="num" style="font-weight:800">${b.done}/${b.total}</span>${vdPill(b.pct,p.id,b.done,b.total)}`:`<span style="color:var(--ink-3)">아직</span>`}</div>`; }).join("")}</div>`:""}`;
+  } else
   $("#part-list").innerHTML=livePARTS().map(p=>{
     const all=itemsOfX(p.id,S.scope), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
     const b=bestOf()[p.id];
@@ -1328,6 +1347,7 @@ document.addEventListener("click",e=>{
   if(g){ if(LOCKED) return; S.scope=g.dataset.gs; save(); renderHome();
          toast(`시험 범위: ${SCOPES()[S.scope].label}`); return; }
   if(e.target.closest("[data-oddh]")){ S.odd=!S.odd; save(); renderHome(); toast(S.odd?"🔢 통변형·단어(40개 이상)는 홀수 번호만 풀어요":"모두 풀어요"); return; }
+  if(e.target.closest("[data-allgo]")){ sel.part="all"; sel.scope="all"; startQuiz({all:true}); return; }
   const t=e.target.closest("[data-part]"); if(!t) return;
   sel.part=t.dataset.part; sel.scope=curScope(); renderSetup(); go("setup");
 });
@@ -1452,7 +1472,7 @@ const HOWTO={
  choice:"지문을 바탕으로 한 <b>요약문 추론 · 추론 불가 · 함축 의미</b> 5지선다입니다. 정답 번호 하나를 고르세요.",
  mwrite:"원문 참조 없이, 각 지문의 <b>중요 문장</b>을 단어 배열 + <b>어형 변형</b>으로 완성합니다. 어법 포인트가 힌트로 붙어 있어요. "+ARR_PASS+"점 이상 + 어형 변형이 맞아야 정답.",
  dtv:"구문독해 문장에 나온 단어(구)를 보고 알맞은 <b>우리말 뜻</b>을 4개 중에서 고르세요.",
- dtg:"문장마다 어법상 맞으면 <b>O</b>, 틀리면 <b>X</b>를 누르고 <b>틀린 부분 → 고친 말</b>을 씁니다(예: <b>go → goes</b>). 고친 말만 써도 돼요. X 문장은 고친 말까지 맞아야 정답이고, 문장마다 1점이에요. 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
+ dtg:"문장마다 어법상 맞으면 <b>O</b>, 틀리면 <b>X</b>를 누릅니다. X를 누르면 문장 단어를 누를 수 있어요 — <b>틀린 단어를 눌러 고르고</b>, 그 자리에 들어갈 <b>바른 말</b>을 쓰세요(예: go → <b>goes</b>). X 문장은 틀린 단어와 고친 말이 둘 다 맞아야 정답이고, 문장마다 1점이에요. 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  dtr:"문장을 <b>끊어 읽은 덩어리(①②③…)</b>마다 우리말로 해석을 씁니다. <b>앞에서부터 덩어리 순서대로</b> 옮기면 돼요. 어순·조사·맞춤법은 조금 달라도 괜찮고, <b>핵심 뜻과 구문</b>(수식 방향·접속사 뜻 등)이 맞으면 정답이에요. 칸마다 1점이고, 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  wmean:"표제어를 보고 <b>우리말 뜻</b>을 씁니다. 뜻이 여러 개면 그중 하나만 써도 되고, <b>뜻이 비슷한 말</b>도 정답이에요. 단, <b>품사</b>가 다르면 틀려요(예: preserve → 보존하다·지키다 ○ / 보존 ✕). 자동 채점이 놓친 답은 결과 화면에서 <b>맞게 썼어요</b>로 정답 처리할 수 있어요.",
  wsyn:"왼쪽 표제어마다 뜻이 가장 가까운 <b>유의어(A~T)</b>를 고릅니다. 같은 유의어는 한 번만 쓰여요.",
@@ -1507,17 +1527,19 @@ function startQuiz(opts){
   if(opts.review){
     (opts.part ? [opts.part] : livePARTS().map(p=>p.id))
       .forEach(pid=>wrongItems(pid, !!opts.ever).forEach(it=>list.push({part:pid, it})));
+  } else if(opts.all){
+    livePARTS().forEach(p=>itemsOfX(p.id,"all").forEach(it=>list.push({part:p.id, it})));
   } else {
     list=itemsOfX(sel.part, sel.scope).map(it=>({part:sel.part, it}));
   }
   if(!list.length){toast("문항이 없어요"); return;}
-  if(S.shuffle){   // 🔀 섞어서 응시: 문항(단락) 순서 + 단어 뜻·유의어 쓰기는 단어 순서까지
+  if(S.shuffle && !opts.all){   // 🔀 섞어서 응시: 문항(단락) 순서 + 단어 뜻·유의어 쓰기는 단어 순서까지
     list=shuffleGroups(list);
     list=list.map(x=>(x.part==="wmean"||x.part==="wsynw"||isWsP(x.part))&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
     list=list.map(x=>x.part==="tf"&&Array.isArray(x.it.st)&&x.it.st.length>1?{part:x.part, it:shuffleTF(x.it)}:x);   // T/F 문장 순서도 섞음
   }
   const items=list.map(x=>x.it);
-  Q={review:!!opts.review, part: opts.review ? (opts.part||"review") : sel.part,
+  Q={review:!!opts.review, all:!!opts.all, part: opts.review ? (opts.part||"review") : opts.all ? "all" : sel.part,
      items, pl:list.map(x=>x.part), i:0, t0:Date.now(), rk:rsKey(opts), scope:sel.scope, odd:!opts.review && oddOn(sel.part)};
   Q.ans=list.map(x=>blankAns(x.part,x.it));
   Q.cur=list.map(()=>0);
@@ -1537,7 +1559,7 @@ function blankAns(part,it){
   if(isClozeP(part)) return it.blanks.map(()=>"");
   if(isChoiceP(part)) return multiAns(it)?[]:null;
   if(part==="wmean"||part==="dtr") return it.rows.map(()=>"");
-  if(part==="dtg") return it.rows.map(()=>({ox:null,t:""}));
+  if(part==="dtg") return it.rows.map(()=>({ox:null,w:null,t:""}));
   if(isWsP(part)) return it.rows.map(()=>null);
   if(part==="wsynw") return it.rows.map(()=>"");
   if(part==="wdef") return ["",""];
@@ -1579,7 +1601,7 @@ function rsSave(){ if(!Q||Q.detail||!Q.rk||!rsTouched()) return;
 function rsDel(k){ const o=rsAll(); if(o[k]){ delete o[k]; rsPut(o); } }
 function rsResume(k){ const sv=rsAll()[k]; if(!sv) return false;
   clearInterval(Q&&Q.timer);
-  Q=Object.assign({review:!!sv.review, part:sv.part, t0:Date.now()-(sv.el||0), rk:k, scope:sv.scope}, sv.q);
+  Q=Object.assign({review:!!sv.review, all:sv.part==="all", part:sv.part, t0:Date.now()-(sv.el||0), rk:k, scope:sv.scope}, sv.q);
   Q.cur ||= Q.items.map(()=>0); Q.bd ||= Q.items.map(()=>[]); Q.af ||= {}; Q.notes ||= Q.items.map(()=>({why:"",voc:""}));
   if(!Q.review){ sel.part=sv.part; if(sv.scope) sel.scope=sv.scope; }
   Q.i=Math.min(Math.max(0,Q.i|0),Q.items.length-1);
@@ -1596,7 +1618,7 @@ function renderResume(){ const el=document.getElementById("resume-slot"); if(!el
   if(!L.length){ el.innerHTML=""; return; }
   const ago=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.round(m/1440)+"일 전"; };
   el.innerHTML=`<div style="margin-top:22px"><div class="sec"><h2>⏸ 풀다 만 시험</h2><span class="more">누르면 그 문제부터 이어서</span></div>
-    <div class="card" style="padding:6px 0">${L.map(([k,v])=>{ const nm=v.review?("오답노트 · "+(v.part&&v.part!=="review"&&P[v.part]?labelOf(v.part):"전체")):(P[v.part]?labelOf(v.part):v.part);
+    <div class="card" style="padding:6px 0">${L.map(([k,v])=>{ const nm=v.review?("오답노트 · "+(v.part&&v.part!=="review"&&P[v.part]?labelOf(v.part):"전체")):v.part==="all"?(((C&&C.groups&&C.groups[0])||{}).t||"전체")+" 한 번에 응시":(P[v.part]?labelOf(v.part):v.part);
       const pct=Math.round(v.i/v.n*100);
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px">
         <button data-rs="${esc(k)}" style="flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer">
@@ -1681,14 +1703,17 @@ function renderQ(){
         <div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="font-size:14px;line-height:1.5"><b style="color:var(--accent)">${esc(r.n)}</b> ${esc(r.w)}</div>
           <input class="cz-in" data-wm="${i}" value="${esc(a[i]||"")}" placeholder="우리말 해석" autocomplete="off" spellcheck="false" style="margin-top:6px;width:100%"></div>`).join("")}</div>`;
   } else if(part==="dtg"){
-    body=`${tag}<p class="q-stem">${stemOf("어법상 맞으면 <b>O</b>, 틀리면 <b>X</b>를 누르고 <b>틀린 부분 → 고친 말</b>을 쓰세요.")}</p>
-      <div class="card" style="margin-top:14px;padding:6px 16px">${it.rows.map((r,i)=>{ const m=a[i]||{};
+    body=`${tag}<p class="q-stem">${stemOf("어법상 맞으면 <b>O</b>, 틀리면 <b>X</b>를 누르고 <b>틀린 단어를 눌러</b> 바르게 고쳐 쓰세요.")}</p>
+      <div class="card" style="margin-top:14px;padding:6px 16px">${it.rows.map((r,i)=>{ const m=a[i]||{}, X=m.ox==="X", tk=String(r.en).split(/\s+/);
+        const sent=X ? tk.map((t,k)=>`<button data-gw="${i}" data-k="${k}" style="display:inline;padding:1px 3px;margin:1px 0;border-radius:5px;font:inherit;line-height:1.9;${m.w===k?"background:var(--cat-3);color:#fff;font-weight:700;text-decoration:line-through":"background:var(--cat-3-s);color:var(--ink)"}">${esc(t)}</button>`).join(" ") : esc(r.en);
         return `<div style="padding:12px 0;border-bottom:1px solid var(--line)">
-          <div style="font-size:14.5px;line-height:1.65"><b style="color:var(--accent);margin-right:6px">${esc(r.n)}</b>${esc(r.en)}</div>
+          <div style="font-size:14.5px;line-height:1.65"><b style="color:var(--accent);margin-right:6px">${esc(r.n)}</b>${sent}</div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="ord${m.ox==="O"?" on":""}" data-gx="${i}" data-v="O" style="flex:1;justify-content:center;margin:0">⭕ 맞음</button>
             <button class="ord${m.ox==="X"?" on":""}" data-gx="${i}" data-v="X" style="flex:1;justify-content:center;margin:0">❌ 틀림</button></div>
-          ${m.ox==="X"?`<input class="cz-in" data-gt="${i}" value="${esc(m.t||"")}" placeholder="틀린 부분 → 고친 말 (예: go → goes)" autocomplete="off" spellcheck="false" autocapitalize="off" style="margin-top:8px;width:100%">`:""}
+          ${!X?"":m.w==null?`<p class="hint" style="margin-top:8px;color:var(--cat-3);font-weight:700">👆 위 문장에서 틀린 단어를 눌러 주세요</p>`
+            :`<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:14px;white-space:nowrap"><s>${esc(tk[m.w].replace(/[.,!?;:]+$/,""))}</s> →</span>
+              <input class="cz-in" data-gt="${i}" value="${esc(m.t||"")}" placeholder="바르게 고친 말" autocomplete="off" spellcheck="false" autocapitalize="off" style="flex:1;min-width:0"></div>`}
         </div>`; }).join("")}</div>`;
   } else if(part==="dtv"){
     body=`${tag}<p class="q-stem">${esc(it.stem)}</p>
@@ -2235,8 +2260,10 @@ $("#quiz-body").addEventListener("click",e=>{
   if(tf){ a[+tf.parentNode.dataset.tf]=tf.dataset.v;
     Array.from(tf.parentNode.children).forEach(x=>x.classList.toggle("on",x===tf)); return; }
   const gx=e.target.closest("[data-gx]");
-  if(gx){ const k=+gx.dataset.gx, m=a[k]||(a[k]={ox:null,t:""}); m.ox=gx.dataset.v; const y=window.scrollY; renderQ(); window.scrollTo(0,y);
-    if(m.ox==="X"){ const f=document.querySelector(`[data-gt="${k}"]`); if(f) f.focus({preventScroll:true}); }
+  if(gx){ const k=+gx.dataset.gx, m=a[k]||(a[k]={ox:null,w:null,t:""}); m.ox=gx.dataset.v; const y=window.scrollY; renderQ(); window.scrollTo(0,y); return; }
+  const gw=e.target.closest("[data-gw]");
+  if(gw){ const k=+gw.dataset.gw, w=+gw.dataset.k, m=a[k]||(a[k]={ox:"X",w:null,t:""}); m.w=(m.w===w?null:w); const y=window.scrollY; renderQ(); window.scrollTo(0,y);
+    if(m.w!=null){ const f=document.querySelector(`[data-gt="${k}"]`); if(f) f.focus({preventScroll:true}); }
     return; }
   const chb=e.target.closest("[data-ch]");
   if(chb){ const v=+chb.dataset.ch;
@@ -2280,7 +2307,7 @@ $("#quiz-body").addEventListener("input",e=>{
   const wm=e.target.closest("[data-wm]");
   if(wm){ Q.ans[Q.i][+wm.dataset.wm]=wm.value; }
   const gt=e.target.closest("[data-gt]");
-  if(gt){ (Q.ans[Q.i][+gt.dataset.gt] ||= {ox:"X",t:""}).t=gt.value; }
+  if(gt){ (Q.ans[Q.i][+gt.dataset.gt] ||= {ox:"X",w:null,t:""}).t=gt.value; }
   const tfx=e.target.closest("[data-tfx]");
   if(tfx){ dpOf(Q.i).fx[+tfx.dataset.tfx]=tfx.value; syncCta(); }
   const ulm=e.target.closest("[data-ulm]");
@@ -2418,10 +2445,11 @@ function grade(part,it,a,gi){
     it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
       d.push({ok:dtrMatch(mine,r), label:`${r.n} ${r.w}`, mine:mine||"무응답", right:r.ko, ex:[r.pt, i===it.rows.length-1?"전체 해석: "+it.ko:""].filter(Boolean).join(" · ")||undefined}); });
   } else if(part==="dtg"){
-    it.rows.forEach((r,i)=>{ const m=a[i]||{}, t=String(m.t||"").trim();
-      const ok=r.ans==="O" ? m.ox==="O" : (m.ox==="X" && dtgMatch(t,r));
-      d.push({ok, label:`${r.n}`, q:r.en, self:r.ans==="X"&&m.ox==="X"&&!!t,
-        mine:m.ox==null?"무응답":m.ox==="O"?"O (맞음)":`X · ${t||"(고친 말 안 씀)"}`,
+    it.rows.forEach((r,i)=>{ const m=a[i]||{}, t=String(m.t||"").trim(), tk=String(r.en).split(/\s+/), hit=dtgHit(r,m);
+      const pw=m.w!=null&&tk[m.w]?tk[m.w].replace(/[.,!?;:]+$/,""):"";
+      const ok=r.ans==="O" ? m.ox==="O" : (m.ox==="X" && hit && dtgMatch(t,r));
+      d.push({ok, label:`${r.n}`, q:r.en, self:r.ans==="X"&&m.ox==="X"&&hit&&!!t,
+        mine:m.ox==null?"무응답":m.ox==="O"?"O (맞음)":`X · ${pw?pw+" → "+(t||"(고친 말 안 씀)"):"(틀린 단어 안 고름)"}${pw&&!hit&&r.ans==="X"?" · 틀린 단어를 잘못 고름":""}`,
         right:r.ans==="O"?"O (맞는 문장)":`X · ${r.wrong} → ${r.fix.slice(0,3).join(" / ")}`, ex:r.ex}); });
   } else if(isWsP(part)){
     it.rows.forEach((r,i)=>d.push({ok:a[i]===r.ans, label:part==="dfa"?`${r.n}. ${String(r.w).slice(0,40)}…`:r.w,
@@ -2447,6 +2475,8 @@ function grade(part,it,a,gi){
 }
 /* 어법 O/X 고치기: '틀린 말 → 고친 말'의 오른쪽(또는 쓴 말 전체)이 허용 답과 같으면 바로 정답, 나머지(문장 통째로 고쳐 쓴 것 등)는 AI 판정 */
 const dtgNorm=t=>String(t||"").toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/[^a-z' ]/g," ").replace(/\s+/g," ").trim();
+function dtgHit(r,m){ if(m.w==null) return false; const tk=String(r.en).split(/\s+/);
+  const wi=(r.wi!=null&&r.wi>=0)?r.wi:tk.findIndex(t=>t.replace(/[^A-Za-z']/g,"")===r.wrong); return m.w===wi; }
 function dtgMatch(mine, r){ if(!mine) return false; const parts=String(mine).split(/→|->|=>|>|:|⇒/), right=dtgNorm(parts[parts.length-1]);
   return !!right && r.fix.some(f=>dtgNorm(f)===right); }
 /* 직독직해 덩어리: 띄어쓰기·문장부호·물결(~)만 빼고 모범 해석/허용 답과 같으면 바로 정답, 나머지는 AI 판정 */
@@ -2460,8 +2490,8 @@ function aiCands(){
     const add=(j,o)=>{ if(d[j]&&!d[j].ok&&String(o.answer||"").trim()) C.push({i,j,...o}); };
     if(p==="wmean") it.rows.forEach((r,j)=>add(j,{kind:"meaning", word:r.w, expected:(r.kp?[r.kp]:[r.ko]).concat(r.koAlt||[]).slice(0,8).join(" / "), answer:a[j]}));
     else if(p==="dtr") it.rows.forEach((r,j)=>add(j,{kind:"chunk", word:r.w, context:T("문장: "+it.en+" | 전체 해석: "+(it.ko||""),400), meaning:r.pt||"", expected:[r.ko].concat(r.koAlt||[]).slice(0,5).join(" / "), answer:a[j]}));
-    else if(p==="dtg") it.rows.forEach((r,j)=>{ const m=a[j]||{}; if(r.ans!=="X"||m.ox!=="X") return;
-        add(j,{kind:"fix", context:T(r.en,400), wrong:r.wrong, expected:r.fix.slice(0,6).join(" / "), meaning:T("어법: "+r.ex,80), answer:m.t}); });
+    else if(p==="dtg") it.rows.forEach((r,j)=>{ const m=a[j]||{}; if(r.ans!=="X"||m.ox!=="X"||!dtgHit(r,m)) return;
+        add(j,{kind:"fix", context:T(String(r.en).split(/\s+/).map((t,k)=>k===m.w?"[["+t+"]]":t).join(" "),400), wrong:r.wrong, expected:r.fix.slice(0,6).join(" / "), meaning:T("어법: "+r.ex,80), answer:m.t}); });
     else if(p==="wsynw") it.rows.forEach((r,j)=>add(j,{kind:"synonym", word:r.w, meaning:r.ko||"", expected:(r.ans||[r.syn].concat(r.alt||[])).filter(Boolean).join(", "), answer:a[j]}));
     else if(p==="wdef") add(1,{kind:"synonym", word:it.hw, meaning:T((it.en||"")+" / "+(it.ko||""),200), expected:[it.syn].concat(it.synAlt||[]).filter(Boolean).join(", "), answer:a[1]});
     else if(p==="cloze") it.blanks.forEach((b,j)=>{ const tx=String(it.text||it.body||""), k="«"+(j+1)+"»", at=tx.indexOf(k);
@@ -2512,6 +2542,21 @@ function tally(){
   Q.detail.forEach(ds=>ds.forEach(x=>{t++; if(x.ok)c++;}));
   return {t,c,pct:t?Math.round(c/t*100):0};
 }
+function allSecs(){ return [...new Set(Q.pl)].map(p=>{ let t=0,c=0, idx=[];
+    Q.detail.forEach((ds,i)=>{ if(Q.pl[i]!==p) return; idx.push(i); ds.forEach(x=>{t++; if(x.ok)c++;}); });
+    const pct=t?Math.round(c/t*100):0; return {p,t,c,pct,idx,v:VERDICT(pct,p,c,t)}; }); }
+function allCardHTML(secs){ const L=allSecs(), stay=L.filter(x=>x.v.stay), fail=L.filter(x=>x.v.k!=="pass");
+  return `<div style="font-size:15px;font-weight:800;letter-spacing:-.01em">${esc(((C&&C.groups&&C.groups[0])||{}).t||"전체")} · 영역별 결과</div>
+    <div style="margin-top:12px;text-align:left">${L.map(x=>`<div style="padding:10px 0;border-top:1px solid var(--line)">
+      <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;min-width:0;font-size:14px;font-weight:700">${esc(labelOf(x.p))}</span>
+        <span class="num" style="font-size:15px;font-weight:800">${x.c}/${x.t}</span><span class="vd ${x.v.k}">${x.v.e} ${x.v.n}</span></div>
+      <div style="font-size:12px;color:var(--ink-3);margin-top:3px">${esc(vrText(x.v,x.c,x.t))}</div></div>`).join("")}</div>
+    ${stay.length?`<div style="margin-top:12px;padding:14px;border-radius:14px;background:var(--no-soft,#fdecec);color:var(--no);font-weight:800;font-size:17px">${STAY_MSG}
+       <div style="font-size:12.5px;font-weight:600;margin-top:4px">${stay.map(x=>esc(labelOf(x.p).replace(/\s*\(.*\)\s*$/,""))+" "+x.v.n).join(" · ")}</div></div>`
+     :!fail.length?`<div style="margin-top:12px;font-size:14px;font-weight:700;color:var(--ok)">🎉 모든 영역 통과! 수고했어요</div>`:""}
+    <div class="score-sub num" style="margin-top:10px">${Math.floor(secs/60)}분 ${secs%60}초</div>
+    <div class="gain">⚡ +${10+L.reduce((n,x)=>n+x.c,0)*2} XP</div>
+    <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`; }
 function showResult(){
   const part=Q.part, {t,c,pct}=tally();
   const V=VERDICT(pct, Q.review?null:part, c, t);
@@ -2525,12 +2570,14 @@ function showResult(){
         stroke-dasharray="${cc}" stroke-dashoffset="${cc*(1-pct/100)}" style="transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)"/>
     </svg><div class="val"><b>${pct}<span style="font-size:18px">%</span></b><span>정답률</span></div></div>
     <div style="margin-top:14px"><span class="vd vd-big ${V.k}">${V.e} ${V.n}</span></div>
-    <div class="score-msg">${V.R?(V.R.wrong?`틀린 개수 ${t-c}개 · ${V.R.wrong[0]}개까지 통과 · ${V.R.wrong[1]}개까지 부분재시 · 그 이상 통재시`:`${V.R.pct[0]}점 이상 통과 · ${V.R.pct[1]}점 이상 부분재시 · 그 아래 통재시`)
+    ${V.stay?`<div style="margin-top:10px;font-size:17px;font-weight:800;color:var(--no)">${STAY_MSG}</div>`:""}
+    <div class="score-msg">${V.R?vrText(V,c,t)
       :V.k==="pass"?"기준(90점) 넘겼어요. 이 파트는 통과!"
       :V.k==="part"?"조금만 더예요 · 틀린 문항만 다시 풀면 통과":"기준(75점) 미만이라 처음부터 다시 풀어야 해요"}</div>
-    <div class="score-sub num">${Q.review?"오답노트":labelOf(part)} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
+    <div class="score-sub num">${Q.review?"오답노트":Q.all?"전체":labelOf(part)} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
     <div class="gain">⚡ +${10+c*2} XP</div>
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`;
+  if(Q.all) $("#score-card").innerHTML=allCardHTML(secs);
 
   $("#review-list").innerHTML=Q.items.map((it,i)=>{
     if((Q.oor||{})[i]) return `<div class="rv"><div class="rv-h" style="cursor:default"><span class="mark" style="background:var(--surface-3);color:var(--ink-3)">🚫</span>
@@ -2564,7 +2611,11 @@ function showResult(){
 
   // 기록 저장
   S.exp+=10+c*2;
-  if(!Q.review){
+  if(Q.all){ const L=allSecs(), sc=SCOPES()[sel.scope]?.short||sel.scope;
+    L.forEach((x,k)=>{ const a={d:todayKey(), unit:unitLabel(), part:x.p, partName:labelOf(x.p), scope:sc, total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t))};
+      if(Q.att&&Q.att[k]) Object.assign(Q.att[k],a); else { S.attempts.push(a); (Q.att ||= [])[k]=a; }
+      const b=bestOf()[x.p]; if(!b || x.pct>b.pct) bestOf()[x.p]={done:x.c,total:x.t,pct:x.pct,scope:sc}; });
+  } else if(!Q.review){
     S.attempts.push({d:todayKey(), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
              scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs});
     const b=bestOf()[part];
@@ -2575,6 +2626,15 @@ function showResult(){
   { const wp=(P[part]&&wrongCount(part))||0; $("#result-retry").textContent = wp ? `틀린 것만 다시 · ${wp}개` : "오답노트 보기"; }
   go("result");
 
+  const detOf=idx=>idx.map(i=>{ const it=Q.items[i];
+        const row={no:it.no, sec:(secLab(it.sec)),
+          d:Q.detail[i].map(x=>Object.assign(x.ok?(x.so?{l:x.label,ok:1,so:1,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)}:{l:x.label,ok:1}):{l:x.label,ok:0,m:String(x.mine).slice(0,80),r:String(x.right).slice(0,80)}, x.tag?{t:String(x.tag).slice(0,12)}:{}, x.ai?{ai:1,m:String(x.mine).slice(0,80)}:{}))};
+        return row; });
+  if(!Q.sent && Q.all){
+    Q.sent=true;
+    allSecs().forEach(x=>submitResult({student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
+      part:x.p, partName:labelOf(x.p), scope:"전체 한 번에", total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t)), detail:detOf(x.idx)}));
+  }
   if(!Q.sent){
     Q.sent=true;
     submitResult({
@@ -2602,7 +2662,7 @@ $("#review-list").addEventListener("click",e=>{
       Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
       if(!(Q.del||{})[i]) markWrong(Q.pl[i], Q.items[i], bad); })();
     const {t,c,pct}=tally();
-    if(!Q.review){
+    if(!Q.review && !Q.all){
       const b=bestOf()[Q.part]; if(!b||pct>b.pct) bestOf()[Q.part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
       const la=S.attempts[S.attempts.length-1]; if(la){la.correct=c; la.pct=pct;}
     }

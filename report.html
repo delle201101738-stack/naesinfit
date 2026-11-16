@@ -376,8 +376,9 @@ async function load(name){
 }
 /* 🎯 단원별 통과 기준 (content/index.json 단원의 verdict) — {파트:{wrong:[통과까지 틀린 수, 부분재시까지]} 또는 {pct:[통과 %, 부분재시 %]}} */
 function vrule(u, part, c, t){ const R=u&&u.verdict&&u.verdict[part]; if(!R||t==null||c==null||!+t) return null;
+  if(R.pf!=null){ const k=(c/t*100)>=R.pf?"pass":"full"; return {k, n:k==="pass"?"PASS":"FAIL", e:k==="pass"?"✓":"✕", R, stay:!!R.stay&&k==="full"}; }
   const k=R.wrong?((t-c)<=R.wrong[0]?"pass":(t-c)<=R.wrong[1]?"part":"full"):((c/t*100)>=R.pct[0]?"pass":(c/t*100)>=R.pct[1]?"part":"full");
-  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R}; }
+  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R, stay:!!R.stay&&k==="full"}; }
 function unitByBook(book, uid){
   if(uid) for(const b of (MF.books||[])) for(const u of (b.units||[]))      // 저장된 단원 id가 있으면 그게 정답
     if(u.id===String(uid).replace(/ak$/,"")) return {b,u};

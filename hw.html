@@ -1106,8 +1106,9 @@ function oneLine(s, items, chk){
 /* 🏫 반(학교)별 시험범위 체크 — 학생 앱 교재 목록에 체크한 단원만 '내 학교 시험범위'로 보임 */
 /* 🎯 단원별 통과 기준 (content/index.json 단원의 verdict) — {파트:{wrong:[통과까지 틀린 수, 부분재시까지]} 또는 {pct:[통과 %, 부분재시 %]}} */
 function vrule(u, part, c, t){ const R=u&&u.verdict&&u.verdict[part]; if(!R||t==null||c==null||!+t) return null;
+  if(R.pf!=null){ const k=(c/t*100)>=R.pf?"pass":"full"; return {k, n:k==="pass"?"PASS":"FAIL", e:k==="pass"?"✓":"✕", R, stay:!!R.stay&&k==="full"}; }
   const k=R.wrong?((t-c)<=R.wrong[0]?"pass":(t-c)<=R.wrong[1]?"part":"full"):((c/t*100)>=R.pct[0]?"pass":(c/t*100)>=R.pct[1]?"part":"full");
-  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R}; }
+  return {k, n:{pass:"통과",part:"부분재시",full:"통재시"}[k], e:{pass:"✓",part:"◐",full:"↻"}[k], R, stay:!!R.stay&&k==="full"}; }
 const unitOf=uid=>{ if(!MANI||!uid) return null; for(const b of MANI.books||[]) for(const u of b.units||[]) if(u.id===uid) return u; return null; };
 let MANI=null;
 async function manifest(){ if(MANI) return MANI; const r=await fetch("content/index.json",{cache:"no-store"}); MANI=await r.json(); return MANI; }
