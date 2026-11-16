@@ -2488,7 +2488,7 @@ function aiCands(){
   const C=[], T=(v,n)=>String(v||"").replace(/\s+/g," ").trim().slice(0,n||300);
   Q.items.forEach((it,i)=>{ const p=Q.pl[i], a=Q.ans[i], d=Q.detail[i];
     const add=(j,o)=>{ if(d[j]&&!d[j].ok&&String(o.answer||"").trim()) C.push({i,j,...o}); };
-    if(p==="wmean") it.rows.forEach((r,j)=>add(j,{kind:"meaning", word:r.w, expected:(r.kp?[r.kp]:[r.ko]).concat(r.koAlt||[]).slice(0,8).join(" / "), answer:a[j]}));
+    if(p==="wmean") it.rows.forEach((r,j)=>add(j,{kind:(C&&C.lenient)?"meaningL":"meaning", word:r.w, expected:(r.kp?[r.kp]:[r.ko]).concat(r.koAlt||[]).slice(0,8).join(" / "), answer:a[j]}));
     else if(p==="dtr") it.rows.forEach((r,j)=>add(j,{kind:"chunk", word:r.w, context:T("문장: "+it.en+" | 전체 해석: "+(it.ko||""),400), meaning:r.pt||"", expected:[r.ko].concat(r.koAlt||[]).slice(0,5).join(" / "), answer:a[j]}));
     else if(p==="dtg") it.rows.forEach((r,j)=>{ const m=a[j]||{}; if(r.ans!=="X"||m.ox!=="X"||!dtgHit(r,m)) return;
         add(j,{kind:"fix", context:T(String(r.en).split(/\s+/).map((t,k)=>k===m.w?"[["+t+"]]":t).join(" "),400), wrong:r.wrong, expected:r.fix.slice(0,6).join(" / "), meaning:T("어법: "+r.ex,80), answer:m.t}); });
