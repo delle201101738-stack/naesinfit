@@ -260,7 +260,7 @@ export async function dtStand(student, unitId) {
              to_char(created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') as day,
              max(total) over (partition by unit_id, part) as mt
       from attempts
-      where unit_id like 'dt%' and scope <> '재시험' and part_name not like '오답노트%' and total > 0
+      where unit_id like 'dt%' and part in ('wmean', 'dtv', 'dtr', 'dtg') and scope <> '재시험' and part_name not like '오답노트%' and total > 0
     ), f as (
       select *, min(day) over (partition by student, unit_id, part) as fd from x where total = mt
     )
