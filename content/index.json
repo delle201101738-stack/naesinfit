@@ -1322,12 +1322,17 @@
     {
      "id": "m1610g1",
      "no": "20–24번",
-     "title": "본교재 단어 TEST",
+     "title": "단어+올킬",
      "file": "content/m1610g1.json",
      "pts": {
-      "wmean": 68
+      "wmean": 68,
+      "cloze": 15,
+      "tf": 50,
+      "choice": 20,
+      "order": 10,
+      "insert": 10
      },
-     "total": 68,
+     "total": 173,
      "labels": {}
     },
     {
