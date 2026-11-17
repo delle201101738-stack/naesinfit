@@ -256,15 +256,17 @@ export async function dtStand(student, unitId) {
   const names = [...new Set(mem.map(m => m.student).concat([student]))];
   const rows = await sql`
     with x as (
-      select student, unit_id, part, total, coalesce(score, correct)::float as c, created_at,
+      select student, unit_id, part, total, scope, coalesce(score, correct)::float as c, created_at,
              to_char(created_at at time zone 'Asia/Seoul', 'YYYY-MM-DD') as day,
-             max(total) over (partition by unit_id, part) as mt
+             coalesce(max(total) filter (where scope <> '지필') over (partition by unit_id, part),
+                      max(total) over (partition by unit_id, part)) as mt   -- 영역 전체 길이 = 앱 응시 기준(지필 만점이 달라도 앱 기록이 빠지지 않게)
       from attempts
       where unit_id like 'dt%' and part in ('wmean', 'dtv', 'dtr', 'dtg') and scope <> '재시험' and part_name not like '오답노트%' and total > 0
     ), f as (
-      select *, min(day) over (partition by student, unit_id, part) as fd from x where total = mt
+      select *, min(day) over (partition by student, unit_id, part) as fd from x where total = mt or scope = '지필'
     )
-    select distinct on (student, unit_id, part) student, unit_id, part, total, c, created_at
+    select distinct on (student, unit_id, part) student, unit_id, part, mt as total,
+           case when total = mt then c else c * mt / total end as c, created_at   -- 지필 만점이 다르면 앱 만점으로 환산
     from f where day = fd and student = any(${names})
     order by student, unit_id, part, c desc, created_at asc`;
   const R = rows.filter(r => !unitId || r.unit_id === unitId);
