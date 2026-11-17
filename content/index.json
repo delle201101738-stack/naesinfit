@@ -1322,17 +1322,18 @@
     {
      "id": "m1610g1",
      "no": "20–24번",
-     "title": "단어+올킬",
+     "title": "단어+통변형+올킬",
      "file": "content/m1610g1.json",
      "pts": {
       "wmean": 68,
+      "word": 74,
       "cloze": 15,
       "tf": 50,
       "choice": 20,
       "order": 10,
       "insert": 10
      },
-     "total": 173,
+     "total": 247,
      "labels": {}
     },
     {
