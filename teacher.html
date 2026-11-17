@@ -429,7 +429,7 @@ const isDtBi=bi=>bi!==OTHER&&!!unitsAll()[+bi]&&/^dt/.test(unitsAll()[+bi].id);
 function dtCols(bi){ const x=unitsAll()[+bi]; if(!x) return; const P=x.u.pts||{};
   DTP.filter(([p])=>P[p]).forEach(([p,nm])=>{ if(COLS.some(c=>c.part===p&&c.bi===bi)) return;
     const empty=COLS.find(c=>!c.orig&&!c.name&&!Object.keys(PD).some(k=>k.startsWith(c.k+"|")));
-    const c=empty||newCol(""); c.bi=bi; c.name=nm; c.total=String(P[p]); c.part=p; if(!empty) COLS.push(c); }); }
+    const c=empty||newCol(""); c.bi=bi; c.name=nm; c.total=String((x.u.paperPts||{})[p]||P[p]); c.part=p; if(!empty) COLS.push(c); }); }
 function loadCols(){   // 이 반 · 이날 이미 넣은 지필 시험 → 칸으로
   const ms=new Set(membersOf(PF.cid)), g={};
   paperRows().forEach(r=>{ if(!ms.has(r.student)||dKST(r.created_at)!==PF.day) return;
