@@ -266,7 +266,7 @@ export async function dtStand(student, unitId) {
       select *, min(day) over (partition by student, unit_id, part) as fd from x where total = mt or scope = '지필'
     )
     select distinct on (student, unit_id, part) student, unit_id, part, mt as total,
-           case when total = mt then c else c * mt / total end as c, created_at   -- 지필 만점이 다르면 앱 만점으로 환산
+           case when total = mt then c else c * mt / total end as c, c as oc, total as ot, created_at   -- 지필 만점이 다르면 앱 만점으로 환산(총점·석차용), 영역 칸은 원래 점수(oc/ot)
     from f where day = fd and student = any(${names})
     order by student, unit_id, part, c desc, created_at asc`;
   const R = rows.filter(r => !unitId || r.unit_id === unitId);
@@ -274,7 +274,7 @@ export async function dtStand(student, unitId) {
   R.forEach(r => { (parts[r.unit_id] ||= {})[r.part] = r.total; });
   const per = {};   // unit → student → {c, parts, at}
   R.forEach(r => { const u = (per[r.unit_id] ||= {}), s = (u[r.student] ||= { c: 0, t: 0, n: 0, at: r.created_at, ps: {} });
-    s.c += r.c; s.t += r.total; s.n++; s.ps[r.part] = { c: Math.round(r.c * 10) / 10, t: r.total }; if (new Date(r.created_at) < new Date(s.at)) s.at = r.created_at; });
+    s.c += r.c; s.t += r.total; s.n++; s.ps[r.part] = { c: Math.round(r.oc * 10) / 10, t: r.ot }; if (new Date(r.created_at) < new Date(s.at)) s.at = r.created_at; });
   const out = [], r1 = v => Math.round(v * 10) / 10;
   for (const u of Object.keys(per).sort()) {
     const P = parts[u], np = Object.keys(P).length, max = Object.values(P).reduce((a, b) => a + b, 0), mine = per[u][student];
