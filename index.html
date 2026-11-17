@@ -1241,7 +1241,7 @@ function renderHome(){
   const firstSeg=(livePARTS().find(p=>oddAble(p.id))||{}).id;
   const oddBar=()=>`<div class="card" data-oddh="1" style="margin:8px 16px 6px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer">
       <span style="font-size:18px">🔢</span>
-      <span style="flex:1;min-width:0"><b style="font-size:14px">홀수 번호만 풀기</b><span style="display:block;font-size:12px;color:var(--ink-3);margin-top:2px">${S.odd?"켜짐 · 통변형 밑줄, 40개 이상 단어 시험은 1·3·5…번만":"꺼짐 · 통변형 밑줄·단어(40개 이상) 모두 풀어요"}</span></span>
+      <span style="flex:1;min-width:0"><b style="font-size:14px">홀수 번호만 풀기</b><span style="display:block;font-size:12px;color:var(--ink-3);margin-top:2px">${S.odd?"켜짐 · 통변형 밑줄, 올킬, 40개 이상 단어 시험은 1·3·5…번만":"꺼짐 · 통변형 밑줄·올킬·단어(40개 이상) 모두 풀어요"}</span></span>
       <span style="flex:none;width:46px;height:28px;border-radius:14px;background:${S.odd?"var(--accent)":"var(--line-2)"};position:relative;transition:background .2s"><i style="position:absolute;top:3px;left:${S.odd?21:3}px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s"></i></span></div>`;
   if(C&&C.allInOne){ const LP=livePARTS();
     const tp=LP.reduce((n,p)=>n+itemsOfX(p.id,"all").reduce((t,i)=>t+pts(p.id,i),0),0);
@@ -1347,7 +1347,7 @@ document.addEventListener("click",e=>{
   const g=e.target.closest("[data-gs]");
   if(g){ if(LOCKED) return; S.scope=g.dataset.gs; save(); renderHome();
          toast(`시험 범위: ${SCOPES()[S.scope].label}`); return; }
-  if(e.target.closest("[data-oddh]")){ S.odd=!S.odd; save(); renderHome(); toast(S.odd?"🔢 통변형·단어(40개 이상)는 홀수 번호만 풀어요":"모두 풀어요"); return; }
+  if(e.target.closest("[data-oddh]")){ S.odd=!S.odd; save(); renderHome(); toast(S.odd?"🔢 통변형·올킬·단어(40개 이상)는 홀수 번호만 풀어요":"모두 풀어요"); return; }
   if(e.target.closest("[data-allgo]")){ sel.part="all"; sel.scope="all"; startQuiz({all:true}); return; }
   const t=e.target.closest("[data-part]"); if(!t) return;
   sel.part=t.dataset.part; sel.scope=curScope(); renderSetup(); go("setup");
@@ -1357,15 +1357,17 @@ document.addEventListener("click",e=>{
 const isWordP = p => /^(wmean|wsyn|wsynw|dfa|wdef|dfb|vdc1|vdc2|vdm1|vdm2|vdm3|vdt1|vdt2|vds|vmc|vmcr)$/.test(p);
 const isRowP = p => p==="wmean"||p==="wsynw"||isWsP(p);
 const wordN = part => itemsOf(part,"all").reduce((n,it)=>n+(isRowP(part)?(it.rows||[]).length:isClozeP(part)?(it.blanks||[]).length:1),0);
-const oddAble = part => !(C&&C.noOdd) && (isSegP(part) || (isWordP(part) && wordN(part)>=40));   // 데일리 테스트처럼 noOdd 단원은 홀수만 풀기 X
+const AK_PARTS=["cloze","tf","choice","order","insert"];
+const isAkOdd = part => AK_PARTS.includes(part) && !!(C&&(C.groups||[]).some(g=>/올킬/.test(g.t||"")&&(g.parts||[]).includes(part)));   // 올킬 묶음 안의 빈칸·문장·문항을 홀수 번째만
+const oddAble = part => !(C&&C.noOdd) && (isSegP(part) || isAkOdd(part) || (isWordP(part) && wordN(part)>=40));   // 데일리 테스트처럼 noOdd 단원은 홀수만 풀기 X
 const oddOn = part => !!S.odd && oddAble(part);
 function oddItems(part, arr){
   let n=0;
-  if(!isSegP(part) && !isRowP(part) && !isClozeP(part)) return arr.filter((it,i)=>i%2===0);   // 한 문항 = 한 단어
+  if(!isSegP(part) && !isRowP(part) && !isClozeP(part) && part!=="tf") return arr.filter((it,i)=>i%2===0);   // 한 문항 = 한 단어(올킬 선택·순서·삽입은 한 문항씩)
   return arr.map(it=>{
     const keep=[];
     if(isSegP(part)) (it.seg||[]).forEach((sg,i)=>{ const v=parseInt(sg.L,10); n++; if(isNaN(v) ? n%2===1 : v%2===1) keep.push(i); });
-    else (isRowP(part)?(it.rows||[]):(it.blanks||[])).forEach((r,i)=>{ n++; if(n%2===1) keep.push(i); });
+    else (isRowP(part)?(it.rows||[]):part==="tf"?(it.st||[]):(it.blanks||[])).forEach((r,i)=>{ n++; if(n%2===1) keep.push(i); });
     return keep.length ? subset(part, it, keep) : null;
   }).filter(Boolean);
 }
@@ -1420,15 +1422,16 @@ function renderSetup(){
 
     ${oddAble(sel.part) ? `
     <div class="sec" style="margin:24px 0 10px"><h2>응시 범위</h2>
-      <span class="note" style="font-size:12.5px;color:var(--ink-3)">통변형 · 단어(40개 이상) 공통</span></div>
+      <span class="note" style="font-size:12.5px;color:var(--ink-3)">통변형 · 올킬 · 단어(40개 이상) 공통</span></div>
     <div class="seg-btn" id="odd-btn">
       <button data-od="0"${S.odd?"":' class="on"'}>${isSegP(sel.part)?"전체 밑줄":"전체"}</button>
       <button data-od="1"${S.odd?' class="on"':""}>🔢 홀수 번호만</button>
     </div>
     <p style="margin:9px 2px 0;font-size:12.5px;color:var(--ink-3);line-height:1.6">${S.odd
       ? (isSegP(sel.part) ? "밑줄 번호가 <b>홀수(1·3·5…)</b>인 것만 풀어요. 나머지는 바른 형태로 채워져 지문에 그대로 보여요. 번호·오답노트는 원래 번호 그대로예요."
+                          : isAkOdd(sel.part) ? `${sel.part==="cloze"?"빈칸":sel.part==="tf"?"문장":"문항"}을 처음부터 세어 <b>홀수 번째(1·3·5…)</b>만 풀어요. 오답노트는 원래 번호 그대로예요.`
                           : `단어가 ${wordN(sel.part)}개라서 <b>홀수 번째(1·3·5…)</b> 단어만 풀어요. 오답노트는 그대로 남아요.`)
-      : (isSegP(sel.part) ? "모든 밑줄을 풀어요." : "모든 단어를 풀어요.")}</p>` : ""}
+      : (isSegP(sel.part) ? "모든 밑줄을 풀어요." : isAkOdd(sel.part) ? "모든 문항을 풀어요." : "모든 단어를 풀어요.")}</p>` : ""}
 
     ${oorList(sel.part).length?`<div class="card" style="margin-top:14px;padding:12px 14px;display:flex;align-items:center;gap:10px">
       <span style="font-size:18px">🚫</span><span style="flex:1;font-size:13px;line-height:1.55"><b>범위 아님으로 뺀 문항 ${oorList(sel.part).length}개</b><br><span style="color:var(--ink-3)">${oorList(sel.part).map(it=>esc(itemTag(it))).slice(0,6).join(" · ")}${oorList(sel.part).length>6?" …":""}</span></span>
