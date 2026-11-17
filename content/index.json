@@ -1619,6 +1619,9 @@
      "no": "02회차",
      "title": "데일리테스트 02회차",
      "file": "content/dt02.json",
+     "paperPts": {
+      "dtr": 17
+     },
      "pts": {
       "wmean": 50,
       "dtv": 14,
