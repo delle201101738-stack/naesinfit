@@ -1322,55 +1322,34 @@
     {
      "id": "m1610g1",
      "no": "20–24번",
-     "title": "단어+올킬+통변형",
+     "title": "본교재 단어 TEST",
      "file": "content/m1610g1.json",
      "pts": {
-      "wmean": 68,
-      "word": 48,
-      "word2": 48,
-      "cloze": 15,
-      "tf": 50,
-      "choice": 20,
-      "order": 10,
-      "insert": 10
+      "wmean": 68
      },
-     "total": 269,
+     "total": 68,
      "labels": {}
     },
     {
      "id": "m1610g2",
      "no": "30–35번",
-     "title": "단어+올킬+통변형",
+     "title": "본교재 단어 TEST",
      "file": "content/m1610g2.json",
      "pts": {
-      "wmean": 91,
-      "word": 67,
-      "word2": 67,
-      "cloze": 18,
-      "tf": 60,
-      "choice": 24,
-      "order": 12,
-      "insert": 12
+      "wmean": 91
      },
-     "total": 351,
+     "total": 91,
      "labels": {}
     },
     {
      "id": "m1610g3",
      "no": "36–41번",
-     "title": "단어+올킬+통변형",
+     "title": "본교재 단어 TEST",
      "file": "content/m1610g3.json",
      "pts": {
-      "wmean": 83,
-      "word": 72,
-      "word2": 72,
-      "cloze": 18,
-      "tf": 60,
-      "choice": 24,
-      "order": 12,
-      "insert": 12
+      "wmean": 83
      },
-     "total": 353,
+     "total": 83,
      "labels": {}
     }
    ]
