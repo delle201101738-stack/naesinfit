@@ -1322,9 +1322,10 @@
     {
      "id": "m1610g1",
      "no": "20–24·29번",
-     "title": "올킬+통변형",
+     "title": "단어+올킬+통변형",
      "file": "content/m1610g1.json",
      "pts": {
+      "wmean": 83,
       "word": 61,
       "word2": 61,
       "cloze": 18,
@@ -1333,15 +1334,16 @@
       "order": 12,
       "insert": 12
      },
-     "total": 248,
+     "total": 331,
      "labels": {}
     },
     {
      "id": "m1610g2",
      "no": "30–35번",
-     "title": "올킬+통변형",
+     "title": "단어+올킬+통변형",
      "file": "content/m1610g2.json",
      "pts": {
+      "wmean": 91,
       "word": 67,
       "word2": 67,
       "cloze": 18,
@@ -1350,15 +1352,16 @@
       "order": 12,
       "insert": 12
      },
-     "total": 260,
+     "total": 351,
      "labels": {}
     },
     {
      "id": "m1610g3",
      "no": "36–41번",
-     "title": "올킬+통변형",
+     "title": "단어+올킬+통변형",
      "file": "content/m1610g3.json",
      "pts": {
+      "wmean": 83,
       "word": 72,
       "word2": 72,
       "cloze": 18,
@@ -1367,7 +1370,7 @@
       "order": 12,
       "insert": 12
      },
-     "total": 270,
+     "total": 353,
      "labels": {}
     }
    ]
