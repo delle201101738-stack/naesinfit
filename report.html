@@ -796,6 +796,7 @@ function dtHTML(D, day){
   const cur=(day&&L.filter(x=>x.day===day).pop())||L[L.length-1], prev=L[L.indexOf(cur)-1];
   const u=mfUnit(cur.unit), PS=Object.entries(cur.parts||{}).sort((a,b)=>Object.keys(DT_PN).indexOf(a[0])-Object.keys(DT_PN).indexOf(b[0]));
   const done=L.filter(x=>x.done), avg100=done.length?Math.round(done.reduce((n,x)=>n+x.p100,0)/done.length):null;
+  const PT=PS.reduce((n,[,v])=>n+v.t,0), PC=Math.round(PS.reduce((n,[,v])=>n+v.c,0)*10)/10;   // 영역 칸 원래 점수 합 (지필 만점이 달라도 그대로)
   const d100=prev&&prev.done&&cur.done?cur.p100-prev.p100:null, dr=prev&&prev.done&&cur.done?prev.rank-cur.rank:null;
   return `<h2 class="s">📝 데일리테스트 총점 · 반 석차</h2>
   <div class="card" style="padding:18px">
@@ -803,7 +804,7 @@ function dtHTML(D, day){
       <div style="flex:1 1 180px"><div style="font-size:12.5px;font-weight:700;color:var(--ink-3)">${esc(cur.no)} · ${fmtDate(cur.day)}</div>
         <div style="font-size:12px;font-weight:700;color:var(--ink-3)">총점 (100점 만점)</div>
         <div class="num" style="font-size:44px;font-weight:900;line-height:1.1;letter-spacing:-.02em">${cur.done?cur.p100:"—"}<span style="font-size:19px;font-weight:800">${cur.done?"점":""}</span></div>
-        <div style="font-size:12.5px;color:var(--ink-3)">${cur.done?`전체 ${cur.max}문항 중 ${cur.total}개 맞음 · ${Math.round((cur.max-cur.total)*10)/10}개 틀림`:`일부 영역만 봐서 총점이 없어요 (본 영역: ${PS.map(([p])=>esc(DT_PN[p]||PNAME[p]||p)).join("·")})`}${d100!=null?`<br>지난 회차보다 <b>${d100>0?"▲ "+d100+"점":d100<0?"▼ "+(-d100)+"점":"같음"}</b>`:""}</div></div>
+        <div style="font-size:12.5px;color:var(--ink-3)">${cur.done?(PT!==cur.max?`종이 시험 ${PT}문항 중 ${PC}개 맞음 · ${Math.round((PT-PC)*10)/10}개 틀림<br><small>총점은 앱 시험 만점(${cur.max}문항) 기준으로 환산했어요</small>`:`전체 ${cur.max}문항 중 ${cur.total}개 맞음 · ${Math.round((cur.max-cur.total)*10)/10}개 틀림`):`일부 영역만 봐서 총점이 없어요 (본 영역: ${PS.map(([p])=>esc(DT_PN[p]||PNAME[p]||p)).join("·")})`}${d100!=null?`<br>지난 회차보다 <b>${d100>0?"▲ "+d100+"점":d100<0?"▼ "+(-d100)+"점":"같음"}</b>`:""}</div></div>
       <div style="flex:1 1 150px;text-align:center;padding:12px;border-radius:16px;background:var(--pri);color:#fff">
         ${cur.done?`<div style="font-size:12.5px;font-weight:700;opacity:.85">🏆 ${esc(cur.cls)} 석차</div>
         <div class="num" style="font-size:36px;font-weight:900;line-height:1.15">${cur.rank}<span style="font-size:16px">등</span> <span style="font-size:15px;opacity:.85">/ ${cur.n}명</span></div>
