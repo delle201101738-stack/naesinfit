@@ -232,6 +232,10 @@ details.more[open]>summary{border-bottom:1px solid var(--line);margin-bottom:6px
 @media(max-width:520px){.hero-in{flex-direction:column;gap:12px}.duo{width:100%}.duo .grade{flex:1;width:auto}}
 .grade i{display:block;font-style:normal;font-size:10.5px;font-weight:800;opacity:.9;margin-bottom:5px}
 .grade b small{font-size:14px;opacity:.8}
+.grade .rk{display:block;margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.35)}
+.grade .rk em{display:block;font-style:normal;font-family:'Archivo',sans-serif;font-size:30px;font-weight:900;line-height:1}
+.grade .rk em small{font-size:14px;font-weight:800;margin-left:1px}
+.grade .rk span{margin-top:3px}
 .hbig{display:flex;gap:14px;align-items:center;border-radius:14px;padding:14px;background:var(--surface-2);margin-bottom:10px;border-left:5px solid var(--ink-3)}
 .hbig.ok{background:var(--ok-soft);border-color:var(--ok)} .hbig.warn{background:var(--warn-soft);border-color:var(--warn)} .hbig.no{background:var(--no-soft);border-color:var(--no)}
 .hbn{flex:none;font-family:'Archivo',sans-serif;line-height:1}
@@ -921,6 +925,7 @@ async function render(D){
   const cmt=[];
   if(attLine(D,day,TD)) cmt.push(attLine(D,day,TD));
   const HB=hwBlock(HW,day,TD);
+  const RK=(()=>{ const cn=cnameOf(D), L=(D.dts||[]).filter(x=>x.day===day&&x.done&&x.rank); return L.find(x=>x.cls===cn)||L[0]||null; })();   // 그날 데일리테스트 반 석차
   const CUM=cumulative(D, day), CD=cumDelta(CUM, day);
   cmt.push(`${nm} ${TD} ${HB&&HB.chk?`숙제 <b>${HB.chk}개 중 ${fmtNR(HB.td)}개</b>를 해 왔고, `:""}시험 <b>${tests.length}개</b>의 정답률은 <b>${score}%</b>예요.`
     +(CD.dt!=null?(CD.dt>0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 <b>${CD.dt}점 올랐어요.</b>`:CD.dt<0?` 지난 학습일(${CD.pt.d.slice(5).replace("-",".")})보다 시험 정답률이 ${-CD.dt}점 내려갔어요.`:` 지난 학습일과 시험 정답률이 같아요.`):"")
@@ -992,7 +997,7 @@ async function render(D){
     <div class="hero-in">
       <div class="duo">
         <div class="grade"><i>📚 숙제</i><b>${HB&&HB.chk?`${fmtNR(HB.td)}<small>/${HB.chk}</small>`:"—"}</b><span>${HB&&HB.pct!=null?`완료 ${HB.pct}%`:HB&&HB.tot?"검사 전":"숙제 없음"}</span></div>
-        <div class="grade"><i>📝 시험</i><b>${tests.length?grade:"—"}</b><span>정답률 ${tests.length?score+"%":"—"}</span></div>
+        <div class="grade"><i>📝 시험</i><b>${tests.length?grade:"—"}</b><span>정답률 ${tests.length?score+"%":"—"}</span>${RK?`<div class="rk"><span>🏆 반 석차</span><em>${RK.rank}<small>등</small></em><span>${RK.n}명 중</span></div>`:""}</div>
       </div>
       <div>
         <h1>${HB&&HB.tot?`숙제 <mark>${HB.chk?`${fmtNR(HB.td)}/${HB.chk}`:"검사 전"}</mark> · `:""}${tests.length?`시험 <mark>${tests.length}개</mark> 정답률 ${score}%`:(RE.n?`${TD}은 틀린 문제 다시 풀기만 했어요`:`${TD}은 앱 시험 기록이 없어요`)}</h1>
