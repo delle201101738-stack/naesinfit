@@ -1615,6 +1615,46 @@
    "publisher": "헤이즐 데일리",
    "units": [
     {
+     "id": "dt03",
+     "no": "03회차",
+     "title": "데일리테스트 03회차",
+     "file": "content/dt03.json",
+     "pts": {
+      "wmean": 50,
+      "dtv": 14,
+      "dtr": 12,
+      "dtg": 5
+     },
+     "total": 81,
+     "labels": {
+      "wmean": "A 어휘 뜻 쓰기 (어휘를 봄 DAY 01·03)",
+      "dtv": "B 구문 단어 뜻 고르기 (4지선다)",
+      "dtr": "C 직독직해 (키워딩 S021·S022)",
+      "dtg": "D 어법 O/X 고치기 (어법을 봄 UNIT 01)"
+     },
+     "verdict": {
+      "wmean": {
+       "wrong": [
+        7,
+        14
+       ],
+       "stay": true
+      },
+      "dtv": {
+       "pf": 70,
+       "stay": true
+      },
+      "dtr": {
+       "pf": 70,
+       "stay": true
+      },
+      "dtg": {
+       "pf": 70,
+       "stay": true
+      }
+     }
+    },
+    {
      "id": "dt02",
      "no": "02회차",
      "title": "데일리테스트 02회차",
@@ -1767,6 +1807,7 @@
    "m1510g4"
   ],
   "예비고1 월금": [
+   "dt03",
    "dt02",
    "dt01",
    "vbom01",
@@ -1791,6 +1832,7 @@
    "vbom20"
   ],
   "예비고1 화목": [
+   "dt03",
    "dt02",
    "dt01",
    "vbom01",
