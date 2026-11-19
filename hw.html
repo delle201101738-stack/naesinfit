@@ -1036,7 +1036,7 @@ function sheetBar(){
     <select class="fld" id="sheet-day" style="width:auto">${ds.map(d=>`<option value="${d}"${d===def?" selected":""}>${fmtD(d)} 숙제 ${DB.items.filter(i=>+i.class_id===CUR&&i.day===d).length}개</option>`).join("")}</select>
     <button class="btn pri" id="sheet-pdf">📄 PDF 받기</button><button class="btn" id="sheet-print">🖨 바로 인쇄</button></div>`;
 }
-function sheetHTML(day){
+function sheetHTML(day, thReal){
   const cls=DB.classes.find(c=>+c.id===CUR), mem=DB.members.filter(m=>+m.class_id===CUR).map(m=>m.student).sort((a,b)=>a.localeCompare(b,"ko"));
   const its=DB.items.filter(i=>+i.class_id===CUR&&i.day===day).sort((a,b)=>a.id-b.id);
   const allIt=DB.items.filter(i=>+i.class_id===CUR&&i.day<day), chk={}; DB.checks.forEach(k=>{chk[k.item_id+"|"+k.student]=k;});
@@ -1044,12 +1044,16 @@ function sheetHTML(day){
   const nStar=mem.filter(s=>why(s).length).length;
   const W=1122, H=792, PAD=30;
   const msN=i=>msOf(i).length, hasMs=its.some(i=>msN(i)), nCol=its.reduce((t,i)=>t+Math.max(1,msN(i)),0);
-  const headH=78, theadH=(its.some(i=>i.memo)?(its.length>5?92:76):48)+(hasMs?(nCol>8?78:66):0), footH=26;
+  /* 칸이 좁으면(세부미션 칸 < 88px) 미션 줄엔 ①②③만, 미션 이름은 숙제 제목 칸에 몰아서 (표 머리가 너무 높아지지 않게) */
+  const colW=(W-PAD*2-34-(nCol>6?96:112)-60-(nCol>5?110:170))/Math.max(nCol,1), narrow=hasMs&&colW<88;
+  const tf=nCol>8?11:nCol>5?12:13.5, mf=nCol>8?9:nCol>5?10:11, sf=nCol>8?8.5:nCol>5?9.5:10.5;
+  const msRowH=narrow?22:(nCol>8?78:66), memoL=narrow?2:3, mlL=3;
+  const row1=Math.max(48, Math.ceil(2*tf*1.25+(its.some(i=>i.memo)?memoL*mf*1.3+3:0)+(narrow?mlL*mf*1.3+3:0)+10), its.some(i=>i.memo)?(its.length>5?92:76):48);
+  const headH=78, theadH=row1+(hasMs?msRowH:0), footH=26;
   /* 한 장에 다 안 들어가면(줄 높이 MINH 미만) 여러 장으로 나눔 — 장마다 머리·표 머리 반복, 번호는 이어서 */
-  const avail=H-PAD*2-headH-theadH-footH, MINH=22, cap=Math.max(5,Math.floor(avail/MINH));
+  const avail=H-PAD*2-headH-Math.max(theadH,thReal||0)-footH, MINH=22, cap=Math.max(3,Math.floor(avail/MINH));
   const nPg=Math.max(1,Math.ceil(mem.length/cap)), per=Math.ceil(Math.max(mem.length,1)/nPg);
   const pages=[]; for(let k=0;k<nPg;k++) pages.push(mem.slice(k*per,(k+1)*per));
-  const tf=nCol>8?11:nCol>5?12:13.5, mf=nCol>8?9:nCol>5?10:11, sf=nCol>8?8.5:nCol>5?9.5:10.5;
   const cut=(t,n)=>{ t=String(t); return t.length>n?t.slice(0,n-1)+"…":t; }, msLen=nCol>8?34:nCol>5?48:64;
   const nb=n=>esc(n.replace(/[A-Za-z0-9]+$/,"")), sx=n=>{ const m=n.match(/[A-Za-z0-9]+$/); return m?`<small>${esc(m[0])}</small>`:""; };
   const page=(rows,pi)=>{
@@ -1063,26 +1067,42 @@ function sheetHTML(day){
     <div style="font-size:12.5px;line-height:1.7;text-align:right;color:#333">표시: <b>○</b> 완료 &nbsp; <b>△</b> 일부 &nbsp; <b>✕</b> 안 함 &nbsp; <b>—</b> 면제 &nbsp; <b style="color:#C2410C">★</b> 집중관리<br>
       검사 조교 ____________ &nbsp; 검사 날짜 ____ / ____</div></div>
   <table><colgroup><col style="width:34px"><col style="width:${nCol>6?96:112}px"><col style="width:60px">${its.map(i=>msN(i)?msOf(i).map(()=>`<col>`).join(""):`<col>`).join("")}<col style="width:${nCol>5?110:170}px"></colgroup>
-   <thead><tr style="height:${hasMs?theadH-(nCol>8?78:66):theadH}px"><th rowspan="${hasMs?2:1}" style="font-size:11px">번호</th><th rowspan="${hasMs?2:1}" style="font-size:13px">이름</th><th rowspan="${hasMs?2:1}" style="font-size:12.5px">출결<span class="m" style="font-size:9.5px">정·지·결</span></th>
-    ${its.map(i=>`<th${msN(i)?` colspan="${msN(i)}" style="font-size:${tf}px;border-bottom:1.5px solid #333!important"`:` rowspan="${hasMs?2:1}" style="font-size:${tf}px"`}>${esc(i.title)}${i.memo?`<span class="m" style="font-size:${mf}px">${esc(cut(i.memo,70))}</span>`:""}</th>`).join("")}<th rowspan="${hasMs?2:1}" style="font-size:13px">메모</th></tr>
-    ${hasMs?`<tr style="height:${nCol>8?78:66}px">${its.filter(i=>msN(i)).map(i=>msOf(i).map((x,j)=>`<th style="font-size:${sf}px;font-weight:600;text-align:left;vertical-align:top;padding-top:3px!important;background:#F6F5FB!important;line-height:1.25"><b style="font-weight:900">${CIRC[j]}</b> ${esc(cut(x,msLen))}</th>`).join("")).join("")}</tr>`:""}</thead>
+   <thead><tr style="height:${hasMs?theadH-msRowH:theadH}px"><th rowspan="${hasMs?2:1}" style="font-size:11px">번호</th><th rowspan="${hasMs?2:1}" style="font-size:13px">이름</th><th rowspan="${hasMs?2:1}" style="font-size:12.5px">출결<span class="m" style="font-size:9.5px">정·지·결</span></th>
+    ${its.map(i=>`<th${msN(i)?` colspan="${msN(i)}" style="font-size:${tf}px;border-bottom:1.5px solid #333!important"`:` rowspan="${hasMs?2:1}" style="font-size:${tf}px"`}><span class="cl" style="-webkit-line-clamp:2">${esc(i.title)}</span>${i.memo?`<span class="m cl" style="font-size:${mf}px;-webkit-line-clamp:${memoL}">${esc(cut(i.memo,70))}</span>`:""}${narrow&&msN(i)?`<span class="m cl" style="font-size:${mf}px;-webkit-line-clamp:${mlL};text-align:left;color:#222!important">${msOf(i).map((x,j)=>`<b>${CIRC[j]}</b>${esc(cut(x,24))}`).join(" ")}</span>`:""}</th>`).join("")}<th rowspan="${hasMs?2:1}" style="font-size:13px">메모</th></tr>
+    ${hasMs?`<tr style="height:${msRowH}px">${its.filter(i=>msN(i)).map(i=>msOf(i).map((x,j)=>`${narrow?`<th style="font-size:${tf}px;font-weight:900;background:#F6F5FB!important;padding:1px!important">${CIRC[j]}</th>`:`<th style="font-size:${sf}px;font-weight:600;text-align:left;vertical-align:top;padding-top:3px!important;background:#F6F5FB!important;line-height:1.25"><b style="font-weight:900">${CIRC[j]}</b> ${esc(cut(x,msLen))}</th>`}`).join("")).join("")}</tr>`:""}</thead>
    <tbody>${rows.map((s,k)=>`<tr style="height:${rowH}px"><td class="no" style="font-size:${fs-2}px">${off+k+1}</td><td class="nm" style="font-size:${fs}px">${why(s).length?`<b style="color:#C2410C!important">★</b>`:""}${nb(s)}${sx(s)}</td><td style="text-align:center;font-size:${fs-1.5}px;font-weight:700">${(()=>{ const a=attRec(s,day); return a?esc(ATTN[a.status]||""):""; })()}</td>${its.map(i=>msN(i)?msOf(i).map(()=>`<td style="text-align:center;color:#bbb!important;font-size:${Math.max(9,fs-3)}px">□</td>`).join(""):"<td></td>").join("")}<td style="vertical-align:top;padding-top:1px!important">${why(s).length?`<span class="why" style="font-size:${wf}px;-webkit-line-clamp:${wl};max-height:${Math.ceil(wl*wf*1.2)}px">★ ${esc(why(s).join(" · "))}</span>`:""}</td></tr>`).join("")}</tbody></table>
   <div style="margin-top:6px;font-size:10.5px;color:#777;display:flex;justify-content:space-between"><span>학생 ${mem.length}명${nPg>1?` (이 장 ${rows.length}명)`:""} · 숙제 ${its.length}개${hasMs?" · 🧩 세부미션 칸은 한 것만 ✓":""}${nStar?` · <b style="color:#C2410C">★ 집중관리 ${nStar}명</b> (사유는 메모 칸)`:""} · 체크 후 반 관리 화면 표에 입력해 주세요</span><span>hazel_studylog${nPg>1?` · ${pi+1}/${nPg}`:""}</span></div></div>`;
   };
-  return `<div class="sheets" style="width:${W}px;background:#fff">
+  return `<div class="sheets" data-per="${per}" style="width:${W}px;background:#fff">
   <style>.sheet table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0}
    .sheet th,.sheet td{border:1px solid #333!important;padding:1px 5px!important;line-height:1.2;vertical-align:middle;white-space:normal!important;color:#111!important;letter-spacing:0!important;text-transform:none!important;position:static!important;background:#fff;min-width:0!important}
    .sheet thead th{background:#EEEDF5!important;font-weight:800;text-align:center;line-height:1.25;word-break:keep-all;overflow-wrap:break-word;padding:2px 5px!important}
    .sheet thead th .m{display:block;font-weight:500;color:#444!important;margin-top:3px;line-height:1.3}
    .sheet td.nm{font-weight:700;white-space:nowrap!important;overflow:hidden}.sheet td.nm small{color:#888!important;font-weight:600;margin-left:2px;font-size:.78em}
    .sheet td.no{text-align:center;color:#666!important}.sheet tbody tr:nth-child(even) td{background:#F7F7FA}
+   .sheet .cl,.sheet thead th .cl{display:-webkit-box!important;-webkit-box-orient:vertical;overflow:hidden}
    .sheet .why{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;line-height:1.2;color:#C2410C!important;font-weight:700}</style>
   ${pages.map(page).join("")}</div>`;
 }
 let H2P=null;
+/* 실제로 그려 보고 표가 장 밖으로 넘치면(제목·세부미션이 길어 표 머리가 높을 때) 한 장 인원을 줄여 다시 나눔 */
+async function sheetBuild(day){
+  let th=0, html="";
+  for(let i=0;i<4;i++){
+    html=sheetHTML(day,th);
+    const box=document.createElement("div"); box.style.cssText="position:fixed;left:-10000px;top:0;z-index:-1"; box.innerHTML=html; document.body.appendChild(box);
+    try{ await document.fonts.ready; }catch(e){}
+    const pgs=[...box.querySelectorAll(".sheet")], over=pgs.some(P=>P.lastElementChild.getBoundingClientRect().bottom>P.getBoundingClientRect().bottom-20+1);
+    const real=Math.ceil(Math.max(...pgs.map(P=>P.querySelector("thead").getBoundingClientRect().height)));
+    box.remove();
+    if(!over) return html;
+    th=Math.max(th+12, real+4);   // 실제 표 머리 높이로 다시 나눔 (그래도 넘치면 조금씩 더 여유)
+  }
+  return html;
+}
 async function sheetPDF(day, printOnly){
   if(!RES) await loadRes();
-  const cls=DB.classes.find(c=>+c.id===CUR), html=sheetHTML(day), name=`숙제검사표_${cls.name}_${day}.pdf`;
+  const cls=DB.classes.find(c=>+c.id===CUR), html=await sheetBuild(day), name=`숙제검사표_${cls.name}_${day}.pdf`;
   if(printOnly){
     const w=window.open("","_blank"); if(!w){ toast("팝업이 막혔어요 · PDF 받기를 써 주세요"); return; }
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(name.replace(".pdf",""))}</title><style>@page{size:A4 landscape;margin:0}html,body{margin:0}.sheet{break-after:page;page-break-after:always}.sheet:last-child{break-after:auto;page-break-after:auto}@media print{.sheets{width:297mm!important}.sheet{width:297mm!important;height:210mm!important}}</style></head><body>${html}<script>setTimeout(()=>print(),400)<\/script></body></html>`);
