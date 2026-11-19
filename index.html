@@ -1599,7 +1599,7 @@ $("#quiz-exit").onclick=()=>{ if(confirm("나갈까요?\n푼 데까지 저장돼
 
 /* ───── 이어 풀기: 시험 중간에 나가도(앱 닫기·새로고침·나가기) 푼 데까지 기기에 저장 ───── */
 const RSKEY="naesinfit.resume.v1";
-const RS_FIELDS=["items","pl","i","ans","cur","bd","af","notes","sk","del","dd","dp","odd","oor"];
+const RS_FIELDS=["items","pl","i","ans","cur","bd","af","notes","sk","del","dd","dp","odd","oor","first","cont","rep"];
 function rsAll(){ try{ const o=JSON.parse(localStorage.getItem(RSKEY))||{}, now=Date.now(); let ch=false;
   Object.keys(o).forEach(k=>{ if(!o[k]||now-o[k].ts>14*864e5){ delete o[k]; ch=true; } }); if(ch) rsPut(o); return o; }catch(e){ return {}; } }
 function rsPut(o){ try{ localStorage.setItem(RSKEY,JSON.stringify(o)); }catch(e){
@@ -2343,7 +2343,7 @@ $("#quiz-body").addEventListener("input",e=>{
 });
 $("#quiz-cta").onclick=()=>{
   const p=Q.pl[Q.i], it=Q.items[Q.i], a=Q.ans[Q.i];
-  if((Q.oor||{})[Q.i]){ if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); } else finish(); return; }
+  if((Q.oor||{})[Q.i]){ if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); } else submitTry(); return; }
   if(isStepP(p)){ const k=skCur(); if(k<stepN(p,it)-1){ skGo(k+1); return; }
     const pd=stepPending(p,it,a);
     if(pd>=0){ Q.sk[Q.i]=pd;
@@ -2353,8 +2353,63 @@ $("#quiz-cta").onclick=()=>{
   else if(singleMissing(p,it,a) && !(timedSec(p)&&!Q.review)){ toast("답을 골라야 다음으로 넘어가요"); return; }
   tqStop();
   if(Q.i<Q.items.length-1){ Q.i++; renderQ(); window.scrollTo(0,0); }
-  else finish();
+  else submitTry();
 };
+
+/* ───── 안 푼 문항 (11-19): 제출 전 경고 + 실수로 제출했으면 결과 화면에서 한 번 '이어서 풀기' ─────
+   무응답 = grade()의 mine이 '무응답'으로 시작하는 채점 칸. 시간제 객관식(시간 초과)·범위 아님은 세지 않음.
+   이어서 풀기: 처음 제출 때 답을 쓴 칸은 처음 채점 그대로 고정(finish에서 Q.first로 덮음), 안 푼 칸만 새로 채점.
+   다시 제출하면 서버의 처음 기록(Q.rep id)을 지우고 새 기록으로 바꿈 → 0점 기록이 리포트에 남지 않음. */
+const isBlankMine=m=>/^무응답/.test(String(m==null?"":m).trim());
+const bkSkip=i=>!!(Q.oor||{})[i] || (!!timedSec(Q.pl[i]) && !Q.review);
+function blankInfo(det){
+  let n=0, at=-1;
+  Q.items.forEach((it,i)=>{ if(bkSkip(i)) return;
+    let ds; try{ ds=det?det[i]:grade(Q.pl[i],it,Q.ans[i],i); }catch(e){ return; }
+    if(Q.cont && Q.first && !det){ const f=Q.first[i]; if(f&&ds&&f.length===ds.length) ds=ds.map((x,j)=>isBlankMine(f[j].mine)?x:f[j]); }
+    const k=(ds||[]).filter(x=>!x.ok&&isBlankMine(x.mine)).length; if(k){ n+=k; if(at<0) at=i; } });
+  return {n, i:at};
+}
+function goBlank(i){
+  if(i<0) return; Q.i=i; const p=Q.pl[i], it=Q.items[i], a=Q.ans[i];
+  if(isStepP(p)){ const pd=stepPending(p,it,a); if(pd>=0) (Q.sk ||= {})[i]=pd; }
+  renderQ(); window.scrollTo(0,0);
+  setTimeout(()=>{ const el=[...document.querySelectorAll("#quiz-body input:not([type=hidden]):not([disabled]):not([type=radio]):not([type=checkbox]), #quiz-body textarea, #quiz-body select")].find(x=>!String(x.value||"").trim());
+    if(el){ el.scrollIntoView({block:"center"}); try{ el.focus({preventScroll:true}); }catch(e){} } },80);
+}
+function bkSheet(title,msg,btns){
+  const old=document.getElementById("bk-sheet"); if(old) old.remove();
+  const w=document.createElement("div"); w.id="bk-sheet";
+  w.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center";
+  w.innerHTML=`<div style="width:100%;max-width:480px;background:var(--surface);color:var(--ink);border-radius:22px 22px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom))">
+    <div style="font-size:18px;font-weight:900;letter-spacing:-.01em">${title}</div>
+    <div style="margin-top:8px;font-size:14px;line-height:1.6;color:var(--ink-2)">${msg}</div>
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">${btns.map((b,k)=>`<button data-bk="${k}" style="padding:15px;border-radius:15px;font-size:15px;font-weight:800;${b.main?"background:var(--accent);color:var(--on-accent)":"background:var(--surface-2);color:var(--ink-2)"}">${b.t}</button>`).join("")}</div></div>`;
+  w.addEventListener("click",e=>{ const b=e.target.closest("[data-bk]"); if(!b) return; w.remove(); const f=btns[+b.dataset.bk].fn; f&&f(); });
+  document.body.appendChild(w);
+}
+function submitTry(){
+  const bk=blankInfo();
+  if(!bk.n){ finish(); return; }
+  bkSheet(`안 푼 문항이 ${bk.n}개 있어요`, "안 푼 문항은 <b>0점</b>으로 채점돼요.<br>정말 모르는 문제라면 그대로 제출해도 돼요.",
+    [{t:"안 푼 문항 풀러 가기", main:true, fn:()=>{ goBlank(bk.i); toast("비어 있는 칸을 채워 주세요"); }},
+     {t:`그래도 제출하기 (${bk.n}개 0점)`, fn:()=>finish()}]);
+}
+function bkContinue(){
+  if(!Q||!Q.detail||!Q.contOK) return;
+  Q.rep=[].concat(...Object.values(Q.sids||{})); Q.first=Q.detail; Q.cont=true; Q.contOK=false;
+  Q.detail=null; Q.judging=false; Q.sent=false;
+  clearInterval(Q.timer); Q.timer=setInterval(tick,1000); tick();
+  $("#q-total").textContent=Q.items.length;
+  const i=blankInfo(Q.first).i;
+  go("quiz"); goBlank(i<0?0:i);
+  toast("안 푼 칸만 채우면 돼요 · 이미 쓴 답은 처음 채점 그대로예요",2600);
+}
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-bkgo]")){ bkSheet("이어서 풀까요?", "안 푼 칸만 채워서 다시 제출해요.<br>이미 쓴 답은 바꿔도 <b>처음 채점 그대로</b>예요.<br>이어서 풀기는 <b>한 번만</b> 할 수 있어요.",
+      [{t:"이어서 풀기", main:true, fn:bkContinue},{t:"취소"}]); return; }
+  if(e.target.closest("[data-bkno]")){ if(Q&&Q.detail){ Q.contOK=false; showResult(); } }
+});
 
 /* ───── 채점 ───── */
 /* 고치기 채점: 정답(to·acc)과 똑같거나, 정답 표현을 포함한 문장을 쓰고 틀린 형태(from+앞뒤 단어)가 남아 있지 않으면 정답 */
@@ -2541,6 +2596,9 @@ async function finish(){
   if(Q.judging) return; Q.judging=true;
   clearInterval(Q.timer); clearTimeout(RS_T); tqStop(); if(Q.rk) rsDel(Q.rk);
   Q.detail=Q.items.map((it,i)=>(Q.oor||{})[i]?[]:grade(Q.pl[i],it,Q.ans[i],i));
+  if(Q.cont && Q.first) Q.detail=Q.detail.map((ds,i)=>{ const f=Q.first[i]; if(!f||f.length!==ds.length) return ds;   // 이어서 풀기: 처음에 답을 쓴 칸은 처음 채점 그대로
+    const tm=bkSkip(i); return ds.map((x,j)=>(tm||!isBlankMine(f[j].mine))?f[j]:x); });
+  Q.contOK=!Q.review && !Q.cont && blankInfo(Q.detail).n>0;
   const nAi=await aiJudge().catch(()=>0);
   if(nAi) setTimeout(()=>toast(`🤖 뜻이 통하는 답 ${nAi}개를 정답으로 인정했어요`,2600),400);
   Q.items.forEach((it,i)=>{
@@ -2601,6 +2659,13 @@ function showResult(){
     <div class="gain">⚡ +${10+c*2} XP</div>
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`;
   if(Q.all) $("#score-card").innerHTML=allCardHTML(secs);
+  if(Q.contOK){ const bn=blankInfo(Q.detail).n;
+    $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:14px;padding:14px;border-radius:16px;background:var(--surface-2);text-align:left">
+      <div style="font-size:15px;font-weight:800">📝 안 푼 칸 ${bn}개가 0점 처리됐어요</div>
+      <div style="font-size:12.5px;color:var(--ink-3);margin-top:4px;line-height:1.55">실수로 제출했다면 <b>안 푼 칸만</b> 이어서 풀 수 있어요. 이미 쓴 답은 처음 채점 그대로예요. (한 번만)</div>
+      <button data-bkgo class="btn-sm" style="display:block;width:100%;margin-top:10px;padding:13px">실수로 제출했어요 · 이어서 풀기</button>
+      <button data-bkno style="display:block;width:100%;margin-top:6px;padding:10px;font-size:13px;font-weight:700;color:var(--ink-3)">몰라서 비웠어요 · 정답 보기</button></div>`); }
+  else if(Q.cont) $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:10px;font-size:12.5px;font-weight:700;color:var(--ink-3)">이어서 푼 점수예요 · 선생님께 이 점수로 바뀌어 전송돼요</div>`);
 
   $("#review-list").innerHTML=Q.items.map((it,i)=>{
     if((Q.oor||{})[i]) return `<div class="rv"><div class="rv-h" style="cursor:default"><span class="mark" style="background:var(--surface-3);color:var(--ink-3)">🚫</span>
@@ -2626,21 +2691,22 @@ function showResult(){
             x.miss&&x.miss.length?`<span style="font-size:12px;color:var(--ink-3);margin-left:8px">빠진 말: ${esc(x.miss.join(", "))}</span>`:""}${
             x.smiss&&x.smiss.length?`<span style="font-size:12px;color:var(--no);font-weight:700;margin-left:8px">어형 틀림·누락: ${esc(x.smiss.join(", "))}</span>`:""}</div>`:""}
           <span class="k">내 답</span><span class="bad">${esc(x.mine)}</span><br>
-          <span class="k">정답</span><span class="good">${esc(x.right)}</span>
-          ${x.ex?`<div style="margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.65">💡 ${esc(x.ex)}</div>`:""}
+          ${Q.contOK&&isBlankMine(x.mine)?`<span class="k">정답</span><span style="color:var(--ink-3)">이어서 풀지 않으면 보여요</span>`:`<span class="k">정답</span><span class="good">${esc(x.right)}</span>
+          ${x.ex?`<div style="margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.65">💡 ${esc(x.ex)}</div>`:""}`}
           ${selfOK(Q.pl[i],x)?`<div style="margin-top:8px"><button class="btn-sm" style="padding:8px 14px;font-size:12.5px" data-self="${i}.${j}">맞게 썼어요 · 정답 처리</button></div>`:""}
         </div>`).join("")||`<div class="expl">전부 맞았어요 👏</div>`}</div></div>`;
   }).join("");
 
   // 기록 저장
-  S.exp+=10+c*2;
+  if(Q.xpG) S.exp-=Q.xpG; Q.xpG=10+c*2; S.exp+=Q.xpG;   // 다시 그려도(맞게 썼어요·이어서 풀기) XP 두 번 안 쌓임
   if(Q.all){ const L=allSecs(), sc=SCOPES()[sel.scope]?.short||sel.scope;
     L.forEach((x,k)=>{ const a={d:todayKey(), unit:unitLabel(), part:x.p, partName:labelOf(x.p), scope:sc, total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t))};
       if(Q.att&&Q.att[k]) Object.assign(Q.att[k],a); else { S.attempts.push(a); (Q.att ||= [])[k]=a; }
       const b=bestOf()[x.p]; if(!b || x.pct>b.pct) bestOf()[x.p]={done:x.c,total:x.t,pct:x.pct,scope:sc}; });
   } else if(!Q.review){
-    S.attempts.push({d:todayKey(), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
-             scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs});
+    const la={d:todayKey(), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
+             scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs};
+    if(Q.la) Object.assign(Q.la,la); else { S.attempts.push(la); Q.la=la; }
     const b=bestOf()[part];
     if(!b || pct>b.pct) bestOf()[part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
   }
@@ -2655,13 +2721,16 @@ function showResult(){
         return row; });
   if(!Q.sent && Q.all){
     Q.sent=true;
-    Promise.all(allSecs().map(x=>submitResult({student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
-      part:x.p, partName:labelOf(x.p), scope:"전체 한 번에", total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t)), detail:detOf(x.idx)})))
+    const repA=Q.cont?(Q.rep||[]):[];
+    Promise.all(allSecs().map((x,k)=>submitResult({student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
+      part:x.p, partName:labelOf(x.p), scope:"전체 한 번에", total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t)), detail:detOf(x.idx),
+      replaceIds:k===0?repA:[]}).then(j=>{ if(j&&j.id) ((Q.sids ||= {})[x.p] ||= []).push(j.id); })))
       .then(()=>dtRankLoad(true)).catch(()=>dtRankLoad(true));
   } else if(Q.all) dtRankLoad(false);
   if(!Q.sent){
     Q.sent=true;
     submitResult({
+      replaceIds:Q.cont?(Q.rep||[]):[],
       student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
       part, partName:Q.review?("오답노트 · "+(part!=="review"&&P[part]?labelOf(part):"전체")):labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
       scope:Q.review?"재시험":(SCOPES()[sel.scope]?.short||sel.scope),
@@ -2673,7 +2742,7 @@ function showResult(){
         if(n && (n.why.trim()||n.voc.trim())){ row.why=n.why.trim().slice(0,300); row.voc=n.voc.trim().slice(0,300); }
         return row;
       })
-    });
+    }).then(j=>{ if(j&&j.id) ((Q.sids ||= {})[part] ||= []).push(j.id); });
   }
 }
 /* 📝 데일리테스트 총점 반 석차 — 서버(api/mine?dtrank)가 반마다 '처음 본 날' 기록으로 계산 */
@@ -3295,8 +3364,8 @@ async function send(payload){
 }
 async function submitResult(payload){
   setSendState("sending");
-  try{ await send(payload); setSendState("sent"); }
-  catch(e){ const q=qGet(); q.push(payload); qSet(q); setSendState("queued", e.message); }
+  try{ const j=await send(payload); setSendState("sent"); return j; }
+  catch(e){ const q=qGet(); q.push(payload); qSet(q); setSendState("queued", e.message); return null; }
 }
 async function flushQueue(){
   let q=qGet(); if(!q.length) return;
