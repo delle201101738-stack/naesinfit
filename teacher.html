@@ -144,6 +144,12 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
   </div></header>
 
   <div class="wrap">
+    <div class="sec"><h2>📊 오늘의 인사이트</h2><span class="note" style="display:flex;gap:6px;align-items:center">
+      <button class="btn" style="padding:6px 10px" data-ishift="-1">◀</button><input type="date" id="ins-day" style="padding:6px 8px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface)">
+      <button class="btn" style="padding:6px 10px" data-ishift="1">▶</button></span></div>
+    <div class="tabsw" id="ins-cls"></div>
+    <div id="ins"></div>
+
     <div class="sec"><h2>교재 · 과</h2><span class="note">고르면 아래 전체가 그 교재 기준으로 바뀝니다</span></div>
     <div class="tabsw" id="btabs"></div>
 
@@ -175,7 +181,7 @@ dialog::backdrop{background:rgba(10,10,20,.5)}
 "use strict";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const PARTNAMES={dtv:"구문 단어 뜻 고르기",dtr:"직독직해",vmc:"⏱ 뜻 고르기(시간제 객관식)",vmcr:"⏱ 단어 고르기(시간제 객관식)",vdm1:"단어 동형 모고 1세트",vdm2:"단어 동형 모고 2세트",vdm3:"단어 동형 모고 3세트",vdt1:"단어 동형 동형모고 30문제",vdt2:"단어 동형 예문변형 동형모고 30문제",vdc1:"단어 동형 객관식 Set 1",vdc2:"단어 동형 객관식 Set 2",vdw1:"단어 동형 주관식 Set 1",vdw2:"단어 동형 주관식 Set 2",vds:"단어 동형 스페셜 변형",wmean:"단어 뜻 쓰기",wsyn:"유의어 객관식",wsynw:"유의어 주관식",wdef:"영영풀이",dfa:"영영풀이 매칭",dfb:"영영풀이 정오",vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",word2:"통변형 ②",fixg:"통변형 ③ 어법 집중",fixv:"통변형 ④ 어휘 집중",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작",twrite:"주제문 영작",cloze:"빈칸 추론",choice:"독해",sjt:"영문선지 비법 TEST",gbbw:"어법 비법 밑줄 고치기",gbb:"어법 비법 TEST",vbbw:"어휘 비법 밑줄 고치기",vbb:"어휘 비법 TEST",mwrite:"중요 문장 영작",review:"오답노트(전체)"};
+const PARTNAMES={dtv:"구문 단어 뜻 고르기",dtr:"직독직해",dtg:"어법 O/X 고치기",vmc:"⏱ 뜻 고르기(시간제 객관식)",vmcr:"⏱ 단어 고르기(시간제 객관식)",vdm1:"단어 동형 모고 1세트",vdm2:"단어 동형 모고 2세트",vdm3:"단어 동형 모고 3세트",vdt1:"단어 동형 동형모고 30문제",vdt2:"단어 동형 예문변형 동형모고 30문제",vdc1:"단어 동형 객관식 Set 1",vdc2:"단어 동형 객관식 Set 2",vdw1:"단어 동형 주관식 Set 1",vdw2:"단어 동형 주관식 Set 2",vds:"단어 동형 스페셜 변형",wmean:"단어 뜻 쓰기",wsyn:"유의어 객관식",wsynw:"유의어 주관식",wdef:"영영풀이",dfa:"영영풀이 매칭",dfb:"영영풀이 정오",vocab:"어휘 선택",gram:"어법 선택",word:"단어 밑줄",word2:"통변형 ②",fixg:"통변형 ③ 어법 집중",fixv:"통변형 ④ 어휘 집중",fix:"어법 오류 수정",tf:"내용일치 TF",order:"순서 배열",insert:"문장 삽입",arrange:"단어배열",write:"영작",twrite:"주제문 영작",cloze:"빈칸 추론",choice:"독해",sjt:"영문선지 비법 TEST",gbbw:"어법 비법 밑줄 고치기",gbb:"어법 비법 TEST",vbbw:"어휘 비법 밑줄 고치기",vbb:"어휘 비법 TEST",mwrite:"중요 문장 영작",review:"오답노트(전체)"};
 const ORDER=["wmean","wsyn","wsynw","wdef","dfa","dfb","vdc1","vdc2","vdm1","vdm2","vdm3","vdt1","vdt2","vdw1","vdw2","vds","vmc","vmcr","dtv","dtr","twrite","cloze","vocab","gram","word","word2","fix","fixg","fixv","tf","choice","sjt","gbbw","gbb","vbbw","vbb","order","insert","arrange","mwrite","write"];
 let PIN=(()=>{try{return localStorage.getItem("naesinfit.pin")||sessionStorage.getItem("naesinfit.pin")||""}catch(e){return ""}})(), ALL=[], ROWS=[], TAB="all", BOOK="all";
 
@@ -231,6 +237,7 @@ async function load(){
   const r=await fetch("/api/results",{headers:{"x-pin":PIN}});
   if(r.status===401){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"비밀번호가 맞지 않습니다"); }
   if(!r.ok){ const j=await r.json().catch(()=>({})); throw new Error(j.error||"불러오지 못했습니다"); }
+  await loadHw();
   const j=await r.json(); ALL=(j.rows||[]).map(x=>({...x, book:String(x.book||"").replace(/\s*올킬\s*$/,"").trim()}));
   try{ const cr=await fetch("content/index.json",{cache:"no-store"}); if(cr.ok) MF=await cr.json(); }catch(e){}
 }
@@ -243,6 +250,7 @@ $("#pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("#pin-go").click()
 $("#reload").onclick=async()=>{ try{ await load(); render(); }catch(e){ alert(e.message); } };
 
 function render(){
+  try{ renderIns(); }catch(e){ console.error("[insight]",e); }
   const books=[...new Set(ALL.map(x=>x.book).filter(Boolean))].sort();
   if(BOOK!=="all" && !books.includes(BOOK)) BOOK="all";
   ROWS = BOOK==="all" ? ALL : ALL.filter(x=>x.book===BOOK);
@@ -576,6 +584,160 @@ $("#csv").onclick=()=>{
   const a=document.createElement("a"); a.href=url; a.download="hazel_studylog_결과.csv"; a.click(); URL.revokeObjectURL(url);
 };
 (async()=>{ if(PIN){ try{ await load(); try{localStorage.setItem("naesinfit.pin",PIN);}catch(e){} $("#gate").hidden=true; $("#app").hidden=false; render(); if(location.hash==="#paper") openPaper(); }catch(e){} } })();
+</script>
+<script>
+"use strict";
+/* ───── 📊 오늘의 인사이트 (11-19) — 반·날짜별: 진도 따라오는지 대시보드 / 통재시 명단 / 숙제 70% 미만 + 남은 숙제
+   시험: 그날 본 기록 중 학생·과·파트마다 최고 기록 1개(재시험·오답노트 제외). 판정은 학생 앱과 같은 규칙(단원 verdict → 없으면 90/75).
+   숙제: 그날(hw_items.day) 숙제의 칸 점수(완료 1 · 일부 = 미션 비율/앱 점수/0.5 · 안 함 0 · 면제·검사 전 제외) 평균. ───── */
+let HW=null, INS={day:"", cid:"all"}, INS_COPY={};
+async function loadHw(){ try{ const r=await fetch("/api/hw",{headers:{"x-pin":PIN},cache:"no-store"}); if(r.ok) HW=await r.json(); }catch(e){ HW=null; } }
+const iDk=v=>{const d=new Date(v),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
+const AREA_OF=p=>/^(wmean|wsyn|wsynw|wdef|dfa|dfb|vdc\d|vdm\d|vdt\d|vdw\d|vds|vmc|vmcr|dtv|vocab|vbb|vbbw|fixv)$/.test(p)?"어휘"
+  :/^(gram|fix|fixg|gbb|gbbw|dtg|word|word2)$/.test(p)?"어법"
+  :/^(dtr|cloze|tf|choice|sjt|order|insert|arrange|twrite|write|mwrite)$/.test(p)?"독해":"기타";
+function iVerdict(r){ const u=unitByBook(r.book,r.unit_id), R=u&&u.verdict&&u.verdict[r.part], c=+r.correct, t=+r.total, pct=t?c/t*100:0;
+  if(R){ if(R.pf!=null) return pct>=R.pf?"pass":"full";
+    if(R.wrong) return (t-c)<=R.wrong[0]?"pass":(t-c)<=R.wrong[1]?"part":"full";
+    if(R.pct) return pct>=R.pct[0]?"pass":pct>=R.pct[1]?"part":"full"; }
+  return pct>=90?"pass":pct>=75?"part":"full"; }
+const VN={pass:"통과",part:"부분재시",full:"통재시"};
+const iJ=v=>{ try{ return Array.isArray(v)?v:v?JSON.parse(v):[]; }catch(e){ return []; } };
+const iCred=(k,it)=>{ if(!k||!k.status||k.status==="skip") return null; if(k.status==="done") return 1; if(k.status!=="part") return 0;
+  const m=iJ(it&&it.missions).length, d=iJ(k.ms).length; if(m&&d) return Math.min(1,d/m);
+  if(k.auto&&k.score!=null) return Math.max(0,Math.min(1,k.score/100)); return 0.5; };
+const r1=v=>Math.round(v*10)/10;
+function insClasses(){ return (HW&&HW.classes)||[]; }
+function insMembers(cid){ const M=(HW&&HW.members)||[]; return [...new Set(M.filter(m=>cid==="all"||+m.class_id===+cid).map(m=>m.student))]; }
+function insClsOf(st){ const M=(HW&&HW.members)||[], C=insClasses(); return M.filter(m=>m.student===st).map(m=>(C.find(c=>+c.id===+m.class_id)||{}).name).filter(Boolean); }
+/* 그날 시험 기록 → 학생·과·파트별 최고 1개 */
+function insBest(day, inSet){
+  const B={};
+  ALL.forEach(r=>{ if(iDk(r.created_at)!==day||!(+r.total>0)||r.scope==="재시험"||/^오답노트/.test(r.part_name||"")||r.part==="review") return;
+    if(inSet && !inSet.has(r.student)) return;
+    const k=r.student+"|"+r.book+"|"+r.part, o=B[k];
+    if(!o || r.correct/r.total>o.correct/o.total) B[k]=r; });
+  return Object.values(B).map(r=>({...r, v:iVerdict(r), a:AREA_OF(r.part)}));
+}
+function insStat(rows){ const t=rows.reduce((s,x)=>s+ +x.total,0), c=rows.reduce((s,x)=>s+ +x.correct,0); return t?c/t*100:null; }
+function insHw(day, studs){
+  const its=((HW&&HW.items)||[]).filter(i=>i.day===day && (INS.cid==="all"||+i.class_id===+INS.cid));
+  if(!its.length) return {its, per:[]};
+  const K=(HW.checks||[]), M=(HW.members||[]);
+  const per=[];
+  studs.forEach(st=>{ const cids=new Set(M.filter(m=>m.student===st).map(m=>+m.class_id));
+    const mine=its.filter(i=>cids.has(+i.class_id)); if(!mine.length) return;
+    let s=0,n=0,pend=0; const todo=[];
+    mine.forEach(it=>{ const k=K.find(x=>+x.item_id===+it.id && x.student===st); const c=iCred(k,it);
+      if(!k||!k.status){ pend++; return; } if(c==null) return; s+=c; n++;
+      if(c<1){ const ms=iJ(it.missions), dn=new Set(iJ(k.ms).map(Number));
+        todo.push({t:it.title, st:k.status, left:ms.filter((x,j)=>!dn.has(j)), memo:it.memo||"", sc:k.auto&&k.score!=null?k.score:null}); } });
+    per.push({st, pct:n?Math.round(s/n*100):null, s, n, tot:mine.length, pend, todo}); });
+  return {its, per};
+}
+function insLine(cls,txt){ return `<div style="display:flex;gap:10px;padding:7px 0;font-size:14px;line-height:1.6"><span style="flex:none">${cls}</span><span>${txt}</span></div>`; }
+function insCopyBtn(key,text){ INS_COPY[key]=text; return `<button class="btn" style="padding:5px 11px;font-size:11.5px" data-icopy="${key}">명단 복사</button>`; }
+function renderIns(){
+  const box=$("#ins"); if(!box) return;
+  if(!INS.day) INS.day=iDk(new Date());
+  $("#ins-day").value=INS.day;
+  const C=insClasses();
+  if(INS.cid!=="all" && !C.some(c=>String(c.id)===String(INS.cid))) INS.cid="all";
+  $("#ins-cls").innerHTML=[["all","전체 반"]].concat(C.map(c=>[String(c.id),c.name])).map(([k,n])=>`<button data-icls="${esc(k)}"${String(INS.cid)===k?' class="on"':""}>${esc(n)}</button>`).join("");
+  const day=INS.day, mem=insMembers(INS.cid), inSet=INS.cid==="all"?null:new Set(mem);
+  const best=insBest(day, inSet);
+  const took=[...new Set(best.map(r=>r.student))];
+  const roster=INS.cid==="all"?[...new Set(mem.concat(took))]:mem;
+  const absent=roster.filter(s=>!took.includes(s));
+  // 직전 학습일
+  const prevDays=[...new Set(ALL.filter(r=>(!inSet||inSet.has(r.student)) && iDk(r.created_at)<day).map(r=>iDk(r.created_at)))].sort();
+  const pd=prevDays[prevDays.length-1], prevAvg=pd?insStat(insBest(pd,inSet)):null;
+  const avg=insStat(best);
+  const cnt={pass:0,part:0,full:0}; best.forEach(r=>cnt[r.v]++);
+  const AR=["어휘","어법","독해"].map(a=>{ const rs=best.filter(r=>r.a===a); return {a, n:rs.length, pct:insStat(rs), pass:rs.filter(r=>r.v==="pass").length, full:rs.filter(r=>r.v==="full").length}; }).filter(x=>x.n);
+  const H=insHw(day, roster), hwPer=H.per.filter(x=>x.pct!=null), hwAvg=hwPer.length?Math.round(hwPer.reduce((s,x)=>s+x.pct,0)/hwPer.length):null;
+  const hwLow=hwPer.filter(x=>x.pct<70).sort((a,b)=>a.pct-b.pct);
+  // 학생별 영역 통재시
+  const byS={}; best.forEach(r=>{ (byS[r.student] ||= {어휘:[],어법:[],독해:[],기타:[]})[r.a].push(r); });
+  const failOf=(s,a)=>(byS[s]&&byS[s][a]||[]).filter(r=>r.v==="full");
+  const vocFull=took.filter(s=>failOf(s,"어휘").length);
+  const gr=took.filter(s=>failOf(s,"어법").length), rd=took.filter(s=>failOf(s,"독해").length);
+  const both=gr.filter(s=>rd.includes(s)), grOnly=gr.filter(s=>!rd.includes(s)), rdOnly=rd.filter(s=>!gr.includes(s));
+  const pLab=r=>{ const u=unitByBook(r.book,r.unit_id), l=u&&u.labels&&u.labels[r.part]; return l?String(l).replace(/\s*\(.*\)\s*$/,"").replace(/^[A-Z]\s+/,""):(PARTNAMES[r.part]||r.part_name||r.part); };
+  const failTxt=(s,a)=>failOf(s,a).map(r=>`${pLab(r)} ${r1(+r.correct)}/${r.total}`).join(" · ");
+  // 많이 틀린 문항
+  const W={};
+  best.forEach(r=>iJ(r.detail).forEach(it=>(it.d||[]).forEach(d=>{ if(String(d.ok)!=="0"&&d.ok!==0) return;
+    const k=r.part+"|"+(it.no||"")+"|"+(d.l||""); const o=W[k] ||= {p:r.part,no:it.no,l:d.l,r:d.r,n:new Set()}; o.n.add(r.student); })));
+  const WT=Object.values(W).filter(x=>x.n.size>=2).sort((a,b)=>b.n.size-a.n.size).slice(0,5);
+  // 한 줄 진단
+  const L=[];
+  if(!best.length) L.push(insLine("📭",`${day.slice(5).replace("-","/")}에 본 시험 기록이 없어요.`));
+  else {
+    const ap=Math.round(avg);
+    L.push(insLine(ap>=85?"🟢":ap>=70?"🟡":"🔴", (ap>=85?`<b>잘 따라오고 있어요.</b> 평균 정답률 ${ap}%`:ap>=70?`<b>대체로 따라오지만 보강이 필요해요.</b> 평균 정답률 ${ap}%`:`<b>많이 버거워하고 있어요.</b> 평균 정답률 ${ap}%`)+(prevAvg!=null?` <span style="color:${avg-prevAvg>=0?"var(--ok)":"var(--no)"};font-weight:700">(직전 ${pd.slice(5).replace("-","/")} ${Math.round(prevAvg)}% → ${avg-prevAvg>=0?"▲":"▼"}${Math.abs(Math.round(avg-prevAvg))})</span>`:"")));
+    if(AR.length>1){ const s=[...AR].sort((a,b)=>a.pct-b.pct), lo=s[0], hi=s[s.length-1];
+      if(hi.pct-lo.pct>=8) L.push(insLine("🎯",`<b>${lo.a}</b>이 가장 약해요 (${Math.round(lo.pct)}%, 통재시 ${lo.full}건). ${hi.a}는 ${Math.round(hi.pct)}%로 가장 좋아요 → 다음 수업 ${lo.a} 보강 1순위.`));
+      else L.push(insLine("🎯",`영역별 차이가 크지 않아요 (${AR.map(x=>`${x.a} ${Math.round(x.pct)}%`).join(" · ")}).`)); }
+    const tot=cnt.pass+cnt.part+cnt.full;
+    L.push(insLine("🧪",`판정 ${tot}건 중 통과 ${cnt.pass} · 부분재시 ${cnt.part} · <b style="color:var(--no)">통재시 ${cnt.full}</b> (${tot?Math.round(cnt.full/tot*100):0}%)${both.length?` · 어법·독해 둘 다 통재시 <b>${both.length}명</b>`:""}`));
+    if(WT.length) L.push(insLine("❗",`가장 많이 틀린 곳: ${WT.filter((x,i,a)=>a.findIndex(y=>y.l===x.l)===i).slice(0,3).map(x=>`<b>${esc(x.l||x.no||"")}</b>(${x.n.size}명)`).join(", ")}`));
+  }
+  if(hwAvg!=null) L.push(insLine(hwAvg>=85?"📗":hwAvg>=70?"📒":"📕",`숙제 완료율 평균 <b>${hwAvg}%</b>${hwLow.length?` · 70% 미만 <b style="color:var(--no)">${hwLow.length}명</b>`:" · 70% 미만 없음 👏"}${H.per.some(x=>x.pend)?` <span style="color:var(--ink-3)">(검사 전 숙제는 빼고 계산)</span>`:""}`));
+  else if(H.its.length) L.push(insLine("📒",`숙제 ${H.its.length}개 · 아직 검사 기록이 없어요.`));
+  if(absent.length && roster.length) L.push(insLine("🙋",`미응시 ${absent.length}명: ${absent.map(esc).join(", ")}`));
+
+  const tile=(v,l,c)=>`<div class="card tile"><b class="num"${c?` style="color:${c}"`:""}>${v}</b><span>${l}</span></div>`;
+  const col=p=>p==null?"":p>=85?"var(--ok)":p<70?"var(--no)":"var(--accent)";
+  // 반별 비교 (전체 반일 때)
+  let cmp="";
+  if(INS.cid==="all" && C.length>1){
+    const rowsC=C.map(c=>{ const m=new Set(insMembers(c.id)), b=best.filter(r=>m.has(r.student)); if(!b.length) return null;
+      const tk=new Set(b.map(r=>r.student)), av=insStat(b), fl=b.filter(r=>r.v==="full").length;
+      const hp=H.per.filter(x=>m.has(x.st)&&x.pct!=null), ha=hp.length?Math.round(hp.reduce((s,x)=>s+x.pct,0)/hp.length):null;
+      return `<tr><td><button style="font-weight:700;color:var(--accent)" data-icls="${c.id}">${esc(c.name)}</button></td><td class="num">${tk.size} / ${m.size}</td>
+        <td><span class="pill ${av>=85?"p-hi":av>=70?"p-mid":"p-lo"}">${Math.round(av)}%</span></td><td class="num">${fl}건</td><td class="num">${ha==null?"—":ha+"%"}</td></tr>`; }).filter(Boolean);
+    if(rowsC.length) cmp=`<div class="card scroll" style="margin-top:12px"><table><thead><tr><th>반</th><th>응시</th><th>평균 정답률</th><th>통재시</th><th>숙제 완료율</th></tr></thead><tbody>${rowsC.join("")}</tbody></table></div>`;
+  }
+  const meter=x=>`<div class="meter"><span class="lb">${x.a} <span style="font-size:11.5px;color:var(--ink-3)">${x.n}건</span></span><span class="tr"><i class="${x.pct>=85?"hi":x.pct<70?"lo":""}" style="width:${Math.round(x.pct)}%"></i></span><span class="vl">${Math.round(x.pct)}%</span></div>`;
+  const nameRow=(s,sub)=>`<div style="display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)"><button style="font-weight:800;color:var(--accent);flex:none" data-stu="${esc(s)}">${esc(s)}</button>
+    ${INS.cid==="all"?`<span style="font-size:11.5px;color:var(--ink-3);flex:none">${esc(insClsOf(s).join("·"))}</span>`:""}<span style="font-size:12.5px;color:var(--ink-2)">${sub}</span></div>`;
+  const ttl=(t,n,copy)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><b style="font-size:14.5px">${t}</b><span class="pill p-lo">${n}명</span><span style="margin-left:auto">${n?copy:""}</span></div>`;
+  const clsName=INS.cid==="all"?"전체":(C.find(c=>String(c.id)===String(INS.cid))||{}).name||"";
+  const dd=day.slice(5).replace("-","/");
+  box.innerHTML=`
+    <div class="tiles">
+      ${tile(roster.length?`${took.length}<small style="font-size:15px;color:var(--ink-3)">/${roster.length}</small>`:took.length,"응시 인원")}
+      ${tile(avg==null?"—":Math.round(avg)+"%","평균 정답률",col(avg))}
+      ${tile(cnt.full,"통재시 (건)",cnt.full?"var(--no)":"")}
+      ${tile(hwAvg==null?"—":hwAvg+"%","숙제 완료율",col(hwAvg))}
+    </div>
+    <div class="card" style="padding:16px 20px;margin-top:12px">${L.join("")}
+      ${AR.length?`<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">${AR.map(meter).join("")}</div>`:""}
+      ${WT.length?`<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--ink-3)">많이 틀린 문항 TOP ${WT.length}</summary>
+        ${WT.map(x=>`<div class="wrongrow"><b>${esc(x.l||"")}</b> <span style="color:var(--ink-3);font-size:12px">${esc(PARTNAMES[x.p]||x.p)}${x.no?" · "+esc(x.no):""}</span> — <b style="color:var(--no)">${x.n.size}명</b> 틀림 · <span class="k">정답</span><span class="good">${esc(x.r||"")}</span></div>`).join("")}</details>`:""}
+    </div>
+    ${cmp}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:12px">
+      <div class="card" style="padding:16px 20px">${ttl("🔤 어휘 통재시",vocFull.length,insCopyBtn("v",`[${clsName} ${dd}] 어휘 통재시 ${vocFull.length}명\n`+vocFull.map(s=>`${s} (${failTxt(s,"어휘")})`).join("\n")))}
+        ${vocFull.length?vocFull.map(s=>nameRow(s,esc(failTxt(s,"어휘")))).join(""):`<div style="font-size:13px;color:var(--ink-3)">없어요 👏</div>`}</div>
+      <div class="card" style="padding:16px 20px">${ttl("📐📖 어법·독해 모두 통재시",both.length,insCopyBtn("b",`[${clsName} ${dd}] 어법·독해 모두 통재시 ${both.length}명\n`+both.map(s=>`${s} (어법: ${failTxt(s,"어법")} / 독해: ${failTxt(s,"독해")})`).join("\n")))}
+        ${both.length?both.map(s=>nameRow(s,`어법: ${esc(failTxt(s,"어법"))}<br>독해: ${esc(failTxt(s,"독해"))}`)).join(""):`<div style="font-size:13px;color:var(--ink-3)">없어요 👏</div>`}
+        ${grOnly.length||rdOnly.length?`<div style="margin-top:8px;font-size:12.5px;color:var(--ink-3);line-height:1.7">${grOnly.length?`어법만 통재시: ${grOnly.map(esc).join(", ")}<br>`:""}${rdOnly.length?`독해만 통재시: ${rdOnly.map(esc).join(", ")}`:""}</div>`:""}</div>
+    </div>
+    <div class="card" style="padding:16px 20px;margin-top:12px">${ttl(`📚 숙제 70% 미만 · 해야 할 숙제`,hwLow.length,insCopyBtn("h",`[${clsName} ${dd}] 숙제 70% 미만 ${hwLow.length}명\n`+hwLow.map(x=>`${x.st} ${x.pct}% → 해야 할 숙제: ${x.todo.map(t=>t.t+(t.left.length?` (남은 미션: ${t.left.join(", ")})`:t.st==="part"?" (일부만 함)":"")).join(" / ")}`).join("\n")))}
+      ${!H.its.length?`<div style="font-size:13px;color:var(--ink-3)">${dd} 숙제가 없어요.</div>`
+       :hwLow.length?hwLow.map(x=>nameRow(x.st,`<span class="pill p-lo" style="margin-right:6px">${x.pct}%</span><span class="num" style="color:var(--ink-3)">${r1(x.s)}/${x.n}${x.pend?` · 검사 전 ${x.pend}`:""}</span>
+          <div style="margin-top:4px">${x.todo.map(t=>`<div style="padding:2px 0">▸ <b>${esc(t.t)}</b> <span class="vd ${t.st==="part"?"part":"full"}" style="margin-left:4px">${t.st==="part"?"일부":"안 함"}${t.sc!=null?` · 앱 ${t.sc}점`:""}</span>${t.left.length?`<div style="font-size:12px;color:var(--ink-3);margin-left:14px">남은 미션: ${t.left.map(esc).join(" · ")}</div>`:""}</div>`).join("")}</div>`)).join("")
+       :`<div style="font-size:13px;color:var(--ink-3)">${hwPer.length?"모두 70% 이상이에요 👏":"아직 검사 기록이 없어요."}</div>`}
+    </div>`;
+}
+$("#ins-day").addEventListener("change",e=>{ INS.day=e.target.value||iDk(new Date()); renderIns(); });
+document.addEventListener("click",e=>{
+  const c=e.target.closest("[data-icls]"); if(c){ INS.cid=c.dataset.icls; renderIns(); return; }
+  const sh=e.target.closest("[data-ishift]"); if(sh){ const d=new Date(INS.day+"T12:00:00"); d.setDate(d.getDate()+(+sh.dataset.ishift)); INS.day=iDk(d); renderIns(); return; }
+  const cp=e.target.closest("[data-icopy]"); if(cp){ const t=INS_COPY[cp.dataset.icopy]||""; (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{ cp.textContent="복사됨 ✓"; setTimeout(()=>cp.textContent="명단 복사",1500); }).catch(()=>prompt("복사하세요",t)); }
+});
 </script>
 </body>
 </html>
