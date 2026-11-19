@@ -103,6 +103,9 @@ export default async function handler(req, res) {
               ${num(b.total)}, ${num(b.correct)}, ${num(b.pct)}, ${num(b.secs)},
               ${JSON.stringify(b.detail || [])}::jsonb)
       returning id, created_at`;
+    // 📝 이어서 풀기(안 푼 문항 실수 제출): 처음 제출한 기록을 새 기록으로 바꿈 — 같은 학생·하루 안의 기록만
+    const rep = (Array.isArray(b.replaceIds) ? b.replaceIds : []).map(Number).filter(n => Number.isInteger(n) && n > 0 && n !== row.id).slice(0, 20);
+    if (rep.length) await sql`delete from attempts where id = any(${rep}) and student = ${stu} and created_at > now() - interval '1 day'`;
     await syncAuto().catch(e => console.error("[submit auto]", e));
     res.status(200).json({ ok: true, id: row.id, at: row.created_at });
   } catch (e) {
