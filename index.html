@@ -382,6 +382,11 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
 .tq-word{margin-top:14px;padding:26px 16px;text-align:center;font-family:Archivo,system-ui,sans-serif;font-size:32px;font-weight:800;letter-spacing:-.01em;background:var(--surface);border-radius:18px;box-shadow:var(--shadow);word-break:break-word}
 .tq-word.ko{font-family:inherit;font-size:19px;line-height:1.6;font-weight:700}
 #vs{position:fixed;inset:0;z-index:300;background:var(--ground);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#drill{position:fixed;inset:0;z-index:310;background:var(--ground);overflow-y:auto;-webkit-overflow-scrolling:touch}
+#drill .dr-in{max-width:560px;margin:0 auto;padding:14px 16px 120px}
+#drill .dr-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+#drill .dr-row .cz-in{flex:1;min-width:0}
+#drill .dr-row .cz-in.ok{box-shadow:inset 0 0 0 2px var(--ok)}
 #vs .vs-in{max-width:560px;margin:0 auto;padding:14px 16px 110px}
 #vs .vs-hd{display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--ground);padding:6px 0 10px;z-index:2}
 #vs .vs-hd b{flex:1;font-size:17px}
@@ -1192,6 +1197,59 @@ function renderSmem0(el){
     <span style="flex:none;width:42px;height:42px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:21px">🧩</span>
     <span style="flex:1;min-width:0"><b style="font-size:15px">문장암기</b><span style="display:block;font-size:12.5px;color:var(--ink-3);margin-top:2px">${esc(sc)} 시험범위 교과서 본문 · 스크램블로 영작하기 · ⭐ 중요 문장만 따로</span></span>
     <span style="flex:none;color:var(--ink-3);font-size:18px">›</span></a>`:""; }
+/* 🔁 데일리테스트 영역별 재시 — 영역 하나만 다시, 그 영역을 전부 맞혀야 통과 (어법은 틀린 이유까지) */
+const reShort = (lab,p) => String(lab||(P[p]&&P[p].n)||p).replace(/\s*\(.*\)\s*$/,"");
+const reStat = (uid,p) => ((S.rt||{})[uid]||{})[p] || null;
+const reNeed = (p,b) => !!b && VERDICT(b.pct,p,b.done,b.total).k!=="pass";
+function reChip(uid,p,lab,need,cls){ const r=reStat(uid,p);
+  const st=r&&r.pass?`<span class="vd pass" style="font-size:11px">✓ 재시 통과</span>`:r&&r.drill&&r.drill.length?`<span class="vd part" style="font-size:11px">✍️ 쓰기 ${r.drill.length}개 남음</span>`:r?`<span class="vd full" style="font-size:11px">✗ ${r.n}회 · ${r.last}%</span>`:need?`<span class="vd part" style="font-size:11px">재시 대상</span>`:"";
+  return `<button class="${cls}" data-rego="${esc(p)}" data-reu="${esc(uid)}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 12px;margin:0 0 6px;border-radius:12px;background:var(--surface-2)">
+    <span style="flex:1;min-width:0;font-size:13.5px;font-weight:700">${esc(reShort(lab,p))}</span>${st}<span style="color:var(--ink-3);font-size:13px">›</span></button>`; }
+function reCardHTML(){ if(!C||!C.allInOne||!UNIT) return ""; const LP=livePARTS();
+  return `<div style="padding:12px 16px 14px;border-top:1px solid var(--line)">
+    <div style="font-size:14px;font-weight:800">🔁 영역별 재시</div>
+    <div style="font-size:12px;color:var(--ink-3);margin:2px 0 10px;line-height:1.55">영역 하나만 다시 봐요 · <b>전부 맞혀야 통과</b> · 어법은 X 문장의 <b>틀린 이유</b>도 써요</div>
+    ${LP.map(p=>reChip(UNIT.id,p.id,labelOf(p.id),reNeed(p.id,bestOf()[p.id]),"re-chip")).join("")}</div>`; }
+function startRe(part){ if(!C||!C[part]||!C[part].length){ toast("문항이 없어요"); return; }
+  const st=reStat(UNIT.id,part); if(st&&Array.isArray(st.drill)&&st.drill.length){ drOpen(part); toast("틀린 단어 5번씩 쓰기부터 해요"); return; }
+  sel={part, scope:"all"}; startQuiz({re:part}); }
+/* ✍️ 단어 재시 틀린 단어 5번씩 쓰기 — 영어 + 한국어 뜻을 한 줄씩 5번. 다 써야 다음 재시 (붙여넣기 막음) */
+const DR_N=5; const RE_DRILLED={};   // 쓰기 마친 단어 수 → 다음 재시 기록 이름에 붙임
+const drKoOk=(v,w)=>{ const m=String(v||"").trim(); if(!m) return false; const n=x=>String(x||"").replace(/\([^)]*\)|\[[^\]]*\]/g,"").replace(/[\s.,;:!?~∼·'"\-]/g,"");
+  const cands=[w.ko].concat(String(w.ko||"").split(/[;,/]/),w.alt||[]).map(n).filter(Boolean);
+  return cands.includes(n(m)) || (typeof koMatch==="function" && koMatch(m,w.ko,w.alt||[])); };
+const drEnOk=(v,w)=>czEq(v,w.en) || czEq(String(v||"").replace(/\s+/g," "),w.en);
+let DR=null;
+function drOpen(part){ const st=reStat(UNIT.id,part); if(!st||!st.drill||!st.drill.length) return;
+  DR={part, L:st.drill, v:st.drill.map(()=>Array.from({length:DR_N},()=>({e:"",k:""})))};
+  let el=document.getElementById("drill"); if(!el){ el=document.createElement("div"); el.id="drill"; document.body.appendChild(el);
+    el.addEventListener("input",drInput); el.addEventListener("paste",e=>{ if(e.target.closest("input")){ e.preventDefault(); toast("직접 손으로 써야 해요 ✍️"); } });
+    el.addEventListener("click",e=>{ if(e.target.closest("[data-drx]")) drClose(false); if(e.target.closest("[data-drdone]")) drDone(); }); }
+  el.hidden=false; document.body.style.overflow="hidden"; drRender(); el.scrollTop=0; }
+function drLeft(){ let n=0; DR.L.forEach((w,i)=>DR.v[i].forEach(x=>{ if(!drEnOk(x.e,w)) n++; if(!drKoOk(x.k,w)) n++; })); return n; }
+function drRender(){ const el=document.getElementById("drill"); if(!el||!DR) return; const left=drLeft();
+  el.innerHTML=`<div class="dr-in"><div class="vs-hd" style="display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--ground);padding:6px 0 10px;z-index:2">
+      <b style="flex:1;font-size:17px">✍️ 틀린 단어 ${DR.L.length}개 · ${DR_N}번씩 쓰기</b><button class="vs-x" data-drx="1" style="width:38px;height:38px;border-radius:12px;border:0;background:var(--surface);box-shadow:var(--shadow);font-size:18px">✕</button></div>
+    <p style="font-size:12.5px;color:var(--ink-3);line-height:1.6;margin:0 0 10px">영어 단어와 한국어 뜻을 한 줄에 하나씩 <b>${DR_N}번</b> 써요. 다 쓰면 다시 재시를 볼 수 있어요. (붙여넣기 안 돼요)</p>
+    ${DR.L.map((w,i)=>`<div class="card" style="padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:15px"><b>${esc(w.en)}</b> <span style="color:var(--ink-2)">— ${esc(w.ko)}</span></div>
+      ${DR.v[i].map((x,k)=>`<div class="dr-row"><span class="num" style="width:16px;font-size:12px;color:var(--ink-3)">${k+1}</span>
+        <input class="cz-in${drEnOk(x.e,w)?" ok":""}" data-dre="${i}.${k}" value="${esc(x.e)}" placeholder="영어" autocomplete="off" spellcheck="false" autocapitalize="off">
+        <input class="cz-in${drKoOk(x.k,w)?" ok":""}" data-drk="${i}.${k}" value="${esc(x.k)}" placeholder="한국어 뜻" autocomplete="off" spellcheck="false"></div>`).join("")}</div>`).join("")}
+    <button class="cta" data-drdone="1" id="dr-cta" ${left?"disabled":""} style="width:100%;margin-top:6px">${left?`남은 칸 ${left}개`:"다 썼어요 · 다시 재시 보기"}</button></div>`; }
+function drInput(e){ const t=e.target, a=t.dataset.dre||t.dataset.drk; if(!a||!DR) return; const [i,k]=a.split(".").map(Number), w=DR.L[i];
+  if(t.dataset.dre!=null){ DR.v[i][k].e=t.value; t.classList.toggle("ok",drEnOk(t.value,w)); } else { DR.v[i][k].k=t.value; t.classList.toggle("ok",drKoOk(t.value,w)); }
+  const left=drLeft(), b=document.getElementById("dr-cta"); if(b){ b.disabled=!!left; b.textContent=left?`남은 칸 ${left}개`:"다 썼어요 · 다시 재시 보기"; } }
+function drClose(){ const el=document.getElementById("drill"); if(el) el.hidden=true; document.body.style.overflow=""; DR=null; if(document.getElementById("s-home").classList.contains("on")) renderHome(); }
+function drDone(){ if(!DR||drLeft()) return; const part=DR.part, st=reStat(UNIT.id,part);
+  if(st){ st.drillN=(st.drillN||0)+1; st.drill=[]; save(); }
+  RE_DRILLED[UNIT.id+"|"+part]=DR.L.length;
+  drClose(); toast("다 썼어요 👏 이제 다시 재시!"); startRe(part); }
+document.addEventListener("click",async e=>{ const b=e.target.closest("[data-rego]"); if(!b) return;
+  const uid=b.dataset.reu, part=b.dataset.rego;
+  if(!UNIT||UNIT.id!==uid){ const u=allUnits(true).find(x=>x.id===uid); if(!u) return; toast("불러오는 중…");
+    try{ await loadUnit(u); S.grade=gradeOfBook(u.book); save(); renderHome(); renderMy(); }catch(err){ toast(err.message); return; } }
+  startRe(part); });
 function renderHome(){
   renderSmem(); renderResume(); renderQpkSlot();
   const q=qGet?qGet().length:0;
@@ -1252,7 +1310,8 @@ function renderHome(){
         <span class="s">${LP.map(p=>esc(labelOf(p.id).replace(/\s*\(.*\)\s*$/,""))).join(" → ")} · 이어서 한 번에 · <span class="num">${tp}개 채점</span></span>
         ${(S.dtr||{})[UNIT.id]?`<span style="display:block;margin-top:6px;font-size:13px;font-weight:800;color:var(--accent)">총점 ${S.dtr[UNIT.id].p100}점${S.dtr[UNIT.id].done?` · ${esc(S.dtr[UNIT.id].cls)} ${S.dtr[UNIT.id].rank}등 / ${S.dtr[UNIT.id].n}명`:""}</span>`:""}</span>${svg("chev","go")}</button>
       ${LP.some(p=>bestOf()[p.id])?`<div style="padding:4px 16px 12px">${LP.map(p=>{ const b=bestOf()[p.id]; return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px">
-        <span style="flex:1;min-width:0;color:var(--ink-2)">${esc(labelOf(p.id))}</span>${b?`<span class="num" style="font-weight:800">${b.done}/${b.total}</span>${vdPill(b.pct,p.id,b.done,b.total)}`:`<span style="color:var(--ink-3)">아직</span>`}</div>`; }).join("")}</div>`:""}`;
+        <span style="flex:1;min-width:0;color:var(--ink-2)">${esc(labelOf(p.id))}</span>${b?`<span class="num" style="font-weight:800">${b.done}/${b.total}</span>${vdPill(b.pct,p.id,b.done,b.total)}`:`<span style="color:var(--ink-3)">아직</span>`}</div>`; }).join("")}</div>`:""}
+      ${reCardHTML()}`;
   } else
   $("#part-list").innerHTML=livePARTS().map(p=>{
     const all=itemsOfX(p.id,S.scope), tp=all.reduce((t,i)=>t+pts(p.id,i),0);
@@ -1534,7 +1593,7 @@ function shuffleTF(it){   // T/F 문장 순서 섞기 — _map으로 원래 번�
 function startQuiz(opts){
   opts=opts||{};
   { const k=rsKey(opts), sv=rsAll()[k];
-    if(sv && (opts.review || sv.scope===sel.scope)){
+    if(sv && (opts.review || opts.re || sv.scope===sel.scope)){
       if(confirm(`풀다 만 시험이 있어요 (${sv.n}문제 중 ${sv.i+1}번째에서 멈춤).\n이어서 풀까요?\n\n[취소]를 누르면 처음부터 새로 풀어요.`)){ rsResume(k); return; }
       rsDel(k);
     } }
@@ -1542,20 +1601,24 @@ function startQuiz(opts){
   if(opts.review){
     (opts.part ? [opts.part] : livePARTS().map(p=>p.id))
       .forEach(pid=>wrongItems(pid, !!opts.ever).forEach(it=>list.push({part:pid, it})));
+  } else if(opts.re){   // 🔁 데일리테스트 영역별 재시: 그 영역 전체 (범위 아님·홀수 무시), 단어 순서·객관식 순서는 섞음
+    list=itemsOf(opts.re,"all").map(it=>({part:opts.re, it}));
+    if(opts.re==="wmean"||opts.re==="dtv") list=shuffleArr(list.slice());
+    list=list.map(x=>x.part==="wmean"&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
   } else if(opts.all){
     livePARTS().forEach(p=>itemsOfX(p.id,"all").forEach(it=>list.push({part:p.id, it})));
   } else {
     list=itemsOfX(sel.part, sel.scope).map(it=>({part:sel.part, it}));
   }
   if(!list.length){toast("문항이 없어요"); return;}
-  if(S.shuffle && !opts.all){   // 🔀 섞어서 응시: 문항(단락) 순서 + 단어 뜻·유의어 쓰기는 단어 순서까지
+  if(S.shuffle && !opts.all && !opts.re){   // 🔀 섞어서 응시: 문항(단락) 순서 + 단어 뜻·유의어 쓰기는 단어 순서까지
     list=shuffleGroups(list);
     list=list.map(x=>(x.part==="wmean"||x.part==="wsynw"||isWsP(x.part))&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
     list=list.map(x=>x.part==="tf"&&Array.isArray(x.it.st)&&x.it.st.length>1?{part:x.part, it:shuffleTF(x.it)}:x);   // T/F 문장 순서도 섞음
   }
   const items=list.map(x=>x.it);
-  Q={review:!!opts.review, all:!!opts.all, part: opts.review ? (opts.part||"review") : opts.all ? "all" : sel.part,
-     items, pl:list.map(x=>x.part), i:0, t0:Date.now(), rk:rsKey(opts), scope:sel.scope, odd:!opts.review && oddOn(sel.part)};
+  Q={review:!!opts.review, all:!!opts.all, re:!!opts.re, drN:opts.re?(RE_DRILLED[(UNIT?UNIT.id:"")+"|"+opts.re]||0):0, part: opts.review ? (opts.part||"review") : opts.re ? opts.re : opts.all ? "all" : sel.part,
+     items, pl:list.map(x=>x.part), i:0, t0:Date.now(), rk:rsKey(opts), scope:opts.re?"all":sel.scope, odd:!opts.review && !opts.re && oddOn(sel.part)};
   Q.ans=list.map(x=>blankAns(x.part,x.it));
   Q.cur=list.map(()=>0);
   Q.bd=list.map(()=>[]); Q.af={};
@@ -1599,13 +1662,13 @@ $("#quiz-exit").onclick=()=>{ if(confirm("나갈까요?\n푼 데까지 저장돼
 
 /* ───── 이어 풀기: 시험 중간에 나가도(앱 닫기·새로고침·나가기) 푼 데까지 기기에 저장 ───── */
 const RSKEY="naesinfit.resume.v1";
-const RS_FIELDS=["items","pl","i","ans","cur","bd","af","notes","sk","del","dd","dp","odd","oor","first","cont","rep"];
+const RS_FIELDS=["items","pl","i","ans","cur","bd","af","notes","sk","del","dd","dp","odd","oor","first","cont","rep","re","drN"];
 function rsAll(){ try{ const o=JSON.parse(localStorage.getItem(RSKEY))||{}, now=Date.now(); let ch=false;
   Object.keys(o).forEach(k=>{ if(!o[k]||now-o[k].ts>14*864e5){ delete o[k]; ch=true; } }); if(ch) rsPut(o); return o; }catch(e){ return {}; } }
 function rsPut(o){ try{ localStorage.setItem(RSKEY,JSON.stringify(o)); }catch(e){
   try{ const ks=Object.keys(o).sort((a,b)=>o[a].ts-o[b].ts); while(ks.length>1){ delete o[ks.shift()]; try{ localStorage.setItem(RSKEY,JSON.stringify(o)); return; }catch(_){} } }catch(_){} } }
 function rsKey(opts){ opts=opts||{}; const u=UNIT?UNIT.id:"";
-  return opts.review ? `${u}|오답|${opts.part||"all"}|${opts.ever?1:0}` : `${u}|${sel.part}`; }
+  return opts.review ? `${u}|오답|${opts.part||"all"}|${opts.ever?1:0}` : opts.re ? `${u}|재시|${opts.re}` : `${u}|${sel.part}`; }
 function rsTouched(){ if(!Q) return false;   // 하나라도 손댄 게 있어야 저장
   return Q.i>0 || JSON.stringify(Q.ans)!==JSON.stringify(Q.pl.map((p,i)=>blankAns(p,Q.items[i]))) || (Q.bd||[]).some(b=>b&&b.length) || Object.keys(Q.del||{}).length>0; }
 function rsSave(){ if(!Q||Q.detail||!Q.rk||!rsTouched()) return;
@@ -1651,7 +1714,7 @@ function renderQ(){
   $("#q-now").textContent=Q.i+1;
   const pv=$("#quiz-prev"); pv.style.opacity=Q.i?"1":".25"; pv.style.pointerEvents=Q.i?"auto":"none";
   $("#q-bar").style.width=((Q.i+1)/Q.items.length*100)+"%";
-  const tag=`<span class="q-type">${labelOf(part)} · ${esc(itemTag(it))}</span>`;
+  const tag=`<span class="q-type">${Q.re?"🔁 재시 · ":""}${labelOf(part)} · ${esc(itemTag(it))}</span>`+(Q.re&&Q.i===0?`<p class="hint" style="margin-top:6px;color:var(--no);font-weight:800">🔁 재시는 이 영역을 <b>전부 맞혀야</b> 통과예요${part==="dtg"?" · X 문장은 <b>틀린 단어 + 고친 말 + 틀린 이유</b>까지 맞아야 정답":""}</p>`:"");
   const stemOf=(d)=> (C&&C.stems&&C.stems[part]) || d;
   let body="";
   if(part==="vocab"||part==="gram"){
@@ -1728,7 +1791,9 @@ function renderQ(){
             <button class="ord${m.ox==="X"?" on":""}" data-gx="${i}" data-v="X" style="flex:1;justify-content:center;margin:0">❌ 틀림</button></div>
           ${!X?"":m.w==null?`<p class="hint" style="margin-top:8px;color:var(--cat-3);font-weight:700">👆 위 문장에서 틀린 단어를 눌러 주세요</p>`
             :`<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:14px;white-space:nowrap"><s>${esc(tk[m.w].replace(/[.,!?;:]+$/,""))}</s> →</span>
-              <input class="cz-in" data-gt="${i}" value="${esc(m.t||"")}" placeholder="바르게 고친 말" autocomplete="off" spellcheck="false" autocapitalize="off" style="flex:1;min-width:0"></div>`}
+              <input class="cz-in" data-gt="${i}" value="${esc(m.t||"")}" placeholder="바르게 고친 말" autocomplete="off" spellcheck="false" autocapitalize="off" style="flex:1;min-width:0"></div>${Q.re?`
+            <div style="margin-top:8px"><div style="font-size:12.5px;font-weight:800;color:var(--cat-3)">✍️ 틀린 이유 <span style="font-weight:600;color:var(--ink-3)">왜 틀렸는지 어법 포인트를 짧게 (예: 주어가 단수라 동사도 단수 / 동사 자리라 준동사 X)</span></div>
+              <textarea class="wr-in note-in" data-gy="${i}" placeholder="틀린 이유를 써 주세요" style="margin-top:6px;min-height:58px">${esc(m.y||"")}</textarea></div>`:""}`}
         </div>`; }).join("")}</div>`;
   } else if(part==="dtv"){
     body=`${tag}<p class="q-stem">${esc(it.stem)}</p>
@@ -1830,7 +1895,7 @@ function renderQ(){
       <div style="font-size:30px">🚫</div><div style="font-size:16px;font-weight:800;margin-top:6px">범위 아님으로 뺐어요</div>
       <div style="font-size:13px;color:var(--ink-3);margin-top:6px;line-height:1.6">이 문항은 <b>점수에서 제외</b>되고 다음부터 나오지 않아요.</div>
       <button class="btn-sm" style="margin-top:14px;padding:9px 16px" data-oorx="1">↩ 되돌리기 (다시 풀기)</button></div>`;
-  else if(!Q.review) body+=`<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="wdel" data-oor="1" style="opacity:.85">🚫 시험 범위 아님 · 빼고 풀기</button></div>`;
+  else if(!Q.review && !Q.re) body+=`<div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="wdel" data-oor="1" style="opacity:.85">🚫 시험 범위 아님 · 빼고 풀기</button></div>`;
   $("#quiz-body").innerHTML=body;
   tqStart();
   if(part==="write" || part==="twrite" || part==="mwrite" || (part==="arrange" && S.arrMode==="type")){
@@ -2213,6 +2278,8 @@ function syncCta(){
     if(skCur()<stepN(p,it)-1){ b.textContent=`다음 ${stepWord(p)}`; return; }
     const left=stepLeft(p,it,a);
     if(left){ b.textContent=`안 한 ${stepWord(p)} ${left}개 남음`; return; }
+  } else if(Q.re && p==="dtg" && (a||[]).some(m=>m&&m.ox==="X"&&(m.w==null||!String(m.t||"").trim()||!String(m.y||"").trim()))){
+    b.disabled=true; b.textContent="X 문장: 틀린 단어 · 고친 말 · 틀린 이유를 모두 써 주세요"; return;
   } else if(singleMissing(p,it,a)){ if(timedSec(p)&&!Q.review){ b.textContent="모르겠어요 · 건너뛰기"; return; } b.textContent="답을 골라 주세요"; return; }
   const allDel=(Q.del||{})[Q.i]===true || (isStepP(p) && Object.keys((Q.dd||{})[Q.i]||{}).length>=stepN(p,it));
   if(Q.review && !WORD_PARTS.has(p) && !allDel){
@@ -2322,7 +2389,9 @@ $("#quiz-body").addEventListener("input",e=>{
   const wm=e.target.closest("[data-wm]");
   if(wm){ Q.ans[Q.i][+wm.dataset.wm]=wm.value; }
   const gt=e.target.closest("[data-gt]");
-  if(gt){ (Q.ans[Q.i][+gt.dataset.gt] ||= {ox:"X",w:null,t:""}).t=gt.value; }
+  if(gt){ (Q.ans[Q.i][+gt.dataset.gt] ||= {ox:"X",w:null,t:""}).t=gt.value; if(Q.re) syncCta(); }
+  const gy=e.target.closest("[data-gy]");
+  if(gy){ (Q.ans[Q.i][+gy.dataset.gy] ||= {ox:"X",w:null,t:""}).y=gy.value; syncCta(); }
   const tfx=e.target.closest("[data-tfx]");
   if(tfx){ dpOf(Q.i).fx[+tfx.dataset.tfx]=tfx.value; syncCta(); }
   const ulm=e.target.closest("[data-ulm]");
@@ -2518,7 +2587,13 @@ function grade(part,it,a,gi){
     it.rows.forEach((r,i)=>{ const m=a[i]||{}, t=String(m.t||"").trim(), tk=String(r.en).split(/\s+/), hit=dtgHit(r,m);
       const pw=m.w!=null&&tk[m.w]?tk[m.w].replace(/[.,!?;:]+$/,""):"";
       const ok=r.ans==="O" ? m.ox==="O" : (m.ox==="X" && hit && dtgMatch(t,r));
-      d.push({ok, label:`${r.n}`, q:r.en, self:r.ans==="X"&&m.ox==="X"&&hit&&!!t,
+      if(Q&&Q.re&&r.ans==="X"&&m.ox==="X"&&hit){   // 🔁 재시: 틀린 이유까지 AI가 확인 (고친 말은 정답이면 base, 아니면 AI fix 판정으로 base)
+        const y=String(m.y||"").trim();
+        d.push({ok:false, base:ok, gy:1, chk:y&&t?[{kind:"gwhy", word:r.wrong, context:String(r.en).split(/\s+/).map((w,k)=>k===m.w?"[["+w+"]]":w).join(" ").slice(0,400),
+            expected:`${r.wrong} → ${r.fix.slice(0,3).join(" / ")} · ${r.ex}`.slice(0,300), answer:y, ok:false}]:[],
+          label:`${r.n}`, q:r.en, mine:`X · ${pw} → ${t||"(고친 말 안 씀)"} · 이유: ${y||"(안 씀)"}`,
+          right:`X · ${r.wrong} → ${r.fix.slice(0,3).join(" / ")}`, ex:r.ex}); return; }
+      d.push({ok, label:`${r.n}`, q:r.en, self:!(Q&&Q.re)&&r.ans==="X"&&m.ox==="X"&&hit&&!!t,
         mine:m.ox==null?"무응답":m.ox==="O"?"O (맞음)":`X · ${pw?pw+" → "+(t||"(고친 말 안 씀)"):"(틀린 단어 안 고름)"}${pw&&!hit&&r.ans==="X"?" · 틀린 단어를 잘못 고름":""}`,
         right:r.ans==="O"?"O (맞는 문장)":`X · ${r.wrong} → ${r.fix.slice(0,3).join(" / ")}`, ex:r.ex}); });
   } else if(isWsP(part)){
@@ -2560,7 +2635,7 @@ function aiCands(){
     const add=(j,o)=>{ if(d[j]&&!d[j].ok&&String(o.answer||"").trim()) C.push({i,j,...o}); };
     if(p==="wmean") it.rows.forEach((r,j)=>add(j,{kind:(C&&C.lenient)?"meaningL":"meaning", word:r.w, expected:(r.kp?[r.kp]:[r.ko]).concat(r.koAlt||[]).slice(0,8).join(" / "), answer:a[j]}));
     else if(p==="dtr") it.rows.forEach((r,j)=>add(j,{kind:"chunk", word:r.w, context:T("문장: "+it.en+" | 전체 해석: "+(it.ko||""),400), meaning:r.pt||"", expected:[r.ko].concat(r.koAlt||[]).slice(0,5).join(" / "), answer:a[j]}));
-    else if(p==="dtg") it.rows.forEach((r,j)=>{ const m=a[j]||{}; if(r.ans!=="X"||m.ox!=="X"||!dtgHit(r,m)) return;
+    else if(p==="dtg") it.rows.forEach((r,j)=>{ const m=a[j]||{}; if(r.ans!=="X"||m.ox!=="X"||!dtgHit(r,m)||(d[j]&&d[j].base)) return;
         add(j,{kind:"fix", context:T(String(r.en).split(/\s+/).map((t,k)=>k===m.w?"[["+t+"]]":t).join(" "),400), wrong:r.wrong, expected:r.fix.slice(0,6).join(" / "), meaning:T("어법: "+r.ex,80), answer:m.t}); });
     else if(p==="wsynw") it.rows.forEach((r,j)=>add(j,{kind:"synonym", word:r.w, meaning:r.ko||"", expected:(r.ans||[r.syn].concat(r.alt||[])).filter(Boolean).join(", "), answer:a[j]}));
     else if(p==="wdef") add(1,{kind:"synonym", word:it.hw, meaning:T((it.en||"")+" / "+(it.ko||""),200), expected:[it.syn].concat(it.synAlt||[]).filter(Boolean).join(", "), answer:a[1]});
@@ -2588,7 +2663,7 @@ async function aiJudge(){
       body:JSON.stringify({action:"judge", items:C.map(({i,j,...o})=>o).concat(D.map(({ok,why,...o})=>o))})});
     const js=await r.json(); let n=0; if(!r.ok||!Array.isArray(js.res)) throw new Error("judge");
     (js.res||[]).forEach(v=>{ if(v.i>=C.length){ const c=D[v.i-C.length]; if(c){ c.ok=!!v.ok||!!v.none; c.why=v.why||""; } return; }
-      const c=C[v.i]; if(!c||!v.ok) return; const x=Q.detail[c.i][c.j]; x.ok=true; x.ai=true; x.aiWhy=v.why||""; n++; });
+      const c=C[v.i]; if(!c||!v.ok) return; const x=Q.detail[c.i][c.j]; if(x.gy){ x.base=true; return; } x.ok=true; x.ai=true; x.aiWhy=v.why||""; n++; });
     fin(); return n;
   }catch(e){ D.forEach(c=>{ c.ok=true; }); fin(); return 0; } finally{ clearTimeout(tm); }
 }
@@ -2598,8 +2673,11 @@ async function finish(){
   Q.detail=Q.items.map((it,i)=>(Q.oor||{})[i]?[]:grade(Q.pl[i],it,Q.ans[i],i));
   if(Q.cont && Q.first) Q.detail=Q.detail.map((ds,i)=>{ const f=Q.first[i]; if(!f||f.length!==ds.length) return ds;   // 이어서 풀기: 처음에 답을 쓴 칸은 처음 채점 그대로
     const tm=bkSkip(i); return ds.map((x,j)=>(tm||!isBlankMine(f[j].mine))?f[j]:x); });
-  Q.contOK=!Q.review && !Q.cont && blankInfo(Q.detail).n>0;
+  Q.contOK=!Q.review && !Q.re && !Q.cont && blankInfo(Q.detail).n>0;
   const nAi=await aiJudge().catch(()=>0);
+  Q.detail.forEach(ds=>ds.forEach(x=>{ if(!x.gy) return; const c=(x.chk||[])[0];   // 재시 어법: 이유 판정 결과를 해설에
+    x.ai=false; if(x.ok) return;
+    x.ex=(!x.base?"고친 말이 틀렸어요 · ":!c?"틀린 이유를 안 썼어요 · ":`틀린 이유가 부족해요${c.why?" ("+c.why+")":""} · `)+(x.ex||""); }));
   if(nAi) setTimeout(()=>toast(`🤖 뜻이 통하는 답 ${nAi}개를 정답으로 인정했어요`,2600),400);
   Q.items.forEach((it,i)=>{
     const mp=it._map, bad=[];
@@ -2640,7 +2718,7 @@ function allCardHTML(secs){ const L=allSecs(), stay=L.filter(x=>x.v.stay), fail=
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`; }
 function showResult(){
   const part=Q.part, {t,c,pct}=tally();
-  const V=VERDICT(pct, Q.review?null:part, c, t);
+  const V=Q.re ? (c>=t&&t>0 ? {k:"pass", n:"재시 통과", e:"✓"} : {k:"full", n:"재시 불통과", e:"✗"}) : VERDICT(pct, Q.review?null:part, c, t);
   const secs=Math.floor((Date.now()-Q.t0)/1000);
   const r=58, cc=2*Math.PI*r;
   const col=pct>=80?"var(--ok)":pct>=60?"var(--accent)":"var(--no)";
@@ -2652,10 +2730,10 @@ function showResult(){
     </svg><div class="val"><b>${pct}<span style="font-size:18px">%</span></b><span>정답률</span></div></div>
     <div style="margin-top:14px"><span class="vd vd-big ${V.k}">${V.e} ${V.n}</span></div>
     ${V.stay?`<div style="margin-top:10px;font-size:17px;font-weight:800;color:var(--no)">${STAY_MSG}</div>`:""}
-    <div class="score-msg">${V.R?vrText(V,c,t)
+    <div class="score-msg">${Q.re?(V.k==="pass"?"🎉 다 맞았어요! 이 영역 재시 통과":`재시는 <b>다 맞아야</b> 통과예요 · ${t-c}개 틀림 → 틀린 것 확인하고 다시 보세요`):V.R?vrText(V,c,t)
       :V.k==="pass"?"기준(90점) 넘겼어요. 이 파트는 통과!"
       :V.k==="part"?"조금만 더예요 · 틀린 문항만 다시 풀면 통과":"기준(75점) 미만이라 처음부터 다시 풀어야 해요"}</div>
-    <div class="score-sub num">${Q.review?"오답노트":Q.all?"전체":labelOf(part)} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
+    <div class="score-sub num">${Q.review?"오답노트":Q.all?"전체":(Q.re?"🔁 재시 · ":"")+labelOf(part)} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
     <div class="gain">⚡ +${10+c*2} XP</div>
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`;
   if(Q.all) $("#score-card").innerHTML=allCardHTML(secs);
@@ -2703,6 +2781,16 @@ function showResult(){
     L.forEach((x,k)=>{ const a={d:todayKey(), unit:unitLabel(), part:x.p, partName:labelOf(x.p), scope:sc, total:x.t, correct:x.c, pct:x.pct, secs:Math.round(secs*x.t/Math.max(1,t))};
       if(Q.att&&Q.att[k]) Object.assign(Q.att[k],a); else { S.attempts.push(a); (Q.att ||= [])[k]=a; }
       const b=bestOf()[x.p]; if(!b || x.pct>b.pct) bestOf()[x.p]={done:x.c,total:x.t,pct:x.pct,scope:sc}; });
+  } else if(Q.re){
+    const la={d:todayKey(), unit:unitLabel(), part, partName:"재시 · "+labelOf(part), scope:"재시험", total:t, correct:c, pct, secs};
+    if(Q.la) Object.assign(Q.la,la); else { S.attempts.push(la); Q.la=la; }
+    const R=((S.rt ||= {})[UNIT.id] ||= {}), o=(R[part] ||= {n:0});
+    if(!Q.rtN){ o.n=(o.n||0)+1; Q.rtN=1; } o.last=pct; o.d=todayKey(); if(c>=t&&t>0){ o.pass=1; o.pd=o.pd||todayKey(); }
+    if(part==="wmean"||part==="dtv"){ const L=[];   // 단어 재시: 틀린 단어는 5번씩 쓰고 다시
+      Q.items.forEach((it,i)=>(Q.detail[i]||[]).forEach((x,j)=>{ if(x.ok) return;
+        if(part==="wmean"){ const r=it.rows[j]; if(r) L.push({en:r.w, ko:r.ko, alt:(r.koAlt||[]).slice(0,10)}); }
+        else L.push({en:it.body, ko:it.opt[it.ans]}); }));
+      o.drill=L; }
   } else if(!Q.review){
     const la={d:todayKey(), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
              scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs};
@@ -2713,6 +2801,9 @@ function showResult(){
   save();
   $("#result-retry").hidden = !wrongTotal(true);
   { const wp=(P[part]&&wrongCount(part))||0; $("#result-retry").textContent = wp ? `틀린 것만 다시 · ${wp}개` : "오답노트 보기"; }
+  if(Q.re){ $("#result-retry").hidden = V.k==="pass"; const dl=((reStat(UNIT.id,part)||{}).drill||[]).length;
+    $("#result-retry").textContent=dl?`✍️ 틀린 단어 ${dl}개 · 5번씩 쓰기`:"🔁 다시 재시 보기";
+    if(dl) $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:12px;padding:12px;border-radius:14px;background:var(--surface-2);font-size:13px;font-weight:700;line-height:1.6">✍️ 틀린 단어 <b>${dl}개</b>를 <b>영어·한국어로 5번씩</b> 써야 다시 재시를 볼 수 있어요</div>`); }
   go("result");
 
   const detOf=idx=>idx.map(i=>{ const it=Q.items[i];
@@ -2732,8 +2823,8 @@ function showResult(){
     submitResult({
       replaceIds:Q.cont?(Q.rep||[]):[],
       student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"",
-      part, partName:Q.review?("오답노트 · "+(part!=="review"&&P[part]?labelOf(part):"전체")):labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
-      scope:Q.review?"재시험":(SCOPES()[sel.scope]?.short||sel.scope),
+      part, partName:Q.review?("오답노트 · "+(part!=="review"&&P[part]?labelOf(part):"전체")):Q.re?("재시 · "+reShort(labelOf(part),part)+(Q.drN?` · 쓰기${Q.drN}개×5 후`:"")):labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
+      scope:(Q.review||Q.re)?"재시험":(SCOPES()[sel.scope]?.short||sel.scope),
       total:t, correct:c, pct, secs,
       detail:Q.items.map((it,i)=>{
         const row={no:it.no, sec:(secLab(it.sec)),
@@ -2765,7 +2856,7 @@ $("#review-list").addEventListener("click",e=>{
       Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
       if(!(Q.del||{})[i]) markWrong(Q.pl[i], Q.items[i], bad); })();
     const {t,c,pct}=tally();
-    if(!Q.review && !Q.all){
+    if(!Q.review && !Q.all && !Q.re){
       const b=bestOf()[Q.part]; if(!b||pct>b.pct) bestOf()[Q.part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
       const la=S.attempts[S.attempts.length-1]; if(la){la.correct=c; la.pct=pct;}
     }
@@ -2775,6 +2866,7 @@ $("#review-list").addEventListener("click",e=>{
 });
 $("#result-cta").onclick=()=>{renderHome();go("home");};
 $("#result-retry").onclick=()=>{
+  if(Q&&Q.re){ startRe(Q.part); return; }
   const p=Q&&Q.part;
   if(p&&P[p]&&wrongCount(p)) startQuiz({review:true, part:p});   // 방금 푼 파트의 오답만 바로
   else { renderWrong(); go("wrong"); }
@@ -3265,11 +3357,18 @@ function renderQpick(mode){
   let list="";
   if(QPM==="dt") list=`<div class="sec" style="margin-top:6px"><h2>데일리테스트 응시</h2><span class="more">최신 회차가 맨 위</span></div>
       <div class="card" style="padding:8px 16px">${g.dt.map((u,i)=>uBtn(u).replace("</b>",`</b>${i?"":` <span class="vd" style="font-size:11px;padding:2px 7px;margin-left:4px">NEW</span>`}`)).join("")}</div>`;
+  else if(QPM==="re") list=`<div class="sec" style="margin-top:6px"><h2>🔁 데일리테스트 재시</h2><span class="more">영역을 고르세요</span></div>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:-2px 4px 8px;line-height:1.6">영역 하나만 다시 봐요 · <b>전부 맞혀야 통과</b> · 어법은 X 문장의 <b>틀린 이유</b>도 써요</p>
+      ${g.dt.map(u=>{ const ps=Object.keys(u.pts||{}).filter(p=>P[p]), bs=(S.best||{})[u.id]||{};
+        return `<div class="card" style="padding:12px 12px 6px;margin-bottom:10px"><div style="font-size:14.5px;font-weight:800;margin:0 4px 8px">${esc(u.no)} <span style="font-weight:500;color:var(--ink-3);font-size:12.5px">${esc(u.title||"")}</span></div>
+          ${ps.map(p=>{ const b=bs[p]; let need=false; if(b){ const R=u.verdict&&u.verdict[p]; need=R&&R.pf!=null?b.pct<R.pf:R&&R.wrong?(b.total-b.done)>R.wrong[0]:b.pct<VD_PASS; }
+            return reChip(u.id,p,(u.labels||{})[p],need,"re-chip"); }).join("")}</div>`; }).join("")}`;
   else if(QPM==="vb") list=books.map(b=>{ const us=g.other.filter(u=>u.book===b);
       return `<div class="sec" style="margin-top:6px"><h2>${esc(bnm(b))} 암기</h2><span class="more">DAY를 고르세요</span></div>
       <div class="card" style="padding:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${us.map(u=>`<button class="chip${UNIT&&UNIT.id===u.id?" sel":""}" data-qu="${esc(u.id)}" style="justify-content:center;padding:12px 4px;font-weight:700">${esc(u.no)}</button>`).join("")}</div>`; }).join("");
   $("#qpick-body").innerHTML = big("vb","📖",`${esc(vb)} 암기`,`단어 외우기 · 셀프 테스트 · <span class="num">${g.other.length}개</span>`,"cat-1")
     + big("dt","📝","데일리테스트 응시",`최신 ${esc(g.dt[0].no)} · <span class="num">${g.dt.length}회차</span>`,"cat-3")
+    + big("re","🔁","데일리테스트 재시",`영역별로 다시 · 전부 맞혀야 통과`,"cat-2")
     + list
     + `<p style="font-size:12.5px;color:var(--ink-3);margin:14px 4px 0;line-height:1.6">다른 교재는 <button id="qpick-all" style="color:var(--accent);font-weight:700">📚 시험범위 전체 보기</button></p>`;
   return true; }
@@ -3289,7 +3388,8 @@ function renderQpkSlot(){ const el=$("#qpk-slot"); if(!el) return; const g=qpkGr
   el.style.marginTop="16px";
   el.innerHTML=`<div style="display:flex;gap:8px">
     <button class="btn-sm" data-qopen="vb" style="flex:1;padding:12px 8px;font-weight:700">📖 ${esc([...new Set(g.other.map(u=>u.book))].map(b=>(b.publisher&&!/헤이즐/.test(b.publisher))?b.publisher:b.subject).join(" · "))} 암기</button>
-    <button class="btn-sm" data-qopen="dt" style="flex:1;padding:12px 8px;font-weight:700">📝 데일리테스트 응시</button></div>`; }
+    <button class="btn-sm" data-qopen="dt" style="flex:1;padding:12px 8px;font-weight:700">📝 데일리테스트 응시</button>
+    <button class="btn-sm" data-qopen="re" style="flex:1;padding:12px 8px;font-weight:700">🔁 재시</button></div>`; }
 $("#qpk-slot").addEventListener("click",e=>{ const b=e.target.closest("[data-qopen]"); if(b) openQpick(b.dataset.qopen); });
 const qpkFirst=()=>{ try{ if(sessionStorage.getItem("nf.qpk")) return false; sessionStorage.setItem("nf.qpk","1"); }catch(e){} return !!qpkGroups(); };
 $("#home-book").onclick=()=>{ if(S.rsch==="*") S.rsch=""; renderBooks(); go("books"); };
