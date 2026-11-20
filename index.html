@@ -1115,7 +1115,12 @@ const subLen = (part,it) =>
   (part==="wmean"||isWsP(part)||part==="wsynw"||part==="dtr"||part==="dtg") ? it.rows.length :
   (part==="wdef")                 ? 2 : 1;
 const wrongCount = (part, ever) => wrongItems(part, ever).reduce((s,it)=>s+pts(part,it),0);
-const wrongTotal = ever => livePARTS().reduce((s,p)=>s+wrongCount(p.id, ever),0);
+/* 📒 데일리테스트(한 번에 응시) 오답노트 = 통과용: 원래 시험에서 통과했거나 재시를 통과한 영역만. 부분재시·통재시 영역은 🔁 영역별 재시로 */
+const woOK = id => { if(!(C&&C.allInOne)||!UNIT) return true; const b=bestOf()[id];
+  return (!!b && VERDICT(b.pct,id,b.done,b.total).k==="pass") || !!(((S.rt||{})[UNIT.id]||{})[id]||{}).pass; };
+const woLive = () => livePARTS().filter(p=>woOK(p.id));
+const woBlocked = () => (C&&C.allInOne) ? livePARTS().filter(p=>bestOf()[p.id]&&!woOK(p.id)) : [];
+const wrongTotal = ever => woLive().reduce((s,p)=>s+wrongCount(p.id, ever),0);
 function doneCount(){
   const b=bestOf();
   return PARTS.reduce((s,p)=>s+(b[p.id]?.done||0),0);
@@ -1325,15 +1330,17 @@ function renderHome(){
       ${svg("chev","go")}
     </button>`;}).join("");
 
-  const wt=wrongTotal(), we=wrongTotal(true);
+  const wt=wrongTotal(), we=wrongTotal(true), wb=woBlocked();
+  const wbNote=wb.length?`<div style="margin-top:8px;font-size:12.5px;color:var(--ink-3);line-height:1.6">🔁 <b>${wb.map(p=>esc(reShort(labelOf(p.id),p.id))).join(" · ")}</b> 영역은 아직 통과 못 해서 오답노트 대신 <b>영역별 재시</b>(영역 전체)를 봐야 해요</div>`:"";
   $("#wrong-slot").innerHTML = we ? `
-    <div class="sec"><h2>오답노트</h2><span class="more">틀렸던 문제는 언제든 다시</span></div>
+    <div class="sec"><h2>오답노트${C&&C.allInOne?" · 통과한 영역":""}</h2><span class="more">틀렸던 문제는 언제든 다시</span></div>
     <button class="card part-card" data-go="wrong" style="width:100%">
       <span class="ci" style="background:var(--no-soft);color:var(--no)">${wt||we}</span>
       <span style="flex:1"><span class="t">${wt?`아직 틀린 문제 ${wt}개 다시 풀기`:`틀렸던 문제 ${we}개 다시 풀기`}</span>
-      <span class="s">${wt?`틀렸던 문제 전체 ${we}개 · `:""}${livePARTS().filter(p=>wrongCount(p.id,true)).map(p=>labelOf(p.id)).join(" · ")}</span></span>
+      <span class="s">${wt?`틀렸던 문제 전체 ${we}개 · `:""}${woLive().filter(p=>wrongCount(p.id,true)).map(p=>labelOf(p.id)).join(" · ")}</span></span>
       ${svg("chev","go")}
-    </button>` : (tried ? `
+    </button>${wbNote}` : wb.length ? `
+    <div class="sec"><h2>오답노트 · 통과한 영역</h2><span class="more">통과하면 열려요</span></div>${wbNote}` : (tried ? `
     <div class="sec"><h2>오답노트</h2><span class="more">비어 있어요</span></div>
     <div class="card" style="padding:16px;font-size:13.5px;color:var(--ink-3);line-height:1.7">
       지금은 틀린 문항이 없어요 👏 새로 풀다가 틀리면 여기에 자동으로 쌓입니다.</div>` : "");
@@ -1599,7 +1606,7 @@ function startQuiz(opts){
     } }
   let list=[];
   if(opts.review){
-    (opts.part ? [opts.part] : livePARTS().map(p=>p.id))
+    (opts.part ? [opts.part] : woLive().map(p=>p.id))
       .forEach(pid=>wrongItems(pid, !!opts.ever).forEach(it=>list.push({part:pid, it})));
   } else if(opts.re){   // 🔁 데일리테스트 영역별 재시: 그 영역 전체 (범위 아님·홀수 무시), 단어 순서·객관식 순서는 섞음
     list=itemsOf(opts.re,"all").map(it=>({part:opts.re, it}));
@@ -2801,6 +2808,11 @@ function showResult(){
   save();
   $("#result-retry").hidden = !wrongTotal(true);
   { const wp=(P[part]&&wrongCount(part))||0; $("#result-retry").textContent = wp ? `틀린 것만 다시 · ${wp}개` : "오답노트 보기"; }
+  if(Q.all && C && C.allInOne){ const nf=allSecs().filter(x=>x.v.k!=="pass"), wa=wrongTotal();
+    $("#result-retry").dataset.dt = nf.length ? "re" : "wo";
+    $("#result-retry").hidden = !nf.length && !wa;
+    $("#result-retry").textContent = nf.length ? `🔁 재시 보러 가기 · ${nf.map(x=>reShort(labelOf(x.p),x.p).replace(/^[A-Z]\s+/,"")).join("·")}` : `틀린 것만 다시 · ${wa}개 (오답노트)`; }
+  else delete $("#result-retry").dataset.dt;
   if(Q.re){ $("#result-retry").hidden = V.k==="pass"; const dl=((reStat(UNIT.id,part)||{}).drill||[]).length;
     $("#result-retry").textContent=dl?`✍️ 틀린 단어 ${dl}개 · 5번씩 쓰기`:"🔁 다시 재시 보기";
     if(dl) $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:12px;padding:12px;border-radius:14px;background:var(--surface-2);font-size:13px;font-weight:700;line-height:1.6">✍️ 틀린 단어 <b>${dl}개</b>를 <b>영어·한국어로 5번씩</b> 써야 다시 재시를 볼 수 있어요</div>`); }
@@ -2867,6 +2879,9 @@ $("#review-list").addEventListener("click",e=>{
 $("#result-cta").onclick=()=>{renderHome();go("home");};
 $("#result-retry").onclick=()=>{
   if(Q&&Q.re){ startRe(Q.part); return; }
+  const dt=$("#result-retry").dataset.dt;
+  if(dt==="re"){ renderHome(); go("home"); setTimeout(()=>{ const c=document.querySelector("#part-list .re-chip"); if(c) c.closest("div").scrollIntoView({block:"center",behavior:"smooth"}); },120); return; }
+  if(dt==="wo"){ startQuiz({review:true}); return; }
   const p=Q&&Q.part;
   if(p&&P[p]&&wrongCount(p)) startQuiz({review:true, part:p});   // 방금 푼 파트의 오답만 바로
   else { renderWrong(); go("wrong"); }
@@ -2906,7 +2921,7 @@ function wItemRows(part){
       <button class="wdel${wSure===id?" sure":""}" data-wdel="${esc(id)}">${wSure===id?"정말 삭제":"삭제"}</button></div>`; }).join(""); }).join("");
 }
 function renderWrong(){
-  const rows=livePARTS().map(p=>({p, n:wrongCount(p.id), e:wrongCount(p.id,true)})).filter(x=>x.e);
+  const rows=woLive().map(p=>({p, n:wrongCount(p.id), e:wrongCount(p.id,true)})).filter(x=>x.e);
   const tot=rows.reduce((s,x)=>s+x.n,0), tote=rows.reduce((s,x)=>s+x.e,0);
   const redo=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round">${I.redo}</svg>`;
   const pill=(on)=>`flex:none;display:flex;align-items:center;gap:5px;padding:8px 11px;border-radius:11px;font-size:12.5px;font-weight:800;${on?"background:var(--accent);color:var(--on-accent)":"background:var(--surface-2);color:var(--accent)"}`;
