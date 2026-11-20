@@ -1206,6 +1206,10 @@ function renderSmem0(el){
 const reShort = (lab,p) => String(lab||(P[p]&&P[p].n)||p).replace(/\s*\(.*\)\s*$/,"");
 const reStat = (uid,p) => ((S.rt||{})[uid]||{})[p] || null;
 const reNeed = (p,b) => !!b && VERDICT(b.pct,p,b.done,b.total).k!=="pass";
+/* 재시 통과 기준: 데일리테스트(한 번에 응시)·단어 파트는 전부 맞아야, 나머지는 90점(VD_PASS) 이상 */
+const reAll = p => !!(C&&C.allInOne) || isWordP(p) || p==="dtv";
+const rePassOK = (p,c,t) => t>0 && (reAll(p) ? c>=t : c/t*100>=VD_PASS);
+const reRuleTxt = p => reAll(p) ? "전부 맞혀야" : `${VD_PASS}점 이상이면`;
 function reChip(uid,p,lab,need,cls){ const r=reStat(uid,p);
   const st=r&&r.pass?`<span class="vd pass" style="font-size:11px">✓ 재시 통과</span>`:r&&r.drill&&r.drill.length?`<span class="vd part" style="font-size:11px">✍️ 쓰기 ${r.drill.length}개 남음</span>`:r?`<span class="vd full" style="font-size:11px">✗ ${r.n}회 · ${r.last}%</span>`:need?`<span class="vd part" style="font-size:11px">재시 대상</span>`:"";
   return `<button class="${cls}" data-rego="${esc(p)}" data-reu="${esc(uid)}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 12px;margin:0 0 6px;border-radius:12px;background:var(--surface-2)">
@@ -1217,13 +1221,26 @@ function reCardHTML(){ if(!C||!C.allInOne||!UNIT) return ""; const LP=livePARTS(
     ${LP.map(p=>reChip(UNIT.id,p.id,labelOf(p.id),reNeed(p.id,bestOf()[p.id]),"re-chip")).join("")}</div>`; }
 function startRe(part){ if(!C||!C[part]||!C[part].length){ toast("문항이 없어요"); return; }
   const st=reStat(UNIT.id,part); if(st&&Array.isArray(st.drill)&&st.drill.length){ drOpen(part); toast("틀린 단어 5번씩 쓰기부터 해요"); return; }
-  sel={part, scope:"all"}; startQuiz({re:part}); }
+  sel={part, scope:(C&&C.allInOne)?"all":curScope()}; startQuiz({re:part}); }
 /* ✍️ 단어 재시 틀린 단어 5번씩 쓰기 — 영어 + 한국어 뜻을 한 줄씩 5번. 다 써야 다음 재시 (붙여넣기 막음) */
 const DR_N=5; const RE_DRILLED={};   // 쓰기 마친 단어 수 → 다음 재시 기록 이름에 붙임
-const drKoOk=(v,w)=>{ const m=String(v||"").trim(); if(!m) return false; const n=x=>String(x||"").replace(/\([^)]*\)|\[[^\]]*\]/g,"").replace(/[\s.,;:!?~∼·'"\-]/g,"");
+const drKoOk=(v,w)=>{ const m=String(v||"").trim(); if(!m) return false; if(w.k2==="en") return czEq(m,w.ko); const n=x=>String(x||"").replace(/\([^)]*\)|\[[^\]]*\]/g,"").replace(/[\s.,;:!?~∼·'"\-]/g,"");
   const cands=[w.ko].concat(String(w.ko||"").split(/[;,/]/),w.alt||[]).map(n).filter(Boolean);
   return cands.includes(n(m)) || (typeof koMatch==="function" && koMatch(m,w.ko,w.alt||[])); };
 const drEnOk=(v,w)=>czEq(v,w.en) || czEq(String(v||"").replace(/\s+/g," "),w.en);
+/* 틀린 단어 → {en, ko(한국어 뜻 또는 유의어 k2:'en')} */
+const drVdKo = ex => { const m=String(ex||"").match(/\(\s*(?:[a-z]{1,4}\.\s*)+([^)]+)\)/); return m?m[1].trim():""; };
+function drPair(part,it,j){ const A=k=>(it.opt||[])[k];
+  if(part==="wmean"){ const r=it.rows[j]; return r&&{en:r.w, ko:r.ko, alt:(r.koAlt||[]).slice(0,10)}; }
+  if(part==="wsynw"){ const r=it.rows[j]; return r&&(r.ko?{en:r.w, ko:r.ko}:{en:r.w, ko:(r.ans&&r.ans[0])||r.syn, k2:"en"}); }
+  if(part==="wsyn"){ const r=it.rows[j]; return r&&{en:r.w, ko:it.opts[r.ans], k2:"en"}; }
+  if(part==="wdef") return it.ko?{en:it.hw, ko:it.ko}:{en:it.hw, ko:it.syn, k2:"en"};
+  if(part==="dtv"||part==="vmc") return {en:it.body, ko:A(it.ans)};
+  if(part==="vmcr") return {en:A(it.ans), ko:it.body};
+  if(part==="vds"){ const b=(it.blanks||[])[j]; return b&&{en:b.ans, ko:b.ko}; }
+  if(/^(vdc|vdt)\d$/.test(part)){ const k=drVdKo(it.ex); return k?{en:A(it.ans), ko:k}:null; }
+  if(part==="dfa"){ const r=it.rows[j]; return null; }
+  return null; }
 let DR=null;
 function drOpen(part){ const st=reStat(UNIT.id,part); if(!st||!st.drill||!st.drill.length) return;
   DR={part, L:st.drill, v:st.drill.map(()=>Array.from({length:DR_N},()=>({e:"",k:""})))};
@@ -1240,7 +1257,7 @@ function drRender(){ const el=document.getElementById("drill"); if(!el||!DR) ret
       <div style="font-size:15px"><b>${esc(w.en)}</b> <span style="color:var(--ink-2)">— ${esc(w.ko)}</span></div>
       ${DR.v[i].map((x,k)=>`<div class="dr-row"><span class="num" style="width:16px;font-size:12px;color:var(--ink-3)">${k+1}</span>
         <input class="cz-in${drEnOk(x.e,w)?" ok":""}" data-dre="${i}.${k}" value="${esc(x.e)}" placeholder="영어" autocomplete="off" spellcheck="false" autocapitalize="off">
-        <input class="cz-in${drKoOk(x.k,w)?" ok":""}" data-drk="${i}.${k}" value="${esc(x.k)}" placeholder="한국어 뜻" autocomplete="off" spellcheck="false"></div>`).join("")}</div>`).join("")}
+        <input class="cz-in${drKoOk(x.k,w)?" ok":""}" data-drk="${i}.${k}" value="${esc(x.k)}" placeholder="${w.k2==="en"?"유의어":"한국어 뜻"}" autocomplete="off" spellcheck="false"${w.k2==="en"?' autocapitalize="off"':""}></div>`).join("")}</div>`).join("")}
     <button class="cta" data-drdone="1" id="dr-cta" ${left?"disabled":""} style="width:100%;margin-top:6px">${left?`남은 칸 ${left}개`:"다 썼어요 · 다시 재시 보기"}</button></div>`; }
 function drInput(e){ const t=e.target, a=t.dataset.dre||t.dataset.drk; if(!a||!DR) return; const [i,k]=a.split(".").map(Number), w=DR.L[i];
   if(t.dataset.dre!=null){ DR.v[i][k].e=t.value; t.classList.toggle("ok",drEnOk(t.value,w)); } else { DR.v[i][k].k=t.value; t.classList.toggle("ok",drKoOk(t.value,w)); }
@@ -1328,7 +1345,7 @@ function renderHome(){
              <span class="num" style="font-size:13px;font-weight:800;color:var(--ink-2)">${b.pct}%</span>
              ${vdPill(b.pct,p.id,b.done,b.total)}</span>`:""}
       ${svg("chev","go")}
-    </button>`;}).join("");
+    </button>${b||reStat(UNIT.id,p.id)?`<div style="padding:0 16px 8px">${reChip(UNIT.id,p.id,"🔁 재시 · 파트 전체 다시 ("+(reAll(p.id)?"다 맞아야":VD_PASS+"점")+" 통과)",reNeed(p.id,b),"re-chip")}</div>`:""}`;}).join("");
 
   const wt=wrongTotal(), we=wrongTotal(true), wb=woBlocked();
   const wbNote=wb.length?`<div style="margin-top:8px;font-size:12.5px;color:var(--ink-3);line-height:1.6">🔁 <b>${wb.map(p=>esc(reShort(labelOf(p.id),p.id))).join(" · ")}</b> 영역은 아직 통과 못 해서 오답노트 대신 <b>영역별 재시</b>(영역 전체)를 봐야 해요</div>`:"";
@@ -1609,7 +1626,7 @@ function startQuiz(opts){
     (opts.part ? [opts.part] : woLive().map(p=>p.id))
       .forEach(pid=>wrongItems(pid, !!opts.ever).forEach(it=>list.push({part:pid, it})));
   } else if(opts.re){   // 🔁 데일리테스트 영역별 재시: 그 영역 전체 (범위 아님·홀수 무시), 단어 순서·객관식 순서는 섞음
-    list=itemsOf(opts.re,"all").map(it=>({part:opts.re, it}));
+    list=((C&&C.allInOne)?itemsOf(opts.re,"all"):itemsOfX(opts.re, sel.scope)).map(it=>({part:opts.re, it}));
     if(opts.re==="wmean"||opts.re==="dtv") list=shuffleArr(list.slice());
     list=list.map(x=>x.part==="wmean"&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
   } else if(opts.all){
@@ -1625,7 +1642,7 @@ function startQuiz(opts){
   }
   const items=list.map(x=>x.it);
   Q={review:!!opts.review, all:!!opts.all, re:!!opts.re, drN:opts.re?(RE_DRILLED[(UNIT?UNIT.id:"")+"|"+opts.re]||0):0, part: opts.review ? (opts.part||"review") : opts.re ? opts.re : opts.all ? "all" : sel.part,
-     items, pl:list.map(x=>x.part), i:0, t0:Date.now(), rk:rsKey(opts), scope:opts.re?"all":sel.scope, odd:!opts.review && !opts.re && oddOn(sel.part)};
+     items, pl:list.map(x=>x.part), i:0, t0:Date.now(), rk:rsKey(opts), scope:opts.re?((C&&C.allInOne)?"all":sel.scope):sel.scope, odd:!opts.review && !opts.re && oddOn(sel.part)};
   Q.ans=list.map(x=>blankAns(x.part,x.it));
   Q.cur=list.map(()=>0);
   Q.bd=list.map(()=>[]); Q.af={};
@@ -1721,7 +1738,7 @@ function renderQ(){
   $("#q-now").textContent=Q.i+1;
   const pv=$("#quiz-prev"); pv.style.opacity=Q.i?"1":".25"; pv.style.pointerEvents=Q.i?"auto":"none";
   $("#q-bar").style.width=((Q.i+1)/Q.items.length*100)+"%";
-  const tag=`<span class="q-type">${Q.re?"🔁 재시 · ":""}${labelOf(part)} · ${esc(itemTag(it))}</span>`+(Q.re&&Q.i===0?`<p class="hint" style="margin-top:6px;color:var(--no);font-weight:800">🔁 재시는 이 영역을 <b>전부 맞혀야</b> 통과예요${part==="dtg"?" · X 문장은 <b>틀린 단어 + 고친 말 + 틀린 이유</b>까지 맞아야 정답":""}</p>`:"");
+  const tag=`<span class="q-type">${Q.re?"🔁 재시 · ":""}${labelOf(part)} · ${esc(itemTag(it))}</span>`+(Q.re&&Q.i===0?`<p class="hint" style="margin-top:6px;color:var(--no);font-weight:800">🔁 재시는 이 ${(C&&C.allInOne)?"영역을":"파트를"} <b>${reRuleTxt(part)}</b> 통과예요${part==="dtg"?" · X 문장은 <b>틀린 단어 + 고친 말 + 틀린 이유</b>까지 맞아야 정답":""}</p>`:"");
   const stemOf=(d)=> (C&&C.stems&&C.stems[part]) || d;
   let body="";
   if(part==="vocab"||part==="gram"){
@@ -2725,7 +2742,7 @@ function allCardHTML(secs){ const L=allSecs(), stay=L.filter(x=>x.v.stay), fail=
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`; }
 function showResult(){
   const part=Q.part, {t,c,pct}=tally();
-  const V=Q.re ? (c>=t&&t>0 ? {k:"pass", n:"재시 통과", e:"✓"} : {k:"full", n:"재시 불통과", e:"✗"}) : VERDICT(pct, Q.review?null:part, c, t);
+  const V=Q.re ? (rePassOK(part,c,t) ? {k:"pass", n:"재시 통과", e:"✓"} : {k:"full", n:"재시 불통과", e:"✗"}) : VERDICT(pct, Q.review?null:part, c, t);
   const secs=Math.floor((Date.now()-Q.t0)/1000);
   const r=58, cc=2*Math.PI*r;
   const col=pct>=80?"var(--ok)":pct>=60?"var(--accent)":"var(--no)";
@@ -2737,9 +2754,9 @@ function showResult(){
     </svg><div class="val"><b>${pct}<span style="font-size:18px">%</span></b><span>정답률</span></div></div>
     <div style="margin-top:14px"><span class="vd vd-big ${V.k}">${V.e} ${V.n}</span></div>
     ${V.stay?`<div style="margin-top:10px;font-size:17px;font-weight:800;color:var(--no)">${STAY_MSG}</div>`:""}
-    <div class="score-msg">${Q.re?(V.k==="pass"?"🎉 다 맞았어요! 이 영역 재시 통과":`재시는 <b>다 맞아야</b> 통과예요 · ${t-c}개 틀림 → 틀린 것 확인하고 다시 보세요`):V.R?vrText(V,c,t)
+    <div class="score-msg">${Q.re?(V.k==="pass"?(c>=t?"🎉 다 맞았어요! 재시 통과":`🎉 ${pct}점 · 재시 통과`):`재시는 <b>${reRuleTxt(part)}</b> 통과예요 · ${t-c}개 틀림 → 틀린 것 확인하고 다시 보세요`):V.R?vrText(V,c,t)
       :V.k==="pass"?"기준(90점) 넘겼어요. 이 파트는 통과!"
-      :V.k==="part"?"조금만 더예요 · 틀린 문항만 다시 풀면 통과":"기준(75점) 미만이라 처음부터 다시 풀어야 해요"}</div>
+      :V.k==="part"?"조금만 더예요 · 🔁 재시(파트 전체)를 보고 통과하세요":"기준(75점) 미만 · 🔁 재시(파트 전체)를 보세요"}</div>
     <div class="score-sub num">${Q.review?"오답노트":Q.all?"전체":(Q.re?"🔁 재시 · ":"")+labelOf(part)} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
     <div class="gain">⚡ +${10+c*2} XP</div>
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`;
@@ -2792,12 +2809,10 @@ function showResult(){
     const la={d:todayKey(), unit:unitLabel(), part, partName:"재시 · "+labelOf(part), scope:"재시험", total:t, correct:c, pct, secs};
     if(Q.la) Object.assign(Q.la,la); else { S.attempts.push(la); Q.la=la; }
     const R=((S.rt ||= {})[UNIT.id] ||= {}), o=(R[part] ||= {n:0});
-    if(!Q.rtN){ o.n=(o.n||0)+1; Q.rtN=1; } o.last=pct; o.d=todayKey(); if(c>=t&&t>0){ o.pass=1; o.pd=o.pd||todayKey(); }
-    if(part==="wmean"||part==="dtv"){ const L=[];   // 단어 재시: 틀린 단어는 5번씩 쓰고 다시
-      Q.items.forEach((it,i)=>(Q.detail[i]||[]).forEach((x,j)=>{ if(x.ok) return;
-        if(part==="wmean"){ const r=it.rows[j]; if(r) L.push({en:r.w, ko:r.ko, alt:(r.koAlt||[]).slice(0,10)}); }
-        else L.push({en:it.body, ko:it.opt[it.ans]}); }));
-      o.drill=L; }
+    if(!Q.rtN){ o.n=(o.n||0)+1; Q.rtN=1; } o.last=pct; o.d=todayKey(); if(rePassOK(part,c,t)){ o.pass=1; o.pd=o.pd||todayKey(); }
+    if(reAll(part) && (isWordP(part)||part==="dtv") && !rePassOK(part,c,t)){ const L=[], seen=new Set();   // 단어 재시 불통과: 틀린 단어는 5번씩 쓰고 다시
+      Q.items.forEach((it,i)=>(Q.detail[i]||[]).forEach((x,j)=>{ if(x.ok) return; const w=drPair(part,it,j); if(w&&w.en&&w.ko&&!seen.has(w.en)){ seen.add(w.en); L.push(w); } }));
+      o.drill=L.slice(0,40); } else o.drill=[];
   } else if(!Q.review){
     const la={d:todayKey(), unit:unitLabel(), part, partName:labelOf(part)+(Q.odd?" (홀수)":"")+(oorN()?` (범위 아님 ${oorN()} 제외)`:""),
              scope:SCOPES()[sel.scope]?.short||sel.scope, total:t, correct:c, pct, secs};
@@ -2813,6 +2828,8 @@ function showResult(){
     $("#result-retry").hidden = !nf.length && !wa;
     $("#result-retry").textContent = nf.length ? `🔁 재시 보러 가기 · ${nf.map(x=>reShort(labelOf(x.p),x.p).replace(/^[A-Z]\s+/,"")).join("·")}` : `틀린 것만 다시 · ${wa}개 (오답노트)`; }
   else delete $("#result-retry").dataset.dt;
+  if(!Q.re && !Q.review && !Q.all && P[part] && V.k!=="pass" && UNIT)
+    $("#score-card").insertAdjacentHTML("beforeend",`<button class="btn-sm" data-rego="${esc(part)}" data-reu="${esc(UNIT.id)}" style="display:block;width:100%;margin-top:12px;padding:13px">🔁 재시 보기 · 파트 전체 (${reAll(part)?"다 맞아야":VD_PASS+"점"} 통과)</button>`);
   if(Q.re){ $("#result-retry").hidden = V.k==="pass"; const dl=((reStat(UNIT.id,part)||{}).drill||[]).length;
     $("#result-retry").textContent=dl?`✍️ 틀린 단어 ${dl}개 · 5번씩 쓰기`:"🔁 다시 재시 보기";
     if(dl) $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:12px;padding:12px;border-radius:14px;background:var(--surface-2);font-size:13px;font-weight:700;line-height:1.6">✍️ 틀린 단어 <b>${dl}개</b>를 <b>영어·한국어로 5번씩</b> 써야 다시 재시를 볼 수 있어요</div>`); }
