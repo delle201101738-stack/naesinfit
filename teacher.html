@@ -188,6 +188,12 @@ let PIN=(()=>{try{return localStorage.getItem("naesinfit.pin")||sessionStorage.g
 const pctClass=p=>p>=90?"p-hi":p>=75?"p-mid":"p-lo";
 const VD_PASS=90, VD_PART=75;
 let MF={books:[]};
+let DTCHK=null, DTCHK_ING=false;   // 데일리테스트 회차별 어법 추가 문제 풀(dtgx) 점검
+async function dtChkLoad(){ if(DTCHK_ING) return; DTCHK_ING=true; const R={};
+  const us=[]; (MF.books||[]).forEach(b=>(b.units||[]).forEach(u=>{ if(/^dt\d/.test(u.id)) us.push(u); }));
+  await Promise.all(us.map(async u=>{ try{ const j=await (await fetch(`content/${u.id}.json`,{cache:"no-store"})).json();
+    if(j.allInOne) R[u.id]={no:u.no, dtg:(j.dtg||[]).length, dtgx:(j.dtgx||[]).length, study:((j.study||{}).dtg||[]).length}; }catch(e){} }));
+  DTCHK=R; DTCHK_ING=false; try{ renderIns(); }catch(e){} }
 const vd=(p,done)=> (done!=null&&done<100) ? {k:"todo",n:`진행 ${done}%`}
                   : p>=VD_PASS?{k:"pass",n:"통과"}:p>=VD_PART?{k:"part",n:"부분 재시험"}:{k:"full",n:"전체 재시험"};
 const vdPill=(p,done)=>`<span class="vd ${vd(p,done).k}">${vd(p,done).n}</span>`;
@@ -706,6 +712,8 @@ function renderIns(){
   const clsName=INS.cid==="all"?"전체":(C.find(c=>String(c.id)===String(INS.cid))||{}).name||"";
   // 🔁 데일리테스트 영역별 재시 현황: 그날 원래 시험에서 통과 못 한 영역 → 그 뒤 재시 기록(전부 맞으면 통과)
   const RE=ALL.filter(r=>r.scope==="재시험"&&/^재시 · /.test(r.part_name||"")&&+r.total>0);
+  if(!DTCHK) dtChkLoad();
+  const dtMiss=Object.entries(DTCHK||{}).filter(([k,v])=>v.dtg&&!(v.dtgx>=5));
   const reAllP=r=>/^dt/.test(r.unit_id||"")||/^(wmean|wsyn|wsynw|dfa|wdef|dfb|vdc\d|vdm\d|vdt\d|vds|vmc|vmcr|dtv)$/.test(r.part);   // 재시 통과: 데일리테스트·단어는 전부, 나머지 90점
   const reOK=(r,x)=>+x.total>0&&(reAllP(r)?+x.correct>=+x.total:+x.correct/+x.total>=0.9);
   const reT=best.filter(r=>r.v!=="pass").map(r=>{ const L=RE.filter(x=>x.student===r.student&&x.unit_id===r.unit_id&&x.part===r.part&&iDk(x.created_at)>=day);
@@ -737,6 +745,7 @@ function renderIns(){
         ${both.length?both.map(s=>nameRow(s,`어법: ${esc(failTxt(s,"어법"))}<br>독해: ${esc(failTxt(s,"독해"))}`)).join(""):`<div style="font-size:13px;color:var(--ink-3)">없어요 👏</div>`}
         ${grOnly.length||rdOnly.length?`<div style="margin-top:8px;font-size:12.5px;color:var(--ink-3);line-height:1.7">${grOnly.length?`어법만 통재시: ${grOnly.map(esc).join(", ")}<br>`:""}${rdOnly.length?`독해만 통재시: ${rdOnly.map(esc).join(", ")}`:""}</div>`:""}</div>
     </div>
+    ${dtMiss.length?`<div class="card" style="padding:14px 20px;margin-top:12px;border:2px solid var(--no)"><b style="font-size:14px;color:var(--no)">⚠ 데일리테스트 어법 통재시 추가 문제가 없어요</b><div style="font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.6">${dtMiss.map(([k,v])=>esc(v.no)).join(" · ")} — 어법 통재시 재시에 5문장을 더 넣을 문제 풀(dtgx)이 비어 있어서 지금은 원래 5문장만 나와요. Claude에게 "<b>${esc(dtMiss[0][1].no)} 어법 추가 문제 넣어줘</b>"라고 해 주세요.</div></div>`:""}
     ${!reT.length?`<div class="card" style="padding:16px 20px;margin-top:12px"><b style="font-size:14.5px">🔁 재시 현황</b><div style="font-size:13px;color:var(--ink-3);margin-top:6px">${dd}에 재시 대상(통과 못 한 영역)이 없어요.</div></div>`:""}
     ${reT.length?`<div class="card" style="padding:16px 20px;margin-top:12px">${ttl("🔁 재시 현황 <span style=\"font-size:12px;font-weight:600;color:var(--ink-3)\">파트 전체 다시 · 데일리테스트·단어는 다 맞아야, 나머지 90점</span>",reLeft.length,insCopyBtn("r",`[${clsName} ${dd}] 재시 남은 학생 ${reLeft.length}명\n`+reLeft.map(s=>`${s} (${reT.filter(x=>x.r.student===s&&!x.ok).map(x=>`${pLab(x.r)} ${reTxt(x)}`).join(" · ")})`).join("\n")))}
       ${reT.map(x=>nameRow(x.r.student,`<b>${esc(pLab(x.r))}</b> <span class="num" style="color:var(--ink-3)">${r1(+x.r.correct)}/${x.r.total} ${VN[x.r.v]}</span> → <span style="font-weight:800;color:${x.ok?"var(--ok)":x.n?"var(--no)":"var(--ink-3)"}">${reTxt(x)}</span>`)).join("")}</div>`:""}

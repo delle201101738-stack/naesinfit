@@ -387,6 +387,20 @@ input::placeholder,textarea::placeholder{color:var(--ink-3); opacity:1}
 #drill .dr-row{display:flex;gap:6px;align-items:center;margin-top:6px}
 #drill .dr-row .cz-in{flex:1;min-width:0}
 #drill .dr-row .cz-in.ok{box-shadow:inset 0 0 0 2px var(--ok)}
+#study{position:fixed;inset:0;z-index:310;background:var(--ground);display:flex;flex-direction:column}
+#study[hidden]{display:none}
+#study .sv-top{max-width:560px;width:100%;margin:0 auto;padding:12px 16px 6px;box-sizing:border-box}
+#study .sv-bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-top:8px}
+#study .sv-bar i{display:block;height:100%;background:var(--cat-3);transition:width .2s}
+#study .sv-card{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;max-width:560px;width:100%;margin:0 auto;padding:6px 16px 12px;box-sizing:border-box}
+#study .sv-in{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:20px 20px 22px;min-height:52vh}
+#study .sv-k{font-size:12px;font-weight:800;color:var(--cat-3);letter-spacing:.02em}
+#study .sv-h{font-size:20px;font-weight:800;line-height:1.35;margin:6px 0 12px}
+#study .sv-b{font-size:15px;line-height:1.75;white-space:pre-line;color:var(--ink-2)}
+#study .sv-ex{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--surface-2);font-size:14px;line-height:1.7;white-space:pre-line}
+#study .sv-mine{display:inline-block;margin-bottom:8px;padding:3px 9px;border-radius:999px;background:var(--no);color:#fff;font-size:11.5px;font-weight:800}
+#study .sv-nav{max-width:560px;width:100%;margin:0 auto;padding:8px 16px calc(14px + env(safe-area-inset-bottom));display:flex;gap:8px;box-sizing:border-box}
+#study .sv-nav button{flex:1;padding:14px 8px;border-radius:14px;border:0;font-size:15px;font-weight:800}
 #vs .vs-in{max-width:560px;margin:0 auto;padding:14px 16px 110px}
 #vs .vs-hd{display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--ground);padding:6px 0 10px;z-index:2}
 #vs .vs-hd b{flex:1;font-size:17px}
@@ -1224,11 +1238,64 @@ function reChip(uid,p,lab,need,cls){ const r=reStat(uid,p);
   const st=r&&r.pass?`<span class="vd pass" style="font-size:11px">✓ 재시 통과</span>`:r&&r.drill&&r.drill.length?`<span class="vd part" style="font-size:11px">✍️ 쓰기 ${r.drill.length}개 남음</span>`:r?`<span class="vd full" style="font-size:11px">✗ ${r.n}회 · ${r.last}%</span>`:need?`<span class="vd part" style="font-size:11px">재시 대상</span>`:"";
   return `<button class="${cls}" data-rego="${esc(p)}" data-reu="${esc(uid)}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 12px;margin:0 0 6px;border-radius:12px;background:var(--surface-2)">
     <span style="flex:1;min-width:0;font-size:13.5px;font-weight:700">${esc(reShort(lab,p))}</span>${st}<span style="color:var(--ink-3);font-size:13px">›</span></button>`; }
+/* 📚 데일리테스트 재시 전 '먼저 공부하기' — 영역별 개념·포인트 카드 (학생이 틀린 문제를 앞에) */
+const stRow = (uid,p,lab,need) => `<div style="display:flex;gap:6px;align-items:stretch"><button class="btn-sm" data-stgo="${esc(p)}" data-reu="${esc(uid)}" style="flex:0 0 auto;margin:0 0 6px;padding:0 12px;border-radius:12px;font-weight:800;font-size:12.5px;white-space:nowrap">📚 먼저 공부${((((S.rt||{})[uid]||{})[p]||{}).st)?" ✓":""}</button><div style="flex:1;min-width:0">${reChip(uid,p,lab,need,"re-chip")}</div></div>`;
+function stWrongIdx(part,it){ return ((wrongOf()[part]||{})[wkey(it)])||[]; }
+function stCards(part){ const L=[], lab=reShort(labelOf(part),part), items=(C[part]||[]);
+  const card=(k,h,b,ex,mine)=>L.push({k,h,b,ex,mine});
+  if(part==="wmean"){ const W=[], A=[]; items.forEach(it=>{ const bad=stWrongIdx(part,it); it.rows.forEach((r,j)=>{ (bad.includes(j)?W:A).push(r); }); });
+    card(lab, W.length?`틀렸던 단어 ${W.length}개부터 볼게요`:"단어를 한 번 훑어봐요", "영어를 보고 뜻을 먼저 떠올린 다음 아래 뜻을 확인하세요.\n재시는 50개 전부 다시 나오고, 다 맞아야 통과예요.");
+    W.forEach(r=>card("❗ 내가 틀린 단어", r.w, r.kp||r.ko, (r.koAlt||[]).length?"이렇게 써도 정답: "+r.koAlt.slice(0,5).join(" · "):"", 1));
+    for(let i=0;i<A.length;i+=10) card(`전체 단어 ${i+1}–${Math.min(i+10,A.length)}`, "나머지 단어 훑어보기", A.slice(i,i+10).map(r=>`${r.w} — ${r.ko}`).join("\n")); }
+  else if(part==="dtv"){ const W=items.filter(it=>stWrongIdx(part,it).length), A=items.filter(it=>!stWrongIdx(part,it).length);
+    card(lab, W.length?`틀렸던 단어 ${W.length}개부터 볼게요`:"구문 단어를 한 번 훑어봐요", "재시에서 틀리면 그 단어를 영어·한국어로 5번씩 써야 해요.\n지금 확실히 외우고 가요!");
+    W.forEach(it=>card("❗ 내가 틀린 단어", it.body, it.opt[it.ans], "헷갈리는 보기: "+it.opt.filter((o,k)=>k!==it.ans).join(" · ")+(it.tag?`\n(${it.tag})`:""), 1));
+    if(A.length) card("전체 구문 단어", "나머지 단어 훑어보기", A.map(it=>`${it.body} — ${it.opt[it.ans]}`).join("\n")); }
+  else if(part==="dtr"){ card(lab, "직독직해 포인트", "끊어 읽는 덩어리마다 뜻과 문법 포인트를 확인해요.\n재시에서는 칸마다 우리말 뜻을 써요.");
+    items.forEach(it=>{ const bad=stWrongIdx(part,it);
+      card(`${it.no} · 문장 전체`, it.en, it.ko, (it.pt||[]).length?"📌 "+it.pt.join("\n📌 "):"", bad.length?1:0);
+      card(`${it.no} · 덩어리별`, "끊어서 읽기", it.rows.map((r,j)=>`${bad.includes(j)?"❗":""}${r.n} ${r.w}\n   → ${r.ko}${r.pt?`\n   📌 ${r.pt}`:""}`).join("\n\n"), "", bad.length?1:0); }); }
+  else if(part==="dtg"){ const it=items[0]; const bad=it?stWrongIdx(part,it):[];
+    card(lab, "먼저 개념부터", "어법 재시는 X 문장의 틀린 단어 + 고친 말 + 틀린 이유까지 맞아야 정답이에요."+(dtgFull()?"\n↻ 통재시라 재시에 문장 5개가 더 나와요. 개념을 꼭 보고 가요!":""));
+    ((C.study||{}).dtg||[]).forEach(c=>card("📘 개념", c.h, c.b, c.ex));
+    if(it){ const R=it.rows.map((r,j)=>({r,j})).sort((a,b)=>bad.includes(b.j)-bad.includes(a.j));
+      R.forEach(({r,j})=>card(`문장 ${r.n} · 정답 ${r.ans}${bad.includes(j)?" · ❗ 내가 틀린 문장":""}`, r.en, r.ans==="X"?`${r.wrong} → ${r.fix.slice(0,3).join(" / ")}`:"맞는 문장 (O)", "💡 "+r.ex, bad.includes(j)?1:0)); } }
+  return L; }
+let STV=null;
+function stOpen(part){ const L=stCards(part); if(!L.length){ startRe(part); return; }
+  L.push({k:"끝", h:"다 봤어요 👏", b:"이제 재시를 보러 가요.\n"+(reAll(part)?"전부 맞혀야 통과예요.":"")+(part==="dtv"?"\n틀린 단어는 5번씩 쓰면 통과로 인정돼요.":""), end:1});
+  STV={part, L, i:0};
+  let el=document.getElementById("study"); if(!el){ el=document.createElement("div"); el.id="study"; document.body.appendChild(el);
+    el.addEventListener("click",e=>{ if(e.target.closest("[data-stx]")) stClose(); else if(e.target.closest("[data-stp]")) stGo(-1); else if(e.target.closest("[data-stn]")) stGo(1); else if(e.target.closest("[data-stre]")) stDone(); });
+    let x0=null; el.addEventListener("touchstart",e=>{ x0=e.touches[0].clientX; },{passive:true});
+    el.addEventListener("touchend",e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>60) stGo(dx<0?1:-1); });
+    document.addEventListener("keydown",e=>{ if(!STV||el.hidden) return; if(e.key==="ArrowRight") stGo(1); if(e.key==="ArrowLeft") stGo(-1); if(e.key==="Escape") stClose(); }); }
+  el.hidden=false; document.body.style.overflow="hidden"; stRender(); }
+function stGo(d){ if(!STV) return; STV.i=Math.max(0,Math.min(STV.L.length-1,STV.i+d)); stRender(); }
+function stRender(){ const el=document.getElementById("study"); if(!el||!STV) return; const c=STV.L[STV.i], n=STV.L.length, last=STV.i===n-1;
+  el.innerHTML=`<div class="sv-top"><div style="display:flex;align-items:center;gap:10px"><b style="flex:1;font-size:15px">📚 먼저 공부하기 · ${esc(reShort(labelOf(STV.part),STV.part))}</b>
+      <span class="num" style="font-size:13px;color:var(--ink-3);font-weight:700">${STV.i+1} / ${n}</span>
+      <button data-stx="1" style="width:36px;height:36px;border-radius:12px;border:0;background:var(--surface);box-shadow:var(--shadow);font-size:16px">✕</button></div>
+      <div class="sv-bar"><i style="width:${Math.round((STV.i+1)/n*100)}%"></i></div></div>
+    <div class="sv-card"><div class="sv-in">${c.mine?`<span class="sv-mine">❗ 내가 틀린 것</span>`:""}<div class="sv-k">${esc(c.k)}</div><div class="sv-h">${esc(c.h)}</div><div class="sv-b">${esc(c.b||"")}</div>${c.ex?`<div class="sv-ex">${esc(c.ex)}</div>`:""}
+      ${c.end?`<button class="cta" data-stre="1" style="width:100%;margin-top:22px">🔁 재시 보기</button>`:""}</div></div>
+    <div class="sv-nav"><button data-stp="1" ${STV.i?"":"disabled"} style="background:var(--surface);box-shadow:var(--shadow);color:var(--ink)">◀ 이전</button>
+      ${last?`<button data-stre="1" style="background:var(--cat-3);color:#fff">🔁 재시 보기</button>`:`<button data-stn="1" style="background:var(--cat-3);color:#fff">다음 ▶</button>`}</div>`;
+  el.querySelector(".sv-card").scrollTop=0; }
+function stMark(){ if(!STV||!UNIT) return; const o=(((S.rt ||= {})[UNIT.id] ||= {})[STV.part] ||= {n:0}); o.st=todayKey(); save(); }
+function stClose(){ const el=document.getElementById("study"); if(STV&&STV.i>=STV.L.length-1) stMark(); if(el) el.hidden=true; document.body.style.overflow=""; STV=null; if(document.getElementById("s-home").classList.contains("on")) renderHome(); }
+function stDone(){ if(!STV) return; const part=STV.part; stMark(); const el=document.getElementById("study"); if(el) el.hidden=true; document.body.style.overflow=""; STV=null; startRe(part); }
+document.addEventListener("click",async e=>{ const b=e.target.closest("[data-stgo]"); if(!b) return;
+  const uid=b.dataset.reu, part=b.dataset.stgo;
+  if(!UNIT||UNIT.id!==uid){ const u=allUnits(true).find(x=>x.id===uid); if(!u) return; toast("불러오는 중…");
+    try{ await loadUnit(u); S.grade=gradeOfBook(u.book); save(); renderHome(); renderMy(); }catch(err){ toast(err.message); return; } }
+  if(document.getElementById("qpick")&&!document.getElementById("qpick").hidden&&typeof closeQpick==="function") closeQpick();
+  stOpen(part); });
 function reCardHTML(){ if(!C||!C.allInOne||!UNIT) return ""; const LP=livePARTS();
   return `<div style="padding:12px 16px 14px;border-top:1px solid var(--line)">
     <div style="font-size:14px;font-weight:800">🔁 영역별 재시</div>
     <div style="font-size:12px;color:var(--ink-3);margin:2px 0 10px;line-height:1.55">영역 하나만 다시 봐요 · <b>전부 맞혀야 통과</b> · 어법은 X 문장의 <b>틀린 이유</b>도 써요</div>
-    ${LP.map(p=>reChip(UNIT.id,p.id,labelOf(p.id),reNeed(p.id,bestOf()[p.id]),"re-chip")).join("")}</div>`; }
+    ${LP.map(p=>stRow(UNIT.id,p.id,labelOf(p.id),reNeed(p.id,bestOf()[p.id]))).join("")}</div>`; }
 function startRe(part){ if(!C||!C[part]||!C[part].length){ toast("문항이 없어요"); return; }
   const st=reStat(UNIT.id,part); if(st&&Array.isArray(st.drill)&&st.drill.length){ drOpen(part); toast("틀린 단어 5번씩 쓰기부터 해요"); return; }
   sel={part, scope:(C&&C.allInOne)?"all":curScope()}; startQuiz({re:part}); }
@@ -3419,7 +3486,7 @@ function renderQpick(mode){
       ${g.dt.map(u=>{ const ps=Object.keys(u.pts||{}).filter(p=>P[p]), bs=(S.best||{})[u.id]||{};
         return `<div class="card" style="padding:12px 12px 6px;margin-bottom:10px"><div style="font-size:14.5px;font-weight:800;margin:0 4px 8px">${esc(u.no)} <span style="font-weight:500;color:var(--ink-3);font-size:12.5px">${esc(u.title||"")}</span></div>
           ${ps.map(p=>{ const b=bs[p]; let need=false; if(b){ const R=u.verdict&&u.verdict[p]; need=R&&R.pf!=null?b.pct<R.pf:R&&R.wrong?(b.total-b.done)>R.wrong[0]:b.pct<VD_PASS; }
-            return reChip(u.id,p,(u.labels||{})[p],need,"re-chip"); }).join("")}</div>`; }).join("")}`;
+            return stRow(u.id,p,(u.labels||{})[p],need); }).join("")}</div>`; }).join("")}`;
   else if(QPM==="vb") list=books.map(b=>{ const us=g.other.filter(u=>u.book===b);
       return `<div class="sec" style="margin-top:6px"><h2>${esc(bnm(b))} 암기</h2><span class="more">DAY를 고르세요</span></div>
       <div class="card" style="padding:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${us.map(u=>`<button class="chip${UNIT&&UNIT.id===u.id?" sel":""}" data-qu="${esc(u.id)}" style="justify-content:center;padding:12px 4px;font-weight:700">${esc(u.no)}</button>`).join("")}</div>`; }).join("");
