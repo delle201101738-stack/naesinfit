@@ -36,6 +36,7 @@ const pt2 = v => v == null ? "" : v > 0 ? `▲ ${v}점` : v < 0 ? `▼ ${-v}점`
 const dPlus = (d, n) => { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 const dDiff = (a, b) => Math.round((new Date(a + "T00:00:00Z") - new Date(b + "T00:00:00Z")) / 864e5);
 
+let RP_HOST = "";
 async function build(student, dayQ, range) {
   await ensure();
   const rows = await sql`select id, book, part, part_name, scope, total, coalesce(score, correct) as correct, created_at
@@ -125,6 +126,16 @@ async function build(student, dayQ, range) {
       const PV = Object.values(c.parts || {}), PT = PV.reduce((n, v) => n + v.t, 0), PC = PV.reduce((n, v) => n + v.c, 0);
       L.push(`<h2>데일리테스트 총점 · 반 석차</h2><p><b>${esc(c.no)} (${fmt(c.day)}) ${c.done ? `총점 ${c.p100}점 (100점 만점, ${PT !== c.max ? `종이 시험 ${PT}문항 중 ${r1(PT - PC)}개 틀림 · 앱 만점 기준 환산` : `전체 ${c.max}문항 중 ${r1(c.max - c.total)}개 틀림`})` : "일부 영역만 봐서 총점 없음"}</b>${c.done ? ` · <b>${esc(c.cls)} ${c.rank}등 / ${c.n}명</b> · 반 평균 ${c.avg100 ?? c.avg}점 (전 영역 본 ${c.n}명)` : " · 아직 모든 영역을 안 봐서 석차 없음"}</p>`);
       L.push(`<ul>${Object.keys(PN).filter(p => c.parts && c.parts[p]).map(p => { const v = c.parts[p]; return `<li>${PN[p]}: ${v.t ? Math.round(v.c / v.t * 100) : 0}점 · ${r1(v.t - v.c)}개 틀림 (${v.c}/${v.t})</li>`; }).join("")}</ul>`);
+      { const i = DL.indexOf(c), p = DL[i - 1];   // ⚠ 연속 부분재시 / 🚨 연속 통재시 (판정은 index.json verdict, 없으면 90/75)
+        if (c.day === day && p) { const MF = RP_HOST ? await fetch(`https://${RP_HOST}/content/index.json`, { cache: "no-store" }).then(r => r.json()).catch(() => null) : null;
+          const uOf = id => { for (const b of (MF && MF.books) || []) for (const u of b.units || []) if (u.id === id) return u; return null; };
+          const vk = (u, pp, v) => { const R = u && u.verdict && u.verdict[pp], q = v.t ? v.c / v.t * 100 : 0;
+            if (R) { if (R.pf != null) return q >= R.pf ? "pass" : "full"; if (R.wrong) return (v.t - v.c) <= R.wrong[0] ? "pass" : (v.t - v.c) <= R.wrong[1] ? "part" : "full"; if (R.pct) return q >= R.pct[0] ? "pass" : q >= R.pct[1] ? "part" : "full"; }
+            return q >= 90 ? "pass" : q >= 75 ? "part" : "full"; };
+          const ks = x => { const u = uOf(x.unit); return Object.entries(x.parts || {}).map(([pp, v]) => vk(u, pp, v)); };
+          const a = ks(p), b = ks(c);
+          if (a.includes("full") && b.includes("full")) L.push(`<p style="font-size:18px;color:#dc2626"><b>🚨 연속 통재시 — ${esc(p.no)}에 이어 ${esc(c.no)}까지 2회 연속 통재시예요. 남아서 재시를 끝내고 귀가해요.</b></p>`);
+          if (a.includes("part") && b.includes("part")) L.push(`<p style="color:#b45309"><b>⚠ 연속 부분재시 — ${esc(p.no)}에 이어 ${esc(c.no)}까지 2회 연속 부분재시예요. 남아서 재시를 끝내고 귀가해요.</b></p>`); } }
       if (DL.length > 1) L.push(`<table border="1" cellpadding="4"><tr><th>회차</th><th>날짜</th><th>총점(100점)</th><th>틀린 개수</th><th>반 석차</th><th>반 평균</th></tr>${DL.slice().reverse().map(x => `<tr><td>${esc(x.no)}</td><td>${fmt(x.day)}</td><td>${x.done ? x.p100 + "점" : "일부만 응시"}</td><td>${x.done ? r1(x.max - x.total) + "개" : "—"}</td><td>${x.done ? `${x.rank}등/${x.n}명` : "—"}</td><td>${x.avg100 != null ? x.avg100 + "점" : "—"}</td></tr>`).join("")}</table>`);
     } }
   if (!S.tests.length && !S.hw.length) {
@@ -256,7 +267,7 @@ export default async function handler(req, res) {
   if (u.searchParams.get("iv")) return ivPage(req, res, u);
   if (u.searchParams.get("mo")) return moPage(req, res, u);
   const tok = (u.searchParams.get("t") || "").trim().slice(0, 40);
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  const host = req.headers["x-forwarded-host"] || req.headers.host; RP_HOST = host;
   let page = "";
   try { page = await (await fetch(`https://${host}/report`, { cache: "no-store" })).text(); } catch (e) {}
   let ssr = "", title = "", desc = "";
