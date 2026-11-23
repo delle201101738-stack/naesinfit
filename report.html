@@ -793,6 +793,25 @@ const DAYI={}, CONT={};
 /* 📝 예비고1 데일리테스트 — 총점 · 반 석차 · 누적 (api/report의 dts: 회차마다 '처음 본 날' 기록) */
 const DT_PN={wmean:"어휘",dtv:"구문 단어",dtr:"직독직해",dtg:"어법"};
 const mfUnit=id=>{ for(const b of ((typeof MF!=="undefined"&&MF&&MF.books)||[])) for(const u of (b.units||[])) if(u.id===id) return u; return null; };
+/* ⚠ 연속 부분재시 / 🚨 연속 통재시 — 지난 회차와 이번 회차(그날 본 회차) 둘 다 부분재시(통재시) 영역이 1개라도 있으면 */
+function dtStreakOf(D, day){ const A=(D.dts||[]); if(!A.length||!day) return null;
+  const cn=cnameOf(D), byU={}; A.forEach(x=>{ if(!byU[x.unit]||x.cls===cn) byU[x.unit]=x; });
+  const L=Object.values(byU).sort((a,b)=>a.unit.localeCompare(b.unit,"en",{numeric:true})), cur=L.filter(x=>x.day===day).pop(); if(!cur) return null;
+  const prev=L[L.indexOf(cur)-1]; if(!prev) return null;
+  const ks=x=>{ const u=mfUnit(x.unit); return Object.entries(x.parts||{}).map(([p,v])=>{ const V=u&&vrule(u,p,v.c,v.t); if(V) return V.k; const q=v.t?v.c/v.t*100:0; return q>=90?"pass":q>=75?"part":"full"; }); };
+  const nm=x=>Object.entries(x.parts||{}).filter(([p,v])=>{ const u=mfUnit(x.unit), V=u&&vrule(u,p,v.c,v.t); return V&&V.k!=="pass"; }).map(([p])=>DT_PN[p]||p);
+  const a=ks(prev), b=ks(cur), full=a.includes("full")&&b.includes("full"), part=a.includes("part")&&b.includes("part");
+  return full||part ? {full, part, prev, cur, pn:nm(prev), cn:nm(cur)} : null; }
+function dtAlertHTML(D, day){ const k=dtStreakOf(D, day); if(!k) return "";
+  const box=(full)=>full
+    ? `<div style="margin:14px 0;padding:20px 18px;border-radius:18px;background:#dc2626;color:#fff;box-shadow:0 8px 24px rgba(220,38,38,.35);border:3px solid #7f1d1d">
+        <div style="font-size:26px;font-weight:900;line-height:1.25">🚨 연속 통재시 — 꼭 확인해 주세요</div>
+        <div style="font-size:15.5px;font-weight:800;margin-top:8px;line-height:1.6">데일리테스트 <u>${esc(k.prev.no)}</u>에 이어 <u>${esc(k.cur.no)}</u>까지 <b>2회 연속 통재시</b>가 나왔어요.</div>
+        <div style="font-size:14px;font-weight:700;margin-top:6px;opacity:.95;line-height:1.6">지난 회차: ${k.pn.map(esc).join("·")||"—"} · 이번 회차: ${k.cn.map(esc).join("·")||"—"}<br>학원에 남아서 재시를 끝내고 귀가해요. 집에서도 해당 영역 복습을 꼭 챙겨 주세요.</div></div>`
+    : `<div style="margin:14px 0;padding:16px 18px;border-radius:16px;background:#fff7ed;border:2px solid #f59e0b">
+        <div style="font-size:20px;font-weight:900;color:#b45309">⚠ 연속 부분재시</div>
+        <div style="font-size:14.5px;font-weight:700;margin-top:6px;line-height:1.6;color:#7c2d12">데일리테스트 ${esc(k.prev.no)}에 이어 ${esc(k.cur.no)}까지 2회 연속 부분재시가 나왔어요. 남아서 재시를 끝내고 귀가해요.</div></div>`;
+  return (k.full?box(true):"")+(k.part?box(false):""); }
 function dtHTML(D, day){
   const A=(D.dts||[]); if(!A.length) return "";
   const cn=cnameOf(D), byU={}; A.forEach(x=>{ if(!byU[x.unit]||x.cls===cn) byU[x.unit]=x; });
@@ -992,6 +1011,8 @@ async function render(D){
   </div>
 
   ${headHTML(NOTE&&NOTE.headline||autoHead, TEACH, !!(NOTE&&NOTE.headline))}
+
+  ${dtAlertHTML(D, day)}
 
   <div class="hero">
     <div class="hero-in">

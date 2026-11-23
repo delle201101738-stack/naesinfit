@@ -935,15 +935,26 @@ const vrText = (V,c,t) => !V||!V.R ? "" : V.R.pf!=null ? `정답률 ${Math.round
 const STAY_MSG = "🏫 남아서 완료하세요";
 /* 🏫 데일리테스트(한 번에 응시): 4개 영역 중 통재시(FAIL)가 2개 이상이면 남아서 하고 가기 */
 const DT_STAY_N = 2;
+/* ⚠ 연속 판정: 지난 회차와 이번 회차 둘 다 부분재시(통재시) 영역이 1개라도 있으면 연속 부분재시(연속 통재시) → 남아서 하고 가기 */
+const dtStreak = (a,b) => ({ part:a.includes("part")&&b.includes("part"), full:a.includes("full")&&b.includes("full") });
+async function dtStreakNow(){ if(!UNIT||!S.name||!C||!C.allInOne) return null;
+  try{ const r=await (await fetch(`api/mine?dtrank=1&student=${encodeURIComponent(S.name)}`,{cache:"no-store"})).json();
+    const byU={}; (r.dt||[]).forEach(x=>{ if(!byU[x.unit]||(S.cls&&x.cls===S.cls.name)) byU[x.unit]=x; });
+    const prev=Object.values(byU).filter(x=>x.unit.localeCompare(UNIT.id,"en",{numeric:true})<0).sort((a,b)=>a.unit.localeCompare(b.unit,"en",{numeric:true})).pop();
+    if(!prev) return null; const uP=allUnits(true).find(x=>x.id===prev.unit);
+    const vk=(u,p,c,t)=>{ const v=u&&vrule(u,p,c,t); if(v) return v.k; const q=t?c/t*100:0; return q>=VD_PASS?"pass":q>=VD_PART?"part":"full"; };
+    const a=Object.entries(prev.parts||{}).map(([p,v])=>vk(uP,p,v.c,v.t)), b=allSecs().map(x=>x.v.k);
+    return {...dtStreak(a,b), prevNo:prev.no||prev.unit}; }catch(e){ return null; } }
 const dtStayOf = vs => { const f=vs.filter(x=>x.v.k==="full"); return f.length>=DT_STAY_N ? f : []; };
-function stayPopup(list){ let el=document.getElementById("staypop"); if(!el){ el=document.createElement("div"); el.id="staypop";
+function stayPopup(list, why){ why=why||[]; let el=document.getElementById("staypop"); if(!el){ el=document.createElement("div"); el.id="staypop";
     el.style.cssText="position:fixed;inset:0;z-index:320;background:rgba(15,18,30,.55);display:flex;align-items:center;justify-content:center;padding:20px";
     el.addEventListener("click",e=>{ if(e.target.closest("[data-stayok]")) el.style.display="none"; }); document.body.appendChild(el); }
   el.innerHTML=`<div style="width:100%;max-width:380px;background:var(--surface);border-radius:22px;padding:24px 22px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <div style="font-size:52px;line-height:1">🏫</div>
     <div style="font-size:22px;font-weight:900;margin-top:10px;color:var(--no)">남아서 하고 가세요</div>
-    <div style="font-size:14px;color:var(--ink-2);margin-top:8px;line-height:1.6">4개 영역 중 <b>${list.length}개 영역이 통재시</b>예요.<br>선생님께 기록됐어요. 남아서 재시를 끝내고 가요.</div>
-    <div style="margin-top:14px;padding:12px;border-radius:14px;background:var(--surface-2);text-align:left;font-size:14px;line-height:1.8">${list.map(x=>`<div>↻ <b>${esc(labelOf(x.p).replace(/\s*\(.*\)\s*$/,""))}</b> <span style="color:var(--ink-3)">${x.c}/${x.t}</span></div>`).join("")}</div>
+    ${why.map(w=>`<div style="margin-top:12px;padding:12px;border-radius:14px;background:${w.full?"var(--no)":"#f59e0b"};color:#fff;font-size:15px;font-weight:900;line-height:1.5">${w.t}<div style="font-size:12.5px;font-weight:700;opacity:.95;margin-top:2px">${w.s}</div></div>`).join("")}
+    <div style="font-size:14px;color:var(--ink-2);margin-top:10px;line-height:1.6">${list.filter(x=>x.v.k==="full").length>=DT_STAY_N?`4개 영역 중 <b>${list.filter(x=>x.v.k==="full").length}개 영역이 통재시</b>예요.<br>`:""}선생님께 기록됐어요. 남아서 재시를 끝내고 가요.</div>
+    ${list.length?`<div style="margin-top:14px;padding:12px;border-radius:14px;background:var(--surface-2);text-align:left;font-size:14px;line-height:1.8">${list.map(x=>`<div>${x.v.k==="full"?"↻":"◐"} <b>${esc(labelOf(x.p).replace(/\s*\(.*\)\s*$/,""))}</b> <span style="color:var(--ink-3)">${x.c}/${x.t} ${x.v.n}</span></div>`).join("")}</div>`:""}
     <div style="font-size:12.5px;color:var(--ink-3);margin-top:10px">홈 → 🔁 영역별 재시 (📚 먼저 공부하고 보면 좋아요)</div>
     <button class="cta" data-stayok="1" style="width:100%;margin-top:16px">확인</button></div>`;
   el.style.display="flex"; }
@@ -2860,8 +2871,15 @@ function showResult(){
     <div class="gain">⚡ +${10+c*2} XP</div>
     <div id="send-state" style="margin-top:12px;font-size:12.5px"></div>`;
   if(Q.all) $("#score-card").innerHTML=allCardHTML(secs);
-  if(Q.all && C && C.allInOne && !Q.stayShown){ Q.stayShown=1; const sl=dtStayOf(allSecs());
-    if(sl.length){ (S.stay ||= {})[UNIT.id]={d:todayKey(), p:sl.map(x=>x.p)}; save(); setTimeout(()=>stayPopup(sl),350); } }
+  if(Q.all && C && C.allInOne && !Q.stayShown){ Q.stayShown=1; const sl=dtStayOf(allSecs()), uid=UNIT.id;
+    (async()=>{ const sk=await dtStreakNow(), why=[];
+      if(sk&&sk.full) why.push({full:1, t:"🚨 연속 통재시", s:`지난 ${sk.prevNo}에 이어 2회 연속 통재시예요`});
+      if(sk&&sk.part) why.push({t:"⚠ 연속 부분재시", s:`지난 ${sk.prevNo}에 이어 2회 연속 부분재시예요`});
+      if(!sl.length&&!why.length) return;
+      (S.stay ||= {})[uid]={d:todayKey(), p:sl.map(x=>x.p), streak:why.map(w=>w.t)}; save();
+      const bad=allSecs().filter(x=>x.v.k!=="pass");
+      if(why.length&&document.getElementById("score-card")) $("#score-card").insertAdjacentHTML("afterbegin",why.map(w=>`<div style="margin-bottom:10px;padding:12px;border-radius:14px;background:${w.full?"var(--no)":"#f59e0b"};color:#fff;font-weight:900;font-size:15px">${w.t} · 남아서 하고 가세요<div style="font-size:12.5px;font-weight:700;opacity:.95">${w.s}</div></div>`).join(""));
+      setTimeout(()=>stayPopup(sl.length?sl:bad, why),350); })(); }
   if(Q.contOK){ const bn=blankInfo(Q.detail).n;
     $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:14px;padding:14px;border-radius:16px;background:var(--surface-2);text-align:left">
       <div style="font-size:15px;font-weight:800">📝 안 푼 칸 ${bn}개가 0점 처리됐어요</div>
