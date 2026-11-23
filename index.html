@@ -1210,6 +1210,16 @@ const reNeed = (p,b) => !!b && VERDICT(b.pct,p,b.done,b.total).k!=="pass";
 const reAll = p => !!(C&&C.allInOne) || isWordP(p) || p==="dtv";
 const rePassOK = (p,c,t) => t>0 && (reAll(p) ? c>=t : c/t*100>=VD_PASS);
 const reRuleTxt = p => reAll(p) ? "전부 맞혀야" : `${VD_PASS}점 이상이면`;
+/* 데일리테스트 어법 통재시(원래 시험 FAIL) → 재시에 숙제 파일 문장 5개 추가(C.dtgx), 10문장 다 맞아야 통과 */
+const DTG_ADD=5;
+const dtgFull = () => { if(!(C&&C.allInOne)||!UNIT) return false; const b=bestOf().dtg; return !!b && VERDICT(b.pct,"dtg",b.done,b.total).k==="full"; };
+function dtgExtraItem(){ const base=(C.dtg||[])[0]; if(!base) return null; const pool=shuffleArr((C.dtgx||[]).slice()); if(!pool.length) return null;
+  const X=pool.filter(r=>r.ans==="X"), O=pool.filter(r=>r.ans==="O"); const nx=Math.min(X.length, Math.max(3, DTG_ADD-O.length));
+  const add=X.slice(0,nx).concat(O.slice(0,DTG_ADD-nx));
+  const rows=shuffleArr(base.rows.map(r=>({...r})).concat(add.map(r=>({...r, add:1})))).map((r,k)=>({...r, n:k+1}));
+  return {...base, no:base.no+"+", tag:(base.tag||"D 어법")+` · 통재시 +${add.length}문장`, rows}; }
+/* 데일리테스트 구문 단어(dtv) 재시: 틀린 단어를 영어·한국어 5번씩 쓰면 통과 인정 */
+const dtvByDrill = p => p==="dtv" && !!(C&&C.allInOne);
 function reChip(uid,p,lab,need,cls){ const r=reStat(uid,p);
   const st=r&&r.pass?`<span class="vd pass" style="font-size:11px">✓ 재시 통과</span>`:r&&r.drill&&r.drill.length?`<span class="vd part" style="font-size:11px">✍️ 쓰기 ${r.drill.length}개 남음</span>`:r?`<span class="vd full" style="font-size:11px">✗ ${r.n}회 · ${r.last}%</span>`:need?`<span class="vd part" style="font-size:11px">재시 대상</span>`:"";
   return `<button class="${cls}" data-rego="${esc(p)}" data-reu="${esc(uid)}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 12px;margin:0 0 6px;border-radius:12px;background:var(--surface-2)">
@@ -1265,6 +1275,12 @@ function drInput(e){ const t=e.target, a=t.dataset.dre||t.dataset.drk; if(!a||!D
 function drClose(){ const el=document.getElementById("drill"); if(el) el.hidden=true; document.body.style.overflow=""; DR=null; if(document.getElementById("s-home").classList.contains("on")) renderHome(); }
 function drDone(){ if(!DR||drLeft()) return; const part=DR.part, st=reStat(UNIT.id,part);
   if(st){ st.drillN=(st.drillN||0)+1; st.drill=[]; save(); }
+  if(dtvByDrill(part)){ const n=DR.L.length, t=(st&&st.lt)||n; if(st){ st.pass=1; st.pd=st.pd||todayKey(); save(); }
+    const la={d:todayKey(), unit:unitLabel(), part, partName:"재시 · "+reShort(labelOf(part),part)+` · 쓰기${n}개×5 인정`, scope:"재시험", total:t, correct:t, pct:100, secs:0};
+    S.attempts.push(la); save();
+    submitResult({student:S.name, className:S.cls?S.cls.name:"", book:unitLabel(), unitId:UNIT?UNIT.id:"", part, partName:la.partName,
+      scope:"재시험", total:t, correct:t, pct:100, secs:0, detail:[{no:"쓰기", sec:"", d:DR.L.map(w=>({l:w.en, ok:1, m:w.ko}))}]}).catch(()=>{});
+    drClose(); toast("✓ 틀린 단어 다 썼어요 · 재시 통과 인정!"); renderHome(); return; }
   RE_DRILLED[UNIT.id+"|"+part]=DR.L.length;
   drClose(); toast("다 썼어요 👏 이제 다시 재시!"); startRe(part); }
 document.addEventListener("click",async e=>{ const b=e.target.closest("[data-rego]"); if(!b) return;
@@ -1628,6 +1644,7 @@ function startQuiz(opts){
   } else if(opts.re){   // 🔁 데일리테스트 영역별 재시: 그 영역 전체 (범위 아님·홀수 무시), 단어 순서·객관식 순서는 섞음
     list=((C&&C.allInOne)?itemsOf(opts.re,"all"):itemsOfX(opts.re, sel.scope)).map(it=>({part:opts.re, it}));
     if(opts.re==="wmean"||opts.re==="dtv") list=shuffleArr(list.slice());
+    if(opts.re==="dtg" && dtgFull()){ const ex=dtgExtraItem(); if(ex) list=[{part:"dtg", it:ex}].concat(list.slice(1)); }
     list=list.map(x=>x.part==="wmean"&&x.it.rows&&x.it.rows.length>1?{part:x.part, it:shuffleRows(x.it)}:x);
   } else if(opts.all){
     livePARTS().forEach(p=>itemsOfX(p.id,"all").forEach(it=>list.push({part:p.id, it})));
@@ -1738,7 +1755,7 @@ function renderQ(){
   $("#q-now").textContent=Q.i+1;
   const pv=$("#quiz-prev"); pv.style.opacity=Q.i?"1":".25"; pv.style.pointerEvents=Q.i?"auto":"none";
   $("#q-bar").style.width=((Q.i+1)/Q.items.length*100)+"%";
-  const tag=`<span class="q-type">${Q.re?"🔁 재시 · ":""}${labelOf(part)} · ${esc(itemTag(it))}</span>`+(Q.re&&Q.i===0?`<p class="hint" style="margin-top:6px;color:var(--no);font-weight:800">🔁 재시는 이 ${(C&&C.allInOne)?"영역을":"파트를"} <b>${reRuleTxt(part)}</b> 통과예요${part==="dtg"?" · X 문장은 <b>틀린 단어 + 고친 말 + 틀린 이유</b>까지 맞아야 정답":""}</p>`:"");
+  const tag=`<span class="q-type">${Q.re?"🔁 재시 · ":""}${labelOf(part)} · ${esc(itemTag(it))}</span>`+(Q.re&&Q.i===0?`<p class="hint" style="margin-top:6px;color:var(--no);font-weight:800">🔁 재시는 이 ${(C&&C.allInOne)?"영역을":"파트를"} <b>${reRuleTxt(part)}</b> 통과예요${part==="dtg"?" · X 문장은 <b>틀린 단어 + 고친 말 + 틀린 이유</b>까지 맞아야 정답":""}${part==="dtg"&&(it.rows||[]).some(r=>r.add)?`<br>↻ 어법 <b>통재시</b>라 숙제 파일 문장 <b>${it.rows.filter(r=>r.add).length}개</b>를 더 넣었어요 (${it.rows.length}문장 다 맞아야 통과)`:""}${dtvByDrill(part)?"<br>✍️ 틀린 단어는 영어·한국어로 5번씩 쓰면 통과로 인정돼요":""}</p>`:"");
   const stemOf=(d)=> (C&&C.stems&&C.stems[part]) || d;
   let body="";
   if(part==="vocab"||part==="gram"){
@@ -2706,7 +2723,7 @@ async function finish(){
   Q.items.forEach((it,i)=>{
     const mp=it._map, bad=[];
     Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
-    if(!(Q.del||{})[i] && !(Q.oor||{})[i]) markWrong(Q.pl[i], it, bad);   // 풀다가 삭제한 문제·범위 아님은 다시 쌓지 않음
+    if(!(Q.del||{})[i] && !(Q.oor||{})[i] && !(it.rows||[]).some(r=>r.add)) markWrong(Q.pl[i], it, bad);   // 풀다가 삭제한 문제·범위 아님은 다시 쌓지 않음
   });
   save();
   showResult();
@@ -2754,7 +2771,7 @@ function showResult(){
     </svg><div class="val"><b>${pct}<span style="font-size:18px">%</span></b><span>정답률</span></div></div>
     <div style="margin-top:14px"><span class="vd vd-big ${V.k}">${V.e} ${V.n}</span></div>
     ${V.stay?`<div style="margin-top:10px;font-size:17px;font-weight:800;color:var(--no)">${STAY_MSG}</div>`:""}
-    <div class="score-msg">${Q.re?(V.k==="pass"?(c>=t?"🎉 다 맞았어요! 재시 통과":`🎉 ${pct}점 · 재시 통과`):`재시는 <b>${reRuleTxt(part)}</b> 통과예요 · ${t-c}개 틀림 → 틀린 것 확인하고 다시 보세요`):V.R?vrText(V,c,t)
+    <div class="score-msg">${Q.re?(V.k==="pass"?(c>=t?"🎉 다 맞았어요! 재시 통과":`🎉 ${pct}점 · 재시 통과`):(dtvByDrill(part)?`${t-c}개 틀림 → 틀린 단어를 <b>영어·한국어로 5번씩</b> 쓰면 통과로 인정돼요`:`재시는 <b>${reRuleTxt(part)}</b> 통과예요 · ${t-c}개 틀림 → 정답·해설 확인하고 다시 보세요`)):V.R?vrText(V,c,t)
       :V.k==="pass"?"기준(90점) 넘겼어요. 이 파트는 통과!"
       :V.k==="part"?"조금만 더예요 · 🔁 재시(파트 전체)를 보고 통과하세요":"기준(75점) 미만 · 🔁 재시(파트 전체)를 보세요"}</div>
     <div class="score-sub num">${Q.review?"오답노트":Q.all?"전체":(Q.re?"🔁 재시 · ":"")+labelOf(part)} · ${t}개 중 ${c}개 정답 · ${Math.floor(secs/60)}분 ${secs%60}초</div>
@@ -2769,7 +2786,14 @@ function showResult(){
       <button data-bkno style="display:block;width:100%;margin-top:6px;padding:10px;font-size:13px;font-weight:700;color:var(--ink-3)">몰라서 비웠어요 · 정답 보기</button></div>`); }
   else if(Q.cont) $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:10px;font-size:12.5px;font-weight:700;color:var(--ink-3)">이어서 푼 점수예요 · 선생님께 이 점수로 바뀌어 전송돼요</div>`);
 
-  $("#review-list").innerHTML=Q.items.map((it,i)=>{
+  const dtgAll = Q.re && Q.part==="dtg" ? Q.items.map((it,i)=>(it.rows||[]).map((r,j)=>{ const x=(Q.detail[i]||[])[j]||{};
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--line)">
+        <div style="font-size:12.5px;font-weight:800;margin-bottom:3px"><span style="color:${x.ok?"var(--ok)":"var(--no)"}">${x.ok?"✓":"✗"}</span> ${r.n}${r.add?` <span class="vd part" style="font-size:10.5px">+추가</span>`:""} · 정답 <b>${r.ans}</b>${r.ans==="X"?` · ${esc(r.wrong)} → <b>${esc(r.fix.slice(0,3).join(" / "))}</b>`:""}</div>
+        <div style="font-size:14px;line-height:1.6">${esc(r.en)}</div>
+        ${x.ok?"":`<div style="font-size:12.5px;color:var(--ink-3);margin-top:2px">내 답: ${esc(x.mine||"")}</div>`}
+        <div style="margin-top:4px;font-size:12.5px;color:var(--ink-2);line-height:1.65">💡 ${esc(r.ex)}${r.src?` <span style="color:var(--ink-3)">(${esc(r.src)})</span>`:""}</div></div>`; }).join("")).join("") : "";
+  $("#review-list").innerHTML=(dtgAll?`<div style="padding:14px 16px"><div style="font-size:15px;font-weight:800;margin-bottom:4px">📖 정답 및 해설 · 전체 ${Q.items.reduce((a,it)=>a+(it.rows||[]).length,0)}문장</div>${dtgAll}</div>`:"")+Q.items.map((it,i)=>{
+    if(dtgAll && Q.pl[i]==="dtg") return "";
     if((Q.oor||{})[i]) return `<div class="rv"><div class="rv-h" style="cursor:default"><span class="mark" style="background:var(--surface-3);color:var(--ink-3)">🚫</span>
         <span style="flex:1"><span class="rv-q">${i+1}. ${esc(itemTag(it))}</span><span class="rv-meta">시험 범위 아님 · 점수에서 제외</span></span></div></div>`;
     const ds=Q.detail[i], ok=ds.filter(x=>x.ok).length;
@@ -2809,7 +2833,7 @@ function showResult(){
     const la={d:todayKey(), unit:unitLabel(), part, partName:"재시 · "+labelOf(part), scope:"재시험", total:t, correct:c, pct, secs};
     if(Q.la) Object.assign(Q.la,la); else { S.attempts.push(la); Q.la=la; }
     const R=((S.rt ||= {})[UNIT.id] ||= {}), o=(R[part] ||= {n:0});
-    if(!Q.rtN){ o.n=(o.n||0)+1; Q.rtN=1; } o.last=pct; o.d=todayKey(); if(rePassOK(part,c,t)){ o.pass=1; o.pd=o.pd||todayKey(); }
+    if(!Q.rtN){ o.n=(o.n||0)+1; Q.rtN=1; } o.last=pct; o.lt=t; o.d=todayKey(); if(rePassOK(part,c,t)){ o.pass=1; o.pd=o.pd||todayKey(); }
     if(reAll(part) && (isWordP(part)||part==="dtv") && !rePassOK(part,c,t)){ const L=[], seen=new Set();   // 단어 재시 불통과: 틀린 단어는 5번씩 쓰고 다시
       Q.items.forEach((it,i)=>(Q.detail[i]||[]).forEach((x,j)=>{ if(x.ok) return; const w=drPair(part,it,j); if(w&&w.en&&w.ko&&!seen.has(w.en)){ seen.add(w.en); L.push(w); } }));
       o.drill=L.slice(0,40); } else o.drill=[];
@@ -2831,8 +2855,9 @@ function showResult(){
   if(!Q.re && !Q.review && !Q.all && P[part] && V.k!=="pass" && UNIT)
     $("#score-card").insertAdjacentHTML("beforeend",`<button class="btn-sm" data-rego="${esc(part)}" data-reu="${esc(UNIT.id)}" style="display:block;width:100%;margin-top:12px;padding:13px">🔁 재시 보기 · 파트 전체 (${reAll(part)?"다 맞아야":VD_PASS+"점"} 통과)</button>`);
   if(Q.re){ $("#result-retry").hidden = V.k==="pass"; const dl=((reStat(UNIT.id,part)||{}).drill||[]).length;
-    $("#result-retry").textContent=dl?`✍️ 틀린 단어 ${dl}개 · 5번씩 쓰기`:"🔁 다시 재시 보기";
-    if(dl) $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:12px;padding:12px;border-radius:14px;background:var(--surface-2);font-size:13px;font-weight:700;line-height:1.6">✍️ 틀린 단어 <b>${dl}개</b>를 <b>영어·한국어로 5번씩</b> 써야 다시 재시를 볼 수 있어요</div>`); }
+    $("#result-retry").textContent=dl?`✍️ 틀린 단어 ${dl}개 · 5번씩 쓰기${dtvByDrill(part)?" → 통과 인정":""}`:"🔁 다시 재시 보기";
+    if(part==="dtg"&&C&&C.allInOne){ $("#result-retry").hidden=false; if(V.k==="pass") $("#result-retry").textContent="🔁 한 번 더 보기"; }
+    if(dl) $("#score-card").insertAdjacentHTML("beforeend",`<div style="margin-top:12px;padding:12px;border-radius:14px;background:var(--surface-2);font-size:13px;font-weight:700;line-height:1.6">✍️ 틀린 단어 <b>${dl}개</b>를 <b>영어·한국어로 5번씩</b> ${dtvByDrill(part)?"쓰면 <b>재시 통과로 인정</b>돼요":"써야 다시 재시를 볼 수 있어요"}</div>`); }
   go("result");
 
   const detOf=idx=>idx.map(i=>{ const it=Q.items[i];
@@ -2883,7 +2908,7 @@ $("#review-list").addEventListener("click",e=>{
     Q.detail[i][j].ok=true; Q.detail[i][j].so=1; S.exp+=2;
     (function(){ const mp=Q.items[i]._map, bad=[];
       Q.detail[i].forEach((x,j)=>{ if(!x.ok) bad.push(mp?mp[j]:j); });
-      if(!(Q.del||{})[i]) markWrong(Q.pl[i], Q.items[i], bad); })();
+      if(!(Q.del||{})[i] && !(Q.items[i].rows||[]).some(r=>r.add)) markWrong(Q.pl[i], Q.items[i], bad); })();
     const {t,c,pct}=tally();
     if(!Q.review && !Q.all && !Q.re){
       const b=bestOf()[Q.part]; if(!b||pct>b.pct) bestOf()[Q.part]={done:c,total:t,pct,scope:SCOPES()[sel.scope]?.short||sel.scope};
