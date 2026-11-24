@@ -238,10 +238,12 @@ export default async function handler(req, res) {
 - 흐름: ① 이번 결과와 연속으로 걸린 영역(지난 회차 → 이번 회차) → ② 그 영역에서 무엇이 흔들리는지(틀린 것이 있으면 한두 개 예로) → ③ 학원에서 하는 보완(재시를 통과할 때까지 남아서 다시 보고, 틀린 부분을 다시 공부함) → ④ 가정에서 부탁드릴 것 한 가지(그 영역 복습을 챙겨 봐 주시기).
 - 4~5문장, 학부모께 말하듯 존댓말. '~습니다'만 반복하지 말고 '~해요', '~입니다', '~드릴게요'를 섞는다. AI 말투·과장·낙인 금지(아이를 깎아내리지 않는다). 걱정을 키우기보다 무엇을 하면 되는지에 무게를 둔다.
 - 연속 통재시는 '꼭 확인 부탁드린다'는 무게로, 연속 부분재시는 '조금만 더 채우면 된다'는 무게로 쓴다.
-- 가장 중요한 한두 구절을 **별표 두 개**로 감싼다(최대 2군데).
+- 별표·마크다운 기호는 쓰지 않는다(리포트에 글자 그대로 나간다).
 - 학생 이름은 성을 빼고 부른다(김지유 → 지유는, 박준석 → 준석이는).
 - headline: 학부모가 리포트 맨 위에서 3초 안에 읽을 한 줄, 25자 안팎, 영역 이름 포함(예: '어법 2회 연속 재시 · 집중 보완이 필요해요').
-- 출력은 JSON 한 개만: {"headline":"...","note":"..."}`;
+- 출력 형식(다른 말 없이 이것만):
+<headline>한 줄</headline>
+<note>코멘트 본문</note>`;
         const msg = `학생: ${st} / 날짜: ${day}\n${String(b.info || "").slice(0, 2500)}`;
         const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
           headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
@@ -249,8 +251,11 @@ export default async function handler(req, res) {
         const j = await r.json().catch(() => ({}));
         if (!r.ok) return res.status(502).json({ error: "AI 요청 실패: " + ((j.error && j.error.message) || r.status) });
         const txt = (j.content || []).map(c => c.text || "").join("");
-        const m = txt.match(/\{[\s\S]*\}/); if (!m) return res.status(502).json({ error: "AI 답을 읽지 못했어요" });
-        let o = {}; try { o = JSON.parse(m[0]); } catch (e) { return res.status(502).json({ error: "AI 답을 읽지 못했어요" }); }
+        const tag = t => { const m = txt.match(new RegExp("<" + t + ">([\\s\\S]*?)</" + t + ">")); return m ? m[1].trim() : ""; };
+        let o = { headline: tag("headline"), note: tag("note") };
+        if (!o.note) { const m = txt.match(/\{[\s\S]*\}/); try { if (m) o = JSON.parse(m[0].replace(/\n/g, "\\n")); } catch (e) {} }
+        if (!o.note) { console.error("[hw ai.streak] 읽기 실패", txt.slice(0, 300)); return res.status(502).json({ error: "AI 답을 읽지 못했어요 — 다시 눌러 주세요" }); }
+        o.note = String(o.note).replace(/\*\*/g, ""); o.headline = String(o.headline || "").replace(/\*\*/g, "");
         return res.status(200).json({ ok: true, headline: S(o.headline, 200), note: String(o.note || "").trim().slice(0, 4000), prev: prev || null });
       }
       default: return res.status(400).json({ error: "알 수 없는 요청입니다" });
