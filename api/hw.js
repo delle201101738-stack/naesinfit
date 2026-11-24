@@ -247,7 +247,7 @@ export default async function handler(req, res) {
         const msg = `학생: ${st} / 날짜: ${day}\n${String(b.info || "").slice(0, 2500)}`;
         const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
           headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-          body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: 900, system: SYS, messages: [{ role: "user", content: msg }] }) });
+          body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: 4000, system: SYS, messages: [{ role: "user", content: msg }] }) });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) return res.status(502).json({ error: "AI 요청 실패: " + ((j.error && j.error.message) || r.status) });
         const txt = (j.content || []).map(c => c.text || "").join("");
