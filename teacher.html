@@ -729,19 +729,21 @@ function renderIns(){
     const d=iDk(r.created_at), o=((SER[r.student] ||= {})[r.unit_id] ||= {}), x=o[r.part];
     if(!x||d<x.d||(d===x.d&&r.correct/r.total>x.c/x.t)) o[r.part]={d, c:+r.correct, t:+r.total, book:r.book}; });
   const uNo=u=>String(u).replace(/^dt0*/,"")+"회차";
+  const AN=p=>({wmean:"어휘",dtv:"구문 단어",dtr:"직독직해",dtg:"어법"})[p]||p;
+  const skTxt=x=>[x.full?`연속 통재시 · ${x.prev} ${x.fa.map(AN).join("·")} → ${x.cur} ${x.fb.map(AN).join("·")}`:"", x.part?`연속 부분재시 · ${x.prev} ${x.qa.map(AN).join("·")} → ${x.cur} ${x.qb.map(AN).join("·")}`:""].filter(Boolean).join(" / ");
   const streakL=[]; [...new Set(best.filter(r=>/^dt/.test(r.unit_id||"")).map(r=>r.student+"|"+r.unit_id))].forEach(k=>{ const [st,uid]=k.split("|"), U=SER[st]||{};
     const us=Object.keys(U).sort((a,b)=>a.localeCompare(b,"en",{numeric:true})), i=us.indexOf(uid); if(i<1) return;
     const ks=u=>Object.entries(U[u]).map(([p,x])=>iVerdict({book:x.book, unit_id:u, part:p, correct:x.c, total:x.t}));
     const a=ks(us[i-1]), b=ks(uid), part=a.includes("part")&&b.includes("part"), full=a.includes("full")&&b.includes("full");
-    if(part||full) streakL.push({s:st, part, full, prev:uNo(us[i-1]), cur:uNo(uid)}); });
+    if(part||full){ const pk=(u,v,w)=>Object.keys(U[u]).filter((p,j)=>v[j]===w); streakL.push({s:st, part, full, prev:uNo(us[i-1]), cur:uNo(uid), fa:pk(us[i-1],a,"full"), fb:pk(uid,b,"full"), qa:pk(us[i-1],a,"part"), qb:pk(uid,b,"part")}); } });
   const stayD={}; Object.entries(stayM).forEach(([st,U])=>Object.values(U).forEach(rs=>{ if(rs.length>=2) (stayD[st] ||= []).push(...rs); }));
   // 숙제 완료율 70% 미만도 남아서 하고 가기
   const stayL=[...new Set([...Object.keys(stayD), ...hwLow.map(x=>x.st), ...streakL.map(x=>x.s)])].map(st=>({s:st, rs:stayD[st]||[], hw:hwLow.find(x=>x.st===st)||null, sk:streakL.find(x=>x.s===st)||null}));
   stayL.sort((a,b)=>(b.rs.length?1:0)+(b.hw?1:0)-((a.rs.length?1:0)+(a.hw?1:0))||b.rs.length-a.rs.length||a.s.localeCompare(b.s,"ko"));
-  const stayWhy=x=>[x.sk&&x.sk.full?"🚨 연속 통재시":"", x.sk&&x.sk.part?"⚠ 연속 부분재시":"", x.rs.length?`데일리 통재시 ${x.rs.length}영역`:"", x.hw?`숙제 ${x.hw.pct}%`:""].filter(Boolean).join(" + ");
+  const stayWhy=x=>[x.sk&&x.sk.full?`🚨 연속 통재시(${x.sk.fb.map(AN).join("·")})`:"", x.sk&&x.sk.part?`⚠ 연속 부분재시(${x.sk.qb.map(AN).join("·")})`:"", x.rs.length?`데일리 통재시 ${x.rs.map(r=>AN(r.part)).join("·")}`:"", x.hw?`숙제 ${x.hw.pct}%`:""].filter(Boolean).join(" + ");
   const partL=best.filter(r=>r.v==="part").sort((a,b)=>a.student.localeCompare(b.student,"ko"));
   const partS=[...new Set(partL.map(r=>r.student))];
-  if(streakL.length) L.unshift(insLine("⚠",`<b style="color:var(--no)">연속 재시 ${streakL.length}명</b> — ${streakL.map(x=>`${esc(x.s)} <span style="color:${x.full?"var(--no)":"#d97706"};font-weight:800">(${[x.full?"연속 통재시":"",x.part?"연속 부분재시":""].filter(Boolean).join("·")} ${x.prev}→${x.cur})</span>`).join(", ")}`));
+  if(streakL.length) L.unshift(insLine("⚠",`<b style="color:var(--no)">연속 재시 ${streakL.length}명</b> — ${streakL.map(x=>`${esc(x.s)} <span style="color:${x.full?"var(--no)":"#d97706"};font-weight:800">(${skTxt(x)})</span>`).join(", ")}`));
   if(stayL.length) L.unshift(insLine("🏫",`<b style="color:var(--no)">남아서 하고 가기 ${stayL.length}명</b> (데일리테스트 통재시 2영역 이상 · 숙제 70% 미만 · 연속 재시) — ${stayL.map(x=>`${esc(x.s)} <span style="color:var(--ink-3)">(${stayWhy(x)})</span>`).join(", ")}`));
   if(partS.length) L.push(insLine("📝",`특이사항 · 부분재시 ${partS.length}명 — ${partS.map(esc).join(", ")}`));
   const reTxt=x=>x.ok?`✓ 재시 통과 (${iDk(x.ok.created_at).slice(5).replace("-","/")}${x.n>1?` · ${x.n}회`:""})`:x.n?`✗ 재시 ${x.n}회 · 최고 ${r1(+x.bb.correct)}/${x.bb.total}`:"아직 재시 안 봄";
@@ -759,12 +761,12 @@ function renderIns(){
   const hwTodo=x=>x.todo.map(t=>`<div style="font-size:12.5px;color:var(--ink-2);margin-top:2px">▸ ${esc(t.t)} <b style="color:${t.st==="part"?"#d97706":"var(--no)"}">${t.st==="part"?"일부":"안 함"}</b>${t.left.length?`<span style="color:var(--ink-3)"> · 남은 미션: ${t.left.map(esc).join(", ")}</span>`:""}</div>`).join("");
   const stayCopy=`[${clsName} ${dd}] 남아서 하고 가기 ${stayL.length}명`
     +(sDT.length?`\n\n■ 데일리테스트 통재시 2영역 이상\n`+sDT.map(x=>`- ${x.s}: `+ordR(x.rs).map(r=>`${sLab(r)} ${r1(+r.correct)}/${r.total}`).join(" · ")).join("\n"):"")
-    +(sSK.length?`\n\n■ 연속 재시\n`+sSK.map(x=>`- ${x.s}: ${x.sk.full?"연속 통재시":"연속 부분재시"} ${x.sk.prev}→${x.sk.cur}`).join("\n"):"")
+    +(sSK.length?`\n\n■ 연속 재시\n`+sSK.map(x=>`- ${x.s}: ${skTxt(x.sk)}`).join("\n"):"")
     +(sHW.length?`\n\n■ 숙제 70% 미만\n`+sHW.map(x=>`- ${x.st} ${x.pct}% → `+x.todo.map(t=>t.t+(t.st==="part"?" (일부)":"")+(t.left.length?` (남은 미션: ${t.left.join(", ")})`:"")).join(" / ")).join("\n"):"");
   const stayCard=`<div class="card" style="padding:16px 20px;margin-top:12px;border:2px solid ${stayL.length?"var(--no)":"var(--line)"}">${ttl("🏫 남아서 하고 가기",stayL.length,insCopyBtn("st",stayCopy))}
     <div style="font-size:12px;color:var(--ink-3)">사유가 여러 개인 학생은 해당 칸마다 나와요</div>
     ${sDT.length?sSec("📝","데일리테스트 통재시 2영역 이상",sDT.length,sDT.map(x=>sRow(x.s,dtChips(x)+(x.hw?chip(`+ 숙제 ${x.hw.pct}%`,"mut"):""))).join("")):""}
-    ${sSK.length?sSec("🚨","연속 재시 (지난 회차에 이어 2회 연속)",sSK.length,sSK.map(x=>sRow(x.s,chip(`${x.sk.full?"연속 통재시":"연속 부분재시"} ${x.sk.prev} → ${x.sk.cur}`,x.sk.full?"no":"mut"))).join("")):""}
+    ${sSK.length?sSec("🚨","연속 재시 (지난 회차·이번 회차 영역)",sSK.length,sSK.map(x=>sRow(x.s,`<div style="font-size:12.5px;color:var(--ink-2);font-weight:700">${esc(skTxt(x.sk))}</div>`+ordR(best.filter(r=>r.student===x.s&&/^dt/.test(r.unit_id||"")&&r.v!=="pass")).map(r=>{ const q=reT.find(y=>y.r===r); return chip(`${esc(sLab(r))} ${r1(+r.correct)}/${r.total} ${r.v==="full"?"통재시":"부분재시"}${reMini(q)}`, q&&q.ok?"ok":r.v==="full"?"no":"mut"); }).join(""))).join("")):""}
     ${sSec("📚","숙제 70% 미만",sHW.length,!H.its.length?`<div style="font-size:13px;color:var(--ink-3);padding:4px 0">${dd} 숙제가 없어요.</div>`:sHW.length?sHW.map(x=>sRow(x.st,chip(`${x.pct}% · ${r1(x.s)}/${x.n}${x.pend?` · 검사 전 ${x.pend}`:""}`,"no")+hwTodo(x))).join(""):`<div style="font-size:13px;color:var(--ink-3);padding:4px 0">${hwPer.length?"모두 70% 이상이에요 👏":"아직 검사 기록이 없어요."}</div>`)}
   </div>`;
   box.innerHTML=`
