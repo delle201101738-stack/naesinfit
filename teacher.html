@@ -746,6 +746,27 @@ function renderIns(){
   if(partS.length) L.push(insLine("📝",`특이사항 · 부분재시 ${partS.length}명 — ${partS.map(esc).join(", ")}`));
   const reTxt=x=>x.ok?`✓ 재시 통과 (${iDk(x.ok.created_at).slice(5).replace("-","/")}${x.n>1?` · ${x.n}회`:""})`:x.n?`✗ 재시 ${x.n}회 · 최고 ${r1(+x.bb.correct)}/${x.bb.total}`:"아직 재시 안 봄";
   const dd=day.slice(5).replace("-","/");
+  // 🏫 남아서 하고 가기 — 한 박스: 데일리 통재시 2영역↑ · 연속 재시 · 숙제 70% 미만
+  const SP={wmean:"어휘",dtv:"구문 단어",dtr:"직독직해",dtg:"어법"};
+  const sLab=r=>/^dt/.test(r.unit_id||"")&&SP[r.part]?SP[r.part]:pLab(r);
+  const chip=(t,c)=>`<span style="display:inline-block;padding:1px 9px;margin:2px 4px 2px 0;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;background:${c==="ok"?"rgba(16,185,129,.12)":c==="mut"?"rgba(0,0,0,.06)":"rgba(239,68,68,.1)"};color:${c==="ok"?"var(--ok)":c==="mut"?"var(--ink-2)":"var(--no)"}">${t}</span>`;
+  const reMini=q=>!q?"":q.ok?" · ✓ 재시 통과":q.n?` · ✗ 재시 ${q.n}회`:" · 재시 전";
+  const sRow=(s,h)=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line)"><button style="font-weight:800;color:var(--accent);flex:none;min-width:64px;text-align:left;padding-top:2px" data-stu="${esc(s)}">${esc(s)}</button><div style="flex:1;min-width:0;font-size:13.5px;line-height:1.55">${h}</div></div>`;
+  const sSec=(ic,t,n,body)=>`<div style="margin-top:14px"><div style="font-size:13px;font-weight:800;color:var(--ink-2);margin-bottom:2px">${ic} ${t} <span style="color:${n?"var(--no)":"var(--ink-3)"}">${n}명</span></div>${body}</div>`;
+  const sDT=stayL.filter(x=>x.rs.length), sSK=stayL.filter(x=>x.sk), sHW=hwLow;
+  const ordP=["wmean","dtv","dtr","dtg"], ordR=rs=>[...rs].sort((a,b)=>ordP.indexOf(a.part)-ordP.indexOf(b.part));
+  const dtChips=x=>ordR(x.rs).map(r=>{ const q=reT.find(y=>y.r===r), blank=/^(wmean|dtr)$/.test(r.part)&&+r.total>0&&+r.correct/+r.total<=0.2; return chip(`${esc(sLab(r))} ${r1(+r.correct)}/${r.total}${blank?" · 거의 빈칸":""}${reMini(q)}`, q&&q.ok?"ok":"no"); }).join("");
+  const hwTodo=x=>x.todo.map(t=>`<div style="font-size:12.5px;color:var(--ink-2);margin-top:2px">▸ ${esc(t.t)} <b style="color:${t.st==="part"?"#d97706":"var(--no)"}">${t.st==="part"?"일부":"안 함"}</b>${t.left.length?`<span style="color:var(--ink-3)"> · 남은 미션: ${t.left.map(esc).join(", ")}</span>`:""}</div>`).join("");
+  const stayCopy=`[${clsName} ${dd}] 남아서 하고 가기 ${stayL.length}명`
+    +(sDT.length?`\n\n■ 데일리테스트 통재시 2영역 이상\n`+sDT.map(x=>`- ${x.s}: `+ordR(x.rs).map(r=>`${sLab(r)} ${r1(+r.correct)}/${r.total}`).join(" · ")).join("\n"):"")
+    +(sSK.length?`\n\n■ 연속 재시\n`+sSK.map(x=>`- ${x.s}: ${x.sk.full?"연속 통재시":"연속 부분재시"} ${x.sk.prev}→${x.sk.cur}`).join("\n"):"")
+    +(sHW.length?`\n\n■ 숙제 70% 미만\n`+sHW.map(x=>`- ${x.st} ${x.pct}% → `+x.todo.map(t=>t.t+(t.st==="part"?" (일부)":"")+(t.left.length?` (남은 미션: ${t.left.join(", ")})`:"")).join(" / ")).join("\n"):"");
+  const stayCard=`<div class="card" style="padding:16px 20px;margin-top:12px;border:2px solid ${stayL.length?"var(--no)":"var(--line)"}">${ttl("🏫 남아서 하고 가기",stayL.length,insCopyBtn("st",stayCopy))}
+    <div style="font-size:12px;color:var(--ink-3)">사유가 여러 개인 학생은 해당 칸마다 나와요</div>
+    ${sDT.length?sSec("📝","데일리테스트 통재시 2영역 이상",sDT.length,sDT.map(x=>sRow(x.s,dtChips(x)+(x.hw?chip(`+ 숙제 ${x.hw.pct}%`,"mut"):""))).join("")):""}
+    ${sSK.length?sSec("🚨","연속 재시 (지난 회차에 이어 2회 연속)",sSK.length,sSK.map(x=>sRow(x.s,chip(`${x.sk.full?"연속 통재시":"연속 부분재시"} ${x.sk.prev} → ${x.sk.cur}`,x.sk.full?"no":"mut"))).join("")):""}
+    ${sSec("📚","숙제 70% 미만",sHW.length,!H.its.length?`<div style="font-size:13px;color:var(--ink-3);padding:4px 0">${dd} 숙제가 없어요.</div>`:sHW.length?sHW.map(x=>sRow(x.st,chip(`${x.pct}% · ${r1(x.s)}/${x.n}${x.pend?` · 검사 전 ${x.pend}`:""}`,"no")+hwTodo(x))).join(""):`<div style="font-size:13px;color:var(--ink-3);padding:4px 0">${hwPer.length?"모두 70% 이상이에요 👏":"아직 검사 기록이 없어요."}</div>`)}
+  </div>`;
   box.innerHTML=`
     <div class="tiles">
       ${tile(roster.length?`${took.length}<small style="font-size:15px;color:var(--ink-3)">/${roster.length}</small>`:took.length,"응시 인원")}
@@ -760,10 +781,8 @@ function renderIns(){
       ${WT.length?`<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--ink-3)">많이 틀린 문항 TOP ${WT.length}</summary>
         ${WT.map(x=>`<div class="wrongrow"><b>${esc(x.l||"")}</b> <span style="color:var(--ink-3);font-size:12px">${esc(PARTNAMES[x.p]||x.p)}${x.no?" · "+esc(x.no):""}</span> — <b style="color:var(--no)">${x.n.size}명</b> 틀림 · <span class="k">정답</span><span class="good">${esc(x.r||"")}</span></div>`).join("")}</details>`:""}
     </div>
-    ${stayL.length?`<div class="card" style="padding:16px 20px;margin-top:12px;border:2px solid var(--no)">${ttl("🏫 남아서 하고 가기 <span style=\"font-size:12px;font-weight:600;color:var(--ink-3)\">데일리테스트 통재시 2영역 이상 · 숙제 70% 미만 · 연속 부분재시·통재시</span>",stayL.length,insCopyBtn("st",`[${clsName} ${dd}] 남아서 하고 가기 ${stayL.length}명\n`+stayL.map(x=>`${x.s} (${[x.rs.length?"통재시: "+x.rs.map(r=>pLab(r)+" "+r1(+r.correct)+"/"+r.total).join(" · "):"", x.hw?`숙제 ${x.hw.pct}% → 해야 할 숙제: `+x.hw.todo.map(t=>t.t).join(" / "):""].filter(Boolean).join(" / ")})`).join("\n")))}
-      ${stayL.map(x=>nameRow(x.s,`<div style="margin-bottom:2px"><span class="pill p-lo">${esc(stayWhy(x))}</span></div>`+(x.sk?`<div style="font-weight:800;color:${x.sk.full?"var(--no)":"#d97706"}">${x.sk.full?"🚨 연속 통재시":"⚠ 연속 부분재시"}${x.sk.full&&x.sk.part?" · 연속 부분재시":""} <span style="font-weight:600;color:var(--ink-3)">${x.sk.prev} → ${x.sk.cur}</span></div>`:"")+x.rs.map(r=>{ const q=reT.find(y=>y.r===r); return `↻ <b>${esc(pLab(r))}</b> <span class="num" style="color:var(--ink-3)">${r1(+r.correct)}/${r.total}</span>${q?` → <span style="font-weight:800;color:${q.ok?"var(--ok)":q.n?"var(--no)":"var(--ink-3)"}">${reTxt(q)}</span>`:""}`; }).join("<br>")
-        +(x.hw?`${x.rs.length?"<br>":""}📚 <b>숙제 ${x.hw.pct}%</b> <span class="num" style="color:var(--ink-3)">${r1(x.hw.s)}/${x.hw.n}</span> → 해야 할 숙제: ${x.hw.todo.map(t=>esc(t.t)+(t.left.length?` <span style="color:var(--ink-3)">(남은 미션: ${t.left.map(esc).join(", ")})</span>`:t.st==="part"?` <span style="color:var(--ink-3)">(일부만 함)</span>`:"")).join(" / ")||"—"}`:""))).join("")}</div>`:""}
-    <div class="card" style="padding:16px 20px;margin-top:12px">${streakL.length?`<div style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:rgba(239,68,68,.08)"><b style="font-size:14px">⚠ 연속 재시 (지난 회차에 이어 2회 연속)</b>${streakL.map(x=>`<div style="margin-top:6px;font-size:13.5px"><button style="font-weight:800;color:var(--accent)" data-stu="${esc(x.s)}">${esc(x.s)}</button> <b style="color:${x.full?"var(--no)":"#d97706"}">${[x.full?"🚨 연속 통재시":"",x.part?"⚠ 연속 부분재시":""].filter(Boolean).join(" · ")}</b> <span style="color:var(--ink-3)">${x.prev} → ${x.cur} · 남아서 하고 가기</span></div>`).join("")}</div>`:""}${ttl("📝 특이사항 · 부분재시",partS.length,insCopyBtn("pt",`[${clsName} ${dd}] 부분재시 ${partS.length}명\n`+partS.map(st=>`${st} (${partL.filter(r=>r.student===st).map(r=>pLab(r)+" "+r1(+r.correct)+"/"+r.total).join(" · ")})`).join("\n")))}
+    ${stayCard}
+    <div class="card" style="padding:16px 20px;margin-top:12px">${ttl("📝 특이사항 · 부분재시",partS.length,insCopyBtn("pt",`[${clsName} ${dd}] 부분재시 ${partS.length}명\n`+partS.map(st=>`${st} (${partL.filter(r=>r.student===st).map(r=>pLab(r)+" "+r1(+r.correct)+"/"+r.total).join(" · ")})`).join("\n")))}
       ${partS.length?partS.map(st=>nameRow(st,partL.filter(r=>r.student===st).map(r=>{ const q=reT.find(y=>y.r===r); return `<b>${esc(pLab(r))}</b> <span class="num" style="color:var(--ink-3)">${r1(+r.correct)}/${r.total} 부분재시</span>${q?` → <span style="font-weight:800;color:${q.ok?"var(--ok)":q.n?"var(--no)":"var(--ink-3)"}">${reTxt(q)}</span>`:""}`; }).join("<br>"))).join(""):`<div style="font-size:13px;color:var(--ink-3)">없어요 👏</div>`}</div>
     ${cmp}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:12px">
@@ -776,13 +795,7 @@ function renderIns(){
     ${dtMiss.length?`<div class="card" style="padding:14px 20px;margin-top:12px;border:2px solid var(--no)"><b style="font-size:14px;color:var(--no)">⚠ 데일리테스트 어법 통재시 추가 문제가 없어요</b><div style="font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.6">${dtMiss.map(([k,v])=>esc(v.no)).join(" · ")} — 어법 통재시 재시에 5문장을 더 넣을 문제 풀(dtgx)이 비어 있어서 지금은 원래 5문장만 나와요. Claude에게 "<b>${esc(dtMiss[0][1].no)} 어법 추가 문제 넣어줘</b>"라고 해 주세요.</div></div>`:""}
     ${!reT.length?`<div class="card" style="padding:16px 20px;margin-top:12px"><b style="font-size:14.5px">🔁 재시 현황</b><div style="font-size:13px;color:var(--ink-3);margin-top:6px">${dd}에 재시 대상(통과 못 한 영역)이 없어요.</div></div>`:""}
     ${reT.length?`<div class="card" style="padding:16px 20px;margin-top:12px">${ttl("🔁 재시 현황 <span style=\"font-size:12px;font-weight:600;color:var(--ink-3)\">파트 전체 다시 · 데일리테스트·단어는 다 맞아야, 나머지 90점</span>",reLeft.length,insCopyBtn("r",`[${clsName} ${dd}] 재시 남은 학생 ${reLeft.length}명\n`+reLeft.map(s=>`${s} (${reT.filter(x=>x.r.student===s&&!x.ok).map(x=>`${pLab(x.r)} ${reTxt(x)}`).join(" · ")})`).join("\n")))}
-      ${reT.map(x=>nameRow(x.r.student,`<b>${esc(pLab(x.r))}</b> <span class="num" style="color:var(--ink-3)">${r1(+x.r.correct)}/${x.r.total} ${VN[x.r.v]}</span> → <span style="font-weight:800;color:${x.ok?"var(--ok)":x.n?"var(--no)":"var(--ink-3)"}">${reTxt(x)}</span>`)).join("")}</div>`:""}
-    <div class="card" style="padding:16px 20px;margin-top:12px">${ttl(`📚 숙제 70% 미만 · 해야 할 숙제`,hwLow.length,insCopyBtn("h",`[${clsName} ${dd}] 숙제 70% 미만 ${hwLow.length}명\n`+hwLow.map(x=>`${x.st} ${x.pct}% → 해야 할 숙제: ${x.todo.map(t=>t.t+(t.left.length?` (남은 미션: ${t.left.join(", ")})`:t.st==="part"?" (일부만 함)":"")).join(" / ")}`).join("\n")))}
-      ${!H.its.length?`<div style="font-size:13px;color:var(--ink-3)">${dd} 숙제가 없어요.</div>`
-       :hwLow.length?hwLow.map(x=>nameRow(x.st,`<span class="pill p-lo" style="margin-right:6px">${x.pct}%</span><span class="num" style="color:var(--ink-3)">${r1(x.s)}/${x.n}${x.pend?` · 검사 전 ${x.pend}`:""}</span>
-          <div style="margin-top:4px">${x.todo.map(t=>`<div style="padding:2px 0">▸ <b>${esc(t.t)}</b> <span class="vd ${t.st==="part"?"part":"full"}" style="margin-left:4px">${t.st==="part"?"일부":"안 함"}${t.sc!=null?` · 앱 ${t.sc}점`:""}</span>${t.left.length?`<div style="font-size:12px;color:var(--ink-3);margin-left:14px">남은 미션: ${t.left.map(esc).join(" · ")}</div>`:""}</div>`).join("")}</div>`)).join("")
-       :`<div style="font-size:13px;color:var(--ink-3)">${hwPer.length?"모두 70% 이상이에요 👏":"아직 검사 기록이 없어요."}</div>`}
-    </div>`;
+      ${reT.map(x=>nameRow(x.r.student,`<b>${esc(pLab(x.r))}</b> <span class="num" style="color:var(--ink-3)">${r1(+x.r.correct)}/${x.r.total} ${VN[x.r.v]}</span> → <span style="font-weight:800;color:${x.ok?"var(--ok)":x.n?"var(--no)":"var(--ink-3)"}">${reTxt(x)}</span>`)).join("")}</div>`:""}`;
 }
 $("#ins-day").addEventListener("change",e=>{ INS.day=e.target.value||iDk(new Date()); renderIns(); });
 document.addEventListener("click",e=>{
