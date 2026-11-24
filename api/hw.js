@@ -254,7 +254,7 @@ export default async function handler(req, res) {
         const tag = t => { const m = txt.match(new RegExp("<" + t + ">([\\s\\S]*?)</" + t + ">")); return m ? m[1].trim() : ""; };
         let o = { headline: tag("headline"), note: tag("note") };
         if (!o.note) { const m = txt.match(/\{[\s\S]*\}/); try { if (m) o = JSON.parse(m[0].replace(/\n/g, "\\n")); } catch (e) {} }
-        if (!o.note) { console.error("[hw ai.streak] 읽기 실패", txt.slice(0, 300)); return res.status(502).json({ error: "AI 답을 읽지 못했어요 — 다시 눌러 주세요" }); }
+        if (!o.note) { console.error("[hw ai.streak] 읽기 실패", txt.slice(0, 300)); return res.status(502).json({ error: "AI 답을 읽지 못했어요 — 다시 눌러 주세요", why: { stop: j.stop_reason || "", model: j.model || "", types: (j.content || []).map(c => c.type).join(","), raw: txt.slice(0, 400) } }); }
         o.note = String(o.note).replace(/\*\*/g, ""); o.headline = String(o.headline || "").replace(/\*\*/g, "");
         return res.status(200).json({ ok: true, headline: S(o.headline, 200), note: String(o.note || "").trim().slice(0, 4000), prev: prev || null });
       }
