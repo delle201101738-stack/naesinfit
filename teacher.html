@@ -597,6 +597,41 @@ $("#csv").onclick=()=>{
    시험: 그날 본 기록 중 학생·과·파트마다 최고 기록 1개(재시험·오답노트 제외). 판정은 학생 앱과 같은 규칙(단원 verdict → 없으면 90/75).
    숙제: 그날(hw_items.day) 숙제의 칸 점수(완료 1 · 일부 = 미션 비율/앱 점수/0.5 · 안 함 0 · 면제·검사 전 제외) 평균. ───── */
 let HW=null, INS={day:"", cid:"all"}, INS_COPY={};
+let AIC={};   // 연속 재시 학부모 코멘트 AI 초안 (학생|날짜 → {busy|err|h,n,prev,saved})
+const aicBtn=(act,s,d,t,pri)=>`<button data-aic="${act}" data-s="${esc(s)}" data-d="${d}" style="font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:999px;border:1.5px solid var(--accent);${pri?"background:var(--accent);color:#fff":"background:#fff;color:var(--accent)"}">${t}</button>`;
+function aicBox(s,d){ const k=s+"|"+d, a=AIC[k];
+  if(!a) return `<div style="margin-top:6px">${aicBtn("gen",s,d,"✍️ 학부모 코멘트 AI로 쓰기")}</div>`;
+  if(a.busy) return `<div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)">✍️ AI가 코멘트를 쓰는 중이에요… (10~20초)</div>`;
+  if(a.err) return `<div style="margin-top:6px;font-size:12.5px;color:var(--no)">${esc(a.err)} ${aicBtn("gen",s,d,"↻ 다시")}</div>`;
+  const hasPrev=a.prev&&(a.prev.note||a.prev.headline);
+  return `<div style="margin-top:8px;padding:10px 12px;border-radius:12px;background:rgba(99,102,241,.05);border:1px solid var(--line)">
+    <div style="font-size:12px;font-weight:800;color:var(--ink-3);margin-bottom:6px">✍️ 학부모 코멘트 초안 — 고쳐서 저장하면 ${esc(d.slice(5).replace("-","/"))} 학부모 리포트에 나가요</div>
+    <div style="font-size:11.5px;color:var(--ink-3)">👩‍🏫 선생님 한마디 (맨 위 한 줄)</div>
+    <input data-aic-h="${esc(k)}" value="${esc(a.h||"")}" style="width:100%;box-sizing:border-box;font-weight:800;font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin:2px 0 6px">
+    <div style="font-size:11.5px;color:var(--ink-3)">💬 선생님 코멘트</div>
+    <textarea data-aic-n="${esc(k)}" rows="6" style="width:100%;box-sizing:border-box;font:inherit;font-size:13.5px;line-height:1.6;padding:8px;border:1px solid var(--line);border-radius:8px;margin-top:2px">${esc(a.n||"")}</textarea>
+    ${hasPrev&&!a.saved?`<div style="font-size:12px;color:#d97706;margin-top:4px">⚠ 이 날 리포트에 저장된 선생님 코멘트가 이미 있어요 — '저장'은 바꾸고, '기존 뒤에 붙이기'는 이어 붙여요.</div>`:""}
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${aicBtn("save",s,d,"💾 리포트에 저장",1)}${hasPrev&&!a.saved?aicBtn("append",s,d,"➕ 기존 뒤에 붙이기"):""}${aicBtn("copy",s,d,"📋 복사")}${aicBtn("gen",s,d,"↻ 다시 쓰기")}</div>
+    ${a.saved?`<div style="font-size:12.5px;font-weight:700;color:${a.saveErr?"var(--no)":"var(--ok)"};margin-top:6px">${esc(a.saved)}</div>`:""}
+  </div>`; }
+document.addEventListener("input",e=>{ const h=e.target.closest("[data-aic-h]"), n=e.target.closest("[data-aic-n]");
+  if(h&&AIC[h.dataset.aicH]) AIC[h.dataset.aicH].h=h.value; if(n&&AIC[n.dataset.aicN]) AIC[n.dataset.aicN].n=n.value; });
+document.addEventListener("click",async e=>{ const b=e.target.closest("[data-aic]"); if(!b) return; e.stopPropagation();
+  const s=b.dataset.s, d=b.dataset.d, k=s+"|"+d, act=b.dataset.aic, a=AIC[k];
+  const post=async body=>{ const r=await fetch("/api/hw",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||"요청이 실패했어요"); return j; };
+  if(act==="gen"){ AIC[k]={busy:true}; renderIns();
+    try{ const j=await post({action:"ai.streak",student:s,day:d,info:(window.AIC_INFO||{})[s]||""}); const un=x=>String(x||"").replace(/[*]{2}/g,"");
+      AIC[k]={h:un(j.headline), n:un(j.note), prev:j.prev}; }catch(err){ AIC[k]={err:err.message}; }
+    renderIns(); return; }
+  if(!a||a.busy||a.err) return;
+  if(act==="copy"){ const t=(a.h?a.h+"\n\n":"")+(a.n||""); try{ await navigator.clipboard.writeText(t); }catch(_){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } b.textContent="✓ 복사됨"; return; }
+  if(act==="save"||act==="append"){ const ap=act==="append"&&a.prev;
+    const body={action:"note.set",student:s,day:d,kind:"day",headline:ap?(a.prev.headline||a.h||""):(a.h||""),note:ap?[a.prev.note,a.n].filter(Boolean).join("\n\n"):(a.n||"")};
+    b.disabled=true; b.textContent="저장 중…";
+    try{ await post(body); a.prev={headline:body.headline,note:body.note}; a.saveErr=false; a.saved=ap?"✓ 기존 코멘트 뒤에 붙여 저장했어요 — 학부모 리포트에 나가요":"✓ 저장했어요 — 학부모 리포트 맨 위 한마디·코멘트로 나가요"; }
+    catch(err){ a.saveErr=true; a.saved="✗ 저장하지 못했어요: "+err.message; }
+    renderIns(); }
+});
 async function loadHw(){ try{ const r=await fetch("/api/hw",{headers:{"x-pin":PIN},cache:"no-store"}); if(r.ok) HW=await r.json(); }catch(e){ HW=null; } }
 const iDk=v=>{const d=new Date(v),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;};
 const AREA_OF=p=>/^(wmean|wsyn|wsynw|wdef|dfa|dfb|vdc\d|vdm\d|vdt\d|vdw\d|vds|vmc|vmcr|dtv|vocab|vbb|vbbw|fixv)$/.test(p)?"어휘"
@@ -735,7 +770,7 @@ function renderIns(){
     const us=Object.keys(U).sort((a,b)=>a.localeCompare(b,"en",{numeric:true})), i=us.indexOf(uid); if(i<1) return;
     const ks=u=>Object.entries(U[u]).map(([p,x])=>iVerdict({book:x.book, unit_id:u, part:p, correct:x.c, total:x.t}));
     const a=ks(us[i-1]), b=ks(uid), part=a.includes("part")&&b.includes("part"), full=a.includes("full")&&b.includes("full");
-    if(part||full){ const pk=(u,v,w)=>Object.keys(U[u]).filter((p,j)=>v[j]===w); streakL.push({s:st, part, full, prev:uNo(us[i-1]), cur:uNo(uid), fa:pk(us[i-1],a,"full"), fb:pk(uid,b,"full"), qa:pk(us[i-1],a,"part"), qb:pk(uid,b,"part")}); } });
+    if(part||full){ const pk=(u,v,w)=>Object.keys(U[u]).filter((p,j)=>v[j]===w); streakL.push({s:st, part, full, prev:uNo(us[i-1]), cur:uNo(uid), pu:us[i-1], cu:uid, fa:pk(us[i-1],a,"full"), fb:pk(uid,b,"full"), qa:pk(us[i-1],a,"part"), qb:pk(uid,b,"part")}); } });
   const stayD={}; Object.entries(stayM).forEach(([st,U])=>Object.values(U).forEach(rs=>{ if(rs.length>=2) (stayD[st] ||= []).push(...rs); }));
   // 숙제 완료율 70% 미만도 남아서 하고 가기
   const stayL=[...new Set([...Object.keys(stayD), ...hwLow.map(x=>x.st), ...streakL.map(x=>x.s)])].map(st=>({s:st, rs:stayD[st]||[], hw:hwLow.find(x=>x.st===st)||null, sk:streakL.find(x=>x.s===st)||null}));
@@ -756,6 +791,16 @@ function renderIns(){
   const sRow=(s,h)=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line)"><button style="font-weight:800;color:var(--accent);flex:none;min-width:64px;text-align:left;padding-top:2px" data-stu="${esc(s)}">${esc(s)}</button><div style="flex:1;min-width:0;font-size:13.5px;line-height:1.55">${h}</div></div>`;
   const sSec=(ic,t,n,body)=>`<div style="margin-top:14px"><div style="font-size:13px;font-weight:800;color:var(--ink-2);margin-bottom:2px">${ic} ${t} <span style="color:${n?"var(--no)":"var(--ink-3)"}">${n}명</span></div>${body}</div>`;
   const sDT=stayL.filter(x=>x.rs.length), sSK=stayL.filter(x=>x.sk), sHW=hwLow;
+  // ✍️ 연속 재시 학부모 코멘트 AI용 기록 요약
+  const aicInfo=x=>{ const k=x.sk, U=SER[x.s]||{}, OP=["wmean","dtv","dtr","dtg"];
+    const ln=u=>Object.entries(U[u]||{}).sort((a,b)=>OP.indexOf(a[0])-OP.indexOf(b[0])).map(([p,v])=>{ const vd=iVerdict({book:v.book,unit_id:u,part:p,correct:v.c,total:v.t}); return `${AN(p)} ${r1(v.c)}/${v.t} ${VN[vd]||vd}`; }).join(", ")||"기록 없음";
+    const cur=best.filter(r=>r.student===x.s&&r.unit_id===k.cu&&r.v!=="pass");
+    const wr=cur.map(r=>{ const w=[]; (r.detail||[]).forEach(gg=>(gg.d||[]).forEach(it=>{ if(it.ok===0) w.push(r.part==="wmean"?it.l:r.part==="dtg"?`${it.l||""}번 문장`:(it.l&&it.l!=="선택"?it.l:"")); }));
+      const ww=w.filter(Boolean).slice(0,8); return ww.length?`이번 회차 ${AN(r.part)}에서 틀린 것: ${ww.join(", ")}`:""; }).filter(Boolean);
+    const re=cur.map(r=>{ const q=reT.find(y=>y.r===r); return q?`${AN(r.part)} 재시 상태: ${reTxt(q)}`:""; }).filter(Boolean);
+    return [`반: ${clsName}`, `구분: ${skTxt(k)}`, `지난 회차(${k.prev}) 영역별: ${ln(k.pu)}`, `이번 회차(${k.cur}) 영역별: ${ln(k.cu)}`, ...wr, ...re,
+      `판정 기준: 어휘는 50개 중 틀린 개수 7개까지 통과·14개까지 부분재시·그 이상 통재시, 구문 단어·직독직해·어법은 70% 이상 통과(미만 통재시). 재시는 그 영역을 전부 맞혀야 통과.`].join("\n"); };
+  window.AIC_INFO={}; sSK.forEach(x=>{ AIC_INFO[x.s]=aicInfo(x); });
   const ordP=["wmean","dtv","dtr","dtg"], ordR=rs=>[...rs].sort((a,b)=>ordP.indexOf(a.part)-ordP.indexOf(b.part));
   const dtChips=x=>ordR(x.rs).map(r=>{ const q=reT.find(y=>y.r===r), blank=/^(wmean|dtr)$/.test(r.part)&&+r.total>0&&+r.correct/+r.total<=0.2; return chip(`${esc(sLab(r))} ${r1(+r.correct)}/${r.total}${blank?" · 거의 빈칸":""}${reMini(q)}`, q&&q.ok?"ok":"no"); }).join("");
   const hwTodo=x=>x.todo.map(t=>`<div style="font-size:12.5px;color:var(--ink-2);margin-top:2px">▸ ${esc(t.t)} <b style="color:${t.st==="part"?"#d97706":"var(--no)"}">${t.st==="part"?"일부":"안 함"}</b>${t.left.length?`<span style="color:var(--ink-3)"> · 남은 미션: ${t.left.map(esc).join(", ")}</span>`:""}</div>`).join("");
@@ -764,9 +809,9 @@ function renderIns(){
     +(sSK.length?`\n\n■ 연속 재시\n`+sSK.map(x=>`- ${x.s}: ${skTxt(x.sk)}`).join("\n"):"")
     +(sHW.length?`\n\n■ 숙제 70% 미만\n`+sHW.map(x=>`- ${x.st} ${x.pct}% → `+x.todo.map(t=>t.t+(t.st==="part"?" (일부)":"")+(t.left.length?` (남은 미션: ${t.left.join(", ")})`:"")).join(" / ")).join("\n"):"");
   const stayCard=`<div class="card" style="padding:16px 20px;margin-top:12px;border:2px solid ${stayL.length?"var(--no)":"var(--line)"}">${ttl("🏫 남아서 하고 가기",stayL.length,insCopyBtn("st",stayCopy))}
-    <div style="font-size:12px;color:var(--ink-3)">사유가 여러 개인 학생은 해당 칸마다 나와요</div>
+    <div style="font-size:12px;color:var(--ink-3)">사유가 여러 개인 학생은 해당 칸마다 나와요 · 연속 재시 학생은 ✍️ 버튼으로 학부모 코멘트를 AI로 쓸 수 있어요</div>
     ${sDT.length?sSec("📝","데일리테스트 통재시 2영역 이상",sDT.length,sDT.map(x=>sRow(x.s,dtChips(x)+(x.hw?chip(`+ 숙제 ${x.hw.pct}%`,"mut"):""))).join("")):""}
-    ${sSK.length?sSec("🚨","연속 재시 (지난 회차·이번 회차 영역)",sSK.length,sSK.map(x=>sRow(x.s,`<div style="font-size:12.5px;color:var(--ink-2);font-weight:700">${esc(skTxt(x.sk))}</div>`+ordR(best.filter(r=>r.student===x.s&&/^dt/.test(r.unit_id||"")&&r.v!=="pass")).map(r=>{ const q=reT.find(y=>y.r===r); return chip(`${esc(sLab(r))} ${r1(+r.correct)}/${r.total} ${r.v==="full"?"통재시":"부분재시"}${reMini(q)}`, q&&q.ok?"ok":r.v==="full"?"no":"mut"); }).join(""))).join("")):""}
+    ${sSK.length?sSec("🚨","연속 재시 (지난 회차·이번 회차 영역)",sSK.length,sSK.map(x=>sRow(x.s,`<div style="font-size:12.5px;color:var(--ink-2);font-weight:700">${esc(skTxt(x.sk))}</div>`+ordR(best.filter(r=>r.student===x.s&&/^dt/.test(r.unit_id||"")&&r.v!=="pass")).map(r=>{ const q=reT.find(y=>y.r===r); return chip(`${esc(sLab(r))} ${r1(+r.correct)}/${r.total} ${r.v==="full"?"통재시":"부분재시"}${reMini(q)}`, q&&q.ok?"ok":r.v==="full"?"no":"mut"); }).join("")+aicBox(x.s,day))).join("")):""}
     ${sSec("📚","숙제 70% 미만",sHW.length,!H.its.length?`<div style="font-size:13px;color:var(--ink-3);padding:4px 0">${dd} 숙제가 없어요.</div>`:sHW.length?sHW.map(x=>sRow(x.st,chip(`${x.pct}% · ${r1(x.s)}/${x.n}${x.pend?` · 검사 전 ${x.pend}`:""}`,"no")+hwTodo(x))).join(""):`<div style="font-size:13px;color:var(--ink-3);padding:4px 0">${hwPer.length?"모두 70% 이상이에요 👏":"아직 검사 기록이 없어요."}</div>`)}
   </div>`;
   box.innerHTML=`
