@@ -226,6 +226,33 @@ export default async function handler(req, res) {
         ]);
         return res.status(200).json({ ok: true, classes: cl, members: mem, items: it, checks: ck, attempts: at, notes: nt, views: vw, attend: at2 });
       }
+      case "ai.streak": {   // 연속 부분재시·연속 통재시 → 학부모 코멘트 AI 초안 (저장은 note.set)
+        const key = process.env.ANTHROPIC_API_KEY; if (!key) return res.status(400).json({ error: "AI 키(ANTHROPIC_API_KEY)가 설정되어 있지 않아요" });
+        const st = S(b.student, 20), day = DAY(b.day);
+        if (!st || !day) return res.status(400).json({ error: "학생·날짜가 없습니다" });
+        const [prev] = await sql`select headline, note from report_notes where student = ${st} and day = ${day} and kind = 'day'`;
+        const SYS = `너는 영어 학원 '헤이즐쌤'의 담당 선생님이다. 데일리테스트에서 2회 연속 부분재시 또는 통재시가 나온 학생의 학부모께 보낼 짧은 코멘트를 쓴다.
+규칙:
+- 주어진 기록(회차·영역·점수·판정·재시 상태·틀린 것)에 있는 사실만 쓴다. 없는 장면·태도·말·숫자를 지어내지 않는다.
+- 어떤 영역이 2회 연속으로 통과하지 못했는지 영역 이름과 회차를 분명히 쓰고, **그 영역은 집중 보완이 필요하다**는 뜻을 꼭 넣는다.
+- 흐름: ① 이번 결과와 연속으로 걸린 영역(지난 회차 → 이번 회차) → ② 그 영역에서 무엇이 흔들리는지(틀린 것이 있으면 한두 개 예로) → ③ 학원에서 하는 보완(재시를 통과할 때까지 남아서 다시 보고, 틀린 부분을 다시 공부함) → ④ 가정에서 부탁드릴 것 한 가지(그 영역 복습을 챙겨 봐 주시기).
+- 4~5문장, 학부모께 말하듯 존댓말. '~습니다'만 반복하지 말고 '~해요', '~입니다', '~드릴게요'를 섞는다. AI 말투·과장·낙인 금지(아이를 깎아내리지 않는다). 걱정을 키우기보다 무엇을 하면 되는지에 무게를 둔다.
+- 연속 통재시는 '꼭 확인 부탁드린다'는 무게로, 연속 부분재시는 '조금만 더 채우면 된다'는 무게로 쓴다.
+- 가장 중요한 한두 구절을 **별표 두 개**로 감싼다(최대 2군데).
+- 학생 이름은 성을 빼고 부른다(김지유 → 지유는, 박준석 → 준석이는).
+- headline: 학부모가 리포트 맨 위에서 3초 안에 읽을 한 줄, 25자 안팎, 영역 이름 포함(예: '어법 2회 연속 재시 · 집중 보완이 필요해요').
+- 출력은 JSON 한 개만: {"headline":"...","note":"..."}`;
+        const msg = `학생: ${st} / 날짜: ${day}\n${String(b.info || "").slice(0, 2500)}`;
+        const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
+          headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+          body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5", max_tokens: 900, system: SYS, messages: [{ role: "user", content: msg }] }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) return res.status(502).json({ error: "AI 요청 실패: " + ((j.error && j.error.message) || r.status) });
+        const txt = (j.content || []).map(c => c.text || "").join("");
+        const m = txt.match(/\{[\s\S]*\}/); if (!m) return res.status(502).json({ error: "AI 답을 읽지 못했어요" });
+        let o = {}; try { o = JSON.parse(m[0]); } catch (e) { return res.status(502).json({ error: "AI 답을 읽지 못했어요" }); }
+        return res.status(200).json({ ok: true, headline: S(o.headline, 200), note: String(o.note || "").trim().slice(0, 4000), prev: prev || null });
+      }
       default: return res.status(400).json({ error: "알 수 없는 요청입니다" });
     }
     out.stamp = await bump("hw");
