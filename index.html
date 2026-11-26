@@ -2717,7 +2717,7 @@ function grade(part,it,a,gi){
     it.rows.forEach((r,i)=>{ const mine=String(a[i]||"").trim();
       d.push({ok:dtrMatch(mine,r), label:`${r.n} ${r.w}`, mine:mine||"무응답", right:r.ko, ex:[r.pt, i===it.rows.length-1?"전체 해석: "+it.ko:""].filter(Boolean).join(" · ")||undefined}); });
   } else if(part==="dtg"){
-    it.rows.forEach((r,i)=>{ const m=a[i]||{}, t=String(m.t||"").trim(), tk=String(r.en).split(/\s+/), hit=dtgHit(r,m);
+    it.rows.forEach((r,i)=>{ const m=a[i]||{}, t=String(m.t||"").trim(), tk=String(r.en).split(/\s+/), hit=dtgHitOK(r,m,String(m.t||"").trim());
       const pw=m.w!=null&&tk[m.w]?tk[m.w].replace(/[.,!?;:]+$/,""):"";
       const ok=r.ans==="O" ? m.ox==="O" : (m.ox==="X" && hit && dtgMatch(t,r));
       if(Q&&Q.re&&r.ans==="X"&&m.ox==="X"&&hit){   // 🔁 재시: 틀린 이유까지 AI가 확인 (고친 말은 정답이면 base, 아니면 AI fix 판정으로 base)
@@ -2754,9 +2754,15 @@ function grade(part,it,a,gi){
 /* 어법 O/X 고치기: '틀린 말 → 고친 말'의 오른쪽(또는 쓴 말 전체)이 허용 답과 같으면 바로 정답, 나머지(문장 통째로 고쳐 쓴 것 등)는 AI 판정 */
 const dtgNorm=t=>String(t||"").toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/[^a-z' ]/g," ").replace(/\s+/g," ").trim();
 function dtgHit(r,m){ if(m.w==null) return false; const tk=String(r.en).split(/\s+/);
-  const wi=(r.wi!=null&&r.wi>=0)?r.wi:tk.findIndex(t=>t.replace(/[^A-Za-z']/g,"")===r.wrong); return m.w===wi; }
+  const wi=(r.wi!=null&&r.wi>=0)?r.wi:tk.findIndex(t=>t.replace(/[^A-Za-z']/g,"")===r.wrong); return m.w===wi||(r.wis||[]).includes(m.w); }
+/* 고친 말 판정: 대소문자·문장부호·한글(…로) 무시. 고친 말만 쓰거나, 고친 말이 들어간 구·문장을 써도 정답
+   (단, 원래 틀린 말이 그대로 남아 있으면 오답 — 고친 말 안에 틀린 말이 들어 있는 경우(because → because of)는 예외) */
 function dtgMatch(mine, r){ if(!mine) return false; const parts=String(mine).split(/→|->|=>|>|:|⇒/), right=dtgNorm(parts[parts.length-1]);
-  return !!right && r.fix.some(f=>dtgNorm(f)===right); }
+  if(!right) return false; if(r.fix.some(f=>dtgNorm(f)===right)) return true;
+  const has=(t,w)=>!!w&&(" "+t+" ").indexOf(" "+w+" ")>=0, wr=dtgNorm(r.wrong);
+  return r.fix.some(f=>{ const nf=dtgNorm(f); return has(right,nf) && (!has(right,wr) || has(nf,wr)); }); }
+/* 틀린 단어를 정확히 못 눌렀어도(옆 단어·안 누름) X + 고친 말이 맞으면 인정 */
+function dtgHitOK(r,m,t){ return dtgHit(r,m) || (r.ans==="X" && m.ox==="X" && dtgMatch(t,r)); }
 /* 직독직해 덩어리: 띄어쓰기·문장부호·물결(~)만 빼고 모범 해석/허용 답과 같으면 바로 정답, 나머지는 AI 판정 */
 const dtrNorm=t=>String(t||"").replace(/\([^)]*\)/g,"").replace(/[\s.,!?'"“”‘’~∼·…\-]/g,"");
 function dtrMatch(mine, r){ const m=dtrNorm(mine); if(!m) return false; return [r.ko].concat(r.koAlt||[]).some(x=>dtrNorm(x)===m); }
