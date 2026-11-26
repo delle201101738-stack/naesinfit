@@ -3397,6 +3397,21 @@ async function loadUnit(u){
   if(!r.ok) throw new Error("교재 내용을 불러오지 못했습니다");
   C=await r.json(); UNIT=u;
   try{localStorage.setItem(UKEY,u.id);}catch(e){}
+  if(C&&C.allInOne) await syncDtServer(u.id).catch(()=>{});
+}
+/* 데일리테스트: 선생님이 서버에서 다시 채점(점수 올림)한 기록을 학생 기기에도 반영 — 최고 점수·재시 통과 */
+async function syncDtServer(uid){
+  if(!S.name) return; const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),4000);
+  try{
+    const j=await (await fetch(`api/mine?student=${encodeURIComponent(S.name)}`,{cache:"no-store",signal:ctl.signal})).json();
+    const B=(S.best[uid] ||= {}), R=((S.rt ||= {})[uid] ||= {}); let ch=0;
+    for(const x of (j.rows||[])){ if(x.unit_id!==uid||!["wmean","dtv","dtr","dtg"].includes(x.part)||!x.total) continue;
+      const pn=String(x.part_name||""), c=Number(x.correct)||0, t=Number(x.total)||0, pct=Math.round(c/t*100);
+      if(/^재시/.test(pn)){ if(c>=t){ const o=(R[x.part] ||= {n:0}); if(!o.pass){ o.pass=true; o.pd=o.pd||String(x.created_at||"").slice(0,10); o.drill=[]; ch=1; } } continue; }
+      if(/오답노트|지필/.test(pn)||x.scope==="지필") continue;
+      const b=B[x.part]; if(b && pct>b.pct){ B[x.part]={...b, done:c, total:t, pct}; ch=1; } }
+    if(ch) save();
+  }finally{ clearTimeout(tm); }
 }
 const unitLabel = () => UNIT ? `${UNIT.book.subject} · ${UNIT.book.publisher} · ${UNIT.no}` : "";
 const gradeOfBook = b => b.grade || "고2";
