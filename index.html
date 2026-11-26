@@ -2764,17 +2764,18 @@ function dtgMatch(mine, r){ if(!mine) return false; const parts=String(mine).spl
 /* 틀린 단어를 정확히 못 눌렀어도(옆 단어·안 누름) X + 고친 말이 맞으면 인정 */
 /* 지우기로 고친 답: 틀린 말이 두 낱말 이상이고 정답이 그중 일부를 지운 것(because of → because)이면
    'of 삭제' · 'of 빼기' · '삭제'(of를 누름) · 'of → X' 처럼 지우는 답도 정답 */
-function dtgDelOK(mine, r, pw){ const raw=String(mine||""); if(!raw.trim()) return false;
+function dtgDelOK(mine, r, pw){ const raw=String(mine||"").trim();
   const wt=dtgNorm(r.wrong).split(" ").filter(Boolean), rm=wt.filter(w=>!(r.fix||[]).some(f=>dtgNorm(f).split(" ").includes(w)));
   if(!rm.length || rm.length===wt.length) return false;
-  const kw=/삭제|빼|지우|지워|없애|제거|생략|필요\s*없|delete|remove|omit/i.test(raw) || /(→|->|=>|>)\s*(x|-|—|ㅡ|없음)?\s*$/i.test(raw);
+  if(!raw || /^[x×✕✗\-—ㅡ]$/i.test(raw) || /^(없음|없앰|안\s*씀)$/.test(raw)) return rm.includes(dtgNorm(pw||""));   // 지울 낱말(of)을 누르고 비우거나 X만 씀
+  const kw=/삭제|빼|지우|지워|없애|제거|생략|필요\s*없|안\s*써|안\s*씀|delete|remove|omit/i.test(raw) || /(→|->|=>|>)\s*(x|×|-|—|ㅡ|없음)?\s*$/i.test(raw);
   if(!kw) return false;
   const E=dtgNorm(raw.replace(/\b(delete|remove|omit|x)\b/ig," ")).split(" ").filter(Boolean);
   if(E.some(w=>!wt.includes(w))) return false;              // 다른 영어 단어가 섞이면 아님
   if(E.length) return E.some(w=>rm.includes(w)) && E.filter(w=>!rm.includes(w)).every(w=>wt.includes(w)) && !(E.length===1&&!rm.includes(E[0]));
   return rm.includes(dtgNorm(pw||""));                       // '삭제'만 썼으면 누른 낱말이 지울 낱말이어야
 }
-function dtgFixOK(t,r,pw){ return /삭제|빼|지우|지워|없애|제거|생략|필요\s*없|delete|remove|omit/i.test(String(t||"")) ? dtgDelOK(t,r,pw) : (dtgMatch(t,r) || dtgDelOK(t,r,pw)); }
+function dtgFixOK(t,r,pw){ return /삭제|빼|지우|지워|없애|제거|생략|필요\s*없|안\s*써|delete|remove|omit/i.test(String(t||"")) ? dtgDelOK(t,r,pw) : (dtgMatch(t,r) || dtgDelOK(t,r,pw)); }
 function dtgHitOK(r,m,t){ const tk=String(r.en).split(/\s+/), pw=m.w!=null&&tk[m.w]?tk[m.w].replace(/[.,!?;:]+$/,""):"";
   return dtgHit(r,m) || (r.ans==="X" && m.ox==="X" && dtgFixOK(t,r,pw)); }
 /* 직독직해 덩어리: 띄어쓰기·문장부호·물결(~)만 빼고 모범 해석/허용 답과 같으면 바로 정답, 나머지는 AI 판정 */
