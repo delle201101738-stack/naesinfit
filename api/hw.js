@@ -149,6 +149,17 @@ export default async function handler(req, res) {
         await sql`update attempts set correct = ${nc}, pct = ${a.total ? Math.round(nc / a.total * 100) : 0}, detail = ${JSON.stringify(det).slice(0, 200000)}::jsonb where id = ${aid}`;
         out = { ok: true, id: aid, correct: nc }; break;
       }
+      case "attempt.orig": {  // 재시 버튼으로 처음 본 데일리테스트 영역 → 본 시험 기록으로 바꾸기 (그 영역에 본 시험 기록이 없을 때만)
+        const aid = Number(b.id) || 0, pn = S(b.part_name, 60);
+        if (!aid || !pn) return res.status(400).json({ error: "기록·이름이 없습니다" });
+        const [a] = await sql`select student, unit_id, part, scope from attempts where id = ${aid}`;
+        if (!a) return res.status(404).json({ error: "기록이 없습니다" });
+        if (a.scope !== "재시험") return res.status(400).json({ error: "재시 기록이 아니에요" });
+        const [o] = await sql`select id from attempts where student = ${a.student} and unit_id = ${a.unit_id} and part = ${a.part} and scope not in ('재시험', '지필') limit 1`;
+        if (o) return res.status(400).json({ error: "이미 본 시험 기록이 있어요" });
+        await sql`update attempts set scope = '전체 한 번에', part_name = ${pn} where id = ${aid}`;
+        out = { ok: true, id: aid }; break;
+      }
       case "tpl.save": {      // 🧩 세부미션 템플릿 (선생님이 고친 것) · reset이면 기본값으로
         if (b.reset) await sql`delete from hw_meta where k = 'mission_tpl'`;
         else { const t = cleanTpl(b.tpl); if (!t.length) return res.status(400).json({ error: "템플릿이 비었어요" });
