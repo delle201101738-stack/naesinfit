@@ -1260,6 +1260,9 @@ function dtgExtraItem(){ const base=(C.dtg||[])[0]; if(!base) return null; const
 /* 데일리테스트 구문 단어(dtv) 재시: 틀린 단어를 영어·한국어 5번씩 쓰면 통과 인정 */
 const dtvByDrill = p => p==="dtv" && !!(C&&C.allInOne);
 function reChip(uid,p,lab,need,cls){ const r=reStat(uid,p);
+  if(/^dt\d/.test(uid) && !((S.best||{})[uid]||{})[p] && !r)   // 데일리테스트: 본 시험 보기 전에는 영역별 재시 못 함
+    return `<button class="${cls}" disabled aria-disabled="true" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 12px;margin:0 0 6px;border-radius:12px;background:var(--surface-2);opacity:.45;cursor:not-allowed">
+    <span style="flex:1;min-width:0;font-size:13.5px;font-weight:700">${esc(reShort(lab,p))}</span><span style="font-size:11px;font-weight:700;color:var(--ink-3)">🔒 본 시험 먼저</span></button>`;
   const st=r&&r.pass?`<span class="vd pass" style="font-size:11px">✓ 재시 통과</span>`:r&&r.drill&&r.drill.length?`<span class="vd part" style="font-size:11px">✍️ 쓰기 ${r.drill.length}개 남음</span>`:r?`<span class="vd full" style="font-size:11px">✗ ${r.n}회 · ${r.last}%</span>`:need?`<span class="vd part" style="font-size:11px">재시 대상</span>`:"";
   return `<button class="${cls}" data-rego="${esc(p)}" data-reu="${esc(uid)}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 12px;margin:0 0 6px;border-radius:12px;background:var(--surface-2)">
     <span style="flex:1;min-width:0;font-size:13.5px;font-weight:700">${esc(reShort(lab,p))}</span>${st}<span style="color:var(--ink-3);font-size:13px">›</span></button>`; }
@@ -1379,6 +1382,7 @@ document.addEventListener("click",async e=>{ const b=e.target.closest("[data-reg
   const uid=b.dataset.reu, part=b.dataset.rego;
   if(!UNIT||UNIT.id!==uid){ const u=allUnits(true).find(x=>x.id===uid); if(!u) return; toast("불러오는 중…");
     try{ await loadUnit(u); S.grade=gradeOfBook(u.book); save(); renderHome(); renderMy(); }catch(err){ toast(err.message); return; } }
+  if(C&&C.allInOne&&!bestOf()[part]){ toast("아직 본 시험을 안 봤어요 · 본 시험부터 볼게요",2600); sel.part="all"; sel.scope="all"; startQuiz({all:true}); return; }   // 본 시험 없이 재시부터 보면 기록이 재시로만 남아 대시보드·리포트·석차에서 빠짐
   startRe(part); });
 function renderHome(){
   renderSmem(); renderResume(); renderQpkSlot();
@@ -3409,7 +3413,7 @@ async function syncDtServer(uid){
       const pn=String(x.part_name||""), c=Number(x.correct)||0, t=Number(x.total)||0, pct=Math.round(c/t*100);
       if(/^재시/.test(pn)){ if(c>=t){ const o=(R[x.part] ||= {n:0}); if(!o.pass){ o.pass=true; o.pd=o.pd||String(x.created_at||"").slice(0,10); o.drill=[]; ch=1; } } continue; }
       if(/오답노트|지필/.test(pn)||x.scope==="지필") continue;
-      const b=B[x.part]; if(b && pct>b.pct){ B[x.part]={...b, done:c, total:t, pct}; ch=1; } }
+      const b=B[x.part]; if(!b){ B[x.part]={done:c, total:t, pct, scope:"전체 한 번에"}; ch=1; } else if(pct>b.pct){ B[x.part]={...b, done:c, total:t, pct}; ch=1; } }
     if(ch) save();
   }finally{ clearTimeout(tm); }
 }
