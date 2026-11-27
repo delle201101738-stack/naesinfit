@@ -155,13 +155,13 @@ function para(text){
 /* ── 섹션 ── */
 function S_header(R){ const d=R.data;
   return `<div class="sec" data-k="head"><div class="eb">INTERVIEW → CHECK → MISSION</div>
-    <div class="h1">헤이즐쌤과 <span class="nm">${esc(callName(d.name))}</span>와의 꼼꼼한 인터뷰</div><div class="h1s">1:1 인터뷰 결과리포트 · ${d.round}차</div>
+    <div class="h1">헤이즐쌤과 <span class="nm">${esc(callName(d.name))}</span>와의 꼼꼼한 인터뷰</div><div class="h1s">1:1 인터뷰 결과리포트 · ${d.round}차${d.att===2?" (재시)":""}</div>
     <div class="intro" data-opt="intro">선생님 1명과 학생 1명이 마주 앉아, 시험 범위에서 예고 없이 뽑은 질문에 학생이 직접 말로 답하는 시간입니다. 답을 맞혀도 이유를 모르면, 지문이 조금만 비틀린 순간 무너지기 때문입니다.</div>
     <div class="steps" data-opt="steps"><div><i>1</i>1:1로 마주 앉습니다</div><div><i>2</i>예고 없이 묻습니다</div><div><i>3</i>말로 설명하게 합니다</div></div>
     <div class="info"><div><small>학 생</small><b>${esc(d.name)}<em>${esc(d.cls)}</em></b></div><div><small>범 위</small><b>${esc(d.scope||"—")}</b></div>
-      <div><small>회 차</small><b>${d.round}차<em>${mdText(R.day)}</em></b></div><div><small>담 당</small><b>${esc(tName(d.teacher))}</b></div></div></div>`; }
+      <div><small>회 차</small><b>${d.round}차${d.att===2?" (재시)":""}<em>${mdText(R.day)}</em></b></div><div><small>담 당</small><b>${esc(tName(d.teacher))}</b></div></div></div>`; }
 function S_slim(R){ const d=R.data;
-  return `<div class="sec" data-k="slim"><div class="slim"><span class="t">${esc(d.name)}</span><span class="m">${esc(callName(d.name))}와의 꼼꼼한 인터뷰 · ${d.round}차 · ${mdText(R.day)}</span><span class="eb">${esc(d.cls)}</span></div></div>`; }
+  return `<div class="sec" data-k="slim"><div class="slim"><span class="t">${esc(d.name)}</span><span class="m">${esc(callName(d.name))}와의 꼼꼼한 인터뷰 · ${d.round}차${d.att===2?" (재시)":""} · ${mdText(R.day)}</span><span class="eb">${esc(d.cls)}</span></div></div>`; }
 function S_comment(R){ if(!R.c_title&&!R.c_body) return "";
   return `<div class="sec" data-k="comment"><div class="st">헤이즐 쌤 코멘트</div><div class="cmt">${R.c_title?`<h3>${esc(R.c_title.replace(/\*\*/g,""))}</h3>`:""}${para(R.c_body)}</div></div>`; }
 function S_special(R){ const sp=specialOf(R); if(!sp) return "";
@@ -195,8 +195,8 @@ function S_missions(R){ const M=R.data.missions||[]; if(!M.length) return "";
   return `<div class="sec" data-k="missions"><div class="st">이번 미션</div>${M.map((m,i)=>`<div class="mi"><i>${i+1}</i><span>${esc(m)}</span></div>`).join("")}</div>`; }
 function S_home(R){ if(!R.data.home) return ""; return `<div class="sec" data-k="home"><div class="st">가정에서 한 가지만</div><div class="home">${esc(R.data.home)}</div></div>`; }
 function footer(R,p,n){ const d=R.data; const gs=AREAS.map((a,i)=>`${a} ${d.cur[i]==="미완"?"미완":d.cur[i]||"—"}`).join(" · ");
-  return `<div class="ft"><span>헤이즐쌤의 꼼꼼한 인터뷰 · ${esc(d.name)} · ${d.round}차 · ${esc(gs)}</span><span>${p} / ${n}</span></div>`; }
-const fname=R=>`${R.data.name}_${R.data.round}차_인터뷰리포트`;
+  return `<div class="ft"><span>헤이즐쌤의 꼼꼼한 인터뷰 · ${esc(d.name)} · ${d.round}차${d.att===2?" (재시)":""} · ${esc(gs)}</span><span>${p} / ${n}</span></div>`; }
+const fname=R=>`${R.data.name}_${R.data.round}차${R.data.att===2?"_재시":""}_인터뷰리포트`;
 const longComment=R=>(R.c_body||"").replace(/\s+/g,"").length>140;
 
 /* ── 쪽 나누기 + 자동 맞춤 ──
@@ -274,8 +274,8 @@ function render(teacher){
   app.innerHTML=(teacher?`<div class="bar"><b>🎤 1:1 밀착인터뷰 리포트 · ${esc(QS.get("cls")||"")} ${LIST.length}명</b><span class="sp"></span><button class="btn" id="b-links">🔗 학부모 링크 모두 복사</button>
       <button class="btn" id="b-all-pdf">📚 전체 합본 PDF</button><button class="btn pri" id="b-zip">📦 전부 받기 (개별 PDF · PNG · 합본)</button></div>
     <div class="list">${noCmt.length?`<div class="warn">코멘트가 비어 코멘트 섹션을 뺀 학생: <b>${esc(noCmt.join(", "))}</b></div>`:""}${noAns.length?`<div class="warn">학생 답변 칸이 비어 빈 칸으로 나간 학생: <b>${esc(noAns.join(", "))}</b> (지어내지 않았어요)</div>`:""}<div class="warn" id="scales" style="background:#F2F4F9;border-color:#D9DCE5;color:#454B5C"></div></div>`
-    :`<div class="bar"><b>${esc((LIST[0]||{}).data?LIST[0].data.name:"")} 인터뷰 리포트</b><span class="sp"></span>${LIST.length>1?`<select class="btn" id="b-pick">${LIST.map((R,i)=>`<option value="${i}">${R.data.round}차 · ${mdText(R.day)}</option>`).join("")}</select>`:""}<button class="btn pri" id="b-one">📄 PDF 저장</button></div>`)
-    +LIST.map((R,i)=>`<div class="rep" data-i="${i}"${!teacher&&i?" hidden":""}>${teacher?`<div class="rep-h"><b>${esc(R.data.name)}</b> ${esc(R.data.cls)} · ${R.data.round}차 · <span class="k" data-k="${i}"></span>
+    :`<div class="bar"><b>${esc((LIST[0]||{}).data?LIST[0].data.name:"")} 인터뷰 리포트</b><span class="sp"></span>${LIST.length>1?`<select class="btn" id="b-pick">${LIST.map((R,i)=>`<option value="${i}">${R.data.round}차${R.data.att===2?" (재시)":""} · ${mdText(R.day)}</option>`).join("")}</select>`:""}<button class="btn pri" id="b-one">📄 PDF 저장</button></div>`)
+    +LIST.map((R,i)=>`<div class="rep" data-i="${i}"${!teacher&&i?" hidden":""}>${teacher?`<div class="rep-h"><b>${esc(R.data.name)}</b> ${esc(R.data.cls)} · ${R.data.round}차${R.data.att===2?" (재시)":""} · <span class="k" data-k="${i}"></span>
       <button class="btn" data-pdf="${i}">PDF</button><button class="btn" data-png="${i}">PNG</button>${R.link?`<button class="btn" data-link="${i}">🔗 학부모 링크 복사</button>`:""}</div>`:""}<div><div class="scaler"><div class="pages" id="pg${i}"></div></div></div></div>`).join("");
   app.hidden=false; $("#gate").hidden=true;
   LIST.forEach((R,i)=>{ const f=buildReport(R,$("#pg"+i)); FITS[i]=f;

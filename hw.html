@@ -785,7 +785,8 @@ function ivGridHTML(){
   if(IVG.data.error) return head+`<div class="alerts">${esc(IVG.data.error)}</div>`;
   const M=IVG.data.members; if(!M.length) return head+`<div class="card empty">반에 학생이 없어요</div>`;
   return head+`<div class="card ivg-wrap"><table class="ivg"><thead><tr><th class="sk">학생</th><th class="hs">지난 등급</th>${IVCOLS.map(c=>`<th style="min-width:${c.w}px">${esc(c.h)}</th>`).join("")}<th>리포트</th></tr></thead>
-    <tbody>${M.map((m,ri)=>{ const v=m.input||{}; return `<tr data-ivr="${ri}" data-st="${esc(m.student)}"><td class="sk"><b>${esc(m.name)}</b><small>${esc(m.student!==m.name?m.student:"")}</small><span class="rs" id="rs${ri}">${m.id?"✓":""}</span></td>
+    <tbody>${M.map((m,ri)=>{ const v=m.input||{}, a2=m.att===2, has2=!a2&&M.some(x=>x.student===m.student&&x.att===2);
+      return `<tr data-ivr="${ri}" data-st="${esc(m.student)}"${a2?' style="background:#FFF7E6"':""}><td class="sk"${a2?' style="background:#FFF7E6"':""}>${a2?`<b style="font-size:12.5px;color:#B45309">🔁 재시 인터뷰</b><small>${esc(m.name)} · 그날 2번째</small>`:`<b>${esc(m.name)}</b><small>${esc(m.student!==m.name?m.student:"")}</small>`}<span class="rs" id="rs${ri}">${m.id?"✓":""}</span>${!a2&&!has2?`<button class="btn sm" data-ivre="${ri}" title="재시를 보고 같은 날 인터뷰를 한 번 더 기록해요" style="display:block;margin-top:4px;padding:2px 6px;font-size:11px">＋ 재시 인터뷰</button>`:""}</td>
       <td class="hs">${histTxt(m.hist)}</td>${IVCOLS.map((c,ci)=>`<td data-ci="${ci}">${ivCell(c,m,v)}</td>`).join("")}
       <td>${m.id?`<a class="btn sm" href="interview?ids=${m.id}" target="_blank" rel="noopener">보기</a>`:""}</td></tr>`; }).join("")}</tbody></table></div>`;
 }
@@ -812,7 +813,10 @@ async function ivLive(){
   if(!r.ok||+j.stamp===+IVG.data.stamp) return;
   const r2=await fetch(`/api/interview?grid=1&${q}`,{headers:{"x-pin":PIN},cache:"no-store"}); const g=await r2.json().catch(()=>({}));
   if(!r2.ok||!IVG.data||+g.class_id!==+IVG.cid||g.day!==IV.day) return;
-  const M=IVG.data.members, same=g.members.length===M.length&&g.members.every((m,i)=>m.student===M[i].student);
+  const M=IVG.data.members;
+  M.forEach((x,i)=>{ if(x.att===2&&!x.id&&!g.members.some(y=>y.student===x.student&&y.att===2)){   // 방금 '＋ 재시 인터뷰'로 만든 빈 줄은 그대로 둠
+    const k=g.members.findIndex(y=>y.student===x.student&&(y.att||1)===1); if(k>=0) g.members.splice(k+1,0,{...x}); } });
+  const same=g.members.length===M.length&&g.members.every((m,i)=>m.student===M[i].student&&(m.att||1)===(M[i].att||1));
   if(!same){ if(typing()) return; IVG.data=g; render(); liveNote(`👥 명단이 바뀌어 다시 불러왔어요 · ${hhmm()}`); return; }
   let n=0;
   g.members.forEach((m,i)=>{ const cur=M[i], tr=document.querySelector(`.ivg tr[data-ivr="${i}"]`); cur.id=m.id; cur.input=m.input;
@@ -826,9 +830,10 @@ async function ivSaveRow(tr){
   const ri=+tr.dataset.ivr, m=IVG.data.members[ri], rs=$("#rs"+ri);
   const keys=[...(ivDirty[ri]||[])]; ivDirty[ri]=new Set(); if(!keys.length){ if(rs&&rs.textContent==="…") rs.textContent=m.id?"✓":""; return; }
   const patch={}; keys.forEach(k=>{ const el=/^mr\d$/.test(k)?tr.querySelector(`[data-f="mr"][data-i="${k[2]}"]`):tr.querySelector(`[data-f="${k}"]`); if(el) patch[k]=el.value; });
-  try{ const r=await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"iv.save",class_id:IVG.cid,day:IV.day,student:m.student,patch})});
+  try{ const r=await fetch("/api/interview",{method:"POST",headers:{"x-pin":PIN,"content-type":"application/json"},body:JSON.stringify({action:"iv.save",class_id:IVG.cid,day:IV.day,student:m.student,att:m.att===2?2:1,patch})});
     const j=await r.json(); if(!r.ok) throw new Error(j.error||"저장 실패");
     m.input=j.input; m.id=j.id; if(+j.stamp===+IVG.data.stamp+1) IVG.data.stamp=j.stamp;
+    if(j.hist){ m.hist=j.hist; const rsel=tr.querySelector('select[data-f="round"]'); if(rsel&&!(j.input&&j.input.round)&&rsel!==document.activeElement){ rsel.innerHTML=Array.from({length:12},(_,i)=>i+1).map(n=>`<option value="${n}"${n===j.hist.next?" selected":""}>${n}차${n===j.hist.next?" ✓":""}</option>`).join(""); } }
     ivApply(tr,j.input,true);           // 같은 줄을 다른 선생님이 고친 칸이 있으면 바로 보임
     if(rs){ rs.textContent=(ivDirty[ri]&&ivDirty[ri].size)?"…":j.id?"✓":""; rs.className="rs ok"; }
     ivLink(tr,j.id);
@@ -853,7 +858,7 @@ async function ivXlsx(){
   if(!IVG.data) return;
   if(!window.XLSX) await new Promise((ok,no)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; sc.onload=ok; sc.onerror=()=>no(new Error("엑셀 도구를 불러오지 못했어요")); document.head.appendChild(sc); });
   const cls=(DB.classes.find(c=>+c.id===IVG.cid)||{}).name||"";
-  const rows=IVG.data.members.map(m=>{ const v=m.input||{}, h=m.hist, o={이름:m.name,반:cls,범위:v.scope||h.scope||"",회차:`${v.round||h.next}차`,인터뷰일자:IV.day,담당선생님:v.teacher||"헤이즐",독해:v.g0||"",어휘:v.g1||"",어법:v.g2||"","오답·교재":v.g3||""};
+  const rows=IVG.data.members.map(m=>{ const v=m.input||{}, h=m.hist, o={이름:m.name,반:cls,범위:v.scope||h.scope||"",회차:`${v.round||h.next}차${m.att===2?" (재시)":""}`,인터뷰일자:IV.day,담당선생님:v.teacher||"헤이즐",독해:v.g0||"",어휘:v.g1||"",어법:v.g2||"","오답·교재":v.g3||""};
     [1,2,3].forEach(k=>["독해","어휘","어법","오답·교재"].forEach((a,i)=>{ o[`${k}회전 ${a}`]=((h.byRound||{})[k]||[])[i]||""; }));
     Object.assign(o,{코멘트제목:v.title||"",코멘트본문:v.body||"",특이사항:v.special||""});
     [1,2,3].forEach(k=>{ o["학생답변"+k]=v["a"+k]||""; o[`학생답변${k}맥락`]=v["c"+k]||""; });
@@ -910,7 +915,7 @@ function ivListHTML(){
   ${IV.list.length?Object.entries(by).map(([sh,rs])=>`<div class="sec"><h2 style="font-size:15px">${esc(sh.replace(/^\[.*?\]\s*/,""))} · ${rs.length}명</h2></div>
     <div class="card" style="padding:4px 16px">${rs.map(R=>{ const d=R.data, src=ivSrc[R.c_src]||ivSrc.memo, ed=String(IV.edit)===String(R.id);
       return `<div class="nmrow" style="align-items:flex-start">
-        <span class="who"><b>${esc(d.name)}</b>${R.student!==d.name?` <small style="display:inline">→ ${esc(R.student)}</small>`:""} <small style="display:inline">${d.round}차 · ${esc(d.scope||"")}</small>
+        <span class="who"><b>${esc(d.name)}</b>${R.student!==d.name?` <small style="display:inline">→ ${esc(R.student)}</small>`:""} <small style="display:inline">${d.round}차${d.att===2?" (재시)":""} · ${esc(d.scope||"")}</small>
           <span style="display:flex;gap:4px;margin-top:5px">${d.cur.map(gchip).join("")}</span>
           <small style="margin-top:5px;color:${src[1]}">💬 ${src[0]}${R.memo_changed?` · <b style="color:var(--no)">시트 메모가 바뀌었어요 (되돌리면 새 메모로)</b>`:""}</small>
           ${(R.c_areas||[]).some(Boolean)?`<small style="margin-top:3px;color:var(--ink-2)">🏷 ${(R.c_areas||[]).map((x,i)=>x?`${["독해","어휘","어법","오답·교재"][i]} ${esc(x)}`:"").filter(Boolean).join(" · ")}</small>`:""}
@@ -933,6 +938,9 @@ function ivListHTML(){
 async function ivClick(t){
   if(t.closest("#iv-btn")){ VIEW="iv"; IV.list=null; IV.mode="input"; IVG.data=null; render(); scrollTo({top:0}); return true; }
   const mo=t.closest("[data-ivmode]"); if(mo){ IV.mode=mo.dataset.ivmode; IV.list=null; IVG.data=null; render(); return true; }
+  const ivre=t.closest("[data-ivre]"); if(ivre&&IVG.data){ const ri=+ivre.dataset.ivre, m=IVG.data.members[ri]; if(!m) return true;
+    const h2={...(m.hist2||m.hist)}, r1=+((m.input||{}).round)||m.hist.next; if(m.id&&h2.next<=r1) h2.next=r1+1;   // 1차를 오늘 저장했으면 재시는 그다음 회차
+    IVG.data.members.splice(ri+1,0,{student:m.student, name:m.name, att:2, hist:h2, id:null, input:null}); render(); return true; }
   const ic=t.closest("[data-ivcls]"); if(ic){ IVG.cid=+ic.dataset.ivcls; IVG.data=null; render(); return true; }
   if(t.closest("#ivg-batch")){ const cls=(DB.classes.find(c=>+c.id===IVG.cid)||{}).name||"";
     const n=(IVG.data&&IVG.data.members||[]).filter(m=>m.input&&["g0","g1","g2","g3"].some(k=>m.input[k])).length;
